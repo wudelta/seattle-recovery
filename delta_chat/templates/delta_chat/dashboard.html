@@ -5,75 +5,87 @@
     <title>Delta Console</title>
     <style>
         * { box-sizing: border-box; }
-        body, html {
-            height: 100%; margin: 0; padding: 0;
-            background-color: #0f172a; color: #f8fafc;
-            font-family: ui-sans-serif, system-ui, sans-serif;
-            overflow: hidden;
-        }
+        body, html { height: 100%; margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
         .app-container { display: flex; flex-direction: column; height: 100vh; }
-        header {
-            height: 60px; background: #1e293b; border-bottom: 1px solid #334155;
-            display: flex; align-items: center; padding: 0 20px; flex-shrink: 0;
-        }
+        header { height: 60px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; padding: 0 20px; flex-shrink: 0; }
         .main-content { display: flex; flex: 1; overflow: hidden; }
-        aside {
-            width: 240px; background: #0f172a; border-right: 1px solid #334155;
-            padding: 20px; flex-shrink: 0;
-        }
+        aside { width: 240px; background: #0f172a; border-right: 1px solid #334155; padding: 20px; flex-shrink: 0; }
         main { display: flex; flex-direction: column; flex: 1; background: #020617; }
-        #chat-window {
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px;
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .message { display: flex; gap: 15px; max-width: 90%; }
+        .avatar { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; color: white; }
+        .bubble { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #e2e8f0; width: 100%; }
+
+        /* Markdown Specific Styling */
+        pre { background: #000000 !important; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #475569; margin: 15px 0; position: relative; }
+        code { font-family: 'Consolas', 'Monaco', monospace; color: #38bdf8; font-size: 13px; }
+        p { margin: 8px 0; }
+        ul, ol { padding-left: 20px; }
+
+        /* Pygments Syntax Highlighting */
+        .codehilite .k { color: #f92672; font-weight: bold; }
+        .codehilite .n { color: #f8f8f2; }
+        .codehilite .s { color: #e6db74; }
+        .codehilite .nf { color: #a6e22e; }
+        .codehilite .nb { color: #66d9ef; }
+        .codehilite .c1 { color: #75715e; font-style: italic; }
+        .codehilite .mi { color: #ae81ff; }
+        .codehilite .o { color: #f92672; }
+        .codehilite .p { color: #f8f8f2; }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #334155;
+            color: #94a3b8;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
         }
-        .message { display: flex; gap: 15px; max-width: 80%; }
-        .avatar {
-            width: 32px; height: 32px; border-radius: 4px;
-            display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;
+
+        .copy-btn:hover {
+            background: #475569;
+            color: #f8fafc;
         }
-        .bubble { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+
         .input-area { background: #1e293b; border-top: 1px solid #334155; padding: 20px; flex-shrink: 0; }
-        .input-container { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; }
-        input {
-            flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px;
-            padding: 12px 15px; color: white; outline: none;
-        }
+        .input-container { max-width: 900px; margin: 0 auto; display: flex; gap: 10px; }
+        input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 12px 15px; color: white; outline: none; }
         input:focus { border-color: #0284c7; }
-        button {
-            background: #0284c7; color: white; border: none; padding: 0 25px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;
-        }
+        button { background: #0284c7; color: white; border: none; padding: 0 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #0ea5e9; }
     </style>
 </head>
 <body>
-
     <div class="app-container">
         <header>
-            <h1 style="color: #38bdf8; font-size: 18px; letter-spacing: 1px;">DELTA_CONSOLE</h1>
+            <h1 style="color: #38bdf8; font-size: 18px; letter-spacing: 1px; margin: 0;">DELTA_CONSOLE_V2</h1>
         </header>
-
         <div class="main-content">
             <aside>
-                <p style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">System Info</p>
-                <p style="font-size: 13px; color: #10b981;">● Wu Active</p>
-                <p style="font-size: 11px; color: #64748b; margin-top: 10px;">Operator: Delta</p>
+                <p style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-bottom: 10px;">System Status</p>
+                <p style="font-size: 13px; color: #10b981;">● Local Graph Active</p>
+                <p style="font-size: 11px; color: #64748b; margin-top: 20px;">Operator: Delta</p>
+                <p style="font-size: 11px; color: #64748b;">Brain: Llama 3.3-70b</p>
             </aside>
-
             <main>
                 <div id="chat-window">
-                    <!-- Initial Message from Wu -->
                     <div class="message">
                         <div class="avatar" style="background: #334155">W</div>
                         <div class="bubble">
                             <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0; text-transform: uppercase;">Wu</p>
-                            Welcome back, <strong>Delta</strong>. Logic Engine initialized. Ready for command.
+                            Connection established. Markdown rendering active. Ready for your project data, <strong>Delta</strong>.
                         </div>
                     </div>
                 </div>
-
                 <div class="input-area">
                     <div class="input-container">
-                        <input type="text" id="user-input" placeholder="Enter logic query...">
+                        <input type="text" id="user-input" placeholder="Transmit data or query..." autocomplete="off">
                         <button id="send-btn">SEND</button>
                     </div>
                 </div>
@@ -85,35 +97,65 @@
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
+        const sessionStart = new Date();
 
-        function appendMessage(role, text) {
+        // Automatic Time Log Beacon
+        window.addEventListener('beforeunload', () => {
+            const sessionEnd = new Date();
+            const durationMinutes = Math.round((sessionEnd - sessionStart) / 60000);
+
+            if (durationMinutes >= 1) {
+                const formData = new FormData();
+                formData.append('text', `SYSTEM_LOG: Session ended. Duration: ${durationMinutes} minutes. #TimeLog`);
+
+                // Retrieve CSRF from cookies for Django security
+                const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+                if (csrftoken) formData.append('csrfmiddlewaretoken', csrftoken);
+
+                navigator.sendBeacon('/delta/api/', formData);
+            }
+        });
+
+        function appendMessage(role, htmlContent) {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
-
-            // Delta (You) = Sky Blue | Wu (System) = Slate
             const color = (role === 'Delta') ? '#0284c7' : '#334155';
+            const char = role === 'Delta' ? 'D' : 'W';
 
             msgDiv.innerHTML = `
-                <div class="avatar" style="background: ${color}">
-                    ${role[0]}
-                </div>
+                <div class="avatar" style="background: ${color}">${char}</div>
                 <div class="bubble">
                     <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0; text-transform: uppercase;">${role}</p>
-                    ${text}
+                    <div class="rich-text">${htmlContent}</div>
                 </div>
             `;
             chatWindow.appendChild(msgDiv);
+
+            // Injected Copy Buttons
+            msgDiv.querySelectorAll('pre').forEach((block) => {
+                const button = document.createElement('button');
+                button.innerText = 'Copy';
+                button.className = 'copy-btn';
+                button.addEventListener('click', () => {
+                    const code = block.querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => { button.innerText = 'Copy'; }, 2000);
+                    });
+                });
+                block.appendChild(button);
+            });
+
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        sendBtn.addEventListener('click', async () => {
-            const text = userInput.value;
+        async function handleSend() {
+            const text = userInput.value.trim();
             if (!text) return;
 
-            appendMessage('Delta', text); // You are Delta
+            appendMessage('Delta', text);
             userInput.value = '';
 
-            // This is the call to our actual Django API
             const formData = new FormData();
             formData.append('text', text);
 
@@ -122,16 +164,16 @@
                     method: 'POST',
                     body: formData
                 });
+                if (!response.ok) throw new Error('API_FAILURE');
                 const data = await response.json();
-                appendMessage('Wu', data.reply); // The system is Wu
+                appendMessage('Wu', data.reply);
             } catch (e) {
-                appendMessage('Wu', 'ERROR: Communication with Neon Cloud severed.');
+                appendMessage('Wu', `<span style="color: #ef4444;">CRITICAL: Connection to Local Graph Engine severed.</span>`);
             }
-        });
+        }
 
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendBtn.click();
-        });
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
     </script>
 </body>
 </html>
