@@ -29,8 +29,7 @@ SECRET_KEY = 'django-insecure-^6dnu7gs-9s(#!191+bavcrbrs$320xnf^tn5@h=*-wgh=!0ne
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']  # Temporarily allow everything to clear the connection path
 
 # Application definition
 
@@ -41,7 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'delta_chat'
+    'rest_framework',
+    'delta_chat',
+    'interface.apps.InterfaceConfig',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +60,7 @@ ROOT_URLCONF = 'core_logic.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'interface/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,7 +88,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
 
 
 # Password validation
@@ -122,6 +122,10 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'interface/static'),
+]
 
 STATIC_URL = 'static/'
+
+

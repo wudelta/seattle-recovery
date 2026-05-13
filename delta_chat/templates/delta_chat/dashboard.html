@@ -1,179 +1,75 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Delta Console</title>
-    <style>
-        * { box-sizing: border-box; }
-        body, html { height: 100%; margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100vh; }
-        header { height: 60px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; padding: 0 20px; flex-shrink: 0; }
-        .main-content { display: flex; flex: 1; overflow: hidden; }
-        aside { width: 240px; background: #0f172a; border-right: 1px solid #334155; padding: 20px; flex-shrink: 0; }
-        main { display: flex; flex-direction: column; flex: 1; background: #020617; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .message { display: flex; gap: 15px; max-width: 90%; }
-        .avatar { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; color: white; }
-        .bubble { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #e2e8f0; width: 100%; }
-
-        /* Markdown Specific Styling */
-        pre { background: #000000 !important; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #475569; margin: 15px 0; position: relative; }
-        code { font-family: 'Consolas', 'Monaco', monospace; color: #38bdf8; font-size: 13px; }
-        p { margin: 8px 0; }
-        ul, ol { padding-left: 20px; }
-
-        /* Pygments Syntax Highlighting */
-        .codehilite .k { color: #f92672; font-weight: bold; }
-        .codehilite .n { color: #f8f8f2; }
-        .codehilite .s { color: #e6db74; }
-        .codehilite .nf { color: #a6e22e; }
-        .codehilite .nb { color: #66d9ef; }
-        .codehilite .c1 { color: #75715e; font-style: italic; }
-        .codehilite .mi { color: #ae81ff; }
-        .codehilite .o { color: #f92672; }
-        .codehilite .p { color: #f8f8f2; }
-
-        .copy-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #334155;
-            color: #94a3b8;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 10px;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.2s;
-        }
-
-        .copy-btn:hover {
-            background: #475569;
-            color: #f8fafc;
-        }
-
-        .input-area { background: #1e293b; border-top: 1px solid #334155; padding: 20px; flex-shrink: 0; }
-        .input-container { max-width: 900px; margin: 0 auto; display: flex; gap: 10px; }
-        input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 12px 15px; color: white; outline: none; }
-        input:focus { border-color: #0284c7; }
-        button { background: #0284c7; color: white; border: none; padding: 0 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #0ea5e9; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta Console | Wu Architect</title>
+    <link rel="stylesheet" href="{% static 'delta_chat/css/styles.css' %}">
 </head>
 <body>
     <div class="app-container">
         <header>
-            <h1 style="color: #38bdf8; font-size: 18px; letter-spacing: 1px; margin: 0;">DELTA_CONSOLE_V2</h1>
+            <h1 class="header-title">HopeHub</h1>
         </header>
         <div class="main-content">
             <aside>
-                <p style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-bottom: 10px;">System Status</p>
-                <p style="font-size: 13px; color: #10b981;">● Local Graph Active</p>
-                <p style="font-size: 11px; color: #64748b; margin-top: 20px;">Operator: Delta</p>
-                <p style="font-size: 11px; color: #64748b;">Brain: Llama 3.3-70b</p>
+                <div class="system-status">
+                    <p class="stat-label">System Status</p>
+                    <p id="system-status" class="status-active">Initializing...</p>
+                </div>
+                
+                <!-- Hooked Target: Active Brain Display Node -->
+                <div class="active-brain">
+                    <p class="stat-label">Active Brain</p>
+                    <p id="active-brain" class="model-val" style="transition: color 0.3s ease;">Architect (70B)</p>
+                </div>
+                
+                <!-- Hooked Target: Groq Token Fuel Visual Gauge Component -->
+                <div class="token-fuel">
+                    <p class="stat-label">Groq Token Fuel</p>
+                    <div class="gauge-container" style="background: #222; width: 100%; height: 10px; border-radius: 4px; overflow: hidden; border: 1px solid #444; margin-top: 5px;">
+                        <!-- Inner slider element responds to real-time API values -->
+                        <div id="token-gauge" style="background: #00ffff; width: 100%; height: 100%; transition: width 0.4s ease, background-color 0.4s ease;"></div>
+                    </div>
+                    <!-- Hooked Target: Numeric Fuel Tracker String Value -->
+                    <p id="token-count-display" class="stat-value" style="margin-top: 5px; font-size: 12px; color: #00ffff;">-- / --</p>
+                </div>
+                
+                <div class="operator-info">
+                    <p class="stat-label">Operator</p>
+                    <p class="operator-name">Delta</p>
+                </div>
+                
+                <div class="session-control">
+                    <p class="stat-label">Session Control</p>
+                    <button id="end-session-btn" class="btn-danger">CLOSE SESSION</button>
+                    <p id="session-stats" class="session-log"></p>
+                </div>
+                
+                <div class="manual-log">
+                    <p class="stat-label">Manual Log</p>
+                    <input type="number" id="manual-hours" placeholder="Hrs" style="width: 50px; font-size: 10px; padding: 4px;">
+                    <input type="text" id="manual-note" placeholder="Task..." style="width: 100px; font-size: 10px; padding: 4px;">
+                    <button onclick="logManualTime()" style="background: #38bdf8; font-size: 10px; padding: 5px;">ADD</button>
+                </div>
             </aside>
+            
             <main>
                 <div id="chat-window">
-                    <div class="message">
-                        <div class="avatar" style="background: #334155">W</div>
-                        <div class="bubble">
-                            <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0; text-transform: uppercase;">Wu</p>
-                            Connection established. Markdown rendering active. Ready for your project data, <strong>Delta</strong>.
-                        </div>
-                    </div>
+                  <pre id="response-output">{{ response_output }}</pre>
+                  <button class="copy-button" id="copy-button"></button>
                 </div>
                 <div class="input-area">
                     <div class="input-container">
-                        <input type="text" id="user-input" placeholder="Transmit data or query..." autocomplete="off">
+                        <!-- Matches your exact input tag parameters -->
+                        <textarea id="user-input" placeholder="Enter instruction or paste JSON..." autocomplete="off" rows="1"></textarea>
                         <button id="send-btn">SEND</button>
                     </div>
                 </div>
             </main>
         </div>
     </div>
-
-    <script>
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const sessionStart = new Date();
-
-        // Automatic Time Log Beacon
-        window.addEventListener('beforeunload', () => {
-            const sessionEnd = new Date();
-            const durationMinutes = Math.round((sessionEnd - sessionStart) / 60000);
-
-            if (durationMinutes >= 1) {
-                const formData = new FormData();
-                formData.append('text', `SYSTEM_LOG: Session ended. Duration: ${durationMinutes} minutes. #TimeLog`);
-
-                // Retrieve CSRF from cookies for Django security
-                const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
-                if (csrftoken) formData.append('csrfmiddlewaretoken', csrftoken);
-
-                navigator.sendBeacon('/delta/api/', formData);
-            }
-        });
-
-        function appendMessage(role, htmlContent) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message';
-            const color = (role === 'Delta') ? '#0284c7' : '#334155';
-            const char = role === 'Delta' ? 'D' : 'W';
-
-            msgDiv.innerHTML = `
-                <div class="avatar" style="background: ${color}">${char}</div>
-                <div class="bubble">
-                    <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0; text-transform: uppercase;">${role}</p>
-                    <div class="rich-text">${htmlContent}</div>
-                </div>
-            `;
-            chatWindow.appendChild(msgDiv);
-
-            // Injected Copy Buttons
-            msgDiv.querySelectorAll('pre').forEach((block) => {
-                const button = document.createElement('button');
-                button.innerText = 'Copy';
-                button.className = 'copy-btn';
-                button.addEventListener('click', () => {
-                    const code = block.querySelector('code').innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        button.innerText = 'Copied!';
-                        setTimeout(() => { button.innerText = 'Copy'; }, 2000);
-                    });
-                });
-                block.appendChild(button);
-            });
-
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        async function handleSend() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            appendMessage('Delta', text);
-            userInput.value = '';
-
-            const formData = new FormData();
-            formData.append('text', text);
-
-            try {
-                const response = await fetch('/delta/api/', {
-                    method: 'POST',
-                    body: formData
-                });
-                if (!response.ok) throw new Error('API_FAILURE');
-                const data = await response.json();
-                appendMessage('Wu', data.reply);
-            } catch (e) {
-                appendMessage('Wu', `<span style="color: #ef4444;">CRITICAL: Connection to Local Graph Engine severed.</span>`);
-            }
-        }
-
-        sendBtn.addEventListener('click', handleSend);
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
-    </script>
+    <script src="{% static 'delta_chat/js/script.js' %}"></script>
 </body>
 </html>
