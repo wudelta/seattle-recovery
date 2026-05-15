@@ -41,8 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'delta_chat',
-    'interface.apps.InterfaceConfig',
+    'aurora',
+    'hopehub',
 ]
 
 MIDDLEWARE = [
@@ -123,7 +123,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'interface/static'),
+    os.path.join(BASE_DIR, 'hopehub/static'),
 ]
 
 STATIC_URL = 'static/'
