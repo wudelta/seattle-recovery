@@ -142,23 +142,62 @@ if (userInput) {
 // ============================================================================
 if (endBtn) {
     endBtn.addEventListener('click', async () => {
-        if (!confirm("Close current session and log total time?")) return;
+        if (!confirm("Close current session and execute Janitor Clean Sweep?")) return;
+        
+        // Prevent double submissions and give visual feedback
+        endBtn.disabled = true;
+        endBtn.innerText = "🧹 Sweeping...";
+        endBtn.style.background = "#475569";
 
         try {
-            const response = await fetch('/delta/end_session/', { method: 'POST' });
+            // Note: Changed endpoint path to point directly to your views.py mapping
+            const response = await fetch('/delta/end_session/', { 
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server status anomaly: ${response.status}`);
+            }
+            
             const data = await response.json();
-
+            
             if (data.status === 'success') {
-                const mins = Math.round(data.duration / 60);
+                const mins = typeof data.duration === 'number' ? Math.round(data.duration / 60) : 0;
+                
+                // Update your session HUD dashboard metric indicator if it exists
                 const statsDisplay = document.getElementById('session-stats');
-                if (statsDisplay) statsDisplay.innerText = `● Session Logged: ${mins} mins`;
-
-                endBtn.disabled = true;
-                endBtn.style.background = "#334155";
-                appendMessage('Wu', `*Session documented and synthesized into structural summary node tracking metrics. Total: **${mins} minutes**. Systems standing by.*`);
+                if (statsDisplay) {
+                    statsDisplay.innerText = `● Session Cleared: ${mins} mins`;
+                }
+                
+                endBtn.innerText = "✅ Swept";
+                
+                // Print the Janitor's technical markdown summary straight into the chat view
+                appendMessage('Wu', `
+                    <div style="border-left: 3px solid #10b981; padding-left: 10px; color: #10b981; font-weight: bold; font-family: monospace; margin-bottom: 8px;">
+                        🧼 JANITOR CLEAN SWEEP COMPLETE
+                    </div>
+                    <p><em>Session data saved to disk and cleared from active graph memory. Duration: <strong>${mins} minutes</strong>.</em></p>
+                    <div style="background: #1e293b; padding: 12px; border-radius: 4px; border: 1px solid #334155; margin-top: 10px;">
+                        <strong style="color: #38bdf8; font-family: monospace;">[PROJECT_STATE.md SNAPSHOT]</strong>
+                        <p style="margin: 5px 0 0 0; line-height: 1.5; font-size: 13px; color: #cbd5e1;">${data.summary}</p>
+                    </div>
+                `);
+            } else {
+                alert(`Teardown execution message: ${data.message || 'Unknown processing halt'}`);
+                endBtn.disabled = false;
+                endBtn.innerText = "🛑 Close Session";
+                endBtn.style.background = "#dc2626";
             }
         } catch (error) {
             console.error("Session teardown transmission error caught:", error);
+            alert("Teardown link failed. Bypassing UI to attempt raw endpoint release...");
+            
+            // Emergency fallback: If AJAX fails, load the endpoint directly in your browser tab
+            window.location.href = '/delta/end_session/';
         }
     });
 }

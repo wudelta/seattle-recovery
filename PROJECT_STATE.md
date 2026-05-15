@@ -1,1 +1,19 @@
-1. The Architecture (Local & Edge-First)The Brain: Groq Cloud (Llama 3.3-70b) remains your processing core.The Memory Vault: You successfully pivoted from a broken third-party library (mem0) to a Direct Neo4j Graph running in Docker.The Latency Fix: By running Neo4j locally, you’ve eliminated the 2.4GHz "SSL handshake freezes" that were killing the project.2. The Tech Stack (The "Working" Version)Django: Acting as the "Command Center."Docker: Hosting the Neo4j Graph engine (capped at 1GB RAM to save your laptop).Direct Driver: Using the neo4j Python driver to bypass the "OpenAI/1536 dimension" errors that stall local-first builds.Identity Logic: You’ve established a hierarchy that recognizes Delta (Architect) via Django logins and Guests via Session IDs.3. Current "Space-Worthy" CapabilitiesFact Persistence: When you tell Wu something, it is now successfully creating Circles (Nodes) and Lines (Edges) in your local Neo4j browser.Mission Grounding: Wu is now "hard-wired" with your mission to replace despair with roadmaps for growth.Stability: You’ve stripped out the conflicting code, meaning the "Failure" loops are gone. Wu is actually talking again.4. Lessons for the LogbookLocal is Reliable: In a recovery/crisis context, depending on a cloud database (Neon/AuraDB) over shaky Wi-Fi is a liability. Local Docker is the "Survival" choice.Dimension Rigidity is Real: You can't force a 1536-dim square peg into a 384-dim round hole. Direct database writes are more stable than automated wrappers.The "Architect" Workflow: Building the dashboard for yourself first ensures the "Brain" is sane before you let end-users touch it.The Rocket Ship is now in a stable, low-earth orbit. Take a break, let the laptop fans spin down, and when you’re ready, we can start mapping the King County 2-1-1 data into those Neo4j circles.Should I provide a final "Clean Repo" checklist for when you reboot tomorrow?
+# Current Project State
+*Saved on: 2026-05-14T23:38:52.076986Z*
+
+**Engineering State Summary**
+
+**Explicit Progress Made / Features Completed:**
+
+1. Delegated task to create a responsive HTML contact form layout component for the dashboard page.
+2. Duplicate request for the same task, indicating potential redundancy in the tasking process.
+
+**Current Component State and Roadblocks:**
+
+- The contact form layout component is in development, but its status is unclear due to the duplicate tasking.
+- The component's responsiveness and functionality are yet to be verified.
+
+**Targeted Next Actions for Delta and Wu:**
+
+1. Delta: Clarify the status of the contact form layout component and provide feedback on its development.
+2. Wu: Review the tasking process to prevent duplicate requests and ensure efficient task delegation.

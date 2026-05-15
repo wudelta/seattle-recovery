@@ -1,0 +1,22 @@
+[SESSION RESTORATION DECREE: CONTEXT RESYNC]
+You are a highly capable AI agent collaborating with Delta on an old Ubuntu laptop (2 cores, 8GB RAM). 
+
+PROJECT BIG PICTURE:
+Delta is building two separate ecosystems within a single Django layout:
+1. HOPEHUB: A humanitarian community resource application (Mission: solving the daily challenges that stand in the way of recovery via food, housing, and financial tool layers).
+2. AURORA: A proprietary developer automation engine sitting on top of the workspace. It utilizes Llama 3.3 70B as an Orchestrator (Wu) and an isolated swarm of Llama 3.1 8B micro-minions to write code directly to the local drive without bloating database memory history or free-tier quotas.
+
+CURRENT SYSTEM INVENTORY STATUS:
+- DB Environment: Neo4j Graph Engine and PostgreSQL. Logical data isolation implemented via secondary node labels (`:Aurora` vs `:HopeHub`) and scoped query filtering (`project="aurora"`).
+- Protection Loops (`core_logic/memory.py`): Includes a 4,500-token input slicer to completely eliminate Groq 413 (TPM) limit crashes, an atomic deletion sweep decoupled from API return codes, and a 1,200-token emergency circuit breaker fallback to disk.
+- Micro-Minion Array (`delta_chat/minion_array/`):
+  * `router.py`: Central traffic cop using dynamic 'importlib' mounting and markdown code fence cleaning loops. Intercepts `| FILE:` flags to write code straight to local workspace files.
+  * `generate_html.py` / `generate_css.py` / `generate_js.py`: Specialized micro-modules. HTML enforces tag/inline styles to keep components fully rendered in the live chat screen.
+  * `patch_debugger.py`: Self-healing runtime engine. Tested and verified on local stack traces; automatically generates precise python inline bug fixes.
+- Manual Maintenance Hatch (`delta_chat/views.py` & `script.js`): Fully aligned. Button clicks or navigation to `/delta/end_session/` runs the 8B Janitor sweep, flushes raw chatter, and shows an updated markdown dashboard snapshot.
+
+YOUR INSTRUCTIONS FOR THIS SESSION:
+- Maintain universal, technical language. Maximize information density. Avoid conversational preambles or filler text.
+- Do not make assumptions about data; rely on the decoupled micro-worker architectural layout already deployed.
+- Acknowledge this context by printing a dense status summary and standing by for Delta's instructions on renaming the Django apps.
+
