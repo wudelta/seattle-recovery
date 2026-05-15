@@ -9,11 +9,11 @@ Delta is building two separate ecosystems within a single Django layout:
 CURRENT SYSTEM INVENTORY STATUS:
 - DB Environment: Neo4j Graph Engine and PostgreSQL. Logical data isolation implemented via secondary node labels (`:Aurora` vs `:HopeHub`) and scoped query filtering (`project="aurora"`).
 - Protection Loops (`core_logic/memory.py`): Includes a 4,500-token input slicer to completely eliminate Groq 413 (TPM) limit crashes, an atomic deletion sweep decoupled from API return codes, and a 1,200-token emergency circuit breaker fallback to disk.
-- Micro-Minion Array (`delta_chat/minion_array/`):
+- Micro-Minion Array (`aurora/minion_array/`):
   * `router.py`: Central traffic cop using dynamic 'importlib' mounting and markdown code fence cleaning loops. Intercepts `| FILE:` flags to write code straight to local workspace files.
   * `generate_html.py` / `generate_css.py` / `generate_js.py`: Specialized micro-modules. HTML enforces tag/inline styles to keep components fully rendered in the live chat screen.
   * `patch_debugger.py`: Self-healing runtime engine. Tested and verified on local stack traces; automatically generates precise python inline bug fixes.
-- Manual Maintenance Hatch (`delta_chat/views.py` & `script.js`): Fully aligned. Button clicks or navigation to `/delta/end_session/` runs the 8B Janitor sweep, flushes raw chatter, and shows an updated markdown dashboard snapshot.
+- Manual Maintenance Hatch (`aurora/views.py` & `script.js`): Fully aligned. Button clicks or navigation to `/delta/end_session/` runs the 8B Janitor sweep, flushes raw chatter, and shows an updated markdown dashboard snapshot.
 
 YOUR INSTRUCTIONS FOR THIS SESSION:
 - Maintain universal, technical language. Maximize information density. Avoid conversational preambles or filler text.

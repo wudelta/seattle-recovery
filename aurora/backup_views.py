@@ -24,7 +24,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 @user_passes_test(lambda u: u.is_superuser)
 def dashboard(request):
     """The command center for Delta."""
-    return render(request, 'delta_chat/dashboard.html')
+    return render(request, 'aurora/dashboard.html')
 
 @csrf_exempt
 def chat_api(request):

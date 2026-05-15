@@ -76,7 +76,7 @@ async function handleSend() {
     formData.append('text', text);
 
     try {
-        const response = await fetch('/delta/api/', { 
+        const response = await fetch('/aurora/api/', {
             method: 'POST',
             body: formData
         });

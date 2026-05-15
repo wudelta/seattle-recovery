@@ -21,7 +21,7 @@ def dispatch_to_minion(worker_type, task_details, fallback_context=""):
 
     try:
         # 2. Dynamically mount the micro-worker module
-        module_name = f"delta_chat.minion_array.{worker_type}"
+        module_name = f"aurora.minion_array.{worker_type}"
         worker_module = importlib.import_module(module_name)
         raw_code = worker_module.run(clean_task_details, fallback_context).strip()
         

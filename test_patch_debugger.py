@@ -9,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core_logic.settings")
 import django
 django.setup()
 
-from delta_chat.minion_array.router import dispatch_to_minion
+from aurora.minion_array.router import dispatch_to_minion
 
 def broken_function():
     """This function is mathematically broken and will crash."""
