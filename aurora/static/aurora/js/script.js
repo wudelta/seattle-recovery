@@ -151,7 +151,7 @@ if (endBtn) {
 
         try {
             // Note: Changed endpoint path to point directly to your views.py mapping
-            const response = await fetch('/delta/end_session/', { 
+            const response = await fetch('/aurora/end_session/', { 
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
