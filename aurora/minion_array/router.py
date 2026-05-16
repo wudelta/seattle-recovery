@@ -15,13 +15,22 @@ def dispatch_to_minion(worker_type, task_details, fallback_context=""):
     
     if "| FILE:" in task_details:
         parts = task_details.split("| FILE:")
-        clean_task_details = parts[0].strip()
-        # Clean away stray brackets or spaces from the end
-        target_file_path = parts[1].replace("]", "").strip()
+        # Split the second segment at the first newline to separate path from code
+        path_line_split = parts[1].split("\n", 1)
+        
+        # Isolate the clean file path and remove stray brackets
+        target_file_path = path_line_split[0].replace("]", "").strip()
+        
+        # The remaining text block is passed to the micro-minion
+        if len(path_line_split) > 1:
+            clean_task_details = path_line_split[1].strip()
+        else:
+            clean_task_details = ""
 
     try:
         # 2. Dynamically mount the micro-worker module
-        module_name = f"aurora.minion_array.{worker_type}"
+        # Open aurora/minion_array/router.py and modify line 24 to:
+        module_name = f"aurora.minion_array.generate_{worker_type}"
         worker_module = importlib.import_module(module_name)
         raw_code = worker_module.run(clean_task_details, fallback_context).strip()
         
