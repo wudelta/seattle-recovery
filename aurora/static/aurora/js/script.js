@@ -197,7 +197,7 @@ if (endBtn) {
             alert("Teardown link failed. Bypassing UI to attempt raw endpoint release...");
             
             // Emergency fallback: If AJAX fails, load the endpoint directly in your browser tab
-            window.location.href = '/delta/end_session/';
+            window.location.href = '/aurora/end_session/';
         }
     });
 }
@@ -217,7 +217,7 @@ if (manualHoursField && manualNoteField) {
         formData.append('note', note);
 
         try {
-            const response = await fetch('/delta/manual_log/', { method: 'POST', body: formData });
+            const response = await fetch('/aurora/manual_log/', { method: 'POST', body: formData });
             const data = await response.json();
 
             if (data.status === 'success') {

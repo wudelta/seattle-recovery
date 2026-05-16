@@ -9,4 +9,6 @@ urlpatterns = [
     path('api/', views.chat_api, name='chat_api'),
     path('end_session/', views.end_session_view, name='end_session'),  # Registered
     path('manual_log/', views.manual_time_log_view, name='manual_log'),
+    path('commit_file/', views.commit_file_view, name='aurora_commit_file'),
 ]
+
