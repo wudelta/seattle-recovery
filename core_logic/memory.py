@@ -103,6 +103,35 @@ class IsolatedMemoryEngine:
 # =====================================================================
 # VOLATILE CONTEXT LAYER: RAW CHATTER & TRANSIENT SESSION LOGS
 # =====================================================================
+def create_resource(user_id, data):
+    """Logs resource JSON payloads to the graph engine using strict metadata formatting."""
+    timestamp_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    query = """
+    MATCH (u:User {id: $user_id})
+    CREATE (r:Resource {
+        category: $category,
+        quantity: $quantity,
+        unit: $unit,
+        location: point({latitude: $lat, longitude: $lon}),
+        status: $status,
+        urgency: $urgency,
+        created_at: $created_at
+    })
+    CREATE (u)-[:PROVIDES]->(r)
+    """
+    coords = data.get('location_coords', {}).get('coordinates', [0, 0])
+    db.query(query, {
+        "user_id": user_id,
+        "category": data.get('category'),
+        "quantity": data.get('quantity', 0),
+        "unit": data.get('unit', 'units'),
+        "lat": coords[0],
+        "lon": coords[1],
+        "status": data.get('status', 'Available'),
+        "urgency": data.get('urgency_level', 'Medium'),
+        "created_at": timestamp_str
+    })
+
 def save_memory(user_id, text, role, session_id=None, project="aurora"):
     """Saves a temporary session chatter node partitioned strictly by project."""
     timestamp_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
