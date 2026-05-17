@@ -1,6 +1,6 @@
 # FILE: aurora/test_minions.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.584164+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:27.118526+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/tests/test_minions.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: test_python_minion_accepts_clean_syntax, runtime_evaluation_vector, test_python_minion_traps_invalid_syntax, broken_compilation_loop

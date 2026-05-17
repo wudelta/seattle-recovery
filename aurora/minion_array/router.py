@@ -1,6 +1,6 @@
 # FILE: aurora/router.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.554642+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.962339+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/minion_array/router.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: dispatch_to_minion, render_terminal_monitor

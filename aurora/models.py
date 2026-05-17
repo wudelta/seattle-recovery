@@ -1,6 +1,6 @@
 # FILE: aurora/models.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.285954+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.652799+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/models.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: __str__, __str__, __str__

@@ -1,6 +1,6 @@
 # FILE: aurora/generate_css.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.418984+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.808234+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/minion_array/generate_css.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: run

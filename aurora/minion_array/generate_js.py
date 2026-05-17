@@ -1,6 +1,6 @@
 # FILE: aurora/generate_js.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.425940+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.830416+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/minion_array/generate_js.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: run

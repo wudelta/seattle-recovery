@@ -1,6 +1,6 @@
 # FILE: aurora/views.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.243439+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.608607+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/views.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: wu_director, dashboard, chat_api, manual_time_log_view, end_session_view, get, post, get, post, get, post, execute_baseline_sanity_checks, commit_file_view
@@ -18,13 +18,16 @@ import json
 import logging
 import traceback
 import markdown
+import subprocess
 import importlib.util
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.shortcuts import render
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.core.cache import cache
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -37,6 +40,26 @@ from .serializers import DocumentSerializer, MetadataSerializer, ContentSerializ
 # Consolidated Core Graph Logic Imports
 from core_logic.memory import save_memory, get_recent_context, create_resource, summarize_session
 from core_logic.sessions import start_session, end_session, log_manual_time
+
+@login_required
+def console_dashboard(request):
+    """
+    Renders the central core dashboard cockpit, pre-loading 
+    the un-ingested offline daily brief plain-text staging block.
+    """
+    local_brief_content = ""
+    
+    # Read the current physical offline file state to display on screen
+    if os.path.exists(BRIEF_FILE_PATH):
+        with open(BRIEF_FILE_PATH, 'r', encoding='utf-8') as f:
+            local_brief_content = f.read()
+            
+    context = {
+        'local_brief_content': local_brief_content,
+        'session_active': False,  # Keeps the staging panel visible on initial load
+    }
+    # FIXED: Swapped console.html out for dashboard.html to target your pristine template asset
+    return render(request, 'aurora/dashboard.html', context)
 
 @csrf_exempt
 def wu_director(request):
@@ -213,29 +236,89 @@ def manual_time_log_view(request):
         log_manual_time(user_id, hours, note)
         return JsonResponse({'status': 'success', 'message': f'Logged {hours} manual hours.'})
 
+logger = logging.getLogger("aurora.headless_ui")
+
 @csrf_exempt
 def end_session_view(request):
+    """
+    Manages session termination protocols: summarizes active session frames,
+    updates PostgreSQL tracking deltas, cleans up chatter graphs,
+    and runs atomic Git snapshot pipeline pushes to GitHub.
+    """
     user_id = request.user.username.lower() if request.user.is_authenticated else "delta"
     session_id = request.session.get('current_session_id')
     
     print(f"--- MANUAL SHUTDOWN TRIPPED: CLEAN SWEEP FOR {user_id} ---")
-    summary_result = summarize_session(user_id)
     
+    # 1. Neo4j Summary Node Generation and Background Chatter Cleanup
+    # This invokes your internal graph logic engine to wipe secondary chatter nodes.
+    try:
+        summary_result = summarize_session(user_id)
+    except Exception as graph_err:
+        summary_result = f"Graph engine cleanup execution warning: {str(graph_err)}"
+        print(summary_result)
+
+    # 2. Update PostgreSQL Session Delta Duration
     if session_id:
-        duration = end_session(session_id)
-        del request.session['current_session_id']
+        try:
+            duration = end_session(session_id)
+            if 'current_session_id' in request.session:
+                del request.session['current_session_id']
+        except Exception as sql_err:
+            duration = 0
+            print(f"PostgreSQL duration tracking anomaly: {str(sql_err)}")
     else:
         duration = "No active SQL session found. Cleaned graph state anyway."
+
+    # =========================================================================
+    # AUTOMATED GIT COMMIT & GITHUB PUSH PIPELINE SUITE
+    # =========================================================================
+    print("--- AUTOMATED SOURCE PROTECTION PIPELINE ACTIVATED ---")
+    git_logs = []
+    try:
+        # Step A: Stage all local modified code modifications cleanly
+        subprocess.run(["git", "add", "-A"], check=True, capture_output=True)
+        git_logs.append("Staged all changed repository assets successfully.")
         
+        # Step B: Capture baseline commit parameters
+        commit_msg = f"chore(session): automated save-point for session run {timezone.now().strftime('%Y-%m-%d')}"
+        
+        # Check if there are actual code changes staged before executing the commit
+        status_check = subprocess.run(["git", "diff", "--cached", "--quiet"])
+        if status_check.returncode == 1:  # 1 indicates there are changes waiting to be committed
+            subprocess.run(["git", "commit", "-m", commit_msg], check=True, capture_output=True)
+            git_logs.append(f"Committed session snapshot: '{commit_msg}'")
+            
+            # Step C: Dispatch changes directly to your remote upstream cloud server on GitHub
+            # Pushes to 'origin' using your active development branch 'main'
+            # FIXED: Removed the unused variable assignment to clear the Spyder editor warning flag
+            subprocess.run(["git", "push", "origin", "main"], check=True, capture_output=True, text=True)
+            git_logs.append("Pushed changes to GitHub repository core cleanly.")
+            git_logs.append("Pushed changes to GitHub repository core cleanly.")
+        else:
+            git_logs.append("No local modifications detected since session initialization pass.")
+            
+    except subprocess.CalledProcessError as git_err:
+        error_msg = f"Git operation failed: {git_err.stderr.strip() if git_err.stderr else str(git_err)}"
+        print(f"üîµ PIPELINE FAULT: {error_msg}")
+        git_logs.append(error_msg)
+    except Exception as general_git_err:
+        print(f"üîµ PIPELINE FAULT: {str(general_git_err)}")
+        git_logs.append(str(general_git_err))
+
+    # Append our Git execution steps onto the final screen snapshot text summary block
+    pipeline_summary = f"{summary_result}\n\n[GIT PIPELINE EXECUTION ENGINE]:\n" + "\n".join([f"- {log}" for log in git_logs])
+
+    # 3. Formulate Context Response Handshakes
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.method == "POST":
         return JsonResponse({
-            'status': 'success', 
-            'duration': duration, 
-            'summary': summary_result
+            'status': 'success',
+            'duration': duration,
+            'summary': pipeline_summary
         })
         
     return render(request, 'aurora/session_closed.html', {
-        'summary': summary_result, 
+        'summary': pipeline_summary,
         'duration': duration
     })
 
@@ -417,3 +500,67 @@ def commit_file_view(request):
             "ui_logs": ui_logs,
             "traceback": traceback.format_exc()
         }, status=500)
+
+# Hardcoded text staging path limit
+BRIEF_FILE_PATH = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
+
+@login_required
+@require_POST
+def start_online_session(request):
+    """
+    Ingests the local offline text brief, runs time calculation tracking,
+    triggers 8B minion condensation, populates PostgreSQL EAV targets,
+    and returns initialization flags to switch UI layouts.
+    """
+    try:
+        from core_logic.minion_array import run_8b_translation
+        
+        # 1. Capture Time Baseline Metrics
+        session_start_time = timezone.now()
+        
+        # 2. Extract data payloads directly from local offline staging file
+        if not os.path.exists(BRIEF_FILE_PATH):
+            return JsonResponse({'success': False, 'error': f'Staging asset missing at: {BRIEF_FILE_PATH}'})
+            
+        with open(BRIEF_FILE_PATH, 'r', encoding='utf-8') as f:
+            raw_content = f.read().strip()
+            
+        # Fallback check if UI override sent text edits
+        ui_override = request.POST.get('brief_content', '').strip()
+        if ui_override:
+            raw_content = ui_override
+
+        if not raw_content:
+            return JsonResponse({'success': False, 'error': 'Daily brief file staging text block is empty.'})
+
+        # 3. Compute Local Offline Planning Duration using file statistics deltas
+        file_meta_stat = os.stat(BRIEF_FILE_PATH)
+        last_modified = timezone.make_aware(timezone.datetime.fromtimestamp(file_meta_stat.st_mtime))
+        planning_duration_seconds = max(0, int((session_start_time - last_modified).total_seconds()))
+
+        # 4. Route text directly through local Llama 8B execution layer
+        dense_abstract, objectives_json = run_8b_translation(raw_content)
+
+        # 5. Commit structured logging metrics to PostgreSQL
+        doc_entry = Document.objects.create(
+            title=f"Daily Brief - {session_start_time.strftime('%Y-%m-%d')}",
+            created_at=session_start_time
+        )
+        
+        # Append specifications to your single content field table space layout
+        Content.objects.get_or_create(document=doc_entry, content=f"dense_abstract: {dense_abstract}")
+        Content.objects.get_or_create(document=doc_entry, content=f"objectives_json: {objectives_json}")
+        Content.objects.get_or_create(document=doc_entry, content=f"planning_duration_seconds: {planning_duration_seconds}")
+
+        # 6. Securely clear local staging document file for your next planning turn
+        with open(BRIEF_FILE_PATH, 'w', encoding='utf-8') as f:
+            f.write("")
+
+        return JsonResponse({
+            'success': True,
+            'dense_abstract': dense_abstract,
+            'objectives': objectives_json
+        })
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

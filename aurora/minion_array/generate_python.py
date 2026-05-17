@@ -1,6 +1,6 @@
 # FILE: aurora/generate_python.py
 """
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.437420+00:00
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:26.849167+00:00
  PROJECT ECOSYSTEM: AURORA
  FILE PATH: aurora/minion_array/generate_python.py
  TECHNICAL MATRIX: Python Module. Exported Logic Components: run, self_test_integrity, self_test_integrity, inject_autospec_and_write
@@ -69,6 +69,7 @@ def inject_autospec_and_write(file_path, project_name, generated_code, architect
     # FIX: Added [1] to pull the extension string from the tuple before lowering it
     extension = os.path.splitext(filename)[1].lower()
     
+    # FIX: Swapped .create() out for .get_or_create() to block row pollution
     doc_entry, created = Document.objects.get_or_create(
         title=f"FileSpec: {project_name}/{filename}",
         defaults={'created_at': timezone.now()}
@@ -85,9 +86,20 @@ def inject_autospec_and_write(file_path, project_name, generated_code, architect
     elif extension == '.css':
         tech_description = "Cascading Style Layout Sheet enforcing responsive design constraints."
 
-    # Align with your PostgreSQL Content table layout
-    Content.objects.get_or_create(document=doc_entry, content=f"technical_description: {tech_description}")
-    Content.objects.get_or_create(document=doc_entry, content=f"file_path: {file_path}")
+    # 1. Combine everything into a clean Markdown block
+    combined_markdown_payload = (
+        f"**Technical Matrix:** {tech_description}\n\n"
+        f"**File Path Location:** `{file_path}`\n\n"
+        f"### Module Flow Architecture Diagram:\n"
+        f"```mermaid\n"
+        f"{architectural_flow_diagram}\n"
+        f"```"
+    )
+
+    # 2. Safe unique EAV lookup using the document key constraint
+    content_record, created = Content.objects.get_or_create(document=doc_entry)
+    content_record.content = combined_markdown_payload
+    content_record.save()
     
     comment_header = []
     future_imports = []
