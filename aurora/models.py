@@ -1,3 +1,18 @@
+# FILE: aurora/models.py
+"""
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.285954+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/models.py
+ TECHNICAL MATRIX: Python Module. Exported Logic Components: __str__, __str__, __str__
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[models.py] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+"""
 from django.db import models
 
 class Document(models.Model):

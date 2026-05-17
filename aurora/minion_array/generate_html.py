@@ -1,3 +1,18 @@
+# FILE: aurora/generate_html.py
+"""
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.550188+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/minion_array/generate_html.py
+ TECHNICAL MATRIX: Python Module. Exported Logic Components: run
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[generate_html.py] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+"""
 import os
 from groq import Groq
 

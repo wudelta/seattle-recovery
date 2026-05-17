@@ -1,3 +1,18 @@
+# FILE: aurora/patch_debugger.py
+"""
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.543508+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/minion_array/patch_debugger.py
+ TECHNICAL MATRIX: Python Module. Exported Logic Components: run
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[patch_debugger.py] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+"""
 import os
 from groq import Groq
 

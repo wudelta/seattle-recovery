@@ -1,3 +1,18 @@
+# FILE: aurora/admin.py
+"""
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.329031+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/admin.py
+ TECHNICAL MATRIX: Python Module. Exported Logic Components: get_formset
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[admin.py] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+"""
 # aurora/admin.py
 from django.contrib import admin
 from .models import Document, Metadata, Content

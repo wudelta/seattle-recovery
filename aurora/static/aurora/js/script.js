@@ -1,3 +1,18 @@
+// FILE: aurora/script.js
+/*
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.400759+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/static/aurora/js/script.js
+ TECHNICAL MATRIX: Javascript Client Architecture Asset.
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[script.js] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+*/
 // ============================================================================
 // 1. DOM ELEMENT BINDINGS & HANDSHAKES
 // ============================================================================

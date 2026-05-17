@@ -1,4 +1,18 @@
 # FILE: aurora/views.py
+"""
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:45.243439+00:00
+ PROJECT ECOSYSTEM: AURORA
+ FILE PATH: aurora/views.py
+ TECHNICAL MATRIX: Python Module. Exported Logic Components: wu_director, dashboard, chat_api, manual_time_log_view, end_session_view, get, post, get, post, get, post, execute_baseline_sanity_checks, commit_file_view
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[views.py] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[AURORA]
+ ```
+"""
 import os
 import json
 import logging

@@ -1,3 +1,18 @@
+// FILE: hopehub/styles.css
+/*
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T20:22:46.513079+00:00
+ PROJECT ECOSYSTEM: HOPEHUB
+ FILE PATH: hopehub/static/css/styles.css
+ TECHNICAL MATRIX: Cascading Style Layout Sheet enforcing responsive design constraints.
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[styles.css] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[HOPEHUB]
+ ```
+*/
 /* styles.css */
 
 body {
