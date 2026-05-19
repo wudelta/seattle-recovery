@@ -71,6 +71,8 @@
             </aside>
             
             <main>
+            <!-- Add this line to pass your brief data securely to the frontend script -->
+                <div id="aurora-raw-brief-data" style="display: none;">{{ local_brief_content }}</div>
                 <div id="chat-window">
                   <pre id="response-output">{{ response_output }}</pre>
                   <button class="copy-button" id="copy-button"></button>
@@ -86,5 +88,6 @@
         </div>
     </div>
     <script src="{% static 'aurora/js/script.js' %}"></script>
+    <script src="{% static 'aurora/js/overlay_planner.js' %}"></script>
 </body>
 </html>

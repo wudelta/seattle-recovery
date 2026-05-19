@@ -201,23 +201,26 @@ BRIEF_FILE_PATH = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt'
 
 @login_required
 def console_dashboard(request):
-    print(f"\n📥 [console_dashboard] Query received: {request}")
     """
-    Renders the central core dashboard cockpit, pre-loading 
-    the un-ingested offline daily brief plain-text staging block.
+    Renders the Aurora configuration panel. 
+    Guarantees a completely fresh disk read of the briefing workspace on every single load.
     """
-    local_brief_content = ""
+    # 1. Establish the absolute path dynamically
+    brief_path = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
     
-    # Read the current physical offline file state to display on screen
-    if os.path.exists(BRIEF_FILE_PATH):
-        with open(BRIEF_FILE_PATH, 'r', encoding='utf-8') as f:
+    # 2. FORCE a real-time read inside the function body so cache cannot intervene
+    try:
+        with open(brief_path, 'r', encoding='utf-8') as f:
             local_brief_content = f.read()
-            
+    except Exception as e:
+        local_brief_content = f"Error reading brief workspace from disk: {str(e)}"
+
+    # 3. Pass the fresh string cleanly to your dashboard context
     context = {
         'local_brief_content': local_brief_content,
-        'session_active': False,  # Keeps the staging panel visible on initial load
+        'session_active': False,  # Keeps the staging planning panel visible on load
     }
-    # FIXED: Swapped console.html out for dashboard.html to target your pristine template asset
+    
     return render(request, 'aurora/dashboard.html', context)
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -274,3 +277,25 @@ def determine_orchestration_path(user_message):
     # 4. Fallback Error: You said DELEGATE, but Wu couldn't find a file matching your keyword hint
     print("❌ [MATCH FAILED] 'DELEGATE' requested, but no matching minion file discovered.")
     return "handoff_failed", available_minions
+
+@csrf_exempt
+def save_daily_brief(request):
+    """Saves the current text workspace back to daily_brief.txt without breaking session state."""
+    if request.method == 'POST':
+        try:
+            # 1. Parse the text data coming from the browser
+            data = json.loads(request.body)
+            updated_text = data.get('brief_text', '')
+            
+            # 2. Pinpoint your exact file path on disk
+            brief_path = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
+            
+            # 3. Cleanly overwrite the file with your new workspace edits
+            with open(brief_path, 'w', encoding='utf-8') as f:
+                f.write(updated_text)
+                
+            return JsonResponse({'status': 'success', 'message': 'Disk updated successfully.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

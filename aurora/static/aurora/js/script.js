@@ -30,9 +30,8 @@ document.addEventListener("DOMContentLoaded", function() {
     overlay.id = "aurora-brief-overlay-layer";
     
     // Fallback extraction block to read from response pane template context string if available
-    const fallbackPane = document.getElementById("response-output");
-    const briefRawInitialText = fallbackPane ? fallbackPane.innerText.trim() : "Tweak some minor HTML elements inside the console layout panel view.\nBuild dynamic morning brief endpoints.";
-
+    const briefDataPane = document.getElementById("aurora-raw-brief-data");
+    const briefRawInitialText = briefDataPane ? briefDataPane.innerText.trim() : "Build dynamic morning brief endpoints.";
     overlay.innerHTML = `
         <div class="brief-modal">
             <div class="brief-title">⚡ OFFLINE PLANNING MATRIX BUFFER // SESSION TIME ACCUMULATOR: <span id="brief-ticker">00:00:00</span></div>
