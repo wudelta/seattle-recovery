@@ -1,0 +1,1 @@
+today i want to break out the daily brief into it's own view instead of the overlay to the console. if time permits we will add a journal.

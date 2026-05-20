@@ -15,11 +15,14 @@
 """
 # aurora/urls.py
 from django.urls import path
-from . import views  # Just one import!
+from . import views
+
+app_name = 'aurora' 
 
 urlpatterns = [
+    path('', views.aurora_landing, name='landing'), 
     path('process/', views.wu_director, name='wu_director'),
-    path('', views.console_dashboard, name='aurora_dashboard'),
+    path('dashboard/', views.console_dashboard, name='aurora_dashboard'),
     path('save_brief/', views.save_daily_brief, name='save_daily_brief'),
     path('api/', views.chat_api, name='chat_api'),
     path('end_session/', views.end_session_view, name='end_session'), 

@@ -9,5 +9,5 @@ urlpatterns = [
     path('documents/', views.DocumentView.as_view()),
     path('metadata/', views.MetadataView.as_view()),
     path('content/', views.ContentView.as_view()),
-    path('aurora/', include('aurora.urls')),
+    path('aurora/', include('aurora.urls', namespace='aurora')),    
 ]
