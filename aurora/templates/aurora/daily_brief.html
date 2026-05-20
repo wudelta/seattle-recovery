@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aurora | Daily Brief Workspace</title>
+    <!-- Link to your isolated custom stylesheet asset -->
+    <link rel="stylesheet" href="{% static 'aurora/css/daily_brief.css' %}" />
+</head>
+<body>
+<div class="workspace-container">
+    
+    <div class="header-bar">
+        <div>
+            <h2>Daily System Briefing Workspace</h2>
+            <p style="color: #94a3b8; font-size: 14px; margin: 4px 0 0 0;">Modify your offline system documentation here. Saving updates the raw file on disk immediately.</p>
+        </div>
+        <div class="time-accumulator" id="session-timer">TIME: 00:00:00</div>
+    </div>
+
+    <form method="POST" action="{% url 'aurora:aurora_daily_brief' %}">
+        {% csrf_token %}
+        <textarea id="brief-text" name="brief_text" oninput="checkTextState()">{{ brief_content }}</textarea>
+
+        <div class="action-bar">
+            <div class="btn-group">
+                <button type="button" onclick="copyPromptToClipboard()" class="btn-copy">Copy Prompt</button>
+                <button type="submit" id="save-btn" class="btn-save" disabled>Save</button>
+                <a href="{% url 'aurora:aurora_dashboard' %}" id="exit-btn" class="nav-link">Exit</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Inject your isolated tracking script asset -->
+<script src="{% static 'aurora/js/daily_brief.js' %}"></script>
+</body>
+</html>

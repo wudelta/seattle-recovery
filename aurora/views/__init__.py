@@ -9,3 +9,4 @@ from .start_online_session import start_online_session
 from .minion_clicks import wu_director, manual_time_log_view
 from .documentation import DocumentView, MetadataView, ContentView 
 from .wu_orchestration import save_daily_brief
+from .daily_brief import daily_brief_view

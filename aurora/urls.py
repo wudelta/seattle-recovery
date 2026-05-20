@@ -29,4 +29,5 @@ urlpatterns = [
     path('manual_log/', views.manual_time_log_view, name='manual_log'),
     path('commit_file/', views.commit_file_view, name='aurora_commit_file'),
     path('api/session/start/', views.start_online_session, name='start_online_session'),
+    path('daily_brief/', views.daily_brief_view, name='aurora_daily_brief'),
 ]
