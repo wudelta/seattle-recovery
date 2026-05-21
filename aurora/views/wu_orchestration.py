@@ -277,25 +277,3 @@ def determine_orchestration_path(user_message):
     # 4. Fallback Error: You said DELEGATE, but Wu couldn't find a file matching your keyword hint
     print("❌ [MATCH FAILED] 'DELEGATE' requested, but no matching minion file discovered.")
     return "handoff_failed", available_minions
-
-@csrf_exempt
-def save_daily_brief(request):
-    """Saves the current text workspace back to daily_brief.txt without breaking session state."""
-    if request.method == 'POST':
-        try:
-            # 1. Parse the text data coming from the browser
-            data = json.loads(request.body)
-            updated_text = data.get('brief_text', '')
-            
-            # 2. Pinpoint your exact file path on disk
-            brief_path = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
-            
-            # 3. Cleanly overwrite the file with your new workspace edits
-            with open(brief_path, 'w', encoding='utf-8') as f:
-                f.write(updated_text)
-                
-            return JsonResponse({'status': 'success', 'message': 'Disk updated successfully.'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-            
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

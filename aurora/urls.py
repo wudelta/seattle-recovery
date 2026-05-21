@@ -23,7 +23,6 @@ urlpatterns = [
     path('', views.aurora_landing, name='landing'), 
     path('process/', views.wu_director, name='wu_director'),
     path('dashboard/', views.console_dashboard, name='aurora_dashboard'),
-    path('save_brief/', views.save_daily_brief, name='save_daily_brief'),
     path('api/', views.chat_api, name='chat_api'),
     path('end_session/', views.end_session_view, name='end_session'), 
     path('manual_log/', views.manual_time_log_view, name='manual_log'),

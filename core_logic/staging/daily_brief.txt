@@ -1,1 +1,19 @@
-today i want to break out the daily brief into it's own view instead of the overlay to the console. if time permits we will add a journal.****
+hi wu, this is delta. here is my daily brief and the tasks to work on:
+
+create a model and view for a journal of personal thoughts and reflections. this will be a key feature in hopehub later. this will be used later to do progress assessments but i want it now for myself and to use as a test case. i want to discuss whether this should be stored in neo4j or postgres.
+
+create a model in postgres to save the daily brief. this will feed into the project plan and the start session procedures. make sure daily brief is accurately tracking time.
+
+i think i want to move summaries from neo4j to postgres. these are critical and i have lost too many things in neo4j. perhaps this warrants a larger discussion on how we store data and the advantages of each data store.
+
+create a project plan feature that incorporates daily briefs and past summaries and will be tied into start session procedures. this will be able to prioritize tasks and mark tasks as future features, in-process, or completed. these tasks will be assigned to a project phase. phases need to be identified as pre-launch, beta-test, go-live, and future upgrades. tasks also need to be categorized at critical, important and nice-to-have. they also need to be categorized by estimated time to complete. this way we can choose things based on how much time i have to work in the current session and get some little wins. i know there are sophisticated project plan apps out there, but i want a narrowly focused plan just for me. i want my reliance on external packages to be minimal and i want a just-what-i-need approach. if there are pre-developed things that can be tied into aurora then fine, but i want you to help keep me focused on the most important things first. you will analyze the project plan feature and make recommendations.
+
+review start session and close session procedures, automate and test.
+
+create a timelog in postgres and make sure daily brief and active sessions are accurately tracking time.
+
+tweak the dashboard UI to fix layout and add a terminal monitor to show whats happening. 
+
+evaluate the tasks above and create the dependencies so that we can prioritize, but the journal is the first thing. i need to take care of me so i can stay productive and motivated.
+
+target date for all of this to be completed is EOD Monday the 25th of May. target date for beta-test is August 15.

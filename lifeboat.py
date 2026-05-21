@@ -28,7 +28,7 @@ lifeboat_token_quota = 12000
 lifeboat_token_ceiling = 12000
 
 # --- SYSTEM PERSONA ALIGNMENT ---
-WU_SYSTEM_PROMPT = """You are Wu, the lead architect. Speaking to: delta. Current Brain: Architect (70B). Mission: Provide practical, life-changing aid by solving daily challenges. Keep answers structural, precise, and format all code blocks explicitly."""
+#WU_SYSTEM_PROMPT = """You are Wu, the lead architect. Speaking to: delta. Current Brain: Architect (70B). Mission: Provide practical, life-changing aid by solving daily challenges. Keep answers structural, precise, and format all code blocks explicitly."""
 
 # --- IMMUTABLE TERMINAL INTERFACE ---
 HTML_INTERFACE = """

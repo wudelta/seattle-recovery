@@ -1,18 +1,31 @@
-# FILE: hopehub/models.py
-"""
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:27.262723+00:00
- PROJECT ECOSYSTEM: HOPEHUB
- FILE PATH: hopehub/models.py
- TECHNICAL MATRIX: Python Module. Exported Logic Components: 
-
- ARCHITECTURAL FLOW DIAGRAM:
- ```mermaid
- graph TD
-    A[models.py] --> B(System Kernel)
-    B --> C{Ecosystem Check}
-    C -->|Project Bind| D[HOPEHUB]
- ```
-"""
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
+class JournalEntry(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    emotion = models.CharField(max_length=50, choices=[
+        ('HAPPY', 'Happy'),
+        ('SAD', 'Sad'),
+        ('NEUTRAL', 'Neutral'),
+        ('ANGRY', 'Angry'),
+        ('FEARFUL', 'Fearful'),
+    ])
+    mood_rating = models.IntegerField(choices=[
+        (1, 'Very Low'),
+        (2, 'Low'),
+        (3, 'Neutral'),
+        (4, 'High'),
+        (5, 'Very High'),
+    ])
+    tags = models.ManyToManyField('Tag', blank=True)
+    categories = models.ManyToManyField('Category', blank=True)
+    image = models.ImageField(upload_to='journal_images', blank=True, null=True)
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+class Category(models.Model):
+    name = models.CharField(max_length=50, unique=True)
