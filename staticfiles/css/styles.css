@@ -1,0 +1,88 @@
+// FILE: hopehub/styles.css
+/*
+ AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:27.349979+00:00
+ PROJECT ECOSYSTEM: HOPEHUB
+ FILE PATH: hopehub/static/css/styles.css
+ TECHNICAL MATRIX: Cascading Style Layout Sheet enforcing responsive design constraints.
+
+ ARCHITECTURAL FLOW DIAGRAM:
+ ```mermaid
+ graph TD
+    A[styles.css] --> B(System Kernel)
+    B --> C{Ecosystem Check}
+    C -->|Project Bind| D[HOPEHUB]
+ ```
+*/
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.display-window {
+    margin-bottom: 20px;
+}
+
+.display-window h1 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.display-window blockquote {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.display-window p {
+    font-size: 16px;
+    color: #666;
+}
+
+.chat-interface {
+    margin-top: 20px;
+}
+
+.chat-interface input[type="text"] {
+    width: 70%;
+    height: 30px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+}
+
+.chat-interface button {
+    width: 20%;
+    height: 30px;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.chat-interface button:hover {
+    background-color: #3e8e41;
+}
+
+#chat-log {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}

@@ -122,10 +122,15 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'hopehub/static'),
-]
+# https://djangoproject.com
 
+# The URL prefix used when serving static files
 STATIC_URL = 'static/'
 
+# Where Django looks for additional static files during development
+STATICFILES_DIRS = [
+    BASE_DIR / 'hopehub' / 'static',
+]
 
+# The absolute path where collectstatic will collect files for deployment
+STATIC_ROOT = BASE_DIR / 'staticfiles'

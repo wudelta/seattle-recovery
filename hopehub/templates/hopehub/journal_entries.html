@@ -1,11 +1,89 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>HopeHub Journal Entries</title>
-</head>
-<body>
-    <h1>HopeHub Journal Entries</h1>
-    <!-- Add journal entry content here -->
-    <p>This is a placeholder for journal entry content.</p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    
+    <!-- Header Area with Call-to-Action Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1 class="h2 text-dark font-weight-bold mb-0">Journal Entries</h1>
+        <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary shadow-sm">
+            + New Journal Entry
+        </a>
+    </div>
+
+    <!-- Check if any entries exist -->
+    {% if journal_entries %}
+        <div class="row">
+            {% for journal_entry in journal_entries %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    
+                    <!-- Individual Entry Card -->
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body d-flex flex-column">
+                            
+                            <!-- Journal Main Text Content -->
+                            <p class="card-text text-dark font-weight-medium flex-grow-1 mb-3">
+                                {{ journal_entry.text }}
+                            </p>
+                            
+                            <!-- Meta Information Area -->
+                            <div class="border-top pt-3 mt-auto">
+                                <div class="row no-gutters mb-2">
+                                    <div class="col-6 small text-muted">
+                                        <strong>Emotion:</strong> {{ journal_entry.emotion }}
+                                    </div>
+                                    <div class="col-6 small text-muted text-right">
+                                        <strong>Mood:</strong> 
+                                        <span class="badge badge-secondary px-2 py-1">{{ journal_entry.mood_rating }}/10</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tags Container -->
+                                {% if journal_entry.tags.all %}
+                                    <div class="mb-2">
+                                        <span class="small text-muted d-block mb-1">Tags:</span>
+                                        {% for tag in journal_entry.tags.all %}
+                                            <span class="badge badge-light border text-secondary mr-1 mb-1">{{ tag }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Categories Container -->
+                                {% if journal_entry.categories.all %}
+                                    <div class="mb-3">
+                                        <span class="small text-muted d-block mb-1">Categories:</span>
+                                        {% for category in journal_entry.categories.all %}
+                                            <span class="badge badge-info mr-1 mb-1">{{ category }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Action Footer Inside Card -->
+                            <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-2 d-flex justify-content-end">
+                                <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary mr-2 px-3">
+                                    Edit
+                                </a>
+                                <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">
+                                    Delete
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State UI -->
+        <div class="text-center py-5 bg-light rounded shadow-sm border">
+            <p class="text-muted mb-3">You haven't written any journal entries yet.</p>
+            <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary">
+                Write Your First Entry
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
