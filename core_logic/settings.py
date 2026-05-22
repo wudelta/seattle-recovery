@@ -134,3 +134,9 @@ STATICFILES_DIRS = [
 
 # The absolute path where collectstatic will collect files for deployment
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Absolute filesystem path to the directory that will hold user-uploaded files
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# URL that handles the media served from MEDIA_ROOT
+MEDIA_URL = 'media/'
