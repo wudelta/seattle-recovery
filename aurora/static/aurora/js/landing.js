@@ -8,19 +8,20 @@ const nodes = new vis.DataSet([
     
     // External / Data Ecosystem
     { id: 3, label: 'Neo4j', url: "http://localhost:7474/browser/", color: '#f97316', target: '_blank' },
+    { id: 4, label: 'PgWeb', url: "http://localhost:8081/", color: '#f97316', target: '_blank' },
     
     // Admin & Security
-    { id: 4, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
+    { id: 5, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
     
     // User Spaces
-    { id: 5, label: 'HopeHub', url: "/aurora/", color: '#d946ef', target: '_blank' },
+    { id: 6, label: 'HopeHub', url: "/aurora/", color: '#d946ef', target: '_blank' },
     
     // Logs & Tracking
-    { id: 6, label: 'Journal', url: "/aurora/", color: '#10b981' },
-    { id: 7, label: 'Daily Brief', url: "/aurora/daily_brief/", color: '#10b981' },
+    { id: 7, label: 'Journal', url: "/hopehub/journal_entries/", color: '#10b981' },
+    { id: 8, label: 'Daily Brief', url: "/aurora/daily_brief/", color: '#10b981' },
 
     // External Tools / Code Repo
-    { id: 8, label: 'GitHub', url: "https://github.com", color: '#94a3b8', target: '_blank' }
+    { id: 9, label: 'GitHub', url: "https://github.com", color: '#94a3b8', target: '_blank' }
 ]);
 
 // Connect the cluster together
@@ -31,7 +32,8 @@ const edges = new vis.DataSet([
     { from: 1, to: 5 },
     { from: 1, to: 6 },
     { from: 1, to: 7 },
-    { from: 1, to: 8 }
+    { from: 1, to: 8 },
+    { from: 1, to: 9 }
 ]);
 
 const container = document.getElementById('network-container');

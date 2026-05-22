@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}HopeHub{% endblock %}</title>
+    <h1 class="h2 text-dark font-weight-bold mb-0">HopeHub</h1>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+
+<body>
+
+    <header>
+        <!-- This placeholder lets child templates inject their own unique menus -->
+        {% block navigation %}{% endblock %}
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 HopeHub</p> <!-- Updated year -->
+    </footer>
+
+    <script src="{% static 'js/jquery-3.2.1.slim.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

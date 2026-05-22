@@ -1,6 +1,8 @@
-hi wu, this is delta. here is my daily brief and the tasks to work on:
+i created a model and views for a journal in hopehub yesterday. today i want to tweak the UI and add timestamps to it. it needs to display the dates created and modified on existing entries at the top of the entry. i want to display the date at the top on the create and update views. cards should be boarded by boxes for separation. let's add a quote of the day feature just above the input box. the quote needs to be motivational and inspirational and i must be locally retrieved from the database so it works off-line. i also want the raw text encrypted in the database so if the database is compromised there nothing readable. there is a media upload button on the form. i didn't really ask for it but genesis gave it to me. i'm thinking it might be cool to take a photo and store it with it. kind of a chronicle of how people look over time, but i don't want to take up huge amounts of storage with it. discuss the pros and cons of this feature and determine if it's impractical.
 
-create a model and view for a journal of personal thoughts and reflections. this will be a key feature in hopehub later. this will be used later to do progress assessments but i want it now for myself and to use as a test case. i want to discuss whether this should be stored in neo4j or postgres.
+move the shared static files like bootstrap and vis to another location and fix the templates to find them. i am currently storing copies in each application and i don't want the storage bloat. also, if we update a library i don't want to replace it in multiple locations.
+
+i want to find a way to template the css. maybe there are libraries out there that do that. i don't want to spend a lot of time on styling new templates, but the look and feel needs to be consistent for each app. for example, i want a home button on every screen perhaps by displaying the application name on each screen and making it clickable. this can be accomplished in the base.html i assume.
 
 create a model in postgres to save the daily brief. this will feed into the project plan and the start session procedures. make sure daily brief is accurately tracking time.
 
@@ -15,5 +17,3 @@ create a timelog in postgres and make sure daily brief and active sessions are a
 tweak the dashboard UI to fix layout and add a terminal monitor to show whats happening. 
 
 evaluate the tasks above and create the dependencies so that we can prioritize, but the journal is the first thing. i need to take care of me so i can stay productive and motivated.
-
-target date for all of this to be completed is EOD Monday the 25th of May. target date for beta-test is August 15.

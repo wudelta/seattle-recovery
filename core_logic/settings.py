@@ -60,7 +60,7 @@ ROOT_URLCONF = 'core_logic.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'interface/templates')],
+        'DIRS': [], # Cleaned up legacy path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,8 +128,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Where Django looks for additional static files during development
-STATICFILES_DIRS = [
-    BASE_DIR / 'hopehub' / 'static',
+STATICFILES_DIRS = [ 
+    BASE_DIR / 'static',  # <-- ADD THIS: Points to your new shared root static folder
 ]
 
 # The absolute path where collectstatic will collect files for deployment
@@ -140,3 +140,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # URL that handles the media served from MEDIA_ROOT
 MEDIA_URL = 'media/'
+
