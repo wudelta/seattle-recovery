@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Fixed Height Full Screen Canvas Container -->
+<div class="container-fluid d-flex flex-column" style="height: calc(100vh - 56px); overflow: hidden;">
+    
+    <form method="post" enctype="multipart/form-data" novalidate class="d-flex flex-column h-100 py-3">
+        {% csrf_token %}
+
+        <!-- TOP ACTIONS HEADER -->
+        <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3 flex-shrink-0">
+            <div>
+                <h1 class="h4 font-weight-bold text-dark m-0">
+                    {% if form.instance.pk %}Edit Reflection{% else %}New Journal Reflection{% endif %}
+                </h1>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <a href="{% url 'hopehub:journal_entries' %}" class="btn btn-sm btn-outline-secondary px-4 mr-2 font-weight-bold">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-sm {% if form.instance.pk %}btn-success{% else %}btn-primary{% endif %} px-4 font-weight-bold shadow-sm">
+                    {% if form.instance.pk %}Save Changes{% else %}Publish Reflection{% endif %}
+                </button>
+            </div>
+        </div>
+        
+        <!-- MAIN CONTENT ROW -->
+        <div class="row flex-grow-1" style="min-height: 0;">
+            
+            <!-- LEFT PANEL: Primary Writing Focus Canvas -->
+            <div class="col-lg-8 h-100 pb-3 pb-lg-0">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-3 d-flex flex-column">
+                        
+                        <div class="form-group flex-grow-1 d-flex flex-column m-0">
+                            <label for="{{ form.text.id_for_label }}" class="text-uppercase small font-weight-bold text-muted tracking-wider mb-2 flex-shrink-0">
+                                {% if form.instance.pk %}Modify Your Thoughts{% else %}Write Your Thoughts{% endif %}
+                            </label>
+                            
+                            <div class="flex-grow-1 h-100" style="min-height: 0;">
+                                {{ form.text }}
+                            </div>
+                            
+                            {% if form.text.errors %}
+                                <div class="text-danger small mt-2 flex-shrink-0">
+                                    {% for error in form.text.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Sidebar Panel with Nested Footer -->
+            <div class="col-lg-4 h-100 d-flex flex-column justify-content-between overflow-auto pb-3 pb-lg-0">
+                
+                <div class="flex-shrink-0">
+                    <!-- Attributes Section Card -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body p-3">
+                            <h5 class="h6 font-weight-bold text-dark border-bottom pb-2 mb-3">Attributes</h5>
+                            
+                            <div class="form-group mb-3">
+                                <label for="{{ form.emotion.id_for_label }}" class="small font-weight-bold text-secondary">
+                                    Primary Emotion
+                                </label>
+                                {{ form.emotion }}
+                                {% if form.emotion.errors %}
+                                    <div class="text-danger small mt-1">{% for error in form.emotion.errors %}{{ error }}{% endfor %}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group mb-0">
+                                <label for="{{ form.mood_rating.id_for_label }}" class="small font-weight-bold text-secondary">
+                                    Mood Rating (1 - 5)
+                                </label>
+                                {{ form.mood_rating }}
+                                {% if form.mood_rating.errors %}
+                                    <div class="text-danger small mt-1">{% for error in form.mood_rating.errors %}{{ error }}{% endfor %}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Attachment Card -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body p-3">
+                            <h5 class="h6 font-weight-bold text-dark border-bottom pb-2 mb-3">Media Attachment</h5>
+
+                            <div class="form-group mb-0">
+                                <label for="{{ form.image.id_for_label }}" class="small font-weight-bold text-secondary d-block mb-2">
+                                    Attach an Image
+                                </label>
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="text-danger small mt-1">{% for error in form.image.errors %}{{ error }}{% endfor %}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer completely tucked away inside the scroll-free column -->
+                <div class="text-center text-lg-left pt-2 px-1 flex-shrink-0">
+                    <p class="text-muted small mb-0">&copy; 2026 HopeHub</p>
+                </div>
+
+            </div>
+            
+        </div>
+    </form>
+</div>
+
+<style>
+    textarea.form-control { height: 100% !important; width: 100% !important; resize: none; border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 1rem; }
+    .form-control:focus { border-color: #a3bffa; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+    .custom-select { display: inline-block; width: 100%; height: calc(2.25rem + 2px); padding: .375rem 1.75rem .375rem .75rem; line-height: 1.5; color: #495057; vertical-align: middle; background: #fff url("data:image/svg+xml,%3csvg xmlns='http://w3.org' viewBox='0 0 4 5'%3e%3cpath fill='%23343a40' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right .75rem center/8px 10px; border: 1px solid #ced4da; border-radius: .25rem; appearance: none; }
+    /* Tells base.html's footer container to vanish on this template screen */
+    body > footer, footer {
+    display: none !important;
+}
+
+</style>
+{% endblock %}

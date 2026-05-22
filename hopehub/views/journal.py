@@ -1,44 +1,47 @@
-from django.views.generic import TemplateView, CreateView, UpdateView, DeleteView
+from django.views.generic import TemplateView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models import JournalEntry
 from .forms import JournalEntryForm
 
+# Keep your main dashboard view as-is...
 class JournalView(LoginRequiredMixin, TemplateView):
     template_name = 'hopehub/journal_entries.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Fix: Filter entries so users only see their own journal history
         context['journal_entries'] = JournalEntry.objects.filter(user=self.request.user).order_by('-created_at')
         return context
 
-class CreateJournalEntryView(LoginRequiredMixin, CreateView):
+# NEW: Combined View for both Create and Update operations
+class ProcessJournalEntryView(LoginRequiredMixin, UpdateView):
     model = JournalEntry
     form_class = JournalEntryForm
-    template_name = 'hopehub/create_journal_entry.html'
-    # Add the 'hopehub:' namespace prefix here
-    success_url = reverse_lazy('hopehub:journal_entries') 
+    # Point both actions to a single unified template file
+    template_name = 'hopehub/journal_entry_form.html'
+    success_url = reverse_lazy('hopehub:journal_entries')
 
+    # This method allows this class to double as a CreateView if no pk is provided
+    def get_object(self, queryset=None):
+        if 'pk' in self.kwargs:
+            return super().get_object(queryset)
+        return None # Returning None tells Django to initialize a brand new empty model instance
+
+    # Auto-assign the logged-in user when creating a brand new record
     def form_valid(self, form):
-        form.instance.user = self.request.user
+        if not form.instance.pk:
+            form.instance.user = self.request.user
         return super().form_valid(form)
 
-class UpdateJournalEntryView(LoginRequiredMixin, UpdateView):
-    model = JournalEntry
-    form_class = JournalEntryForm
-    template_name = 'hopehub/update_journal_entry.html'
-    # Add the 'hopehub:' namespace prefix here
-    success_url = reverse_lazy('hopehub:journal_entries') 
-
+    # Security constraint: Restrict editing access to the entry's true owner
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
 
+# Keep your delete view as-is...
 class DeleteJournalEntryView(LoginRequiredMixin, DeleteView):
     model = JournalEntry
     template_name = 'hopehub/delete_journal_entry.html'
-    # Add the 'hopehub:' namespace prefix here
-    success_url = reverse_lazy('hopehub:journal_entries') 
+    success_url = reverse_lazy('hopehub:journal_entries')
 
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
