@@ -2,24 +2,18 @@
 const nodes = new vis.DataSet([
     // Core Anchor
     { id: 1, label: 'Aurora Core', color: '#38bdf8', size: 30 },
-    
     // Dashboards
     { id: 2, label: 'Console', url: "/aurora/dashboard/", color: '#818cf8' },
-    
     // External / Data Ecosystem
     { id: 3, label: 'Neo4j', url: "http://localhost:7474/browser/", color: '#f97316', target: '_blank' },
     { id: 4, label: 'PgWeb', url: "http://localhost:8081/", color: '#f97316', target: '_blank' },
-    
     // Admin & Security
     { id: 5, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
-    
     // User Spaces
     { id: 6, label: 'HopeHub', url: "/aurora/", color: '#d946ef', target: '_blank' },
-    
     // Logs & Tracking
     { id: 7, label: 'Journal', url: "/hopehub/journal_entries/", color: '#10b981' },
     { id: 8, label: 'Daily Brief', url: "/aurora/daily_brief/", color: '#10b981' },
-
     // External Tools / Code Repo
     { id: 9, label: 'GitHub', url: "https://github.com", color: '#94a3b8', target: '_blank' }
 ]);
@@ -42,25 +36,28 @@ const data = { nodes: nodes, edges: edges };
 const options = {
     nodes: {
         shape: 'dot',
-        font: { color: '#ffffff', size: 16 },
+        font: {
+            color: '#212529', // <-- FIXED: Changed from #ffffff to crisp dark text for Morph theme
+            size: 16
+        },
         chosen: {
             node: function(values, id, selected, hovering) {
                 if (hovering) {
                     values.size = values.size + 5;
-                    values.borderColor = '#ffffff';
+                    values.borderColor = '#212529'; // Darkened border color on hover
                     values.borderWidth = 2;
                 }
             },
             label: function(values, id, selected, hovering) {
                 if (hovering) {
-                    values.color = '#ffffff';
+                    values.color = '#000000'; // Pure black text when hovering over a node
                     values.mod = 'bold';
                 }
             }
         }
     },
     edges: {
-        color: '#475569',
+        color: '#94a3b8', // Light slate edge line color to look balanced on light backdrop
         width: 2
     },
     interaction: {
@@ -70,16 +67,15 @@ const options = {
 };
 
 const network = new vis.Network(container, data, options);
-
-const MIN_ZOOM = 0.5; 
-const MAX_ZOOM = 2.5; 
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
 
 // Boundary threshold management
 network.on("zoom", function (params) {
     const currentScale = network.getScale();
     let needsAdjustment = false;
     let targetScale = currentScale;
-
+    
     if (currentScale < MIN_ZOOM) {
         targetScale = MIN_ZOOM;
         needsAdjustment = true;
@@ -87,15 +83,12 @@ network.on("zoom", function (params) {
         targetScale = MAX_ZOOM;
         needsAdjustment = true;
     }
-
+    
     if (needsAdjustment) {
         network.setScale(targetScale);
     }
-
-    network.moveTo({
-        position: { x: 0, y: 0 },
-        animation: false
-    });
+    
+    network.moveTo({ position: { x: 0, y: 0 }, animation: false });
 });
 
 // Cursor UI triggers
@@ -112,7 +105,6 @@ network.on("click", function (params) {
     if (params.nodes.length > 0) {
         const nodeId = params.nodes[0];
         const clickedNode = nodes.get(nodeId);
-        
         if (clickedNode && clickedNode.url) {
             if (clickedNode.target === '_blank') {
                 window.open(clickedNode.url, '_blank', 'noopener,noreferrer');

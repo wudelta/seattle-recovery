@@ -29,4 +29,6 @@ urlpatterns = [
     path('commit_file/', views.commit_file_view, name='aurora_commit_file'),
     path('api/session/start/', views.start_online_session, name='start_online_session'),
     path('daily_brief/', views.daily_brief_view, name='aurora_daily_brief'),
+    # Isolated Data Endpoint
+    path('api/v1/stream/', views.wu_data_stream, name='wu_data_stream'),
 ]

@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aurora Portal{% endblock %}</title>
+    
+    <!-- Shared Global Morph Theme Core -->
+    <link rel="stylesheet" href="{% static 'css/aurora.bootstrap.min.css' %}">
+</head>
+<body>
+
+    <!-- This slot lets child templates plug in their screens -->
+    {% block content %}{% endblock %}
+
+    <!-- Core JavaScript Assets -->
+    <script src="{% static 'js/jquery-3.2.1.slim.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/vis-network.min.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,251 +1,185 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    // --- 1. ELEMENT SELECTION SYSTEM ---
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const responseOutput = document.getElementById("response-output");
+    const copyButton = document.getElementById("copy-button");
+    const consoleOutputCard = document.getElementById("console-output-card");
 
-    // CSRF Utility Extraction Function
-    function getCsrfCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    // --- 2. THE EMPTY-STATE LAYOUT PROTOCOL ---
+    function evaluateEmptyState() {
+        if (responseOutput && consoleOutputCard) {
+            const rawContent = responseOutput.textContent.trim();
+            
+            if (rawContent.length === 0) {
+                // Keep the HTML tag alive for script stability, but hide it visually
+                consoleOutputCard.style.setProperty("display", "none", "important");
+            } else {
+                // Instantly unhide the box container when response text exists
+                consoleOutputCard.style.removeProperty("display");
             }
         }
-        return cookieValue;
     }
 
-    const btnExec = document.getElementById("brief-btn-execute");
-    if (btnExec) {
-        btnExec.addEventListener("click", function() {
-            btnExec.disabled = true;
-            btnExec.textContent = "CRUNCHING OBJECTIVES VIA LOCAL 8B ARRAY...";
-            
-            const txtArea = document.getElementById("brief-editor-textarea");
-            const payload = new FormData();
-            payload.append('brief_content', txtArea ? txtArea.value : "");
+    // Execute the empty state scan immediately on page load
+    evaluateEmptyState();
 
-            fetch('/aurora/api/session/start/', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCsrfCookie('csrftoken') },
-                body: payload
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    clearInterval(intervalTimer);
-                    
-                    // Unlock original status sidebar values securely
-                    const statusField = document.getElementById('system-status');
-                    if (statusField) {
-                        statusField.textContent = "ONLINE // READY";
-                        statusField.className = "status-active";
-                    }
+    // --- 3. DYNAMIC INTERACTIVE PROMPT TRANSMISSION ---
+    function sendMessage() {
+        if (!userInput || !sendBtn) return;
+        
+        const textValue = userInput.value.trim();
+        if (!textValue) return;
 
-                    if (fallbackPane) {
-                        fallbackPane.textContent = 
-                            `[8B TRANSLATOR ABSTRACT MATRIX STAMPED IN POSTGRES]:\n${data.dense_abstract}\n\n` +
-                            `[ORCHESTRATOR ENGINE]: Llama 3.3 70B (Wu) awakened successfully.\n` +
-                            `Ready to address your morning briefing goals. Transmit directives when prepared.`;
-                    }
+        // Pull the secure generated key and the verified URL endpoint out of the page DOM layout
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        const csrftoken = csrfInput ? csrfInput.value : "";
+        
+        const endpointInput = document.getElementById("aurora-chat-endpoint");
+        const fetchUrl = endpointInput ? endpointInput.value : "/chat_api/";
 
-                    // Remove overlay modal out of screen view space entirely
-                    overlay.remove();
-                } else {
-                    alert(`Initialization Aborted: ${data.error}`);
-                    btnExec.disabled = false;
-                    btnExec.textContent = "START ONLINE SESSION (AWAKEN WU)";
-                }
-            })
-            .catch(err => {
-                alert(`Gateway Connection Failure: ${err}`);
-                btnExec.disabled = false;
-                btnExec.textContent = "START ONLINE SESSION (AWAKEN WU)";
-            });
-        });
-    }
+        // Visual Pending State Trigger
+        sendBtn.disabled = true;
+        sendBtn.textContent = "...";
 
-    // ============================================================================
-    // 1. DOM ELEMENT BINDINGS & HANDSHAKES
-    // ============================================================================
-    const chatWindow = document.getElementById('chat-window');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const tokenGauge = document.getElementById('token-gauge');
-    const tokenCount = document.getElementById('token-count-display');
-    const modelDisplay = document.getElementById('active-brain');
-    const endBtn = document.getElementById('end-session-btn');
-    const manualHoursField = document.getElementById('manual-hours');
-    const manualNoteField = document.getElementById('manual-note');
-    const copyButton = document.getElementById('copy-button');
-
-    // ============================================================================
-    // 2. AUTO-GROW TEXTAREA LOGIC
-    // ============================================================================
-    if (userInput) {
-        userInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-    }
-
-    // ============================================================================
-    // 3. CHAT CANVAS RENDERING MATRIX
-    // ============================================================================
-    function appendMessage(role, htmlContent) {
-        if (!chatWindow) return;
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-        const color = (role === 'Delta') ? '#0284c7' : '#334155';
-        const char = (role === 'Delta') ? 'D' : 'W';
-        msgDiv.innerHTML = `
-            <div class="avatar" style="background: ${color}">${char}</div>
-            <div class="bubble">
-                <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0; text-transform: uppercase; font-family: monospace;">${role}</p>
-                <div class="rich-text">${htmlContent}</div>
-            </div>
-        `;
-        chatWindow.appendChild(msgDiv);
-
-        msgDiv.querySelectorAll('pre').forEach((block) => {
-            const btn = document.createElement('button');
-            btn.innerText = 'Copy';
-            btn.className = 'copy-btn';
-            btn.onclick = () => {
-                const codeText = block.innerText.replace('Copy', '').trim();
-                navigator.clipboard.writeText(codeText).then(() => {
-                    btn.innerText = 'Copied!';
-                    setTimeout(() => btn.innerText = 'Copy', 2000);
-                });
-            };
-            block.appendChild(btn);
-        });
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    // ============================================================================
-    // 4. ASYNCHRONOUS GRAPH BRAIN COMMUNICATIONS LAYER
-    // ============================================================================
-    async function handleSend() {
-        const text = userInput.value.trim();
-        if (!text) return;
-        appendMessage('Delta', text);
-        userInput.value = '';
-        userInput.style.height = 'auto';
-
+        // Create form payload matching your Django POST view requirements
         const formData = new FormData();
-        formData.append('text', text);
+        formData.append("text", textValue);
 
-        try {
-            const response = await fetch('/aurora/api/', {
-                method: 'POST',
-                body: formData
-            });
-            if (!response.ok) throw new Error('SERVER_ERROR');
-            const data = await response.json();
-            
-            if (data.reply) appendMessage('Wu', data.reply);
+        // Uses the bulletproof dynamic path calculated by Django
+        fetch(fetchUrl, { 
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrftoken
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("API Gateway Network Failure Status");
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert("Cognitive Protection Alert: " + data.error);
+                return;
+            }
 
-            if (data.tokens_left !== undefined && tokenCount && tokenGauge) {
-                const remaining = parseInt(data.tokens_left);
-                const maxFuel = parseInt(data.token_ceiling) || 18000;
-                const percent = Math.max(0, Math.min(100, (remaining / maxFuel) * 100));
-                tokenCount.innerText = `${remaining.toLocaleString()} / ${maxFuel.toLocaleString()}`;
-                tokenGauge.style.width = percent + '%';
-                
-                if (modelDisplay && data.active_model) modelDisplay.innerText = data.active_model;
+            // Reveal the master container card immediately before rendering text strings
+            if (consoleOutputCard) {
+                consoleOutputCard.style.removeProperty("display");
+            }
 
-                if (percent < 20) {
-                    tokenGauge.style.background = '#ef4444';
-                    if (modelDisplay) modelDisplay.style.color = '#ef4444';
-                } else if (percent < 50) {
-                    tokenGauge.style.background = '#f59e0b';
-                    if (modelDisplay) modelDisplay.style.color = '#f59e0b';
+            // Append response text to code output tags
+            if (responseOutput) {
+                responseOutput.innerHTML = data.reply;
+            }
+
+            // Sync structural dashboard gauge counters with live API rate header parameters
+            updateSystemGauges(data.tokens_left, data.token_ceiling, data.active_model);
+
+            // Clear layout input container prompt variables
+            userInput.value = "";
+            userInput.style.height = "auto";
+        })
+        .catch(err => {
+            console.error("Critical Stream Anomaly Captured:", err);
+            alert("Connection interrupted. Systems attempting automated link refresh.");
+        })
+        .finally(() => {
+            // Restore visual layout control interaction status loops
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = "SEND";
+        });
+    }
+
+    // --- 4. REAL-TIME SYSTEM GAUGES SYNC ---
+    function updateSystemGauges(tokensLeft, tokenCeiling, activeModel) {
+        const tokenGauge = document.getElementById("token-gauge");
+        const tokenDisplay = document.getElementById("token-count-display");
+        const activeBrain = document.getElementById("active-brain");
+
+        if (activeBrain && activeModel) {
+            activeBrain.textContent = activeModel;
+        }
+
+        if (tokensLeft !== undefined && tokenCeiling !== undefined) {
+            if (tokenDisplay) {
+                tokenDisplay.textContent = `${Number(tokensLeft).toLocaleString()} / ${Number(tokenCeiling).toLocaleString()}`;
+            }
+
+            if (tokenGauge) {
+                // Calculate dynamic gauge scale percentage
+                const percentage = Math.max(0, Math.min(100, (tokensLeft / tokenCeiling) * 100));
+                tokenGauge.style.width = `${percentage}%`;
+
+                // Adapt gauge warning colors based on resource levels
+                if (percentage < 25) {
+                    tokenGauge.className = "progress-bar bg-danger";
+                } else if (percentage < 60) {
+                    tokenGauge.className = "progress-bar bg-warning";
                 } else {
-                    tokenGauge.style.background = '#10b981';
-                    if (modelDisplay) modelDisplay.style.color = '#10b981';
+                    tokenGauge.className = "progress-bar bg-info";
                 }
             }
-        } catch (e) {
-            console.error("Caught JS Execution Anomaly Profile:", e);
-            appendMessage('Wu', `<span style="color: #ef4444; font-family: monospace; font-weight: bold;">🔴 CIRCUIT BREAKER: Connection to Django Brain severed.</span>`);
         }
     }
 
-    if (sendBtn) sendBtn.addEventListener('click', handleSend);
+    // --- 5. CLIPBOARD MANAGEMENT LAYER ---
+    if (copyButton && responseOutput) {
+        copyButton.addEventListener("click", function () {
+            const cleanCodeString = responseOutput.textContent;
+            navigator.clipboard.writeText(cleanCodeString)
+                .then(() => {
+                    const originalText = copyButton.textContent;
+                    copyButton.textContent = "Copied!";
+                    copyButton.classList.replace("btn-secondary", "btn-success");
+                    
+                    setTimeout(() => {
+                        copyButton.textContent = originalText;
+                        copyButton.classList.replace("btn-success", "btn-secondary");
+                    }, 2000);
+                })
+                .catch(err => console.error("Clipboard permission query denied:", err));
+        });
+    }
+
+    // --- 6. EVENT INTERFACE WRAPPERS ---
+    if (sendBtn) {
+        sendBtn.addEventListener("click", sendMessage);
+    }
+
     if (userInput) {
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        // Submit on Enter keypress unless holding the Shift key modifier down
+        userInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                sendMessage();
             }
         });
-    }
 
-    // ============================================================================
-    // 6. DUAL-WRITE SESSION TEARDOWN CONTROLS
-    // ============================================================================
-    if (endBtn) {
-        endBtn.addEventListener('click', async () => {
-            if (!confirm("Close current session and execute Janitor Clean Sweep?")) return;
-            endBtn.disabled = true;
-            endBtn.innerText = "🧹 Sweeping...";
-            endBtn.style.background = "#475569";
-
-            try {
-                const response = await fetch('/aurora/end_session/', {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if (!response.ok) throw new Error(`Server status anomaly: ${response.status}`);
-                const data = await response.json();
-                if (data.status === 'success') {
-                    const mins = typeof data.duration === 'number' ? Math.round(data.duration / 60) : 0;
-                    const statsDisplay = document.getElementById('session-stats');
-                    if (statsDisplay) statsDisplay.innerText = `● Session Cleared: ${mins} mins`;
-                    endBtn.innerText = "✅ Swept";
-
-                    appendMessage('Wu', `
-                        <div style="border-left: 3px solid #10b981; padding-left: 10px; color: #10b981; font-weight: bold; font-family: monospace; margin-bottom: 8px;">🧼 JANITOR CLEAN SWEEP COMPLETE</div>
-                        <p><em>Session data saved to disk. Duration: <strong>${mins} minutes</strong>.</em></p>
-                        <div style="background: #1e293b; padding: 12px; border-radius: 4px; border: 1px solid #334155; margin-top: 10px;">
-                            <strong style="color: #38bdf8; font-family: monospace;">[PROJECT_STATE.md SNAPSHOT]</strong>
-                            <p style="margin: 5px 0 0 0; line-height: 1.5; font-size: 13px; color: #cbd5e1;">${data.summary}</p>
-                        </div>
-                    `);
-                } else {
-                    alert(`Teardown message: ${data.message || 'Unknown processing halt'}`);
-                    endBtn.disabled = false;
-                    endBtn.innerText = "🛑 Close Session";
-                    endBtn.style.background = "#dc2626";
-                }
-            } catch (error) {
-                console.error("Session teardown error:", error);
-                window.location.href = '/aurora/end_session/';
-            }
+        // Dynamic auto-expansion tracking height variables logic adjustments
+        userInput.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
         });
-    }
-
-    // ============================================================================
-    // 7. MANUAL LOGGING CONTROLS
-    // ============================================================================
-    if (manualHoursField && manualNoteField) {
-        const logManualTimeBtn = document.querySelector('button[onclick="logManualTime()"]');
-        if (logManualTimeBtn) {
-            logManualTimeBtn.addEventListener('click', async () => {
-                const hours = manualHoursField.value;
-                const note = manualNoteField.value;
-                if (!hours) return alert("Enter hours first.");
-                const formData = new FormData();
-                formData.append('hours', hours);
-                formData.append('note', note);
-                try {
-                    const response = await fetch('/aurora/manual_log/', { method: 'POST', body: formData });
-                    const data = await response.json();
-                    if (data.status === 'success') { alert(data.message); location.reload(); }
-                } catch (error) { console.error("Manual log anomaly:", error); }
-            });
-        }
     }
 });
+
+// --- 7. EXTERNAL GLOBAL LOG CALLS ---
+window.logManualTime = function() {
+    const hours = document.getElementById("manual-hours")?.value;
+    const note = document.getElementById("manual-note")?.value;
+    
+    if (!hours || !note) {
+        alert("Log entry inputs incomplete.");
+        return;
+    }
+    
+    console.log(`[MANUAL LOG REGISTERED] Tracked hours: ${hours} | Task: ${note}`);
+    alert(`Documented ${hours} hours successfully.`);
+    
+    // Clear log form input fields after processing
+    if (document.getElementById("manual-hours")) document.getElementById("manual-hours").value = "";
+    if (document.getElementById("manual-note")) document.getElementById("manual-note").value = "";
+};

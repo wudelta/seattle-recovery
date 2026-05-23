@@ -1,22 +1,107 @@
+{% extends 'aurora_base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Aurora | Home</title>
-    <!-- Core Dependencies -->
-    <link rel="stylesheet" href="{% static 'aurora/css/vis-network.min.css' %}" />
-    <script src="{% static 'aurora/js/vis-network.min.js' %}"></script>
+
+{% block title %}Delta Console | Wu Architect{% endblock %}
+
+{% block content %}
+<div class="container my-5">
     
-    <!-- Isolated Custom Stylesheet Asset -->
-    <link rel="stylesheet" href="{% static 'aurora/css/landing.css' %}" />
-</head>
-<body>
+    <!-- 1. Top Section: App Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h2 class="h3 font-weight-bold text-primary mb-0">Delta Console</h2>
+        <span class="badge badge-success p-2 shadow-sm">System: Operational</span>
+    </div>
 
-    <h1>Aurora</h1>
-    <div id="network-container"></div>
+    <!-- 2. Main Grid: Sidebar Card and Main Chat Area side-by-side -->
+    <div class="row">
+        
+        <!-- SIDEBAR COLUMN -->
+        <aside class="col-lg-4 mb-4">
+            <!-- Morph Styled Panel Card -->
+            <div class="card shadow border-0 p-3 bg-light">
+                <div class="card-body">
+                    
+                    <!-- Active Brain Metric -->
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase font-weight-bold d-block mb-1">Active Brain</label>
+                        <h4 class="text-dark font-weight-bold">Architect (70B)</h4>
+                    </div>
 
-    <!-- Isolated Custom Script Engine Asset -->
-    <script src="{% static 'aurora/js/landing.js' %}"></script>
-</body>
-</html>
+                    <!-- Groq Token Fuel Gauge -->
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase font-weight-bold d-block mb-1">Groq Token Fuel</label>
+                        <!-- Using Morph theme progress component track -->
+                        <div class="progress shadow-sm" style="height: 12px; background-color: #e9ecef;">
+                            <div id="token-gauge" class="progress-bar bg-info" role="progressbar" style="width: 100%;"></div>
+                        </div>
+                        <small id="token-count-display" class="text-info d-block mt-2 font-weight-bold">-- / --</small>
+                    </div>
+
+                    <!-- Operator -->
+                    <div class="mb-4 border-top pt-3">
+                        <label class="text-muted small text-uppercase font-weight-bold d-block mb-1">Operator</label>
+                        <p class="text-dark font-weight-medium mb-0">Delta</p>
+                    </div>
+
+                    <!-- Manual Log Form Component -->
+                    <div class="border-top pt-3 mb-4">
+                        <label class="text-muted small text-uppercase font-weight-bold d-block mb-2">Manual Log</label>
+                        <div class="form-row">
+                            <div class="col-4">
+                                <input type="number" id="manual-hours" class="form-control form-control-sm text-center shadow-sm" placeholder="Hrs">
+                            </div>
+                            <div class="col-8">
+                                <input type="text" id="manual-note" class="form-control form-control-sm shadow-sm" placeholder="Task description...">
+                            </div>
+                        </div>
+                        <button onclick="logManualTime()" class="btn btn-sm btn-block btn-primary shadow-sm mt-2">Add Log Entry</button>
+                    </div>
+
+                    <!-- Session Controls -->
+                    <div class="border-top pt-3 text-center">
+                        <button id="end-session-btn" class="btn btn-sm btn-danger btn-block shadow-sm">CLOSE ACTIVE SESSION</button>
+                        <small id="session-stats" class="text-muted d-block mt-2"></small>
+                    </div>
+
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONSOLE / CHAT MAIN COLUMN -->
+        <main class="col-lg-8 mb-4">
+            
+            <!-- Hidden Data Token Layer -->
+            <div id="aurora-raw-brief-data" style="display: none;">{{ local_brief_content }}</div>
+
+            <!-- Morph Terminal Output Display Window Card -->
+            <div class="card shadow border-0 mb-3 bg-white">
+                <div class="card-body p-4">
+                    <div id="chat-window" style="position: relative;">
+                        <!-- Styled raw code pre-tag blocks text neatly -->
+                        <pre id="response-output" class="text-dark font-weight-medium p-3 bg-light rounded shadow-inner" style="white-space: pre-wrap; min-height: 300px; max-height: 500px; overflow-y: auto;">{{ response_output }}</pre>
+                        <button class="btn btn-sm btn-secondary copy-button shadow-sm" id="copy-button" style="position: absolute; top: 15px; right: 15px;">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Textarea Prompt Submission Area -->
+            <div class="card shadow border-0 bg-light p-2">
+                <div class="input-group">
+                    <textarea id="user-input" class="form-control border-0 shadow-none bg-transparent" placeholder="Enter instruction or paste JSON..." autocomplete="off" rows="2" style="resize: none;"></textarea>
+                    <div class="input-group-append align-self-center pr-2">
+                        <button id="send-btn" class="btn btn-primary px-4 shadow-sm rounded-pill">SEND</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Core execution logic paths (zero styling scripts) -->
+<script src="{% static 'aurora/js/script.js' %}"></script>
+<script src="{% static 'aurora/js/overlay_planner.js' %}"></script>
+{% endblock %}
