@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.urls import reverse
-from ..models import Document, Content
+from aurora.models import Document, Content
 
 class HeadlessSessionAutomationTest(TestCase):
     """

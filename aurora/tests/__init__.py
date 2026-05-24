@@ -1,15 +1,6 @@
-# FILE: aurora/__init__.py
-"""
- AUTO-SPEC DOCUMENTATION - SYNCED: 2026-05-17T21:12:27.096348+00:00
- PROJECT ECOSYSTEM: AURORA
- FILE PATH: aurora/tests/__init__.py
- TECHNICAL MATRIX: Python Module. Exported Logic Components: 
+# FILE: aurora/tests/__init__.py
+# Explicitly expose namespaced test modules to Django's discovery scanner Engine
 
- ARCHITECTURAL FLOW DIAGRAM:
- ```mermaid
- graph TD
-    A[__init__.py] --> B(System Kernel)
-    B --> C{Ecosystem Check}
-    C -->|Project Bind| D[AURORA]
- ```
-"""
+from .test_session_api import HeadlessSessionAutomationTest
+from .test_session_close_api import HeadlessSessionCloseAutomationTest
+from .test_minions import MinionArraySecurityTests

@@ -6,8 +6,23 @@ from groq import Groq
 from google import genai  # Correct modern SDK package import namespace
 from .neo4j_driver import db
 
-# Initialize the Groq client for the 8B Janitor routine
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# FIXED: Explicitly load local config matrices at the import boundary layer
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.getcwd(), '.env'))
+except ImportError:
+    pass
+
+# FIXED: Create a safe getter function instead of a global blocking variable instance
+def get_groq_client():
+    """
+    Lazy instantiates the Groq API Engine client safely.
+    Guarantees the client is only generated AFTER environment memory parameters exist.
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("❌ [GROQ MATRIX CRASH] GROQ_API_KEY environment variable is entirely missing.")
+    return Groq(api_key=api_key)
 
 # =====================================================================
 # PERSISTENT LORE LAYER: CUSTOM NANO-EMBEDDING VECTOR ENGINE

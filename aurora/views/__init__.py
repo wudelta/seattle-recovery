@@ -1,11 +1,13 @@
 # 1. Base Framework Operations (Binds your active console panels)
 from .landing import aurora_landing
-from .wu_orchestration import chat_api, console_dashboard, dashboard  # <-- FIXED: Pulling directly from wu_orchestration
-from .daily_brief import daily_brief_view
+from .wu_orchestration import chat_api, console_dashboard, dashboard
 
 # 2. Daily Automation Workflows
 from .start_online_session import start_online_session
 from .end_session_view import end_session_view
+# FIXED INTERCEPT: Register and expose the new micro-sweeper module layout cleanly
+from .micro_cleanup_view import micro_cleanup_view  
+from .daily_brief import daily_brief_view
 
 # 3. Minion Array Coordination Scripts
 from .minion_clicks import wu_director, manual_time_log_view
