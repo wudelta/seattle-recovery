@@ -1,3 +1,8 @@
+{% extends 'aurora_base.html' %}
+{% load static %} <!-- FIXED: Restores Django's ability to parse static script paths! -->
+
+{% block title %}Delta Console | Wu Architect{% endblock %}
+
 {% block content %}
 {% csrf_token %}
 
@@ -94,7 +99,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Changing the path name directly forces the browser to pull your absolute path change -->
-<script src="{% static 'aurora/js/console_core.js' %}?v=final_reset"></script>
+<!-- Restored to your actual, physical file script.js on your drive -->
+<script src="{% static 'aurora/js/script.js' %}?v=rebuild_today"></script>
 {% endblock %}
+
 

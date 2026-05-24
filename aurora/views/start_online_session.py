@@ -1,30 +1,36 @@
 import os
 import json
 import logging
-import markdown
+from datetime import timezone as datetime_timezone # Absolute native UTC reference
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from ..models import Document, Content
 
 # Setup structured file and terminal logger
 logger = logging.getLogger("aurora.sessions")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Hardcoded text staging path limit
 BRIEF_FILE_PATH = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
 
 @csrf_exempt
-@login_required
 @require_POST
 def start_online_session(request):
+    """
+    Initialize an online session and perform necessary setup tasks.
+    """
     session_start_time = timezone.now()
-    print(f"\n🚀 [START SESSION] Initialization triggered at {session_start_time.isoformat()}")
     logger.info("Session sequence initiated.")
+    print(f"\n🚀 [START SESSION] Initialization triggered at {session_start_time.isoformat()}")
     
     try:
+        # --- 0. DECOUPLED AUTHENTICATION INTERCEPT ---
+        if not request.user.is_authenticated:
+            print("❌ [STAGE 0 FAIL] Terminating transaction. Unauthenticated headless client request.")
+            return JsonResponse({'success': False, 'error': 'Unauthorized entry. Valid token or login required.'}, status=401)
+
         # --- 1. CORE LIBRARY INTERCEPT CHECK ---
         print("🔍 [STAGE 1] Loading minion array local dependencies...")
         try:
@@ -37,24 +43,21 @@ def start_online_session(request):
 
         # --- 2. EXTRACT PAYLOAD DATA ---
         print("🔍 [STAGE 2] Checking incoming request payload types...")
-        ui_override = ""
         user_id = request.user.username.lower()
+        raw_content = ""
         
         try:
             if request.body:
                 json_payload = json.loads(request.body)
-                ui_override = json_payload.get('brief_content', '').strip()
+                raw_content = json_payload.get('brief_content', '').strip()
                 user_id = json_payload.get('user_id', user_id).lower()
-                print(f"📥 [STAGE 2] Extracted valid headless JSON data. Payload length: {len(ui_override)} chars.")
+                print(f"📥 [STAGE 2] Extracted valid headless JSON data. Payload length: {len(raw_content)} chars.")
         except json.JSONDecodeError:
             print("⚠️ [STAGE 2] Request body is not JSON. Falling back to traditional POST form parsing.")
-            ui_override = request.POST.get('brief_content', '').strip()
+            raw_content = request.POST.get('brief_content', '').strip()
 
         # Extract context from local staging file if no direct text override exists
-        raw_content = ""
-        if ui_override:
-            raw_content = ui_override
-        else:
+        if not raw_content:
             print(f"📂 [STAGE 2] Reading raw content from local disk matrix: {BRIEF_FILE_PATH}")
             if os.path.exists(BRIEF_FILE_PATH):
                 with open(BRIEF_FILE_PATH, 'r', encoding='utf-8') as f:
@@ -72,7 +75,8 @@ def start_online_session(request):
         planning_duration_seconds = 0
         if os.path.exists(BRIEF_FILE_PATH):
             file_meta_stat = os.stat(BRIEF_FILE_PATH)
-            last_modified = timezone.make_aware(timezone.datetime.fromtimestamp(file_meta_stat.st_mtime))
+            # FIXED: Extracted direct timezone-aware object without wrapping inside make_aware
+            last_modified = timezone.datetime.fromtimestamp(file_meta_stat.st_mtime, datetime_timezone.utc)
             planning_duration_seconds = max(0, int((session_start_time - last_modified).total_seconds()))
             print(f"⏱️ [STAGE 3] Calculated offline planning duration: {planning_duration_seconds} seconds.")
 
@@ -111,7 +115,6 @@ def start_online_session(request):
         # --- 7. RECONSTRUCT THE 5-DAY CONTEXT & SYSTEM ENVELOPE ---
         print("🔍 [STAGE 7] Querying recent abstract tables to collect historical context...")
         historical_summaries = []
-        
         try:
             recent_docs = Document.objects.filter(title__contains="Daily Brief").order_by('-created_at')[:5]
             if recent_docs.exists():
@@ -139,7 +142,7 @@ def start_online_session(request):
         system_runtime_instructions = (
             f"You are Wu, Lead Architect. Speaking to: {user_id}.\n"
             f"Session Initialization: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-            "ACTIVE WORKSPACE ENVIRONMENT ENVIRONMENT PROTOCOLS:\n"
+            "ACTIVE WORKSPACE ENVIRONMENT PROTOCOLS:\n"
             "1. Coordinate file updates using headless worker array loops.\n"
             "2. Track the execution milestones outlined in objectives_json precisely.\n\n"
             f"== RECENT HISTORICAL SESSIONS SUMMARY CONTEXT ==\n{formatted_history}\n\n"
