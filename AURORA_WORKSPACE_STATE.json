@@ -1,0 +1,51 @@
+{
+  "token_metadata": {
+    "project_name": "AURORA",
+    "last_sync_timestamp": "2026-05-25T13:00:00Z",
+    "human_operator": "Delta",
+    "active_architect_ai": "Wu (70B)"
+  },
+  "system_architecture_profile": {
+    "backend_framework": "Django (Headless JSON Data Engine)",
+    "database_engine": "PostgreSQL (Migration 0002 Active)",
+    "operating_environment": "Ubuntu Linux Laptop",
+    "core_design_philosophy": "Decoupled Data Infrastructure. Pure JSON APIs. Presentational state handled exclusively by the frontend client view layer."
+  },
+  "active_minion_matrix": {
+    "CORE_PY": "Python Backend Engine Specialist (Trace logging and safety try/except wrapping)",
+    "UI_CSS": "Bootswatch CSS & Frontend Layout Specialist (Footertray and sidebar layout matching)",
+    "DOM_JS": "Frontend JavaScript Functional Specialist (Asynchronous fetch streams)",
+    "DB_SQL": "PostgreSQL & Schema Migration Specialist (ORM queries, zero raw SQL)",
+    "SYS_GIT": "Git Security Partition & Cloud Backup Specialist (Asynchronous background threads)",
+    "MINION_ADD": "Automation Agent specialized in registering fresh worker profiles"
+  },
+  "purgatory_engine_guardrails": [
+    "Never write frontend HTML template code blocks inside your Django backend files.",
+    "Never troubleshoot file path parameters or API connection routes inside a web browser. Use python manage.py test.",
+    "Always offload network-bound operating system commands to a detached asynchronous background thread using threading.Thread(daemon=True).",
+    "Maintain a strict One-Task-Per-Session boundary layer. Micro-sweep chat context arrays frequently to stay under the Groq free-tier token ceiling."
+  ],
+  "active_backlog_checklist": {
+    "phase_1_morning_protocol": {
+      "status": "COMPLETED",
+      "tasks": [
+        "Add hidden tracking input endpoint mapping to dashboard.html",
+        "Append executeMorningHandshakeSequence execution block to script.js",
+        "Refactor start_online_session.py to parse offline DeltaNote items into PostgreSQL tables"
+      ]
+    },
+    "phase_2_terminal_verification": {
+      "status": "BLOCKED_ON_TEST_CLIENT_AUTH",
+      "tasks": [
+        "Resolve HeadlessSessionAutomationTest client login authentication drop in Django test harness"
+      ]
+    },
+    "phase_3_human_in_the_loop_deck": {
+      "status": "PENDING",
+      "tasks": [
+        "Develop Django backend endpoints to handle human status updates (APPROVED, EXECUTED, ACCEPTED, ROLLED_BACK)",
+        "Populate baseline DeltaDirective entries for the 6 active specialized minions"
+      ]
+    }
+  }
+}
