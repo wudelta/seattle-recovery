@@ -1,165 +1,133 @@
 import os
 import json
 import logging
-from datetime import timezone as datetime_timezone # Absolute native UTC reference
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from ..models import Document, Content
+from ..models import DeltaNote, DeltaChange, DeltaDirective  # Models fully aligned
 
-# Setup structured file and terminal logger
 logger = logging.getLogger("aurora.sessions")
 logger.setLevel(logging.INFO)
-
-# Hardcoded text staging path limit
-BRIEF_FILE_PATH = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
 
 @csrf_exempt
 @require_POST
 def start_online_session(request):
     """
-    Initialize an online session and perform necessary setup tasks.
+    Delta Process Flow Headless Session Startup Engine.
+    Processes offline brain dumps via 8B worker, pulls review states, and configures Wu.
     """
     session_start_time = timezone.now()
-    logger.info("Session sequence initiated.")
-    print(f"\n🚀 [START SESSION] Initialization triggered at {session_start_time.isoformat()}")
-    
-    try:
-        # --- 0. DECOUPLED AUTHENTICATION INTERCEPT ---
-        if not request.user.is_authenticated:
-            print("❌ [STAGE 0 FAIL] Terminating transaction. Unauthenticated headless client request.")
-            return JsonResponse({'success': False, 'error': 'Unauthorized entry. Valid token or login required.'}, status=401)
+    print(f"\n🚀 [START SESSION] Delta Process Flow triggered at {session_start_time.isoformat()}")
 
-        # --- 1. CORE LIBRARY INTERCEPT CHECK ---
-        print("🔍 [STAGE 1] Loading minion array local dependencies...")
+    try:
+        # --- 0. AUTHENTICATION PROTECTION matrix ---
+        if not request.user.is_authenticated:
+            print("❌ [STAGE 0 FAIL] Unauthenticated client request intercepted.")
+            return JsonResponse({'success': False, 'error': 'Unauthorized entry.'}, status=401)
+
+        user = request.user
+        user_id = user.username.lower()
+
+        # --- 1. MINION ARRAY IMPORT CHECK ---
+        print("🔍 [STAGE 1] Loading minion translation library dependencies...")
         try:
             from core_logic.minion_array import run_8b_translation
-            print("✅ [STAGE 1] run_8b_translation successfully imported.")
+            print("✅ [STAGE 1] run_8b_translation imported successfully.")
         except ImportError as imp_err:
-            print(f"❌ [CRITICAL IMP] Failed to import minion array logic: {str(imp_err)}")
-            logger.error(f"ImportError in minion_array execution: {str(imp_err)}")
-            return JsonResponse({'success': False, 'error': f"Internal environment import failure: {str(imp_err)}"}, status=500)
+            print(f"❌ [CRITICAL IMP] Environment missing worker scripts: {str(imp_err)}")
+            return JsonResponse({'success': False, 'error': 'Internal system engine missing module.'}, status=500)
 
-        # --- 2. EXTRACT PAYLOAD DATA ---
-        print("🔍 [STAGE 2] Checking incoming request payload types...")
-        user_id = request.user.username.lower()
-        raw_content = ""
-        
-        try:
-            if request.body:
-                json_payload = json.loads(request.body)
-                raw_content = json_payload.get('brief_content', '').strip()
-                user_id = json_payload.get('user_id', user_id).lower()
-                print(f"📥 [STAGE 2] Extracted valid headless JSON data. Payload length: {len(raw_content)} chars.")
-        except json.JSONDecodeError:
-            print("⚠️ [STAGE 2] Request body is not JSON. Falling back to traditional POST form parsing.")
-            raw_content = request.POST.get('brief_content', '').strip()
+        # --- 2. COMPILE UNPROCESSED OFFLINE NOTES ---
+        print("🔍 [STAGE 2] Querying PostgreSQL for raw unprocessed DeltaNotes...")
+        unprocessed_notes = DeltaNote.objects.filter(user=user, is_processed=False).order_by('created_at')
+        notes_count = unprocessed_notes.count()
+        print(f"📥 [STAGE 2] Discovered {notes_count} pending offline notes inside database.")
 
-        # Extract context from local staging file if no direct text override exists
-        if not raw_content:
-            print(f"📂 [STAGE 2] Reading raw content from local disk matrix: {BRIEF_FILE_PATH}")
-            if os.path.exists(BRIEF_FILE_PATH):
-                with open(BRIEF_FILE_PATH, 'r', encoding='utf-8') as f:
-                    raw_content = f.read().strip()
-                print(f"💾 [STAGE 2] Read {len(raw_content)} chars from brief staging file.")
-            else:
-                print(f"⚠️ [STAGE 2] Local disk file missing at: {BRIEF_FILE_PATH}")
-
-        if not raw_content:
-            print("❌ [STAGE 2 FAIL] Handshake execution aborted. Daily brief source payload text is blank.")
-            return JsonResponse({'success': False, 'error': 'Daily brief target text data payload is empty.'}, status=400)
-
-        # --- 3. COMPUTE PLANNING DURATION ---
-        print("🔍 [STAGE 3] Computing offline session planning duration metrics...")
-        planning_duration_seconds = 0
-        if os.path.exists(BRIEF_FILE_PATH):
-            file_meta_stat = os.stat(BRIEF_FILE_PATH)
-            # FIXED: Extracted direct timezone-aware object without wrapping inside make_aware
-            last_modified = timezone.datetime.fromtimestamp(file_meta_stat.st_mtime, datetime_timezone.utc)
-            planning_duration_seconds = max(0, int((session_start_time - last_modified).total_seconds()))
-            print(f"⏱️ [STAGE 3] Calculated offline planning duration: {planning_duration_seconds} seconds.")
-
-        # --- 4. CONDENSE TEXT VIA 8B MINION (TOKEN SAVER ROUTINE) ---
-        print("🔍 [STAGE 4] Routing raw text chunk directly to local Llama 8B translation worker matrix...")
-        try:
-            dense_abstract, objectives_json = run_8b_translation(raw_content)
-            print("✅ [STAGE 4] 8B translation model execution finalized successfully.")
-            logger.debug(f"Abstract generated: {dense_abstract[:40]}...")
-        except Exception as model_err:
-            print(f"❌ [STAGE 4 CRASH] Local model inference broke: {str(model_err)}")
-            return JsonResponse({'success': False, 'error': f"Local 8B Model inference anomaly: {str(model_err)}"}, status=502)
-
-        # --- 5. COMMIT LOGGING METRICS TO POSTGRESQL (EAV TARGETS) ---
-        print("🔍 [STAGE 5] Committing structured operational tables data to PostgreSQL targets...")
-        try:
-            doc_entry = Document.objects.create(
-                title=f"Daily Brief - {session_start_time.strftime('%Y-%m-%d')}",
-                created_at=session_start_time
-            )
-            Content.objects.get_or_create(document=doc_entry, content=f"dense_abstract: {dense_abstract}")
-            Content.objects.get_or_create(document=doc_entry, content=f"objectives_json: {objectives_json}")
-            Content.objects.get_or_create(document=doc_entry, content=f"planning_duration_seconds: {planning_duration_seconds}")
-            print(f"📁 [STAGE 5] Successfully created Document ID {doc_entry.pk} inside Postgres.")
-        except Exception as db_err:
-            print(f"❌ [STAGE 5 CRASH] Database commit tracking failure: {str(db_err)}")
-            return JsonResponse({'success': False, 'error': f"Database layer state error: {str(db_err)}"}, status=500)
-
-        # --- 6. SECURELY ERASE LOCAL TEMPORARY FILE STAGING ZONE ---
-        print("🔍 [STAGE 6] Clearing local temporary disk staging workspace...")
-        if os.path.exists(BRIEF_FILE_PATH):
-            with open(BRIEF_FILE_PATH, 'w', encoding='utf-8') as f:
-                f.write("")
-            print("🧹 [STAGE 6] Local files erased securely.")
-
-        # --- 7. RECONSTRUCT THE 5-DAY CONTEXT & SYSTEM ENVELOPE ---
-        print("🔍 [STAGE 7] Querying recent abstract tables to collect historical context...")
-        historical_summaries = []
-        try:
-            recent_docs = Document.objects.filter(title__contains="Daily Brief").order_by('-created_at')[:5]
-            if recent_docs.exists():
-                for doc in reversed(recent_docs):
-                    content_records = Content.objects.filter(document=doc)
-                    for record in content_records:
-                        if record.content and record.content.startswith("dense_abstract:"):
-                            abstract_text = record.content.replace("dense_abstract:", "").strip()
-                            date_string = doc.created_at.strftime('%Y-%m-%d')
-                            historical_summaries.append(f"--- HISTORICAL BRIEF: {date_string} ---\n{abstract_text}")
-                print(f"📚 [STAGE 7] Context extraction ready. Packed {len(historical_summaries)} historical abstracts.")
-            else:
-                print("ℹ️ [STAGE 7 INFO] No historical daily brief rows found in database. Initializing baseline context.")
-        except Exception as context_err:
-            print(f"⚠️ [STAGE 7 WARNING] Context collector bypassed: {str(context_err)}")
-            historical_summaries = ["No historical summaries discoverable in this database environment."]
-
-        # Combine text elements safely
-        if len(historical_summaries) > 0:
-            formatted_history = "\n\n".join(historical_summaries)
+        # --- 3. INITIATE 8B MINION INTERPRETATION LOOP ---
+        if notes_count > 0:
+            print("🔍 [STAGE 3] Dispatching text sequences to Llama 8B translation worker array...")
+            for note in unprocessed_notes:
+                print(f"🔍 [STAGE 3.1] Processing Note ID {note.id} bytes...")
+                try:
+                    dense_abstract, objectives_json = run_8b_translation(note.raw_text)
+                    
+                    # Wu Note: 8B Minion splits input to generate a PENDING_REVIEW change row
+                    DeltaChange.objects.create(
+                        user=user,
+                        assigned_to='MINION',
+                        minion_type='CORE_PY',  # Defaults parsing target to Python core layer
+                        dense_instructions=f"Abstract: {dense_abstract}\nObjectives: {objectives_json}",
+                        status='PENDING_REVIEW'
+                    )
+                    
+                    # Commit step tracking state change
+                    note.is_processed = True
+                    note.processed_at = session_start_time
+                    note.save()
+                    print(f"✅ [STAGE 3.2] Note ID {note.id} securely updated to is_processed=True.")
+                except Exception as model_err:
+                    print(f"❌ [STAGE 3 CRASH] Note ID {note.id} inference loop failure: {str(model_err)}")
+                    continue
         else:
-            formatted_history = "No previous session context logged."
+            print("ℹ️ [STAGE 3] Database log contains zero unprocessed tokens. Skipping.")
 
-        # Build clean structural prompt string without any nested ternary quote tricks
+        # --- 4. ACCUMULATE HEADLESS REVIEW BLOCKS ---
+        print("🔍 [STAGE 4] Assembling Delta's Human-in-the-Loop approval components...")
+        pending_changes = DeltaChange.objects.filter(user=user, status='PENDING_REVIEW')
+        pending_directives = DeltaDirective.objects.filter(user=user, is_approved=False)
+
+        # --- 5. EXTRACT DESIGN DIRECTIVES TO GUIDE WU ---
+        print("🔍 [STAGE 5] Injecting approved systemic boundary guardrails into current thread...")
+        active_directives = DeltaDirective.objects.filter(
+            user=user, 
+            is_approved=True, 
+            assigned_to__in=['WU', 'BOTH']
+        )
+        
+        directives_payload = []
+        for directive in active_directives:
+            directives_payload.append(f"[{directive.directive_name}]: {directive.dense_instructions}")
+        formatted_directives = "\n".join(directives_payload) if directives_payload else "No current systemic rules loaded."
+
+        # --- 6. ASSEMBLE DECOUPLED RUNTIME PROMPT ENVELOPE ---
+        print("🔍 [STAGE 6] Engineering system instruction envelope matrix...")
         system_runtime_instructions = (
-            f"You are Wu, Lead Architect. Speaking to: {user_id}.\n"
-            f"Session Initialization: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-            "ACTIVE WORKSPACE ENVIRONMENT PROTOCOLS:\n"
-            "1. Coordinate file updates using headless worker array loops.\n"
-            "2. Track the execution milestones outlined in objectives_json precisely.\n\n"
-            f"== RECENT HISTORICAL SESSIONS SUMMARY CONTEXT ==\n{formatted_history}\n\n"
-            f"== TODAY'S TARGET WORKSPACE OBJECTIVES ==\n{dense_abstract}"
+            f"You are Wu, Lead Architect Core (70B). Cooperating with human operator Delta (User: {user_id}).\n"
+            f"Active Workspace Context Clock: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            "== APPROVED COGNITIVE DIRECTIVES IN MEMORY ==\n"
+            f"{formatted_directives}\n\n"
+            "MANDATORY TRANSITION RULE:\n"
+            "Do not execute any local code mutations until Delta issues an HTTP status='APPROVED' command sequence."
         )
 
-        print("🏁 [FINALIZE] Headless startup transaction complete. Handing clean JSON payload to network pipeline.\n")
+        print("✅ [FINALIZE] Session startup successfully compiled with heavy logging validation.\n")
         return JsonResponse({
             'success': True,
             'session_status': 'active',
-            'session_start_time': session_start_time.isoformat(),
-            'dense_abstract': dense_abstract,
-            'objectives': objectives_json,
+            'notes_processed_count': notes_count,
+            'review_deck': {
+                'changes': [
+                    {
+                        'id': c.id, 
+                        'app_affected': c.app_affected, 
+                        'assigned_to': c.assigned_to, 
+                        'minion_type': c.minion_type, 
+                        'instructions': c.dense_instructions
+                    } for c in pending_changes
+                ],
+                'directives': [
+                    {
+                        'id': d.id, 
+                        'name': d.directive_name, 
+                        'assigned_to': d.assigned_to, 
+                        'instructions': d.dense_instructions
+                    } for d in pending_directives
+                ]
+            },
             'system_prompt_envelope': system_runtime_instructions
-        })
+        }, status=200)
 
     except Exception as e:
-        print(f"💥 [SYSTEM EXCEPTION] General unhandled runtime breakdown: {str(e)}")
-        logger.critical(f"Unhandled operational trace anomaly: {str(e)}", exc_info=True)
-        return JsonResponse({'success': False, 'error': f"Unhandled layout matrix breakdown: {str(e)}"}, status=500)
+        print(f"💥 [SYSTEM EXCEPTION] Catastrophic operational breakdown: {str(e)}")
+        return JsonResponse({'success': False, 'error': f"Headless execution exception: {str(e)}"}, status=500)

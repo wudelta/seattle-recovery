@@ -3,72 +3,95 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.urls import reverse
-from aurora.models import Document, Content
+from aurora.models import Document, Content, DeltaNote, DeltaChange, DeltaDirective  # All models accounted for
 
 class HeadlessSessionAutomationTest(TestCase):
     """
     Automated Independent Verification Suite for the Headless Session Start API Core.
-    Can be run directly via terminal commands without a browser.
+    Executed entirely within the terminal command line environment via python manage.py test.
     """
+
     def setUp(self):
-        # Initialize complete structural mock test environment parameters
+        print("🔍 [STAGE 1] Initializing complete structural mock testing database parameters...")
         self.client = Client()
         self.username = "delta_test"
         self.password = "matrix_secure_pass_123"
         self.test_user = User.objects.create_user(username=self.username, password=self.password)
-        # FIXED NAMESPACE: Added 'aurora:' prefix to map the routing lookup accurately
         self.target_url = reverse('aurora:start_online_session')
 
     def test_unauthenticated_request_throws_json_unauthorized(self):
         print("\n🧪 [TEST 1] Verifying security guardrails block unauthenticated callers...")
         response = self.client.post(
-            self.target_url, 
-            data=json.dumps({"brief_content": "Sample Test"}), 
+            self.target_url,
+            data=json.dumps({"session_intent": "Automated Test Sweep"}),
             content_type="application/json"
         )
         
-        # FIXED ASSERTION: Asserting a 401 Unauthorized status code and checking for a clean JSON error response payload
         print(f"📊 [TEST 1 RESULT] Received Status Code: {response.status_code}")
         self.assertEqual(response.status_code, 401)
         
         data = json.loads(response.content)
         self.assertFalse(data['success'])
-        self.assertIn('Unauthorized entry', data['error'])
-        print("✅ [TEST 1] Security barrier confirmed. Request successfully denied with JSON 401 response.")
+        print("✅ [TEST 1] Security barrier confirmed. Request successfully denied with JSON 401.")
 
-    def test_successful_json_payload_handshake_flow(self):
-        print("\n🧪 [TEST 2] Running full secure headless login and payload simulation...")
-        # Log the mock user into the network simulation core
-        login_success = self.client.login(username=self.username, password=self.password)
-        self.assertTrue(login_success, "Mock authentication loop failed.")
+    def test_successful_delta_process_flow_handshake(self):
+        print("\n🧪 [TEST 2] Running full secure headless login and Delta Process simulation...")
         
-        mock_payload = {
-            "brief_content": "Test Objective: Connect automated unit testing strings to verification scripts.",
-            "user_id": "delta_test"
-        }
-        
-        print("📡 Sending raw mock JSON transaction payload directly into endpoint view controllers...")
-        response = self.client.post(
-            self.target_url,
-            data=json.dumps(mock_payload),
-            content_type="application/json"
+        # 1. Seed the Postgres Database with Offline Telemetry (Delta Notes)
+        print("🗄️ Seeding PostgreSQL with raw offline DeltaNote brain dumps...")
+        DeltaNote.objects.create(
+            user=self.test_user,
+            raw_text="DOCUMENTATION directive update: All minions must trace code modifications.",
+            is_processed=False
+        )
+        DeltaNote.objects.create(
+            user=self.test_user,
+            raw_text="CORE_PY change: Optimize context initialization in memory.py",
+            is_processed=False
         )
         
-        # 1. Assert accurate HTTP transmission codes
+        # 2. Seed an Approved Directive to verify Wu's prompt injection
+        print("🗄️ Seeding an approved structural DeltaDirective into the testing memory matrix...")
+        DeltaDirective.objects.create(
+            user=self.test_user,
+            directive_name="GLOBAL_CONSTRAINTS",
+            assigned_to="WU",
+            dense_instructions="Never output presentation wrappers inside JSON view engines.",
+            is_approved=True
+        )
+
+        # Log the mock user into the network simulation core
+        login_success = self.client.login(username=self.username, password=self.password)
+        self.assertTrue(login_success, "❌ Mock authentication loop failed.")
+
+        print("📡 Sending raw session start request directly into view controllers...")
+        response = self.client.post(
+            self.target_url,
+            data=json.dumps({"session_intent": "Initialize Workspace"}),
+            content_type="application/json"
+        )
+
+        # Assert clean transmission
+        print(f"📊 [TEST 2 RESULT] Received Status Code: {response.status_code}")
         self.assertEqual(response.status_code, 200, f"Expected 200 OK, got: {response.status_code}")
-        
-        # 2. Evaluate parsed data properties directly
+
+        # Evaluate headless JSON data properties directly
         data = json.loads(response.content)
-        self.assertTrue(data['success'], "API returned a false operation status check result.")
-        self.assertEqual(data['session_status'], 'active')
-        self.assertIn('system_prompt_envelope', data)
+        self.assertTrue(data['success'])
         
-        print("📝 Verifying that system runtime prompt accurately contains our security instruction arrays...")
+        # Assert that the 8B worker loop intercepted and flipped the offline logs
+        print("_ Asserting that offline DeltaNote statuses were flipped to is_processed=True...")
+        unprocessed_count = DeltaNote.objects.filter(user=self.test_user, is_processed=False).count()
+        self.assertEqual(unprocessed_count, 0, f"Expected 0 unprocessed notes, found: {unprocessed_count}")
+
+        # Assert that new pending review rows were generated in the database
+        change_count = DeltaChange.objects.filter(user=self.test_user, status='PENDING_REVIEW').count()
+        self.assertTrue(change_count > 0, f"Expected generated review items, found: {change_count}")
+
+        # Verify Wu's structural prompt envelope contains injected active directives
+        print("🧠 Checking Wu's system prompt envelope for injected directives and user context...")
         self.assertIn("delta_test", data['system_prompt_envelope'])
-        self.assertIn("ACTIVE WORKSPACE ENVIRONMENT", data['system_prompt_envelope'])
-        
-        # 3. Verify that database entries were accurately committed to Postgres
-        print("🗄️ Querying database tables to ensure metrics were written to EAV schema records...")
-        doc_count = Document.objects.filter(title__contains="Daily Brief").count()
-        self.assertEqual(doc_count, 1, f"Expected exactly 1 database document record row, found: {doc_count}")
+        self.assertIn("GLOBAL_CONSTRAINTS", data['system_prompt_envelope'])
+        self.assertIn("Never output presentation wrappers", data['system_prompt_envelope'])
+
         print("✅ [TEST 2] Full decoupled initialization loop ran perfectly without browser dependency.")
