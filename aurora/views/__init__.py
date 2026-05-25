@@ -18,3 +18,5 @@ from .documentation import DocumentView, MetadataView, ContentView
 
 # 5. Headless JSON API Engine Core
 from .api_views import wu_data_stream
+from .delta_notes_api import create_delta_note_api  # FIXED: Registered package entry point
+from .add_note_view import add_note_view

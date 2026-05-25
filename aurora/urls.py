@@ -23,4 +23,6 @@ urlpatterns = [
     path('manual_log/', views.manual_time_log_view, name='manual_log'),
     path('commit_file/', views.commit_file_view, name='aurora_commit_file'),
     path('daily_brief/', views.daily_brief_view, name='aurora_daily_brief'),
+    path('api/notes/create/', views.create_delta_note_api, name='create_delta_note'),
+    path('add-note/', views.add_note_view, name='add_note'),
 ]

@@ -141,3 +141,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # URL that handles the media served from MEDIA_ROOT
 MEDIA_URL = 'media/'
 
+# ==============================================================================
+# PROJECT AURORA MECHANICS: ACTIVE MECHANICAL WORKER REGISTRY MATRIX
+# ==============================================================================
+ACTIVE_MINIONS = [
+    'NONE',       # Reserved for architectural tasks assigned directly to Wu
+    'CORE_PY',    # Python Backend Engine Specialist
+    'UI_CSS',     # Bootswatch CSS & Frontend Layout Specialist
+    'DOM_JS',     # Frontend JavaScript Functional Specialist
+    'DB_SQL',     # PostgreSQL & Schema Migration Specialist
+    'SYS_GIT',    # Git Security Partition & Cloud Backup Specialist
+    'MINION_ADD', # Automation Agent specialized in registering fresh worker profiles
+]

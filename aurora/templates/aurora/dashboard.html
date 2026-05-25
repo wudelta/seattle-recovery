@@ -74,7 +74,7 @@
         </main> 
     </div> 
 
-    <!-- CONSOLIDATED TERMINAL ACTION FOOTER DOCK (SINGLE LINE GRID) --> 
+    <!-- CONSOLIDATED TERMINAL ACTION FOOTER DOCK (SINGLE LINE TRAYS - RETAINED VERBATIM) --> 
     <footer class="row mt-2"> 
         <div class="col-12"> 
             <div class="card shadow border-0 bg-light p-3"> 
@@ -90,7 +90,10 @@
 
                     <!-- Unified System Action Controls --> 
                     <div class="d-flex align-items-center mb-2 mb-lg-0"> 
-                        <button id="sweep-memory-btn" onclick="triggerWorkspaceMemorySweep()" class="btn btn-sm btn-warning shadow-sm mr-2 text-nowrap">🧹 SWEEP RAM</button> 
+                        <!-- TARGETED ROUTING UPDATE: Points purely to our new isolated workspace view -->
+                        <a href="{% url 'aurora:add_note' %}" class="btn btn-sm btn-success shadow-sm mr-2 text-nowrap">📝 ADD NOTE</a>
+                        
+                        <button id="sweep-memory-btn" onclick="triggerWorkspaceMemorySweep()" class="btn btn-sm btn-warning shadow-sm mr-2 text-nowrap">片 SWEEP RAM</button> 
                         <button id="end-session-btn" class="btn btn-sm btn-danger shadow-sm text-nowrap">CLOSE SESSION</button> 
                     </div> 
 
@@ -98,7 +101,8 @@
                 <small id="session-stats" class="text-muted d-block mt-2 text-center text-lg-right"></small> 
             </div> 
         </div> 
-    </footer> 
+    </footer>
+
 </div> 
 {% endblock %} 
 

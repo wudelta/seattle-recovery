@@ -1,0 +1,54 @@
+{% extends 'aurora_base.html' %}
+{% load static %}
+
+{% block title %}Delta Workspace | Journal Notes{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+        <div>
+            <h2 class="h4 font-weight-bold text-primary mb-0">Delta Offline Notes Workspace</h2>
+            <small class="text-muted">Brain dump planning journals natively into PostgreSQL data rows</small>
+        </div>
+        <!-- FIXED: Changing 'dashboard' to 'aurora_dashboard' matches your true url pattern namespacing -->
+        <a href="{% url 'aurora:aurora_dashboard' %}" class="btn btn-sm btn-secondary shadow-sm">🖥️ Open Console</a>
+    </div>
+
+    <div class="row">
+        <!-- LEFT COLUMN: EXTENSIVE TEXTAREA NOTE CREATION -->
+        <main class="col-lg-7 mb-4">
+            <div class="card shadow border-0 p-4 bg-white">
+                <label class="text-muted small text-uppercase font-weight-bold d-block mb-2">New Unstructured Journal Entry</label>
+                <div class="form-group mb-3">
+                    <textarea id="offline-note-text" class="form-control bg-light text-dark font-weight-medium" 
+                              placeholder="Spend your hour mapping out code, structural adjustments, database changes, or feature backlogs here in natural English..." 
+                              rows="12" style="resize: vertical; font-size: 0.95rem; line-height: 1.5;"></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span id="save-status-text" class="text-muted small">Ready to save offline ledger.</span>
+                    <button id="save-note-btn" class="btn btn-success px-4 font-weight-bold shadow-sm">Save Note to Postgres</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT COLUMN: HISTORICAL SAVED NOTELOG TIMELINE -->
+        <aside class="col-lg-5 mb-4">
+            <div class="card shadow border-0 p-3 bg-light" style="max-height: 480px; overflow-y: auto;">
+                <label class="text-muted small text-uppercase font-weight-bold d-block mb-2 border-bottom pb-1 border-secondary">Unprocessed Database Queue</label>
+                <div id="notes-timeline-container">
+                    <div class="p-2 mb-2 rounded bg-white border border-secondary shadow-sm">
+                        <small class="text-primary font-weight-bold d-block mb-1">Queue Tracking Active</small>
+                        <p class="text-dark small mb-0 font-weight-medium">New notes will be captured as UNPROCESSED until your session_start processing minion loop activates.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'aurora/js/delta_notes.js' %}?v=rebuild_today"></script>
+{% endblock %}
