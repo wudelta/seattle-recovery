@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fetch(fetchUrl, {
             method: "POST",
-            credentials: "include", // FIXED: Forces profile cookies to pass to views
+            credentials: "include",
             body: formData,
             headers: {
                 "X-Requested-With": "XMLHttpRequest",
@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
             
             const response = await fetch('/aurora/micro-cleanup/', {
                 method: 'POST',
-                credentials: 'include', // FIXED: Includes login profile matrices
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
@@ -130,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 responseOutput.textContent = `🧹 [SYSTEM WORKSPACE GRAPH SWEPT & FLUSHED]\n\nRaw chat records have been compiled into a high-density milestone log chunk and committed down to persistent PostgreSQL tables.\n\nLatest Index Core Summary:\n${data.summary_snapshot}`;
                 evaluateEmptyState();
                 
-                // Flush gauge meters down to baseline reset states
                 updateSystemGauges(hardTokenCeiling - 1500, hardTokenCeiling, "Architect (70B)");
                 
                 systemStatusText.textContent = "Operational";
@@ -162,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             const response = await fetch(startEndpointInput.value, {
                 method: 'POST',
-                credentials: 'include', // FIXED: Pass cookies to bypass Stage 0
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
@@ -210,3 +209,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (percentage < 25) {
                     tokenGauge.className = "progress-bar bg-danger";
                 } else if (percentage < 60) {
+                    tokenGauge.className = "progress-bar bg-warning";
+                } else {
+                    tokenGauge.className = "progress-bar bg-info";
+                }
+            }
+        }
+    }
+
