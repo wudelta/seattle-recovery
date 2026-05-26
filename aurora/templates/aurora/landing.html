@@ -1,55 +1,26 @@
+{% extends 'aurora_base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome | Aurora Portal</title>
-    
-    <!-- Shared Global Morph Theme Core -->
-    <link rel="stylesheet" href="{% static 'css/aurora.bootstrap.min.css' %}">
 
-    <!-- Screen Bounding Rules Framework -->
-    <style>
-        html, body {
-            overflow: hidden !important;    /* Hard absolute lock: No scrollbars allowed */
-            height: 100vh !important;       /* Hard constraint tracking device window boundaries */
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-    </style>
-</head>
-<body>
+{% block title %}Welcome | Aurora Portal{% endblock %}
 
-    <!-- Main Viewport Structural Fluid Grid Container -->
-    <div class="container-fluid d-flex flex-column justify-content-between p-4" style="height: 100vh; overflow: hidden;">
-        
-        <!-- Header Viewport Space -->
-        <header class="flex-shrink-0">
-            <h1 class="h2 text-primary font-weight-bold mb-0">Aurora Portal</h1>
-        </header>
+{% block extra_css %}
+<!-- Screen Bounding Rules Framework -->
+<style>
+    html, body { 
+        overflow: hidden !important; /* Hard absolute lock: No scrollbars allowed */
+        height: 100vh !important;    /* Hard constraint tracking device window boundaries */
+        margin: 0 !important; 
+        padding: 0 !important; 
+    }
+</style>
+{% endblock %}
 
-        <!-- Main Graphic Section: Calculates exact screen heights natively -->
-        <main class="flex-grow-1 my-3" style="height: calc(100vh - 160px); position: relative; min-height: 200px;">
-            <!-- Completely clean: Morph defaults will automatically apply the signature soft style -->
-            <div id="network-container" class="w-100 h-100 rounded border shadow"></div>
-        </main>
+{% block content %}
+<!-- Completely clean: Morph defaults will automatically apply the signature soft style -->
+<div id="network-container" class="w-100 h-100 rounded border shadow"></div>
+{% endblock %}
 
-        <!-- Footer parameters tracking -->
-        <footer class="pt-2 border-top text-muted flex-shrink-0">
-            <small class="mb-0">&copy; 2026 Aurora Project</small>
-        </footer>
-
-    </div>
-
-    <!-- Core JavaScript Asset Framework Interfaces -->
-    <script src="{% static 'js/jquery-3.2.1.slim.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-    
-    <!-- Shared Global Vis Network Library Link -->
-    <script src="{% static 'js/vis-network.min.js' %}"></script>
-    
-    <!-- Your restored, verified, anti-recursive error-free script execution core -->
-    <script src="{% static 'aurora/js/landing.js' %}?v=pure_morph_lock"></script>
-</body>
-</html>
+{% block extra_js %}
+<!-- Your restored, verified, anti-recursive error-free script execution core -->
+<script src="{% static 'aurora/js/landing.js' %}?v=pure_morph_lock"></script>
+{% endblock %}

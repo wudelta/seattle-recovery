@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'crispy_forms',
+    'crispy_bootstrap5',
     'aurora',
     'hopehub',
 ]
@@ -57,10 +59,17 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core_logic.urls'
 
+# Set Bootstrap 5 as the default render engine
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+# The newer version of crispy looks for a dictionary configuration:
+CRISPY_CONFIG = {
+    "template_pack": "bootstrap5",
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [], # Cleaned up legacy path
+        'DIRS': [BASE_DIR / 'templates'], # Cleaned up legacy path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -153,3 +162,12 @@ ACTIVE_MINIONS = [
     'SYS_GIT',    # Git Security Partition & Cloud Backup Specialist
     'MINION_ADD', # Automation Agent specialized in registering fresh worker profiles
 ]
+
+# Django will look up the URL path automatically based on the name
+LOGIN_REDIRECT_URL = 'aurora:landing'
+
+# Where to send users after they log out (e.g., back to the login screen)
+LOGOUT_REDIRECT_URL = 'login' 
+
+# The URL Django sends users to if a view requires them to be logged in
+LOGIN_URL = 'login' 

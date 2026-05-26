@@ -5,20 +5,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Aurora Portal{% endblock %}</title>
-    
     <!-- Shared Global Morph Theme Core -->
-    <link rel="stylesheet" href="{% static 'css/aurora.bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/morph.bootstrap.min.css' %}">
+    <!-- Child Page Specific CSS Inject Hook -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <!-- This slot lets child templates plug in their screens -->
-    {% block content %}{% endblock %}
+    <!-- NEW HEADER: Placed outside, full width, relative positioning -->
+    <header class="container-fluid d-flex align-items-center p-4 position-relative bg-transparent flex-shrink-0">
+        <!-- Logo on the left -->
+        <a href="{% url 'aurora:landing' %}" style="text-decoration: none;" class="position-relative z-index-1">
+            <img src="{% static 'media/aurora_logo.png' %}" alt="Aurora Portal Logo" style="max-width: 150px; height: auto; border: none;">
+        </a>
+        
+        <!-- Centered Container for Title + Tagline -->
+        <div class="position-absolute start-50 translate-middle-x d-flex align-items-baseline gap-3 text-nowrap">
+            <!-- Main Title: Uses theme's dark text color by default, but styled thick -->
+            <h1 class="display-4 text-dark mb-0" style="font-weight: 900; letter-spacing: 1px; line-height: 1;">Aurora</h1>
+            
+            <!-- Tagline: Uses theme's muted/secondary gray color -->
+            <span class="h5 text-muted fst-italic mb-0">"You imagine it, we build it"</span>
+        </div>
+    </header>
+
+    <!-- Main Viewport Structural Fluid Grid Container (Adjusted height for the new header) -->
+    <div class="container-fluid d-flex flex-column justify-content-between px-4 pb-4" style="height: calc(100vh - 90px); overflow: hidden;">
+        
+        <!-- Dynamic Main Graphic Section for all Child Views -->
+        <main class="flex-grow-1 mb-3" style="position: relative; min-height: 200px;">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer tracking parameters across the app platform -->
+        <footer class="pt-2 border-top text-muted flex-shrink-0">
+            <small class="mb-0">&copy; 2026 Aurora Project</small>
+        </footer>
+    </div>
 
     <!-- Core JavaScript Assets -->
     <script src="{% static 'js/jquery-3.2.1.slim.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
     <script src="{% static 'js/vis-network.min.js' %}"></script>
-    
+    <!-- Child Page Specific JS Scripts Inject Hook -->
     {% block extra_js %}{% endblock %}
 </body>
 </html>

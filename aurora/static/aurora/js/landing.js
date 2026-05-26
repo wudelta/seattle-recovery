@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { id: 5, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
         { id: 6, label: 'HopeHub', url: "/aurora/", color: '#d946ef', target: '_blank' },
         { id: 7, label: 'Journal', url: "/hopehub/journal_entries/", color: '#10b981' },
-        { id: 8, label: 'Daily Brief', url: "/aurora/daily_brief/", color: '#10b981' },
+        { id: 8, label: 'Delta Notes', url: "/aurora/add_note/", color: '#10b981' },
         { id: 9, label: 'GitHub', url: "https://github.com", color: '#94a3b8', target: '_blank' }
     ]);
 
