@@ -1,40 +1,121 @@
-# Project Aurora: Strategic Plan & Workspace State Token
-**Target Objectives Matrix for Session Date: 2026-05-25**
-*Status: Architecture Verified, Dual-Target Local Persistence Active, Assets Synced to Git*
+# ARCHITECTURAL COMPONENT BLUEPRINT: AUTOMATED APP BUILDER
+
+## 1. PROJECT META & CORE PARADIGM
+
+* **Project Name:** Aurora / HopeHub
+* **System Vision:** Fully automated, AI-assisted, web-based application builder.
+* **Core Philosophy:** High-density context mapping, zero cloud dependency, token-optimized local pipelines.
+* **Development Constraints:** 2 Cores, 8GB RAM, Groq Free-Tier API Limits.
+* **The Core Meta-Loop:** Aurora is the AI-assisted engine built to automatically construct, test, and deploy HopeHub.
+
+### 1.1 HOPEHUB MISSION STATEMENT & ETHICAL CORE
+
+> "We provide practical, life-changing aid by solving the daily challenges that stand in the way of recovery. From housing and food to financial security and emotional support, our goal is to break the chains of substance use and despair. We replace hopelessness with a roadmap for growth, connection, and a well-being that lasts."
+
+### 1.2 UX/UI DESIGN PRINCIPLES FOR RECOVERY MAPPING
+
+* **Low Cognitive Load:** Interface must avoid cluttered data tables. Users under chronic stress require high-contrast, simple, step-by-step interactive workflows.
+* **Immediate Utility First:** Practical aid (housing, food, crisis routing) must sit at the root level, requiring the absolute minimum number of clicks.
+* **Visual Progression:** Layout must visually emphasize progress via node-based, graphical step trackers powered by Neo4j relationships.
 
 ---
 
-## 1. Active System State Profile (Where We Left Off)
-*   **The Brain Core**: Django operates as a Headless JSON Data Engine. Global context initialization is fully insulated via lazy-loading structures inside `core_logic/memory.py` to prevent static verification check freezes.
-*   **Morning Handshake (`start_online_session.py`)**: Fully verified via terminal unit tests (`OK`). Upgraded to route payloads straight through the Groq-powered Llama 3.1 8B minion context translation loop. *Status: Disconnected from browser UI.*
-*   **Evening Cleanup (`end_session_view.py` / `backup.py`)**: Fully verified via terminal testing (`OK`). Upgraded to dual-target local persistence. Retains real database binary files (`.dump` and `.tar.gz`) inside `core_logic/staging/backups/` and accurately tracks raw file-size footprints on disk before executing background thread pushes to GitHub.
-*   **Safe Execution Safeguards (`minion_patcher.py` / `minion_runner.py`)**: Built with a 4-layer file protection matrix. Zero-byte truncation is structurally impossible. Code patches write to a sandboxed `.tmp` file, run automated `TestCase` loops, and execute an AI-driven self-healing routine up to 3 times before rolling back cleanly from a backup copy.
-*   **Web Interface Layout (`dashboard.html` / `script.js`)**: Highly optimized. Active buttons, log templates, and manual timing logs are fully consolidated into a responsive single-line footer tray dock, leaving the sidebar dedicated exclusively to status meters and gauges.
+## 2. PURGATORY ENGINE PROTOCOL: ZERO-QUICKSAND DEVELOPMENT MATRIX
+**[DESCRIPTOR: STANDALONE DATA INFRASTRUCTURE & TERMINAL TEST PIPELINES]**
+
+### 2.1 MANDATORY OPERATIONAL PHILOSOPHY
+You are strictly forbidden from writing or modifying any code within monolithic, coupled systems where data processing and visual UI layouts fight for state control.
+* **Decoupled Architecture:** All application layers must remain strictly decoupled.
+* **Backend Boundaries:** Backend engine handles ONLY deterministic JSON data packages, database transactions, session boundaries, and system file manipulation.
+* **Frontend Boundaries:** Interface presentation, visual formatting wrappers, loading spin-states, and visual empty-states are handled EXCLUSIVELY by the frontend client view layer.
+* **Session Boundaries:** Enforce a strict One-Task-Per-Session boundary layer. Clear chat context arrays frequently via micro-sweeps to keep active tokens under the Groq free-tier ceiling.
+
+### 2.2 THE THREE-STAGE PIPELINE CHECKLIST (REQUIRED EVERY STEP)
+
+#### STAGE 1: PRINT-HEAVY, EXPLICIT TRACE ENGINE
+Every view, function, loop, and file operation generated MUST contain sequential, alphanumeric stdout terminal `print()` statements tracking data progress milestones.
+* **Tracking Prefix:** `print("🔍 [STAGE X] Description of active transaction metric payload...")`
+* **Success Marker:** `print("✅ [STAGE X] Explicit confirmation of successful module completion.")`
+* **Error Intercept:** `print("❌ [STAGE X CRASH] Anomaly captured: " + str(err))_`
+
+#### STAGE 2: DEFENSIVE ERROR TRAPPING & SILENT CRASH PROTECTION
+* **Strict Try/Except:** Wrap all network, database, file-handling, and subprocess execution code blocks inside strict `try/except` closures.
+* **No Thread Freezes:** Never let an internal error freeze an application thread. Implement clear, localized safety fallbacks.
+* **Asynchronous I/O:** Never write blocking external operating system executions. All network bound or I/O bound commands (such as `git push`, backups, or file exports) MUST be offloaded to an asynchronous background worker thread using `threading.Thread(daemon=True)`.
+
+#### STAGE 3: BROWSER-FREE PIPELINE AUTOMATION TESTING
+* **Terminal Suites:** Every feature module built must be accompanied by an independent, automated integration or unit testing script (`django.test.TestCase` framework) executable via `python manage.py test`.
+* **Dynamic Lookup:** All URL testing endpoints must pull from native path naming maps using absolute dynamic lookups (e.g., `reverse('namespace:view_name')`) to eliminate relative string pathing mismatches.
+
+### 2.3 CORE EXECUTABLE MINION ARRAY INTERFACE PROTOCOLS
+When delegating mechanical file modification tasks to 8B Minion worker scripts:
+1. **Trace Arrays:** Minions must output strict terminal trace arrays indicating precisely which files are targeted.
+2. **Zero Chatter:** Minions are strictly limited to code generation, modification, and execution tasks. They must NEVER generate or write conversational chatter or human-centric filler notes to disk.
+3. **Catastrophic Loss Prevention:** Every single file manipulation requires an explicit sanity check execution step to safeguard files against silent truncation or catastrophic data loss.
 
 ---
 
-## 2. Active Backlog Objectives (Tomorrow's Checklist)
+## 3. SYSTEM ENVIRONMENT & TECHNOLOGY INTEGRATION
 
-### Phase 1: Activate Morning Protocol Handshake (Priority 1)
-- [ ] **Task 1.1**: Open `aurora/templates/aurora/dashboard.html` and add the hidden tracking input (`id="aurora-start-session-endpoint"`) using the namespaced URL template path map `{% url 'aurora:start_online_session' %}`.
-- [ ] **Task 1.2**: Open `aurora/static/aurora/js/script.js` and add the asynchronous `executeMorningHandshakeSequence()` trigger at the very bottom of the page execution block.
-- [ ] **Task 1.3**: Launch the local server and verify that loading the dashboard browser page immediately triggers the 8B minion to parse your plain-English journal entry and load Wu's ultra-dense context instructions envelope right on your screen.
+### 3.1 Relational State Layer (PostgreSQL)
+* **Role:** Multi-tenant user authentication, core transactional data, permission matrices, and token context tracking.
+* **Optimization Component:** PostgreSQL Entity-Attribute-Value (EAV) micro-summary engine tracks and flushes active chat context histories to preserve RAM and Groq API token capacity.
 
-### Phase 2: Live Continuous Sweeper Finalization & Routing
-- [ ] **Task 2.1**: Map the namespaced path string for `path('micro-cleanup/', micro_cleanup_view, name='micro_cleanup')` directly inside `aurora/urls.py` to expose the new view engine to the web server.
-- [ ] **Task 2.2**: Launch your browser console (F12) and click the newly styled **🧹 Sweep RAM** footer button. Ensure the terminal trace prints out your PostgreSQL EAV micro-summary storage success and rolls your token gauges back to safe baseline capacities.
+### 3.2 Connected Knowledge Layer (Neo4j)
+* **Role:** Dynamic application scaffolding mapping, UI element dependency graphs, and AI worker routing logic.
+* **Driver Location:** `core_logic/neo4j_driver.py` (`Neo4jManager`)
 
-### Phase 3: Active Subsystem Integration (Connecting Wu to Minions)
-- [ ] **Task 3.1**: Connect `SafeMinionPatcher.commit_safe_patch` directly into your main `chat_api` view controller layer. This enables Wu 70B to pass patch specifications to the 8B worker to modify local files on disk natively on target test passes.
-- [ ] **Task 3.2**: Execute an end-to-end task run using your natural journaling routine to ensure code additions are handled with zero human text translation required.
-
-### Phase 4: The Automated Rolling Retention Cleaner
-- [ ] **Task 4.1**: Create an automated utility sweep inside `core_logic/backup.py` to scan `core_logic/staging/backups/` and automatically delete local archives older than 14 days to preserve laptop hard disk limits over time.
+### 3.3 Framework Dependencies
+* **Core Backend:** Django 6.0.4 (Headless JSON Data Engine mode), Django REST Framework
+* **Global Context Architecture:** `core_logic/memory.py` maps lazy-loading structures to prevent static verification check freezes.
+* **Frontend Presentation:** Crispy Forms (Bootstrap 5), Bootswatch template themes, structured single-line footer tray dock containing active status gauges.
 
 ---
 
-## 3. Core Guardrails (Never Disobey)
-1. **Never write frontend HTML template code blocks inside your Django backend files.** All data views must return pure, structured JSON payloads.
-2. **Never troubleshoot file path parameters or API connection routes inside a web browser.** Always test data streams directly from your command line terminal using independent unit testing suites or `python manage.py test aurora`.
-3. **Always offload network-bound operating system commands (such as cloud pushes or database backups) to a detached asynchronous background thread** to keep your development server lightning-fast.
-4. **Never pile multiple features into a single workspace session.** Maintain a strict One-Task-Per-Session boundary layer, clearing chat context arrays frequently via micro-sweeps to keep active tokens under the Groq free-tier ceiling.
+## 4. COMPRESSED APP INVENTORY & RESPONSIBILITY MATRIX
+
+### 4.1 `aurora` App
+* **Core Function:** The scaffolding forge. It holds the AI worker orchestration loops, code parsing utilities, and the developer interface you use to prompt Wu.
+* **Key Targets:** Successful authentication forces a routing redirect to `aurora:landing` (the builder dashboard).
+
+### 4.2 `hopehub` App
+* **Core Function:** The production application. It manages recovery client intake, local resource tracking (housing networks, food distributions, support groups), and dynamic individual progress roadmaps.
+
+### 4.3 `core_logic` App (System Engine)
+* **Core Function:** Root URLs routing, global settings orchestration, shared driver instances.
+* **Staging Directory:** `core_logic/staging/backups/` handles local dual-target persistence for `.dump` and `.tar.gz` binary rollbacks.
+
+---
+
+## 5. AI WORKER PARTITIONS & REGISTRATION SPECS
+
+* **`NONE`**: Structural changes, global schema adjustments, cross-app architectural routing.
+* **`CORE_PY`**: Execution of backend views, form validators, middleware development, and pure Python logic.
+* **`UI_CSS`**: Layout aesthetics, Bootswatch theme custom modifications, styling scaffolding.
+* **`DOM_JS`**: Single-page-app dynamic browser behaviors, local state handling, event triggers.
+* **`DB_SQL`**: Relational tables migration scripts, raw Cypher syntax execution pipelines.
+* **`SYS_GIT`**: Pipeline isolation protocols, local code version branch protection, safety tracking.
+* **`MINION_ADD`**: Automated scripts dedicated to spinning up and registering brand new worker profiles.
+
+---
+
+## 6. SYSTEM FILES & SCRIPTS DIRECTORY
+
+### 6.1 Session & Context Automation
+* `start_online_session.py`: Handles the morning handshake protocol. Routes raw journal text inputs through Llama 3.1 8B minion context translation loops to construct Wu's active context envelope.
+* `end_session_view.py` / `backup.py`: Triggers evening cleanup sequences, measures binary file sizes, and spins up a background thread for safe GitHub synchronization.
+* Retention Rule: `backup.py` scans the backup staging folder and auto-deletes local archives older than 14 days to preserve disk limits.
+
+### 6.2 Self-Healing Patch Pipeline
+* `minion_patcher.py` / `minion_runner.py`: Controls a 4-layer sandboxed code patch matrix. Writes patches to `.tmp` scripts, triggers local `TestCase` validation, runs an AI self-healing retry block up to 3 times, and rolls back cleanly on terminal failures to prevent file truncation.
+* Integration Hook: `SafeMinionPatcher.commit_safe_patch` connects directly to the core `chat_api` controller, allowing Wu (70B) to feed modifications straight down to the 8B minion file workers.
+
+---
+
+## 7. RE-SEED DATA PACKETS (CURRENT STATE WORKSPACE)
+
+* **Active Working Models / Nodes:** None listed yet.
+* **Active Routing Endpoints:**
+  * `aurora:start_online_session` -> Wired to hidden layout input `id="aurora-start-session-endpoint"`
+  * `aurora:micro_cleanup` -> Triggered via frontend footer button `🧹 Sweep RAM`
+

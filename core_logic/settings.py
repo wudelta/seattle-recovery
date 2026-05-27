@@ -123,7 +123,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Open your_project_name/settings.py
+
+# Set your local layout presentation timezone
+TIME_ZONE = 'America/Los_Angeles'
 
 USE_I18N = True
 

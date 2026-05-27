@@ -6,29 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}HopeHub{% endblock %}</title>
     
-    <!-- Link strictly to your new custom HopeHub theme -->
+    <!-- Shared Global Morph Theme Core -->
     <link rel="stylesheet" href="{% static 'css/quartz.bootstrap.min.css' %}">
+    
+    <!-- Child Page Specific CSS Inject Hook -->
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="d-flex flex-column" style="min-height: 100vh;">
 
-    <header class="container mt-4">
-        <!-- Main Application Header (Now properly visible in the body) -->
-        <h1 class="h2 text-dark font-weight-bold mb-3">HopeHub</h1>
+    <!-- NEW HEADER: Responsive and Fluid -->
+    <header class="container-fluid py-4 px-4 bg-transparent flex-shrink-0">
+        <div class="row align-items-center justify-content-center justify-content-md-between g-3">
+            
+            <!-- Logo on the left -->
+            <div class="col-auto">
+                <a href="{% url 'aurora:landing' %}" class="d-block">
+                    <img src="{% static 'media/hopehub_logo.png' %}" alt="HopeHub Logo" style="max-width: 150px; height: auto; border: none;">
+                </a>
+            </div>
 
-        <!-- This placeholder lets child templates inject their own unique menus -->
-        {% block navigation %}{% endblock %}
+            <!-- Centered (or nicely spaced) Container for Title + Tagline -->
+            <div class="col-12 col-md-auto d-flex flex-column flex-md-row align-items-center align-items-md-baseline gap-2 text-center text-md-start">
+                <!-- Main Title -->
+                <h1 class="display-4 text-dark mb-0" style="font-weight: 900; letter-spacing: 1px; line-height: 1;">HopeHub</h1>
+                <!-- Tagline -->
+                <span class="h5 text-muted fst-italic mb-0">"Where hope flourishes"</span>
+            </div>
+
+            <!-- Empty column to balance the right side on larger screens -->
+            <div class="col-auto d-none d-md-block" style="width: 150px;"></div>
+
+        </div>
     </header>
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <!-- Main Viewport Structural Fluid Grid Container -->
+    <div class="container-fluid d-flex flex-column px-4 pb-4 flex-grow-1" style="overflow-y: auto;">
+        <!-- Dynamic Main Graphic Section for all Child Views -->
+        <main class="flex-grow-1 mb-3" style="position: relative; min-height: 200px;">
+            {% block content %}{% endblock %}
+        </main>
 
-    <footer class="container mt-5 py-3 border-top text-muted">
-        <p>&copy; 2026 HopeHub</p>
-    </footer>
+        <!-- Footer tracking parameters across the app platform -->
+        <footer class="pt-2 border-top text-muted flex-shrink-0">
+            <small class="mb-0">&copy; 2026 HopeHub Project</small>
+        </footer>
+    </div>
 
-    <!-- Local JavaScript Assets -->
-    <script src="{% static 'js/jquery-3.2.1.slim.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <!-- Core JavaScript Assets -->
+    <!-- Removed jQuery since Bootstrap 5 operates on pure JS -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/vis-network.min.js' %}"></script>
+    
+    <!-- Child Page Specific JS Scripts Inject Hook -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
