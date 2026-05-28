@@ -25,4 +25,34 @@ urlpatterns = [
     path('daily_brief/', views.daily_brief_view, name='aurora_daily_brief'),
     path('api/notes/create/', views.create_delta_note_api, name='create_delta_note'),
     path('add_note/', views.add_note_view, name='add_note'),
+    # 1. Master Pipeline Control Panel Dashboard View
+    path(
+        'pipeline/<str:feature_name>/', 
+        views.AutomationDashboardView.as_view(), 
+        name='pipeline_dashboard'
+    ),
+    
+    # 2. POST Endpoint: Human Approves/Modifies the Active Minion Step
+    path(
+        'step/<int:step_id>/process/', 
+        views.ProcessMinionStepView.as_view(), 
+        name='process_step'
+    ),
+    
+    # 3. POST Endpoint: Finalizes Two-Part Validation Gate for Feature Release
+    path(
+        'pipeline/<str:feature_name>/finalize/', 
+        views.FinalizeFeatureView.as_view(), 
+        name='finalize_feature'
+    ),
+    path(
+    'step/<int:step_id>/process/', 
+    views.ProcessMinionStepView.as_view(), 
+    name='process_step'
+    ),
+    path(
+    'pipeline/<str:feature_name>/finalize/', 
+    views.FinalizeFeatureView.as_view(), 
+    name='finalize_feature'
+    ),
 ]

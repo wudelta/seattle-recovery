@@ -59,8 +59,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core_logic.urls'
 
-# Set Bootstrap 5 as the default render engine
+# ==============================================================================
+# CRISPY FORMS FOR BOOTSTRAP 5 LAYOUT DESIGN
+# ==============================================================================
+# Enforces native utility wrappers compatible with global Bootswatch skins.
+# ==============================================================================
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 # The newer version of crispy looks for a dictionary configuration:
 CRISPY_CONFIG = {
     "template_pack": "bootstrap5",

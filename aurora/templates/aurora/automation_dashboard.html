@@ -1,0 +1,164 @@
+{% extends 'aurora_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Aurora Pipeline Control Center{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Controls: Inherits corporate card styles from Bootswatch -->
+    <div class="card border-primary mb-4 shadow-sm">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap p-3">
+            <div>
+                <h1 class="h3 mb-0 text-primary font-monospace fw-bold">
+                    <i class="bi bi-cpu-fill me-2"></i>AURORA_FORGE // Pipeline Control
+                </h1>
+                <p class="text-muted small mb-0 mt-1">Feature Target Scope: <span class="badge bg-light text-dark">{{ feature_name }}</span></p>
+            </div>
+            <div class="mt-2 mt-md-0">
+                <span class="badge {% if pipeline_status == 'RUNNING' %}bg-success animate-pulse{% else %}bg-secondary{% endif %} p-2 font-monospace fs-6">
+                    STATUS: {{ pipeline_status }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step Track Sequence Indicator -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-secondary shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        {% for step in pipeline_steps %}
+                            <div class="d-flex align-items-center">
+                                <div class="p-2 rounded font-monospace border shadow-sm
+                                    {% if step.id == active_step.id %}bg-primary text-white border-primary
+                                    {% elif step.is_executed %}bg-success text-white border-success
+                                    {% else %}bg-body-tertiary text-muted border-light-subtle{% endif %}">
+                                    <span class="fw-bold">Step {{ step.step_order }}</span>: {{ step.get_stage_display }}
+                                </div>
+                                {% if not forloop.last %}
+                                    <i class="bi bi-chevron-right mx-2 text-muted"></i>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Side-by-Side Panel Split -->
+    <div class="row g-4">
+        <!-- Left Column: Human Inspection & Code Mutation Form Modifier -->
+        <div class="col-lg-7">
+            <div class="card border-secondary shadow h-100">
+                <div class="card-header bg-primary text-white font-monospace d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-sliders me-2"></i>1. PLAN & MUTATION MODIFIER</span>
+                    <span class="badge bg-secondary">Worker: {{ active_step.assigned_minion }}</span>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="automation-blueprint-form" action="{% url 'aurora:process_step' active_step.id %}">
+                        {% csrf_token %}
+                        
+                        <!-- Form fields parse automatically to match Bootswatch text-areas and inputs via Crispy -->
+                        {% crispy form %}
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Minion Telemetry & Verification Simulator -->
+        <div class="col-lg-5">
+            <div class="card border-secondary shadow h-100 font-monospace">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-terminal-fill me-2"></i>2. MINION EXECUTION PIPELINE</span>
+                    <small class="opacity-75">PID: LOCAL_WORKER</small>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-between bg-body-tertiary">
+                    <!-- File Metadata System Info Card -->
+                    <div class="mb-3 p-3 bg-body border rounded border-secondary">
+                        <div class="text-muted small">TARGET_PATH:</div>
+                        <div class="text-success fw-bold text-break mb-2">{{ active_step.target_file_path }}</div>
+                        <div class="text-muted small">ANCHOR_SIGNATURE:</div>
+                        <div class="text-warning text-break">`{{ active_step.anchor_signature|default:"EOF (Append to File)" }}`</div>
+                    </div>
+
+                    <!-- Sandbox Automation Console Stream: Inherits input/pre background context from Bootswatch -->
+                    <div class="flex-grow-1 mb-3">
+                        <label class="text-muted small mb-1 d-block">AURORA_MINION_STDOUT:</label>
+                        <pre class="p-3 bg-body text-body rounded border border-secondary overflow-y-auto mb-0" style="height: 280px; white-space: pre-wrap;">{{ active_step.execution_logs|default:"⏳ Awaiting execution authorization signal from human operator..." }}</pre>
+                    </div>
+
+                    <!-- Minion Live Status Notification Block -->
+                    <div class="alert {% if active_step.is_executed %}alert-success{% else %}alert-warning{% endif %} d-flex align-items-center mb-0 border shadow-sm" role="alert">
+                        <div class="spinner-border spinner-border-sm me-3 {% if active_step.is_executed %}d-none{% endif %}" role="status"></div>
+                        <div>
+                            <strong>Minion Current State:</strong> 
+                            {% if active_step.is_executed %}
+                                Complete. Target code successfully injected and compiled.
+                            {% else %}
+                                Halting pipeline execution. Awaiting human verification and approval flag.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Global Footer Execution & Two-Part Validation Gate -->
+    {% if all_steps_executed %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-success shadow-lg">
+                <div class="card-header bg-success text-white font-monospace fw-bold">
+                    <i class="bi bi-shield-check me-2"></i>3. TWO-PART AUTOMATED SYSTEM VALIDATION GATE
+                </div>
+                <div class="card-body bg-body-tertiary">
+                    <div class="row align-items-center">
+                        <!-- Gate 1: Automated Suite Output Indicator -->
+                        <div class="col-md-6 mb-3 mb-md-0 border-end border-secondary">
+                            <h5 class="text-success font-monospace mb-2"><i class="bi bi-check-circle-fill me-2"></i>GATE 1: Automated Test Validation</h5>
+                            <div class="progress mb-2" style="height: 22px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 100%">100%</div>
+                            </div>
+                            <small class="text-muted font-monospace">Command: `python manage.py test` ➔ <span class="text-success fw-bold">EXIT_CODE 0 (ALL PASSED)</span></small>
+                        </div>
+                        
+                        <!-- Gate 2: Interactive Human Sign-off Verification -->
+                        <div class="col-md-6 ps-md-4">
+                            <h5 class="text-warning font-monospace mb-2"><i class="bi bi-eye-fill me-2"></i>GATE 2: Visual Human Verification</h5>
+                            <p class="small text-muted mb-3">Launch a sandboxed secure window instance of your new webpage directly inside your development browser environment.</p>
+                            <div class="d-flex gap-2">
+                                <a href="/under-construction/" target="_blank" class="btn btn-outline-info font-monospace flex-grow-1">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>Open Local Sandbox View
+                                </a>
+                                <form method="post" action="{% url 'hopehub:finalize_feature' feature_name %}" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success font-monospace w-100">
+                                        <i class="bi bi-rocket-takeoff-fill me-2"></i>Final Feature Approval
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Styling to simulate pulse on telemetry badges */
+    .animate-pulse {
+        animation: pulse-animation 2s infinite;
+    }
+    @keyframes pulse-animation {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}

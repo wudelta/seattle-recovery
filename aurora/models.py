@@ -144,3 +144,102 @@ class DeltaDirective(models.Model):
 
     def __str__(self):
         return f"DeltaDirective: {self.directive_name} (Assigned: {self.assigned_to})"
+
+
+class AutomatedBuildStep(models.Model):
+    """
+    Relational tracking state machine managing the sequential build parameters
+    and automation payloads executed by Aurora's minion worker array.
+    """
+    STAGE_CHOICES = [
+        ('SETUP_TEST', '1. Write Failing Test'),
+        ('BUILD_HTML', '2. Generate HTML Template'),
+        ('BUILD_VIEW', '3. Implement View Class'),
+        ('BUILD_ROUTER', '4. Register URL Path'),
+        ('VERIFY_TDD', '5. Run Verification Suite'),
+    ]
+
+    APPROVAL_CHOICES = [
+        ('PENDING_REVIEW', 'Pending Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+
+    # Core Metadata & Sequence Management
+    feature_name = models.CharField(
+        max_length=100,
+        help_text="Unique lowercase identifier for the target feature group (e.g., 'under_construction_page')."
+    )
+    step_order = models.PositiveIntegerField(
+        help_text="Strict sequential order for pipeline execution (e.g., 1, 2, 3, 4)."
+    )
+    stage = models.CharField(
+        max_length=20, 
+        choices=STAGE_CHOICES,
+        help_text="The explicit system development lifecycle phase."
+    )
+    title = models.CharField(
+        max_length=150,
+        help_text="Short, human-readable title describing this specific automation step."
+    )
+    
+    # Target File System Targeting Parameters
+    target_file_path = models.CharField(
+        max_length=255,
+        help_text="Relative directory file path to modify (e.g., 'hopehub/tests/test_views.py')."
+    )
+    
+    # Automation Payloads & Code Mutation Signatures
+    code_payload = models.TextField(
+        blank=True,
+        help_text="The raw Python code or HTML snippet text to inject or write to disk."
+    )
+    anchor_signature = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="The string or regex token used to position code insertion inside an existing file."
+    )
+    
+    # Human-in-the-Loop Workflow Tracking States
+    approval_status = models.CharField(
+        max_length=20,
+        choices=APPROVAL_CHOICES,
+        default='PENDING_REVIEW',
+        help_text="Controls if a worker minion has authorization to run file updates."
+    )
+    assigned_minion = models.CharField(
+        max_length=50,
+        help_text="The descriptive identity name of the runner executing this code operation."
+    )
+    human_notes = models.TextField(
+        blank=True,
+        help_text="Your personal workspace adjustments, rationale, or design notes."
+    )
+    
+    # Self-Verification Telemetry & Shell Validation Gate Data
+    verification_command = models.CharField(
+        max_length=255,
+        help_text="The shell command run to verify compilation (e.g., 'python manage.py test')."
+    )
+    expected_exit_code = models.IntegerField(
+        default=0,
+        help_text="The terminal response code expected. 0 for clean pass, 1 for TDD initial failure."
+    )
+    execution_logs = models.TextField(
+        blank=True,
+        help_text="Raw standard output and error telemetry streaming back from the active worker subprocess."
+    )
+    is_executed = models.BooleanField(
+        default=False,
+        help_text="Tracks whether the task step has run successfully and cleared validation checkpoints."
+    )
+
+    class Meta:
+        ordering = ['feature_name', 'step_order']
+        # Strict structural block ensuring no matching order entries collide inside a single feature scope
+        unique_together = ['feature_name', 'step_order']
+        verbose_name = "Automated Build Step"
+        verbose_name_plural = "Automated Build Steps"
+
+    def __str__(self):
+        return f"{self.feature_name} - Step {self.step_order}: {self.title}"
