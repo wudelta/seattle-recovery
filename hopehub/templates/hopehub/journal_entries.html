@@ -1,210 +1,206 @@
-{% extends 'hopehub_base.html' %}
-{% load static %}
+{% extends 'hopehub_base.html' %} 
+{% load static %} 
 
-{% block title %}Journal Entries | HopeHub{% endblock %}
+{% block title %}Journal Entries | HopeHub{% endblock %} 
 
-{% block extra_css %}
-<style>
-    /* Bulletproof custom transition that does not rely on Bootstrap's JS engine */
-    #allEntriesCollapse {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.4s ease-out;
-    }
-    #allEntriesCollapse.show-cards {
-        max-height: 2000px; /* Large ceiling value to accommodate many extra cards */
-    }
-</style>
+{% block extra_css %} 
+<style> 
+/* Bulletproof custom transition that does not rely on Bootstrap's JS engine */ 
+#allEntriesCollapse { 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.4s ease-out; 
+} 
+#allEntriesCollapse.show-cards { 
+    max-index: none;
+    max-height: 4000px; /* Elevated ceiling value to house extra hidden rows comfortably */ 
+} 
+</style> 
 {% endblock %}
 
-{% block content %}
-<div class="container my-5">
+{% block content %} 
+<div class="container mt-2 mb-5"> 
 
-    <!-- Transparent Navigation Menu for Bootstrap 5 with Counter Badge -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent mb-4 px-0">
-        <button class="navbar-toggler border-0 text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon" style="filter: invert(0.2);"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link text-dark fw-bold active opacity-75 px-0 d-flex align-items-center gap-2" href="{% url 'hopehub:journal_entries' %}">
-                        <span>Journal Entries</span>
-                        {% if journal_entries %}
-                        <span class="badge rounded-pill bg-dark text-white opacity-100" style="font-size: 0.75rem;">{{ journal_entries|length }}</span>
-                        {% endif %}
-                    </a>
-                </li>
-            </ul>
+    <!-- Header Area with Call-to-Action Button --> 
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom"> 
+        <div class="d-flex align-items-center gap-3">
+            <h2 class="h4 text-dark fw-bold mb-0">My Journal</h2> 
+            {% if journal_entries %} 
+                <span class="badge rounded-pill bg-dark text-white" style="font-size: 0.8rem;">
+                    {{ journal_entries|length }} Entries
+                </span> 
+            {% endif %}
         </div>
-    </nav>
+        <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary shadow-sm"> 
+            + New Journal Entry 
+        </a> 
+    </div> 
 
-    <!-- Header Area with Call-to-Action Button -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h2 class="h4 text-dark fw-bold mb-0">My Journal</h2>
-        <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary shadow-sm">
-            + New Journal Entry
-        </a>
-    </div>
-
-    <!-- Check if any entries exist -->
-    {% if journal_entries %}
-    
-    <!-- Primary Grid: Shows the first 6 entries -->
-    <div class="row g-4">
-        {% for journal_entry in journal_entries|slice:":6" %}
-        <div class="col-md-6 col-lg-4">
-            <!-- Individual Entry Card -->
-            <div class="card h-100 shadow-sm border-0">
-                
-                <!-- Timestamps Header Area -->
-                <div class="card-header bg-transparent border-0 pt-3 pb-0 px-3 d-flex justify-content-between align-items-center">
-                    <span class="small text-muted" title="Created on">
-                        {{ journal_entry.created_at|date:"M d, Y g:i A" }}
-                    </span>
-                    <!-- Only display the updated timestamp if it differs from creation time (compared by minute) -->
-                    {% if journal_entry.updated_at|date:"YmdHi" != journal_entry.created_at|date:"YmdHi" %}
-                    <span class="small text-muted fst-italic" title="Last updated" style="font-size: 0.75rem;">
-                        Updated: {{ journal_entry.updated_at|date:"M d, Y" }}
-                    </span>
-                    {% endif %}
-                </div>
-
-                <div class="card-body d-flex flex-column pt-2">
-                    <!-- Journal Main Text Content (Limited to 5 lines with scrollbar) -->
-                    <div class="flex-grow-1 mb-3 pe-1" style="max-height: calc(1.5rem * 5); overflow-y: auto; line-height: 1.5rem;">
-                        <p class="card-text text-dark fw-semibold mb-0" style="white-space: pre-wrap;">{{ journal_entry.text }}</p>
-                    </div>
-
-                    <!-- Meta Information Area -->
-                    <div class="border-top pt-3 mt-auto">
-                        <div class="row g-0 mb-2 align-items-center">
-                            <div class="col-6 small text-muted">
-                                <strong>Emotion:</strong> {{ journal_entry.emotion }}
-                            </div>
-                            <div class="col-6 small text-muted text-end">
-                                <strong>Mood:</strong> <span class="badge bg-secondary px-2 py-1">{{ journal_entry.mood_rating }}/10</span>
-                            </div>
-                        </div>
-
-                        <!-- Tags Container -->
-                        {% if journal_entry.tags.all %}
-                        <div class="mb-2">
-                            <span class="small text-muted d-block mb-1">Tags:</span>
-                            {% for tag in journal_entry.tags.all %}
-                            <span class="badge bg-light border text-secondary me-1 mb-1">{{ tag }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <!-- Categories Container -->
-                        {% if journal_entry.categories.all %}
-                        <div class="mb-3">
-                            <span class="small text-muted d-block mb-1">Categories:</span>
-                            {% for category in journal_entry.categories.all %}
-                            <span class="badge bg-info text-dark me-1 mb-1">{{ category }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Action Footer Inside Card -->
-                    <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-2 d-flex justify-content-end gap-2">
-                        <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a>
-                        <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Hidden Collapse Container -->
-    {% if journal_entries|length > 6 %}
-    <div id="allEntriesCollapse">
-        <div class="row g-4 pt-4">
-            {% for journal_entry in journal_entries|slice:"6:" %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header bg-transparent border-0 pt-3 pb-0 px-3 d-flex justify-content-between align-items-center">
-                        <span class="small text-muted">{{ journal_entry.created_at|date:"M d, Y g:i A" }}</span>
-                        {% if journal_entry.updated_at|date:"YmdHi" != journal_entry.created_at|date:"YmdHi" %}
-                        <span class="small text-muted fst-italic" style="font-size: 0.75rem;">Updated: {{ journal_entry.updated_at|date:"M d, Y" }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="card-body d-flex flex-column pt-2">
-                        <div class="flex-grow-1 mb-3 pe-1" style="max-height: calc(1.5rem * 5); overflow-y: auto; line-height: 1.5rem;">
-                            <p class="card-text text-dark fw-semibold mb-0" style="white-space: pre-wrap;">{{ journal_entry.text }}</p>
-                        </div>
-                        <div class="border-top pt-3 mt-auto">
-                            <div class="row g-0 mb-2 align-items-center">
-                                <div class="col-6 small text-muted"><strong>Emotion:</strong> {{ journal_entry.emotion }}</div>
-                                <div class="col-6 small text-muted text-end"><strong>Mood:</strong> <span class="badge bg-secondary px-2 py-1">{{ journal_entry.mood_rating }}/10</span></div>
-                            </div>
-                            {% if journal_entry.tags.all %}
-                            <div class="mb-2">
-                                <span class="small text-muted d-block mb-1">Tags:</span>
-                                {% for tag in journal_entry.tags.all %}
-                                <span class="badge bg-light border text-secondary me-1 mb-1">{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            {% if journal_entry.categories.all %}
-                            <div class="mb-3">
-                                <span class="small text-muted d-block mb-1">Categories:</span>
-                                {% for category in journal_entry.categories.all %}
-                                <span class="badge bg-info text-dark me-1 mb-1">{{ category }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-2 d-flex justify-content-end gap-2">
-                            <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a>
-                            <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Action Button to Trigger Manual JavaScript Toggle -->
-    <div class="text-center mt-5">
-        <button class="btn btn-outline-dark px-4 fw-bold shadow-sm" type="button" id="viewAllBtn">
-            View All Entries
-        </button>
-    </div>
-    {% endif %}
-
-    {% else %}
-    <!-- Empty State UI -->
-    <div class="text-center py-5 bg-light rounded shadow-sm border">
-        <p class="text-muted mb-3">You haven't written any journal entries yet.</p>
-        <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary">
-            Write Your First Entry
-        </a>
-    </div>
-    {% endif %}
-{% endblock %}
-{% block extra_js %}
-<script>
-    // Pure vanilla JavaScript independent of global framework setups
-    document.addEventListener('DOMContentLoaded', function() {
-        const btn = document.getElementById('viewAllBtn');
-        const container = document.getElementById('allEntriesCollapse');
+    <!-- Check if any entries exist --> 
+    {% if journal_entries %} 
         
-        if (btn && container) {
-            btn.addEventListener('click', function() {
-                container.classList.toggle('show-cards');
-                
-                if (container.classList.contains('show-cards')) {
-                    btn.textContent = 'Show Less';
-                } else {
-                    btn.textContent = 'View All Entries';
-                }
-            });
-        }
-    });
-</script>
+        <!-- Primary Grid: Shows the first 6 entries --> 
+        <div class="row g-4"> 
+            {% for journal_entry in journal_entries|slice:":6" %} 
+            <div class="col-md-6 col-lg-4"> 
+                <div class="card h-100 shadow-sm border-0"> 
+                    
+                    <!-- Timestamps Header Area --> 
+                    <div class="card-header bg-transparent border-0 pt-3 pb-0 px-3 d-flex justify-content-between align-items-center"> 
+                        <span class="small text-muted" title="Created on"> 
+                            {{ journal_entry.created_at|date:"M d, Y g:i A" }} 
+                        </span> 
+                        {% if journal_entry.updated_at|date:"YmdHi" != journal_entry.created_at|date:"YmdHi" %} 
+                        <span class="small text-muted fst-italic" title="Last updated" style="font-size: 0.75rem;"> 
+                            Updated: {{ journal_entry.updated_at|date:"M d, Y" }} 
+                        </span> 
+                        {% endif %} 
+                    </div> 
+
+                    <div class="card-body d-flex flex-column pt-2"> 
+                        <div class="flex-grow-1 mb-3 pe-1" style="max-height: calc(1.5rem * 5); overflow-y: auto; line-height: 1.5rem;"> 
+                            <p class="card-text text-dark fw-semibold mb-0" style="white-space: pre-wrap;">{{ journal_entry.text }}</p> 
+                        </div> 
+
+                        <!-- Meta Information Area --> 
+                        <div class="border-top pt-3 mt-auto"> 
+                            <div class="row g-0 align-items-center"> 
+                                <div class="col-6 small text-muted"> 
+                                    <!-- Dynamic Emotion Color Badge + Prepended Emoji Icon Mapping -->
+                                    <span class="badge px-2 py-1 rounded d-inline-flex align-items-center gap-1 {% if journal_entry.emotion in 'sad anxious frustrated angry overwhelmed' %}bg-danger-subtle text-danger border border-danger-subtle{% elif journal_entry.emotion in 'balanced reflective tired' %}bg-secondary-subtle text-secondary border border-secondary-subtle{% elif journal_entry.emotion in 'peaceful hopeful' %}bg-primary-subtle text-primary border border-primary-subtle{% else %}bg-success-subtle text-success border border-success-subtle{% endif %}">
+                                        <span>
+                                            {% if journal_entry.emotion == 'joyful' %}😊
+                                            {% elif journal_entry.emotion == 'peaceful' %}😌
+                                            {% elif journal_entry.emotion == 'grateful' %}🙏
+                                            {% elif journal_entry.emotion == 'hopeful' %}✨
+                                            {% elif journal_entry.emotion == 'balanced' %}😐
+                                            {% elif journal_entry.emotion == 'reflective' %}🤔
+                                            {% elif journal_entry.emotion == 'anxious' %}😰
+                                            {% elif journal_entry.emotion == 'sad' %}😢
+                                            {% elif journal_entry.emotion == 'frustrated' %}😒
+                                            {% elif journal_entry.emotion == 'angry' %}😤
+                                            {% elif journal_entry.emotion == 'tired' %}🥱
+                                            {% elif journal_entry.emotion == 'overwhelmed' %}🤯
+                                            {% endif %}
+                                        </span>
+                                        <span>{{ journal_entry.emotion|capfirst }}</span>
+                                    </span>
+                                </div> 
+                                <div class="col-6 small text-muted text-end"> 
+                                    <strong>Mood:</strong> 
+                                    <span class="badge {% if journal_entry.mood_rating <= 3 %}bg-danger{% elif journal_entry.mood_rating <= 5 %}bg-secondary{% elif journal_entry.mood_rating <= 8 %}bg-primary{% else %}bg-success{% endif %} px-2 py-1">
+                                        {{ journal_entry.mood_rating }}/10
+                                    </span> 
+                                </div> 
+                            </div> 
+                        </div> 
+
+                        <!-- Action Footer Inside Card --> 
+                        <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-3 d-flex justify-content-end gap-2"> 
+                            <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a> 
+                            <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a> 
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+            {% endfor %} 
+        </div> 
+
+        <!-- Hidden Collapse Container --> 
+        {% if journal_entries|length > 6 %} 
+        <div id="allEntriesCollapse"> 
+            <div class="row g-4 pt-4"> 
+                {% for journal_entry in journal_entries|slice:"6:" %} 
+                <div class="col-md-6 col-lg-4"> 
+                    <div class="card h-100 shadow-sm border-0"> 
+                        <div class="card-header bg-transparent border-0 pt-3 pb-0 px-3 d-flex justify-content-between align-items-center"> 
+                            <span class="small text-muted">{{ journal_entry.created_at|date:"M d, Y g:i A" }}</span> 
+                            {% if journal_entry.updated_at|date:"YmdHi" != journal_entry.created_at|date:"YmdHi" %} 
+                            <span class="small text-muted fst-italic" style="font-size: 0.75rem;">Updated: {{ journal_entry.updated_at|date:"M d, Y" }}</span> 
+                            {% endif %} 
+                        </div> 
+                        <div class="card-body d-flex flex-column pt-2"> 
+                            <div class="flex-grow-1 mb-3 pe-1" style="max-height: calc(1.5rem * 5); overflow-y: auto; line-height: 1.5rem;"> 
+                                <p class="card-text text-dark fw-semibold mb-0" style="white-space: pre-wrap;">{{ journal_entry.text }}</p> 
+                            </div> 
+                            <div class="border-top pt-3 mt-auto"> 
+                                <div class="row g-0 align-items-center"> 
+                                    <div class="col-6 small text-muted">
+                                        <!-- Dynamic Emotion Color Badge + Prepended Emoji Icon Mapping for Collapsed Grid -->
+                                        <span class="badge px-2 py-1 rounded d-inline-flex align-items-center gap-1 {% if journal_entry.emotion in 'sad anxious frustrated angry overwhelmed' %}bg-danger-subtle text-danger border border-danger-subtle{% elif journal_entry.emotion in 'balanced reflective tired' %}bg-secondary-subtle text-secondary border border-secondary-subtle{% elif journal_entry.emotion in 'peaceful hopeful' %}bg-primary-subtle text-primary border border-primary-subtle{% else %}bg-success-subtle text-success border border-success-subtle{% endif %}">
+                                            <span>
+                                                {% if journal_entry.emotion == 'joyful' %}😊
+                                                {% elif journal_entry.emotion == 'peaceful' %}😌
+                                                {% elif journal_entry.emotion == 'grateful' %}🙏
+                                                {% elif journal_entry.emotion == 'hopeful' %}✨
+                                                {% elif journal_entry.emotion == 'balanced' %}😐
+                                                {% elif journal_entry.emotion == 'reflective' %}🤔
+                                                {% elif journal_entry.emotion == 'anxious' %}😰
+                                                {% elif journal_entry.emotion == 'sad' %}😢
+                                                {% elif journal_entry.emotion == 'frustrated' %}😒
+                                                {% elif journal_entry.emotion == 'angry' %}😤
+                                                {% elif journal_entry.emotion == 'tired' %}🥱
+                                                {% elif journal_entry.emotion == 'overwhelmed' %}🤯
+                                                {% endif %}
+                                            </span>
+                                            <span>{{ journal_entry.emotion|capfirst }}</span>
+                                        </span>
+                                    </div> 
+                                    <div class="col-6 small text-muted text-end">
+                                        <strong>Mood:</strong> 
+                                        <span class="badge {% if journal_entry.mood_rating <= 3 %}bg-danger{% elif journal_entry.mood_rating <= 5 %}bg-secondary{% elif journal_entry.mood_rating <= 8 %}bg-primary{% else %}bg-success{% endif %} px-2 py-1">
+                                            {{ journal_entry.mood_rating }}/10
+                                        </span>
+                                    </div> 
+                                </div> 
+                            </div> 
+                            <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-3 d-flex justify-content-end gap-2"> 
+                                <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a> 
+                                <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a> 
+                            </div> 
+                        </div> 
+                    </div> 
+                </div> 
+                {% endfor %} 
+            </div> 
+        </div> 
+
+        <!-- Action Button to Trigger Manual JavaScript Toggle --> 
+        <div class="text-center mt-5"> 
+            <button class="btn btn-outline-dark px-4 fw-bold shadow-sm" type="button" id="viewAllBtn"> 
+                View All Entries 
+            </button> 
+        </div> 
+        {% endif %} 
+
+    {% else %} 
+        <!-- Empty State UI --> 
+        <div class="text-center py-5 bg-light rounded shadow-sm border"> 
+            <p class="text-muted mb-3">You haven't written any journal entries yet.</p> 
+            <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary"> 
+                Write Your First Entry 
+            </a> 
+        </div> 
+    {% endif %} 
+</div> 
+{% endblock %}
+
+{% block extra_js %} 
+<script> 
+document.addEventListener('DOMContentLoaded', function() { 
+    const btn = document.getElementById('viewAllBtn'); 
+    const container = document.getElementById('allEntriesCollapse'); 
+    
+    if (btn && container) { 
+        btn.addEventListener('click', function() { 
+            container.classList.toggle('show-cards'); 
+            if (container.classList.contains('show-cards')) { 
+                btn.textContent = 'Show Less'; 
+            } else { 
+                btn.textContent = 'View All Entries'; 
+            } 
+        }); 
+    } 
+}); 
+</script> 
 {% endblock %}

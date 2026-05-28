@@ -1,75 +1,267 @@
-{% extends 'hopehub_base.html' %}
-{% load static %}
+{% extends 'hopehub_base.html' %} 
+{% load static %} 
 
-{% block title %}{% if form.instance.pk %}Edit Entry{% else %}New Entry{% endif %} | HopeHub{% endblock %}
+{% block title %}
+  {% if form.instance.pk %}Edit Entry{% else %}New Entry{% endif %} | HopeHub
+{% endblock %} 
 
-{% block navigation %}
-<!-- Navigation layout that allows the user to easily back out 
-<nav class="navbar navbar-expand-lg navbar-light bg-light rounded shadow-sm mb-4">
-    <div class="navbar-nav">
-        <a class="nav-item nav-link font-weight-bold" href="{% url 'hopehub:journal_entries' %}">&larr; Back to Journal Entries</a>
-    </div>
-</nav>
--->
-{% endblock %}
+{% block extra_css %} 
+<style>
+/* Clean Grid Alignment Matrix */
+.emoji-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; } 
+@media (min-width: 375px) { .emoji-grid { grid-template-columns: repeat(3, 1fr); } } 
+@media (min-width: 992px) { .emoji-grid { grid-template-columns: repeat(2, 1fr); } } 
+@media (min-width: 1200px) { .emoji-grid { grid-template-columns: repeat(3, 1fr); } } 
 
-{% block content %}
-<div class="container my-5">
-    <!-- Centered Card Container for Form Isolation -->
-    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
-        <div class="card-body p-4">
+/* Button Layout Core Parameters */ 
+.emoji-card-btn { 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    padding: 12px 6px; background-color: transparent !important; 
+    border: 2px solid #ced4da !important; border-radius: 12px; 
+    cursor: pointer; width: 100%; transition: all 0.1s ease-in-out; 
+} 
+.emoji-card-btn:hover { 
+    border-color: #6c757d !important; background-color: rgba(0, 0, 0, 0.05) !important; 
+} 
+.emoji-card-btn .emoji-graphic { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; } 
+.emoji-card-btn .emoji-label { 
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; 
+    letter-spacing: 0.5px; color: #495057 !important; 
+} 
+
+/* BULLETPROOF ACTIVE STATE: Changes to a thick dark border and soft background */ 
+.emoji-card-btn.active { 
+    background-color: rgba(0, 0, 0, 0.1) !important; 
+    border: 3px solid #212529 !important; 
+    box-shadow: 0 0 0 0.25rem rgba(33, 37, 41, 0.15) !important; 
+} 
+.emoji-card-btn.active .emoji-label { color: #000000 !important; font-weight: 900 !important; } 
+</style> 
+{% endblock %} 
+
+{% block content %} 
+<div class="container mt-2 mb-5"> <!-- Reduced top margin from my-5 to mt-2 -->
+
+    <!-- Contextual Section Header --> 
+    <div class="mb-2 pb-2 border-bottom"> <!-- Reduced bottom spacing from mb-4 to mb-2 -->
+        <h2 class="h4 text-dark fw-bold mb-0"> 
+            {% if form.instance.pk %}Edit Journal Entry{% else %}Create New Journal Entry{% endif %} 
+        </h2> 
+    </div> 
+
+    <!-- Main Multi-Column Form Container --> 
+    <form method="post" id="journalForm" novalidate>
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %} 
+        <div class="alert alert-danger shadow-sm mb-4"> 
+            {{ form.non_field_errors|striptags }} 
+        </div> 
+        {% endif %} 
+
+        <div class="row g-4 align-items-stretch"> 
             
-            <!-- Contextual Title depending on if editing or creating -->
-            <h2 class="h4 text-dark font-weight-bold mb-4">
-                {% if form.instance.pk %}Edit Journal Entry{% else %}Create New Journal Entry{% endif %}
-            </h2>
-            
-            <form method="post" novalidate>
-                {% csrf_token %}
+            <!-- LEFT COLUMN: Flex Column Wrapping Main Writing Space & Buttons --> 
+            <div class="col-lg-8 d-flex flex-column justify-content-between"> 
                 
-                <!-- Explicit form errors block -->
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger shadow-sm mb-3">
-                        {{ form.non_field_errors|striptags }}
-                    </div>
-                {% endif %}
-                
-                <!-- Dynamic loop to generate form inputs cleanly -->
-                {% for field in form %}
-                    <div class="form-group mb-3">
-                        <label class="form-label font-weight-bold text-secondary small mb-1" for="{{ field.id_for_label }}">
-                            {{ field.label }}
-                        </label>
+                <!-- Expanded Text Writing Card -->
+                <div class="card shadow-sm border-0 flex-grow-1 mb-4"> 
+                    <div class="card-body p-4 d-flex flex-column h-100"> 
+                        <label class="form-label fw-bold text-secondary small mb-2" for="{{ form.text.id_for_label }}"> 
+                            {{ form.text.label }} 
+                        </label> 
+                        <div class="flex-grow-1 d-flex"> 
+                            <!-- Direct Inline Style Override forces text area widget to absorb remaining room -->
+                            {{ form.text }} 
+                            <style>#{{ form.text.id_for_label }} { height: 100% !important; min-height: 400px; resize: none; }</style>
+                        </div> 
+                        {% if form.text.errors %} 
+                        <div class="text-danger small mt-1 fw-medium">{{ form.text.errors|striptags }}</div> 
+                        {% endif %} 
+                    </div> 
+                </div> 
+
+                <!-- Repositioned Layout Action Buttons Anchor (Directly beneath card) --> 
+                <div class="d-flex justify-content-end gap-2 pt-2"> 
+                    <a href="{% url 'hopehub:journal_entries' %}" class="btn btn-light px-4"> Cancel </a> 
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm"> Save Entry </button> 
+                </div> 
+
+            </div> 
+
+            <!-- RIGHT COLUMN: Transparent Side Panel Fields --> 
+            <div class="col-lg-4"> 
+                <div class="card bg-transparent border-0 h-100"> 
+                    <div class="card-body p-4"> <!-- Restored standard uniform padding to match left side perfectly -->
                         
-                        <!-- Injecting bootstrap styling adjustments into inputs -->
-                        {{ field }}
-                        
-                        <!-- Individual field errors layout hook -->
-                        {% if field.errors %}
-                            <div class="text-danger small mt-1">
-                                {{ field.errors|striptags }}
+                        <!-- Clickable Emojis Selector Deck --> 
+                        <div class="mb-4"> 
+                            <label class="form-label fw-semibold text-dark small mb-2" style="color: #212529 !important;"> 
+                                How are you feeling? 
+                            </label> 
+                            
+                            <!-- Hidden Field Wrapper: Tracks backend-compatible selection value --> 
+                            <div class="d-none"> 
+                                <input type="hidden" name="{{ form.emotion.name }}" id="id_emotion_hidden" value="{{ form.emotion.value|default:'' }}">
+                            </div> 
+
+                            <!-- Structural Grid: All 12 options preserved with lowercase targets --> 
+                            <div class="emoji-grid"> 
+                                <div class="emoji-card-btn" data-emotion="joyful" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😊</span> <span class="emoji-label">Joyful</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="peaceful" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😌</span> <span class="emoji-label">Peaceful</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="grateful" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">🙏</span> <span class="emoji-label">Grateful</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="hopeful" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">✨</span> <span class="emoji-label">Hopeful</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="balanced" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😐</span> <span class="emoji-label">Balanced</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="reflective" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">🤔</span> <span class="emoji-label">Reflective</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="anxious" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😰</span> <span class="emoji-label">Anxious</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="sad" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😢</span> <span class="emoji-label">Sad</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="frustrated" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😒</span> <span class="emoji-label">Frustrated</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="angry" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">😤</span> <span class="emoji-label">Angry</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="tired" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">🥱</span> <span class="emoji-label">Tired</span> 
+                                </div> 
+                                <div class="emoji-card-btn" data-emotion="overwhelmed" onclick="selectInlineEmotion(this)"> 
+                                    <span class="emoji-graphic">🤯</span> <span class="emoji-label">Stressed</span> 
+                                </div> 
+                            </div> 
+                            
+                            {% if form.emotion.errors %} 
+                            <div class="text-danger small mt-1">{{ form.emotion.errors|striptags }}</div> 
+                            {% endif %} 
+                        </div> 
+
+                        <!-- Mood Field: Interactive Slider Layout --> 
+                        <div class="mb-0"> 
+                            <label class="form-label fw-semibold text-dark small mb-1" for="moodSlider" style="color: #212529 !important;"> 
+                                {{ form.mood_rating.label }} 
+                            </label> 
+                            
+                            <input type="hidden" name="{{ form.mood_rating.name }}" id="id_mood_rating_hidden" value="{{ form.mood_rating.value|default:5 }}">
+                            
+                            <div class="px-2 pt-2">
+                                <input type="range" class="form-range" min="1" max="10" step="1" id="moodSlider" value="{{ form.mood_rating.value|default:5 }}">
+                                
+                                <div class="text-center mt-2">
+                                    <span id="moodBadge" class="badge bg-secondary p-2 fs-7 fw-bold text-wrap w-100">
+                                        5: Neutral / Baseline
+                                    </span>
+                                </div>
                             </div>
-                        {% endif %}
-                        
-                        <!-- Optional input description/help text -->
-                        {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text|safe }}</small>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                
-                <!-- Interactive Action Button Alignment -->
-                <div class="d-flex justify-content-end border-top pt-3 mt-4">
-                    <a href="{% url 'hopehub:journal_entries' %}" class="btn btn-light mr-2 px-4">
-                        Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                        Save Entry
-                    </button>
-                </div>
-            </form>
-            
-        </div>
-    </div>
-</div>
+
+                            {% if form.mood_rating.errors %} 
+                            <div class="text-danger small mt-1">{{ form.mood_rating.errors|striptags }}</div> 
+                            {% endif %} 
+                        </div>
+
+                    </div> 
+                </div> 
+            </div>
+        </div> 
+
+    </form> 
+</div> 
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// Dictionary matching your models.py Integer Choices matrix
+const moodLabels = {
+    1: "1: Crisis / Extremely Low",
+    2: "2: Very Low / Severe Distress",
+    3: "3: Low / Visibly Struggling",
+    4: "4: Mildly Low / Flat",
+    5: "5: Neutral / Baseline",
+    6: "6: Mildly Good / Stable",
+    7: "7: Good / Positive",
+    8: "8: Very Good / High Energy",
+    9: "9: Excellent / Vibrant",
+    10: "10: Peak Joy / Triumphant"
+};
+
+// 1. Emotion Card Click Handler
+function selectInlineEmotion(clickedElement) {
+    const val = clickedElement.getAttribute('data-emotion');
+    const masterInput = document.getElementById('id_emotion_hidden');
+    
+    if (masterInput) {
+        masterInput.value = val;
+    }
+    
+    const cards = document.querySelectorAll('.emoji-card-btn');
+    cards.forEach(card => card.classList.remove('active'));
+    clickedElement.classList.add('active');
+}
+
+// 2. Mood Range Slider Handler
+function updateMoodUI(value) {
+    const hiddenInput = document.getElementById('id_mood_rating_hidden');
+    const badge = document.getElementById('moodBadge');
+
+    if (hiddenInput) {
+        hiddenInput.value = value;
+    }
+    
+    if (badge) {
+        badge.innerText = moodLabels[value] || value;
+        badge.className = "badge p-2 fs-7 fw-bold text-wrap w-100"; // Clear older contextual classes
+        
+        // Dynamic contextual color tier transitions
+        if (value <= 3) {
+            badge.classList.add("bg-danger");
+        } else if (value <= 5) {
+            badge.classList.add("bg-secondary");
+        } else if (value <= 8) {
+            badge.classList.add("bg-primary");
+        } else {
+            badge.classList.add("bg-success");
+        }
+    }
+}
+
+// 3. Document Initialization Pass (Handles New Entry Defaults & Saved Edit Screen Data)
+document.addEventListener("DOMContentLoaded", function() {
+    // Pass A: Auto-highlight active emotion choice row
+    const emotionField = document.getElementById('id_emotion_hidden');
+    if (emotionField && emotionField.value) {
+        const preselectedCard = document.querySelector('.emoji-card-btn[data-emotion="' + emotionField.value + '"]');
+        if (preselectedCard) {
+            preselectedCard.classList.add('active');
+        }
+    }
+
+    // Pass B: Sync initial slider attributes and register live event listeners
+    const slider = document.getElementById("moodSlider");
+    const moodHiddenInput = document.getElementById("id_mood_rating_hidden");
+    
+    if (slider && moodHiddenInput) {
+        slider.value = moodHiddenInput.value || 5;
+        updateMoodUI(slider.value);
+
+        slider.addEventListener("input", function(e) {
+            updateMoodUI(e.target.value);
+        });
+    }
+});
+</script>
+{% endblock %}
+
