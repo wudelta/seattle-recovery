@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header Controls: Inherits corporate card styles from Bootswatch -->
+    <!-- Master Header: Keeps navigation controls locked to the top of your screen -->
     <div class="card border-primary mb-4 shadow-sm">
         <div class="card-body d-flex align-items-center justify-content-between flex-wrap p-3">
             <div>
@@ -14,7 +14,16 @@
                 </h1>
                 <p class="text-muted small mb-0 mt-1">Feature Target Scope: <span class="badge bg-light text-dark">{{ feature_name }}</span></p>
             </div>
-            <div class="mt-2 mt-md-0">
+            <!-- GLOBAL ACTION CONTROLS -->
+            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                <!-- STEP BACKWARD CONTROL: Instantly visible at all times across all stages -->
+                <form method="post" action="{% url 'aurora:step_backward' active_step.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-warning font-monospace">
+                        <i class="bi bi-arrow-left-short"></i>‚èÆÔ∏è Re-open Previous Step
+                    </button>
+                </form>
+                
                 <span class="badge {% if pipeline_status == 'RUNNING' %}bg-success animate-pulse{% else %}bg-secondary{% endif %} p-2 font-monospace fs-6">
                     STATUS: {{ pipeline_status }}
                 </span>
@@ -60,7 +69,7 @@
                     <form method="post" id="automation-blueprint-form" action="{% url 'aurora:process_step' active_step.id %}">
                         {% csrf_token %}
                         
-                        <!-- Form fields parse automatically to match Bootswatch text-areas and inputs via Crispy -->
+                        <!-- Form fields parse automatically to match Bootswatch styles via Crispy -->
                         {% crispy form %}
                         
                     </form>
@@ -68,7 +77,7 @@
             </div>
         </div>
 
-        <!-- Right Column: Minion Telemetry & Verification Simulator -->
+        <!-- Right Column: Minion Telemetry Console & Rollback Control Module -->
         <div class="col-lg-5">
             <div class="card border-secondary shadow h-100 font-monospace">
                 <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
@@ -76,7 +85,7 @@
                     <small class="opacity-75">PID: LOCAL_WORKER</small>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between bg-body-tertiary">
-                    <!-- File Metadata System Info Card -->
+                    <!-- File Metadata Info Card -->
                     <div class="mb-3 p-3 bg-body border rounded border-secondary">
                         <div class="text-muted small">TARGET_PATH:</div>
                         <div class="text-success fw-bold text-break mb-2">{{ active_step.target_file_path }}</div>
@@ -84,19 +93,33 @@
                         <div class="text-warning text-break">`{{ active_step.anchor_signature|default:"EOF (Append to File)" }}`</div>
                     </div>
 
-                    <!-- Sandbox Automation Console Stream: Inherits input/pre background context from Bootswatch -->
+                    <!-- Sandbox Automation Console Stream -->
                     <div class="flex-grow-1 mb-3">
-                        <label class="text-muted small mb-1 d-block">AURORA_MINION_STDOUT:</label>
-                        <pre class="p-3 bg-body text-body rounded border border-secondary overflow-y-auto mb-0" style="height: 280px; white-space: pre-wrap;">{{ active_step.execution_logs|default:"⏳ Awaiting execution authorization signal from human operator..." }}</pre>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="text-muted small mb-0">AURORA_MINION_STDOUT:</label>
+                            <!-- THE SAFETY ROLLBACK CONTROL ACTUATOR BUTTON -->
+                            <form method="post" action="{% url 'aurora:rollback_step' active_step.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2 font-monospace" style="font-size: 0.75rem;">
+                                    <i class="bi bi-trash3-fill me-1"></i>üîÑ Discard Changes & Rollback
+                                </button>
+                            </form>
+                        </div>
+                        <!-- Console container inherits output color formatting based on errors -->
+                        <pre class="p-3 bg-body text-body rounded border {% if '[STDERR' in active_step.execution_logs %}border-danger text-danger-emphasis{% else %}border-secondary{% endif %} overflow-y-auto mb-0" style="height: 280px; white-space: pre-wrap;">{{ active_step.execution_logs|default:"‚è≥ Awaiting execution authorization signal from human operator..." }}</pre>
                     </div>
 
                     <!-- Minion Live Status Notification Block -->
-                    <div class="alert {% if active_step.is_executed %}alert-success{% else %}alert-warning{% endif %} d-flex align-items-center mb-0 border shadow-sm" role="alert">
-                        <div class="spinner-border spinner-border-sm me-3 {% if active_step.is_executed %}d-none{% endif %}" role="status"></div>
+                    <div class="alert {% if active_step.is_executed %}alert-success{% elif '[STDERR' in active_step.execution_logs %}alert-danger{% else %}alert-warning{% endif %} d-flex align-items-center mb-0 border shadow-sm" role="alert">
+                        {% if not active_step.is_executed %}
+                        <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+                        {% endif %}
                         <div>
                             <strong>Minion Current State:</strong> 
                             {% if active_step.is_executed %}
                                 Complete. Target code successfully injected and compiled.
+                            {% elif '[STDERR' in active_step.execution_logs %}
+                                üî¥ AUTOMATION CRITICAL ERROR: Compilation broken. Adjust code payload on the left panel and click approve to retry execution loop.
                             {% else %}
                                 Halting pipeline execution. Awaiting human verification and approval flag.
                             {% endif %}
@@ -123,7 +146,7 @@
                             <div class="progress mb-2" style="height: 22px;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 100%">100%</div>
                             </div>
-                            <small class="text-muted font-monospace">Command: `python manage.py test` ➔ <span class="text-success fw-bold">EXIT_CODE 0 (ALL PASSED)</span></small>
+                            <small class="text-muted font-monospace">Command: `python manage.py test` ‚ûî <span class="text-success fw-bold">EXIT_CODE 0 (ALL PASSED)</span></small>
                         </div>
                         
                         <!-- Gate 2: Interactive Human Sign-off Verification -->
@@ -134,7 +157,7 @@
                                 <a href="/under-construction/" target="_blank" class="btn btn-outline-info font-monospace flex-grow-1">
                                     <i class="bi bi-box-arrow-up-right me-2"></i>Open Local Sandbox View
                                 </a>
-                                <form method="post" action="{% url 'hopehub:finalize_feature' feature_name %}" class="flex-grow-1">
+                                <form method="post" action="{% url 'aurora:finalize_feature' feature_name %}" class="flex-grow-1">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-success font-monospace w-100">
                                         <i class="bi bi-rocket-takeoff-fill me-2"></i>Final Feature Approval
@@ -151,7 +174,7 @@
 </div>
 
 <style>
-    /* Styling to simulate pulse on telemetry badges */
+    /* Styling to simulate pulse animation on telemetry status indicators */
     .animate-pulse {
         animation: pulse-animation 2s infinite;
     }
@@ -162,3 +185,4 @@
     }
 </style>
 {% endblock %}
+                            

@@ -31,15 +31,11 @@ urlpatterns = [
         views.AutomationDashboardView.as_view(), 
         name='pipeline_dashboard'
     ),
-    
-    # 2. POST Endpoint: Human Approves/Modifies the Active Minion Step
     path(
         'step/<int:step_id>/process/', 
         views.ProcessMinionStepView.as_view(), 
         name='process_step'
     ),
-    
-    # 3. POST Endpoint: Finalizes Two-Part Validation Gate for Feature Release
     path(
         'pipeline/<str:feature_name>/finalize/', 
         views.FinalizeFeatureView.as_view(), 
@@ -55,4 +51,15 @@ urlpatterns = [
     views.FinalizeFeatureView.as_view(), 
     name='finalize_feature'
     ),
+    path(
+    'step/<int:step_id>/rollback/', 
+    views.RollbackMinionStepView.as_view(), 
+    name='rollback_step'
+    ),
+    path(
+    'step/<int:step_id>/backward/', 
+    views.StepBackwardNavigationView.as_view(), 
+    name='step_backward'  # Ensure this name matches perfectly
+    ),
+
 ]

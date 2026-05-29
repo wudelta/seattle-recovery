@@ -26,7 +26,7 @@ from .add_note_view import add_note_view
 
 # NEW WORKFLOW: Forge Pipeline Controller View Module Injection
 from .automation_dashboard import AutomationDashboardView
-from .process_minion_step import ProcessMinionStepView
+from .process_minion_step import ProcessMinionStepView, RollbackMinionStepView, StepBackwardNavigationView
 from .finalize_feature import FinalizeFeatureView
 
 # ==============================================================================
@@ -64,8 +64,10 @@ __all__ = [
     'create_delta_note_api',
     'add_note_view',
     
-    # New Active Module View
+    # 6. Forge Pipeline Controller Active Views
     'AutomationDashboardView',
     'ProcessMinionStepView',
+    'RollbackMinionStepView',
     'FinalizeFeatureView',
+    'StepBackwardNavigationView',
 ]
