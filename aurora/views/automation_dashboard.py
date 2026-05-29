@@ -2,10 +2,8 @@ from django import forms
 from django.views.generic import UpdateView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Fieldset, Field
-
 from aurora.models import AutomatedBuildStep
 
 # 1. THE FORM COMPONENT DEFINITION
@@ -23,6 +21,10 @@ class AutomatedBuildStepForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_id = 'automation-blueprint-form'
+        
+        # CRITICAL RE-SEED SYNC GUARD: Disable Crispy's auto-generated form tags.
+        # This prevents nesting and honors the action target defined in automation_dashboard.html.
+        self.helper.form_tag = False 
         
         self.helper.layout = Layout(
             Fieldset(
@@ -56,7 +58,6 @@ class AutomatedBuildStepForm(forms.ModelForm):
             Submit('submit', '✅ APPROVE STEP & REFRESH WORKER PIPELINE', css_class='btn btn-success btn-lg mt-3 w-100')
         )
 
-
 # 2. THE VIEW CONTROLLER DEFINITION
 class AutomationDashboardView(UpdateView):
     model = AutomatedBuildStep
@@ -70,12 +71,12 @@ class AutomationDashboardView(UpdateView):
             feature_name=feature_name,
             is_executed=False
         ).order_by('step_order').first()
-
+        
         if not active_step:
             active_step = AutomatedBuildStep.objects.filter(
                 feature_name=feature_name
             ).order_by('-step_order').first()
-
+            
         return active_step
 
     def get_context_data(self, **kwargs):
@@ -85,9 +86,9 @@ class AutomationDashboardView(UpdateView):
         pipeline_steps = AutomatedBuildStep.objects.filter(
             feature_name=feature_name
         ).order_by('step_order')
-
+        
         all_steps_executed = not pipeline_steps.filter(is_executed=False).exists()
-
+        
         context.update({
             'feature_name': feature_name,
             'pipeline_steps': pipeline_steps,
