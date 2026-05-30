@@ -4,16 +4,20 @@ from django.db import models
 from django.contrib.auth.models import User
 from cryptography.fernet import Fernet
 
-# HIPAA HARDENING: Isolate clinical data keys from standard system variables.
+# HIPAA & 42 CFR PART 2 SECURITY INVARIANT: Isolate encryption keys entirely from source code files.
 ENCRYPTION_KEY = os.getenv('HOPEHUB_FIELD_ENCRYPTION_KEY')
 if not ENCRYPTION_KEY:
-    # Generates a valid, structural, reproducible URL-safe base64 fallback for local dev
-    # This prevents daily rotation data-loss while completely satisfying Fernet validation
-    ENCRYPTION_KEY = "3132333435363738393031323334353637383930313233343536373839303132" # 32 bytes hex
-    import base64
-    ENCRYPTION_KEY = base64.urlsafe_b64encode(b"seattle_recovery_dev_key_32bytes").decode('utf-8')
+    # Fail-secure hard stop: Block application boot to prevent data leakage or fallback weaknesses
+    raise SystemError(
+        "\n======================================================================\n"
+        "🚨 [SECURITY CRITICAL] HOPEHUB_FIELD_ENCRYPTION_KEY IS NOT CONFIGURED!\n"
+        "   To prevent data corruption and maintain clinical confidentiality,\n"
+        "   you must export a valid 32-byte URL-safe base64 key into your environment.\n"
+        "======================================================================\n"
+    )
 
 cipher_suite = Fernet(ENCRYPTION_KEY.encode('utf-8'))
+
 
 class EncryptedTextField(models.TextField):
     """Custom TextField wrapper that handles transparent database encryption."""
@@ -26,7 +30,7 @@ class EncryptedTextField(models.TextField):
         return value
 
     def from_db_value(self, value, expression, connection):
-        """Decrypts tokens into readable strings, safely passing unencrypted legacy text."""
+        """Decrypts tokens into readable strings using the primary production environment key."""
         if value:
             if value.startswith('gAAAA'):
                 try:
@@ -72,9 +76,15 @@ class JournalEntry(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 # ======================================================================
