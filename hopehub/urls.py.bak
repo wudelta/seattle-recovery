@@ -4,7 +4,6 @@ from . import views
 app_name = 'hopehub'
 
 urlpatterns = [
-path('under-construction/', views.UnderConstructionView.as_view(), name='under_construction'),
     path('journal_entries/', views.JournalView.as_view(), name='journal_entries'),
     
     # Both paths now route to the exact same combined class

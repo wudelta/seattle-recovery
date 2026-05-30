@@ -23,18 +23,29 @@ class ProcessMinionStepView(View):
             step.approval_status = 'APPROVED'
             step.save()
 
-            mutation_success = apply_file_mutation(
-                target_file_path=step.target_file_path,
-                code_payload=step.code_payload,
-                anchor_signature=step.anchor_signature
-            )
+            try:
+                # 1. Execute safe file mutation tracking loop
+                mutation_success = apply_file_mutation(
+                    target_file_path=step.target_file_path,
+                    code_payload=step.code_payload,
+                    anchor_signature=step.anchor_signature
+                )
 
-            if not mutation_success:
-                step.execution_logs = f"[CRITICAL ERROR]: Failed to find anchor token signature: '{step.anchor_signature}'\n"
+                if not mutation_success:
+                    step.execution_logs = f"[CRITICAL ERROR]: Failed to find anchor token signature: '{step.anchor_signature}'\n"
+                    step.save()
+                    messages.error(request, "Failed to resolve insertion anchor. See console details.")
+                    return redirect(reverse('aurora:pipeline_dashboard', kwargs={'feature_name': step.feature_name}))
+
+            except Exception as mutation_error:
+                # Safety Gate: Catch directory initialization or writing errors before shell execution
+                step.execution_logs = f"[MUTATION ENGINE FAULT]:\n{str(mutation_error)}\n"
+                step.is_executed = False
                 step.save()
-                messages.error(request, "Failed to resolve insertion anchor. See console details.")
+                messages.error(request, "The file mutation engine encountered an isolated fault.")
                 return redirect(reverse('aurora:pipeline_dashboard', kwargs={'feature_name': step.feature_name}))
 
+            # 2. Run Local Subprocess Verification Execution Loop
             try:
                 result = subprocess.run(
                     step.verification_command,
@@ -55,11 +66,12 @@ class ProcessMinionStepView(View):
                 if result.returncode == step.expected_exit_code:
                     step.is_executed = True
                     messages.success(request, f"Step {step.step_order} verified successfully!")
-                    # PRESERVE .bak FILES HERE: Do not delete backup files automatically.
-                    # Retaining backups allows multi-step backwards navigation and visual rollbacks.
+                    # SYSTEM SAFETY CONSTRAINT: .bak files are intentionally PRESERVED here
+                    # to enable operators to leverage backward sequence navigation seamlessly.
                 else:
-                    step.is_executed = False
-                    messages.error(request, f"Subprocess validation check failed with exit code {result.returncode}.")
+                    # EXTRACT FIELD ERRORS: Print the exact dictionary validation breakdown to the UI
+                    error_string = ", ".join([f"{field}: {errors[0]}" for field, errors in form.errors.items()])
+                    messages.error(request, f"❌ FORM VALIDATION CRITICAL EXCEPTION: {error_string}")
 
             except subprocess.TimeoutExpired:
                 step.execution_logs = f"[TIMEOUT CRITICAL ERROR]: Shell command timed out.\n"
@@ -86,21 +98,30 @@ class RollbackMinionStepView(View):
         step_id = self.kwargs.get('step_id')
         step = get_object_or_404(AutomatedBuildStep, id=step_id)
 
-        # Leverage the dedicated mutator rollback to clean files and package headers cleanly
+        # DEFENSIVE RUNTIME GUARD: Stop execution if the path variable was modified to be blank
+        if not step.target_file_path:
+            step.execution_logs = "[SYSTEM CONTROL ERROR]: Cannot execute rollback loop. Target file path variable is undefined.\n"
+            step.approval_status = 'PENDING_REVIEW'
+            step.save()
+            messages.warning(request, "Rollback aborted: Target path variable is empty.")
+            return redirect(reverse('aurora:pipeline_dashboard', kwargs={'feature_name': step.feature_name}))
+
         try:
+            # 1. Trigger the string-scrubbing safe rollback helper
             rollback_file_mutation(step.target_file_path)
             step.execution_logs = "[SYSTEM CONTROL]: Rollback executed. File layout and package declarations completely restored.\n"
             messages.info(request, f"Step {step.step_order} changes safely discarded.")
         except Exception as e:
+            # Safety Layer: If a file path is locked by the OS or missing permissions, log it cleanly
             step.execution_logs = f"[SYSTEM ROLLBACK FAULT]:\n{str(e)}\n"
             messages.error(request, "An error occurred during system file rollback operations.")
 
+        # 2. Revert workflow tracking state flags
         step.approval_status = 'PENDING_REVIEW'
         step.is_executed = False
         step.save()
         
         return redirect(reverse('aurora:pipeline_dashboard', kwargs={'feature_name': step.feature_name}))
-
 
 class StepBackwardNavigationView(View):
     """
