@@ -31,7 +31,7 @@
                 </span> 
             {% endif %}
         </div>
-        <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary shadow-sm"> 
+        <a href="{% url 'hopehub:journal_entry_create' %}" class="btn btn-primary shadow-sm">
             + New Journal Entry 
         </a> 
     </div> 
@@ -97,8 +97,8 @@
 
                         <!-- Action Footer Inside Card --> 
                         <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-3 d-flex justify-content-end gap-2"> 
-                            <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a> 
-                            <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a> 
+                            <a href="{% url 'hopehub:journal_entry_edit' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a>
+                            <a href="{% url 'hopehub:journal_entry_delete' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a>
                         </div> 
                     </div> 
                 </div> 
@@ -155,8 +155,8 @@
                                 </div> 
                             </div> 
                             <div class="card-footer bg-transparent border-0 px-0 pb-0 pt-3 d-flex justify-content-end gap-2"> 
-                                <a href="{% url 'hopehub:update_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a> 
-                                <a href="{% url 'hopehub:delete_journal_entry' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a> 
+                                <a href="{% url 'hopehub:journal_entry_edit' journal_entry.pk %}" class="btn btn-sm btn-outline-secondary px-3">Edit</a>
+                                <a href="{% url 'hopehub:journal_entry_delete' journal_entry.pk %}" class="btn btn-sm btn-outline-danger px-3">Delete</a>
                             </div> 
                         </div> 
                     </div> 
@@ -177,7 +177,7 @@
         <!-- Empty State UI --> 
         <div class="text-center py-5 bg-light rounded shadow-sm border"> 
             <p class="text-muted mb-3">You haven't written any journal entries yet.</p> 
-            <a href="{% url 'hopehub:create_journal_entry' %}" class="btn btn-primary"> 
+            <a href="{% url 'hopehub:journal_entry_create' %}" class="btn btn-primary">
                 Write Your First Entry 
             </a> 
         </div> 

@@ -1,4 +1,4 @@
 from .journal import JournalView
 from .journal import ProcessJournalEntryView
 from .journal import DeleteJournalEntryView
-from .under_construction import *
+

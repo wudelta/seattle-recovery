@@ -1,0 +1,42 @@
+TESTING PIPELINE
+
+STEP 1: 
+
+changed Verification command to "python manage.py check" and Expected exit code to 1. if i don't change these the test will fail and the step will not advance.
+
+hopehub/tests/test_views.py gets created and step advances.
+
+rollback: file gets cleared with comment "# Module baseline cleared by Aurora Rollback Engine" but file remains.
+
+need to fix file name. i do not want all tests added to the same file. i want an independent test for each module created. 
+
+STEP 2: 
+
+hopehub/templates/hopehub/construction.html gets created and step advances.
+
+rollback: file gets cleared with comment "# Module baseline cleared by Aurora Rollback Engine" but file remains.
+
+need to fix rollback. file should be deleted entirely.
+
+STEP 3: 
+
+changed Expected exit code to 1. if i don't change this the test will fail and the step will not advance.
+
+hopehub/views/under_construction.py gets created and step advances.
+
+rollback: file remains unchanged.
+
+STEP 4: 
+
+ALL STEPS:
+
+if file already exits a .bak file gets created and never deleted.
+
+need to fix: .bak file should also be deleted so orphaned files don't remain.
+
+opening file in Spyder gives warning:
+
+test_views.py contains mixed end-of-line characters.
+Spyder will fix this automatically.
+
+this is annoying but does not seem to affect functionallity.

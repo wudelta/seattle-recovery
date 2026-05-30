@@ -1,15 +1,22 @@
+# filepath: hopehub/urls.py
 from django.urls import path
 from . import views
 
 app_name = 'hopehub'
 
 urlpatterns = [
-path('under-construction/', views.UnderConstructionView.as_view(), name='under_construction'),
-    path('journal_entries/', views.JournalView.as_view(), name='journal_entries'),
+    # 1. Main Journal Dashboard View
+    path('journal/', views.JournalView.as_view(), name='journal_entries'),
     
-    # Both paths now route to the exact same combined class
-    path('create_journal_entry/', views.ProcessJournalEntryView.as_view(), name='create_journal_entry'),
-    path('update_journal_entry/<int:pk>/', views.ProcessJournalEntryView.as_view(), name='update_journal_entry'),
+    # 2. Dual-Purpose Entry View (Create Action: No Primary Key argument provided)
+    path('journal/new/', views.ProcessJournalEntryView.as_view(), name='journal_entry_create'),
     
-    path('delete_journal_entry/<int:pk>/', views.DeleteJournalEntryView.as_view(), name='delete_journal_entry'),
+    # 3. Dual-Purpose Entry View (Update Action: Primary Key integer mapped to self.kwargs)
+    path('journal/<int:pk>/edit/', views.ProcessJournalEntryView.as_view(), name='journal_entry_edit'),
+    
+    # 4. Entry Deletion View
+    path('journal/<int:pk>/delete/', views.DeleteJournalEntryView.as_view(), name='journal_entry_delete'),
+
+    # Anchor Signature for Aurora Forge Automation Engine (Step 4 Target)
+    # Network Routing Minion will append paths directly below this line
 ]

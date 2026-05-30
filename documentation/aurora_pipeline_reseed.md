@@ -5,7 +5,6 @@ We are running a transactional, relational automation toolchain inside the **Aur
 
 The master criteria for this engine are to act as a development force multiplier, enforce strict standards, adhere to change protocols, and provide immutable audit trails **without ever destabilizing or crashing the local development server context.**
 
----
 
 ## 2. Settled Architectural Decisions & Constraints
 * **Directory Path Isolation Enforcement**: Root application packages (`hopehub/`) and view packages (`hopehub/views/`) must remain completely distinct target vectors. Top-level configurations (`hopehub/`) are frozen initialization contexts and must never be scanned or appended to by automated directory interception hooks to prevent premature URL loading locks.
@@ -17,7 +16,6 @@ The master criteria for this engine are to act as a development force multiplier
 * **Localhost URL Alignment**: All workspace panels, control panel links, and redirect lookups use `localhost:8000` rather than raw IP interfaces.
 * **Lean Dashboard Interface & Isolated Routing**: The control panel drops standard landing page back-links to enforce strict interface isolation during active code mutations. Post-finalization redirects route explicitly back to the centralized control hub (`aurora_dashboard`), which maps to `/aurora/dashboard/`.
 
----
 
 ## 3. Upgraded Debugging & State Navigation Framework
 The control center contains three immediate platform engineering upgrades to prevent silent failures and streamline browser-based modifications:
@@ -25,7 +23,6 @@ The control center contains three immediate platform engineering upgrades to pre
 2. **1-Click Rollback Engine (`RollbackMinionStepView`)**: A safety actuator button next to the terminal console instantly wipes away experimental code mutations, cleans up accidental package declarations inside `__init__.py` files, and completely restores the file system using background `.bak` snapshots.
 3. **Bidirectional Sequence Navigation (`StepBackwardNavigationView`)**: A global, persistent header button (`⏮️ Re-open Previous Step`) allows operators to manually force the database tracking state backward to overwrite or re-review completed files.
 
----
 
 ## 4. Hardened Protection Against Server Instability (Post-Mortem Fixes)
 To prevent front-end text mutations and automated file rollbacks from causing fatal Python import traps (`AppRegistryNotReady: Apps aren't loaded yet.`), the system enforces the following safety invariants:
@@ -34,7 +31,6 @@ To prevent front-end text mutations and automated file rollbacks from causing fa
 * **Safe Parsing Rollback Sequence**: When rolling back or deleting a newly created view module file, the engine must actively scan and clean up any package constructor trackers (`__init__.py`) **first**. The explicit import statement (`from .under_construction import *`) must be completely scrubbed out *before* the corresponding file content is cleared. This guarantees Django never encounters a dangling pointer that chokes its app registry boot sequence.
 * **Preservation of File Targets**: If a file must be cleared during a rollback, the engine truncates or clears its content to a baseline comment (`# Module baseline cleared by Aurora Rollback Engine`) instead of deleting the file entirely from the disk, preventing path resolution crashes during live hot-reloads.
 
----
 
 ## 5. Active Seeded Pipeline Steps (PostgreSQL Layout Map)
 The pipeline database contains the following four corrected steps, structurally aligned with the maximum column size limitations (`max_length=150` on titles) and explicit enum choices declared within the active `aurora/models.py` state table:
@@ -72,7 +68,6 @@ The pipeline database contains the following four corrected steps, structurally 
    * *Verification Command:* `python manage.py test hopehub.tests.test_views`
    * *Expected Exit Code:* `0` (TDD Turns Solid Green)
 
----
 
 ## 6. Operational Recovery & Disaster Rollback Plan
 If you need to instantly clean up or reset the environment back to baseline parameters, execute this teardown sequence:

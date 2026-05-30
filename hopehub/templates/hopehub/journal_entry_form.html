@@ -50,7 +50,7 @@
     </div> 
 
     <!-- Main Multi-Column Form Container --> 
-    <form method="post" id="journalForm" novalidate>
+    <form method="post" id="journalForm" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         
         {% if form.non_field_errors %} 
@@ -89,98 +89,120 @@
 
             </div> 
 
-            <!-- RIGHT COLUMN: Transparent Side Panel Fields --> 
-            <div class="col-lg-4"> 
-                <div class="card bg-transparent border-0 h-100"> 
-                    <div class="card-body p-4"> <!-- Restored standard uniform padding to match left side perfectly -->
+        <!-- RIGHT COLUMN: Transparent Side Panel Fields -->
+        <div class="col-lg-4">
+            <div class="card bg-transparent border-0 h-100">
+                <div class="card-body p-4">
+                    
+                    <!-- Clickable Emojis Selector Deck -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small mb-2" style="color: #212529 !important;">
+                            How are you feeling?
+                        </label>
                         
-                        <!-- Clickable Emojis Selector Deck --> 
-                        <div class="mb-4"> 
-                            <label class="form-label fw-semibold text-dark small mb-2" style="color: #212529 !important;"> 
-                                How are you feeling? 
-                            </label> 
-                            
-                            <!-- Hidden Field Wrapper: Tracks backend-compatible selection value --> 
-                            <div class="d-none"> 
-                                <input type="hidden" name="{{ form.emotion.name }}" id="id_emotion_hidden" value="{{ form.emotion.value|default:'' }}">
-                            </div> 
-
-                            <!-- Structural Grid: All 12 options preserved with lowercase targets --> 
-                            <div class="emoji-grid"> 
-                                <div class="emoji-card-btn" data-emotion="joyful" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😊</span> <span class="emoji-label">Joyful</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="peaceful" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😌</span> <span class="emoji-label">Peaceful</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="grateful" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">🙏</span> <span class="emoji-label">Grateful</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="hopeful" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">✨</span> <span class="emoji-label">Hopeful</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="balanced" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😐</span> <span class="emoji-label">Balanced</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="reflective" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">🤔</span> <span class="emoji-label">Reflective</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="anxious" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😰</span> <span class="emoji-label">Anxious</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="sad" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😢</span> <span class="emoji-label">Sad</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="frustrated" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😒</span> <span class="emoji-label">Frustrated</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="angry" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">😤</span> <span class="emoji-label">Angry</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="tired" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">🥱</span> <span class="emoji-label">Tired</span> 
-                                </div> 
-                                <div class="emoji-card-btn" data-emotion="overwhelmed" onclick="selectInlineEmotion(this)"> 
-                                    <span class="emoji-graphic">🤯</span> <span class="emoji-label">Stressed</span> 
-                                </div> 
-                            </div> 
-                            
-                            {% if form.emotion.errors %} 
-                            <div class="text-danger small mt-1">{{ form.emotion.errors|striptags }}</div> 
-                            {% endif %} 
-                        </div> 
-
-                        <!-- Mood Field: Interactive Slider Layout --> 
-                        <div class="mb-0"> 
-                            <label class="form-label fw-semibold text-dark small mb-1" for="moodSlider" style="color: #212529 !important;"> 
-                                {{ form.mood_rating.label }} 
-                            </label> 
-                            
-                            <input type="hidden" name="{{ form.mood_rating.name }}" id="id_mood_rating_hidden" value="{{ form.mood_rating.value|default:5 }}">
-                            
-                            <div class="px-2 pt-2">
-                                <input type="range" class="form-range" min="1" max="10" step="1" id="moodSlider" value="{{ form.mood_rating.value|default:5 }}">
-                                
-                                <div class="text-center mt-2">
-                                    <span id="moodBadge" class="badge bg-secondary p-2 fs-7 fw-bold text-wrap w-100">
-                                        5: Neutral / Baseline
-                                    </span>
-                                </div>
-                            </div>
-
-                            {% if form.mood_rating.errors %} 
-                            <div class="text-danger small mt-1">{{ form.mood_rating.errors|striptags }}</div> 
-                            {% endif %} 
+                        <!-- Hidden Field Wrapper: Tracks backend-compatible selection value -->
+                        <div class="d-none">
+                            <input type="hidden" name="{{ form.emotion.name }}" id="id_emotion_hidden" value="{{ form.emotion.value|default:'' }}">
                         </div>
+                        
+                        <!-- Structural Grid: Clean Unicode Emoji Restorations -->
+                        <div class="emoji-grid">
+                            <div class="emoji-card-btn" data-emotion="joyful" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😊</span>
+                                <span class="emoji-label">Joyful</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="peaceful" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😌</span>
+                                <span class="emoji-label">Peaceful</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="grateful" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">🙏</span>
+                                <span class="emoji-label">Grateful</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="hopeful" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">✨</span>
+                                <span class="emoji-label">Hopeful</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="balanced" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😐</span>
+                                <span class="emoji-label">Balanced</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="reflective" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">🤔</span>
+                                <span class="emoji-label">Reflective</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="anxious" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😰</span>
+                                <span class="emoji-label">Anxious</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="sad" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😢</span>
+                                <span class="emoji-label">Sad</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="frustrated" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😑</span>
+                                <span class="emoji-label">Frustrated</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="angry" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">😡</span>
+                                <span class="emoji-label">Angry</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="tired" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">🥱</span>
+                                <span class="emoji-label">Tired</span>
+                            </div>
+                            <div class="emoji-card-btn" data-emotion="overwhelmed" onclick="selectInlineEmotion(this)">
+                                <span class="emoji-graphic">🤯</span>
+                                <span class="emoji-label">Stressed</span>
+                            </div>
+                        </div>
+                        {% if form.emotion.errors %}
+                            <div class="text-danger small mt-1">{{ form.emotion.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
 
-                    </div> 
-                </div> 
+                    <!-- Mood Field & Image Asset Integrations -->
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold text-dark small mb-1" for="moodSlider" style="color: #212529 !important;">
+                            {{ form.mood_rating.label }}
+                        </label>
+                        <input type="hidden" name="{{ form.mood_rating.name }}" id="id_mood_rating_hidden" value="{{ form.mood_rating.value|default:5 }}">
+                        
+                        <div class="px-2 pt-2">
+                            <input type="range" class="form-range" min="1" max="10" step="1" id="moodSlider" value="{{ form.mood_rating.value|default:5 }}">
+                            <div class="text-center mt-2">
+                                <span id="moodBadge" class="badge bg-secondary p-2 fs-7 fw-bold text-wrap w-100">
+                                    5: Neutral / Baseline
+                                </span>
+                            </div>
+                        </div>
+                        {% if form.mood_rating.errors %}
+                            <div class="text-danger small mt-1">{{ form.mood_rating.errors|striptags }}</div>
+                        {% endif %}
+
+                        <!-- Integrated Upload Matrix Layer -->
+                        <div class="mt-4 pt-3 border-top">
+                            <label class="form-label fw-semibold text-dark small mb-1" style="color: #212529 !important;">
+                                Attach Image Asset
+                            </label>
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                            <div class="text-danger small mt-1">{{ form.image.errors|striptags }}</div>
+                            {% endif %}
+                            </div> <!-- Closes the Integrated Upload Matrix / Mood Wrapper div -->
+                            </div> <!-- Closes card-body -->
+                            </div> <!-- Closes card -->
+                            </div> <!-- Closes col-lg-4 -->
+                            </div> <!-- Closes row -->
+                            </form>
+                            </div> <!-- Closes top-level container -->
+                            {% endblock %}
+                        </div>
+                    </div>
+
+                </div>
             </div>
-        </div> 
-
-    </form> 
-</div> 
-{% endblock %}
+        </div>
 
 {% block extra_js %}
 <script>
