@@ -199,7 +199,7 @@ def chat_api(request):
 # Hardcoded text staging path limit
 BRIEF_FILE_PATH = os.path.join(os.getcwd(), 'core_logic/staging/daily_brief.txt')
 
-@login_required
+@login_required(login_url='aurora:login')
 def console_dashboard(request):
     """
     Renders the Aurora configuration panel. 

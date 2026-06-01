@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')), 
     path('aurora/', include('aurora.urls', namespace='aurora')),
     path('hopehub/', include('hopehub.urls', namespace='hopehub')),
     #path('documents/', aurora_views.DocumentView.as_view()),

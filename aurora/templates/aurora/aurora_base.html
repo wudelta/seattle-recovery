@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Aurora Portal{% endblock %}</title>
-    
     <!-- Shared Global Morph Theme Core -->
     <link rel="stylesheet" href="{% static 'css/morph.bootstrap.min.css' %}">
-
     <!-- Child Page Specific CSS Inject Hook -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -16,7 +14,7 @@
 
     <!-- NEW HEADER: Responsive and Fluid -->
     <header class="container-fluid py-4 px-4 bg-transparent flex-shrink-0">
-        <div class="row align-items-center justify-content-center justify-content-md-between g-3">
+        <div class="row align-items-center justify-content-between g-3">
             
             <!-- Logo on the left -->
             <div class="col-auto">
@@ -30,17 +28,35 @@
                 <!-- Main Title -->
                 <h1 class="display-4 text-dark mb-0" style="font-weight: 900; letter-spacing: 1px; line-height: 1;">Aurora</h1>
                 <!-- Tagline -->
-                <span class="h5 text-muted fst-italic mb-0">"You imagine it, we build it"</span>
+                <span class="h5 text-muted fst-italic mb-0">"Where hope flourishes"</span>
             </div>
 
-            <!-- Empty column to balance the right side on larger screens -->
-            <div class="col-auto d-none d-md-block" style="width: 150px;"></div>
+            <!-- Dynamic Authentication Controls (Replaces the empty balancing column) -->
+            <div class="col-12 col-md-auto d-flex justify-content-center justify-content-md-end align-items-center" style="min-width: 150px;">
+                {% if user.is_authenticated %}
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="text-muted small d-none d-lg-inline">Hello, <strong>{{ user.username }}</strong></span>
+                        <form action="{% url 'aurora:logout' %}" method="post" class="m-0 p-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm px-3 shadow-sm">
+                                Log Out
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <!-- Appended ?next={{ request.path }} to dynamically handle redirects -->
+                    <a href="{% url 'aurora:login' %}?next={{ request.path }}" class="btn btn-primary btn-sm px-3 shadow-sm">
+                        Log In
+                    </a>
+                {% endif %}
+            </div>
 
         </div>
     </header>
 
     <!-- Main Viewport Structural Fluid Grid Container -->
     <div class="container-fluid d-flex flex-column px-4 pb-4 flex-grow-1" style="overflow-y: auto;">
+        
         <!-- Dynamic Main Graphic Section for all Child Views -->
         <main class="flex-grow-1 mb-3" style="position: relative; min-height: 200px;">
             {% block content %}{% endblock %}
@@ -50,6 +66,7 @@
         <footer class="pt-2 border-top text-muted flex-shrink-0">
             <small class="mb-0">&copy; 2026 Aurora Project</small>
         </footer>
+
     </div>
 
     <!-- Core JavaScript Assets -->
@@ -59,5 +76,6 @@
     
     <!-- Child Page Specific JS Scripts Inject Hook -->
     {% block extra_js %}{% endblock %}
+
 </body>
 </html>

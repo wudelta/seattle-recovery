@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
-@login_required
+@login_required(login_url='aurora:login')
 def add_note_view(request):
     """
     Renders the newly designed isolated Add Note workspace dashboard.

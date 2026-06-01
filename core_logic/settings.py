@@ -75,7 +75,7 @@ CRISPY_CONFIG = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], # Cleaned up legacy path
+        'DIRS': [], # Cleaned up legacy path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -159,6 +159,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # URL that handles the media served from MEDIA_ROOT
 MEDIA_URL = 'media/'
 
+# settings.py
+
+# Force cookies to strictly respect subpath boundaries
+CSRF_COOKIE_PATH = '/'
+SESSION_COOKIE_PATH = '/'
+
+# Enable strict origin tracking to prevent cross-app interference on localhost
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
+# settings.py (Production Security Overhaul)
+
+# Mitigate Cross-Site Request Forgery risks globally
+# 'Lax' allows standard navigation while strictly protecting state-changing POST forms
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 # ==============================================================================
 # PROJECT AURORA MECHANICS: ACTIVE MECHANICAL WORKER REGISTRY MATRIX
 # ==============================================================================
@@ -171,12 +187,3 @@ ACTIVE_MINIONS = [
     'SYS_GIT',    # Git Security Partition & Cloud Backup Specialist
     'MINION_ADD', # Automation Agent specialized in registering fresh worker profiles
 ]
-
-# Django will look up the URL path automatically based on the name
-LOGIN_REDIRECT_URL = 'aurora:landing'
-
-# Where to send users after they log out (e.g., back to the login screen)
-LOGOUT_REDIRECT_URL = 'login' 
-
-# The URL Django sends users to if a view requires them to be logged in
-LOGIN_URL = 'login' 

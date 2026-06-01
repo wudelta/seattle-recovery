@@ -1,0 +1,50 @@
+{% extends 'hopehub/hopehub_base.html' %} 
+
+{% block title %}Sign In | HopeHub Portal{% endblock %} 
+
+{% block content %} 
+<div class="container h-100 d-flex justify-content-center align-items-center"> 
+    <div class="row w-100 justify-content-center"> 
+        <div class="col-md-6 col-lg-4"> 
+            <div class="card border-0 shadow-sm p-4 rounded-4 bg-body"> 
+                <div class="card-body"> 
+                    <h2 class="text-center text-dark mb-4 fw-bold">Sign In</h2> 
+                    
+                    <form method="post"> 
+                        {% csrf_token %} 
+                        
+                        <!-- Dynamically handles post-login redirection for HopeHub context -->
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% else %}
+                            <input type="hidden" name="next" value="{% url 'hopehub:landing' %}">
+                        {% endif %}
+
+                        {% if form.errors %} 
+                            <div class="alert alert-danger p-2 small text-center mb-3 rounded-3" role="alert"> 
+                                Invalid username or password. 
+                            </div> 
+                        {% endif %} 
+
+                        <div class="mb-3"> 
+                            <label for="id_username" class="form-label text-secondary small fw-bold">Username</label> 
+                            <input type="text" name="username" id="id_username" class="form-control rounded-3" autocomplete="username" required> 
+                        </div> 
+
+                        <div class="mb-3"> 
+                            <label for="id_password" class="form-label text-secondary small fw-bold">Password</label> 
+                            <input type="password" name="password" id="id_password" class="form-control rounded-3" autocomplete="current-password" required> 
+                        </div> 
+
+                        <div class="d-grid gap-2 mt-4"> 
+                            <button type="submit" class="btn btn-primary rounded-3 fw-bold py-2"> 
+                                Login to Portal 
+                            </button> 
+                        </div> 
+                    </form> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+</div> 
+{% endblock %}

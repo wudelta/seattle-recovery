@@ -1,8 +1,8 @@
 # aurora/urls.py
-from django.urls import path
+from django.urls import path, reverse_lazy
+from django.contrib.auth import views as auth_views
 from . import views
 
-# THE SEEDING FIX: Explicitly declares the app identity boundary for Django's parser
 app_name = 'aurora'
 
 urlpatterns = [
@@ -52,4 +52,11 @@ urlpatterns = [
         views.FinalizeFeatureView.as_view(), 
         name='finalize_feature'
     ),
+    
+    # 6. DJANGO AUTH URLS
+    path('login/', auth_views.LoginView.as_view(
+        template_name='aurora/login.html',
+        success_url='/aurora/'  # <--- Forces users to HopeHub journal on success
+    ), name='login'),    path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
+
 ]
