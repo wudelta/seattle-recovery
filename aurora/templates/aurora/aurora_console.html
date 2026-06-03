@@ -10,17 +10,20 @@
 
 {% block content %}
 <div class="d-flex flex-column h-100 w-100">
-    
+
+    <!-- Inside your templates block right near the top of your container div layout -->
+    {% csrf_token %}
+
     <!-- Top Workspace Split (Input, Streaming Logs, System Validation) -->
     <div class="row console-top-row g-2 mb-2 flex-grow-1">
         
         <!-- Panel 1: Blueprint Desk -->
         <div class="col-md-4 d-flex flex-column h-100">
             <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-info-emphasis">🛠️ Blueprint Desk (To: Wu)</div>
+                <div class="card-header py-1 font-monospace small text-purple-emphasis">🛠️ Blueprint Desk</div>
                 <div class="card-body d-flex flex-column p-2">
                     <textarea id="blueprint-input" class="form-control bg-darker text-info font-monospace flex-grow-1 mb-2 small" placeholder="Enter plain-English commands for Wu..."></textarea>
-                    <button id="submit-blueprint" class="btn btn-success btn-sm w-100 font-monospace fw-bold">Command Wu</button>
+                    <button id="submit-blueprint" class="btn btn-success btn-sm w-100 font-monospace fw-bold">Command</button>
                 </div>
             </div>
         </div>
@@ -28,7 +31,7 @@
         <!-- Panel 2: Minion Assembly Line -->
         <div class="col-md-4 d-flex flex-column h-100">
             <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-warning-emphasis">🤖 Minion Assembly Line</div>
+                <div class="card-header py-1 font-monospace small text-purple-emphasis">🤖 Minion Assembly Line</div>
                 <div class="card-body p-2 overflow-auto font-monospace small scrollable-panel" id="minion-feed">
                     <div class="text-muted">[System] Standing by for blueprints...</div>
                 </div>
@@ -38,7 +41,7 @@
         <!-- Panel 3: Validation Inspector -->
         <div class="col-md-4 d-flex flex-column h-100">
             <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-success-emphasis">🔬 Validation Inspector (Spyder Engine)</div>
+                <div class="card-header py-1 font-monospace small text-purple-emphasis">🔬 Validation Inspector</div>
                 <div class="card-body p-2 overflow-auto font-monospace small scrollable-panel" id="inspector-output">
                     <div class="text-success">✔ Syntax Check: Passed</div>
                 </div>

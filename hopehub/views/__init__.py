@@ -12,4 +12,9 @@ from .journal import DeleteJournalEntryView
 __all__ = [
     # 1. Base Framework Operations
     'hopehub_landing',
+    
+    # 2. Journal CRUD Views
+    'JournalView',
+    'ProcessJournalEntryView',
+    'DeleteJournalEntryView',
 ]

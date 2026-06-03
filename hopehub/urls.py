@@ -24,7 +24,7 @@ urlpatterns = [
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(
         template_name='hopehub/login.html',
-        success_url='/hopehub/'  # <--- Forces users to HopeHub journal on success
+        success_url='/hopehub/'
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='hopehub:landing'), name='logout'),
 

@@ -1,5 +1,5 @@
 # aurora/urls.py
-from django.urls import path, reverse_lazy
+from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
@@ -10,7 +10,7 @@ urlpatterns = [
     path('', views.aurora_landing, name='landing'),
     
     # 2. THE COCKPIT: Your primary working environment that replaces Spyder tools
-    path('console/', views.aurora_console, name='console'),
+    path('console/', views.ConsoleView.as_view(), name='console'),
     
     # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
     path('api/command/', views.execute_blueprint_api, name='api_command'),
@@ -18,7 +18,7 @@ urlpatterns = [
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(
         template_name='aurora/login.html',
-        success_url='/aurora/' # <--- Forces users to HopeHub journal on success
+        success_url='/aurora/'
     ), name='login'),
     
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
