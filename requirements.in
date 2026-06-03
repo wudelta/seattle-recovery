@@ -1,0 +1,34 @@
+# requirements.in
+# Core Application & Automation Requirements Matrix for HopeHub + Aurora v2.0
+
+# 1. Base Core Framework
+django>=5.0
+psycopg[binary]              # Postgres Native Driver
+
+# 2. Graph Database
+neo4j                        # Bolt Protocol Graph Client
+
+# 3. AI Gateways
+groq                         # Structural Inference Engine
+
+# 4. Aurora Automation & Lab Environment
+jinja2                       # Code Generation Factory Engine
+ruff                         # Ultra-fast Python Linter (Replaces Spyder, Pyflakes, isort)
+pytest-django                # Isolated Lab Testing Framework
+markdown                     # UI Text Formatting Parser
+
+# 5. Environment Configuration Setup
+django-environ               # Maps .env configurations to settings.py via 'import environ'
+
+# 6. API Architecture
+djangorestframework          # Provides the rest_framework imports for your endpoints
+
+# 7. Front-End Form Layout Engines
+django-crispy-forms          # Core package providing the 'crispy_forms' import
+crispy-bootstrap5            # Integrates your native Bootstrap styles cleanly
+
+# 8. Cryptographic Core Security
+cryptography                 # Native encryption algorithms for security protocols
+
+# 9. Media & Imaging Processor
+Pillow                       # Handles ImageField compilation and media rendering

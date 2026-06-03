@@ -1,12 +1,12 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Aurora Portal{% endblock %}</title>
-    <!-- Shared Global Morph Theme Core -->
-    <link rel="stylesheet" href="{% static 'css/morph.bootstrap.min.css' %}">
+    <!-- Shared Global Solar Theme Core -->
+    <link rel="stylesheet" href="{% static 'css/solar.bootstrap.min.css' %}">
     <!-- Child Page Specific CSS Inject Hook -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -26,9 +26,9 @@
             <!-- Centered Container for Title + Tagline -->
             <div class="col-12 col-md-auto d-flex flex-column flex-md-row align-items-center align-items-md-baseline gap-2 text-center text-md-start">
                 <!-- Main Title -->
-                <h1 class="display-4 text-dark mb-0" style="font-weight: 900; letter-spacing: 1px; line-height: 1;">Aurora</h1>
+                <h1 class="display-4 style="font-weight: 900; letter-spacing: 1px; line-height: 1;">Aurora</h1>
                 <!-- Tagline -->
-                <span class="h5 text-muted fst-italic mb-0">"Where hope flourishes"</span>
+                <span class="h5 text-muted fst-italic mb-0">"You imagine it, we build it"</span>
             </div>
 
             <!-- Dynamic Authentication Controls (Replaces the empty balancing column) -->

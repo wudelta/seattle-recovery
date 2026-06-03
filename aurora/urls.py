@@ -9,54 +9,17 @@ urlpatterns = [
     # 1. ROOT VIEW: Typing '/aurora/' MUST hit the clean visual matrix landing page node
     path('', views.aurora_landing, name='landing'),
     
-    # 2. CONSOLE DASHBOARD: Typing '/aurora/dashboard/' targets the terminal control panel view
-    path('dashboard/', views.console_dashboard, name='aurora_dashboard'),
+    # 2. THE COCKPIT: Your primary working environment that replaces Spyder tools
+    path('console/', views.aurora_console, name='console'),
     
-    # 3. CHAT PIPELINES
-    path('api/', views.chat_api, name='chat_api'),
-    path('api/v1/stream/', views.wu_data_stream, name='wu_data_stream'),
-    path('api/session/start/', views.start_online_session, name='start_online_session'),
-    
-    # 4. OPERATIONAL CHANNELS
-    path('process/', views.wu_director, name='wu_director'),
-    path('end_session/', views.end_session_view, name='end_session'),
-    path('manual_log/', views.manual_time_log_view, name='manual_log'),
-    path('commit_file/', views.commit_file_view, name='aurora_commit_file'),
-    path('daily_brief/', views.daily_brief_view, name='aurora_daily_brief'),
-    path('api/notes/create/', views.create_delta_note_api, name='create_delta_note'),
-    path('add_note/', views.add_note_view, name='add_note'),
-    
-    # 5. HUMAN-IN-THE-LOOP PIPELINE ENGINE (Reseed Sync Nodes)
-    path(
-        'pipeline/<str:feature_name>/', 
-        views.AutomationDashboardView.as_view(), 
-        name='pipeline_dashboard'
-    ),
-    path(
-        'step/<int:step_id>/process/', 
-        views.ProcessMinionStepView.as_view(), 
-        name='process_step'
-    ),
-    path(
-        'step/<int:step_id>/rollback/', 
-        views.RollbackMinionStepView.as_view(), 
-        name='rollback_step'
-    ),
-    path(
-        'step/<int:step_id>/backward/', 
-        views.StepBackwardNavigationView.as_view(), 
-        name='step_backward'
-    ),
-    path(
-        'pipeline/<str:feature_name>/finalize/', 
-        views.FinalizeFeatureView.as_view(), 
-        name='finalize_feature'
-    ),
-    
+    # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
+    path('api/command/', views.execute_blueprint_api, name='api_command'),
+
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(
         template_name='aurora/login.html',
-        success_url='/aurora/'  # <--- Forces users to HopeHub journal on success
-    ), name='login'),    path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
-
+        success_url='/aurora/' # <--- Forces users to HopeHub journal on success
+    ), name='login'),
+    
+    path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
 ]

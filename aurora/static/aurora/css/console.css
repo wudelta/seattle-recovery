@@ -1,0 +1,93 @@
+/* aurora/static/aurora/css/console.css */
+
+/* ==========================================================================
+   1. VIEWPORT & LAYOUT CONSTRAINTS (For absolute screen density)
+   ========================================================================== */
+html, body {
+    height: 100vh;
+    overflow: hidden !important; /* Disables global browser window scrolling */
+    background-color: #001e26 !important; /* Deeper background for panel depth */
+}
+
+/* Force the main layout element to lock tightly to the remaining vertical space */
+.container-fluid.d-flex.flex-column.px-4 {
+    height: calc(100vh - 85px) !important; /* Subtract header footprint dynamically */
+    overflow: hidden !important; 
+    padding-bottom: 0.5rem !important;
+}
+
+.console-top-row {
+    height: 55%; /* Fixed top vertical split */
+}
+
+/* Force internal panel texts to scroll inside cards rather than resizing card frames */
+.scrollable-panel {
+    height: 100%;
+    max-height: calc(100% - 5px);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+textarea#blueprint-input {
+    resize: none;
+}
+
+/* ==========================================================================
+   2. RECOVERY PLATFORM COMPACT MODE OVERRIDES
+   ========================================================================== */
+header.container-fluid {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+header h1.display-4 {
+    font-size: 1.8rem !important; /* Squeezes logo footprint */
+}
+
+header img {
+    max-width: 90px !important; /* Scales down logo assets */
+}
+
+header .h5.text-muted {
+    font-size: 0.9rem !important;
+}
+
+/* ==========================================================================
+   3. SOLARIZED DARK HIGH-CONTRAST ACCENTS
+   ========================================================================== */
+/* High-Contrast Code Crucible Canvas */
+.bg-black {
+    background-color: #001115 !important; /* Pitch dark backing for readable syntax */
+    border: 1px solid #073642 !important;
+}
+
+.bg-darker {
+    background-color: #001a20 !important;
+    border: 1px solid #073642 !important;
+}
+
+/* Syntax strings pop clearly for rapid skimming */
+#code-viewer {
+    color: #268bd2 !important; /* Brilliant Solar Blue for functions/comments */
+    background-color: #000a0d !important;
+    font-weight: 600;
+}
+
+/* High-Contrast Verification Notifications */
+.text-success {
+    color: #859900 !important; /* Solarized Green for clean test results */
+}
+
+.text-warning {
+    color: #b58900 !important; /* Solarized Yellow/Amber for active worker pipelines */
+}
+
+.text-danger {
+    color: #dc322f !important; /* Solarized Red for validation breaks */
+}
+
+/* Structural Card Highlights */
+.card-header {
+    background-color: #073642 !important; /* Defined boundary dividers */
+    letter-spacing: 0.5px;
+}
