@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // 1. DATASET MATRIX SPECIFICATIONS (Restored to your original hex colors)
     const nodes = new vis.DataSet([
         { id: 1, label: 'Aurora Core', url: "/aurora/", color: '#38bdf8', size: 30 },
-        //{ id: 2, label: 'Console', url: "/aurora/dashboard/", color: '#818cf8' },
+        { id: 2, label: 'Console', url: "/aurora/console/", color: '#818cf8' },
         { id: 3, label: 'Neo4j', url: "http://localhost:7474/browser/", color: '#f97316', target: '_blank' },
         { id: 4, label: 'PgWeb', url: "http://localhost:8081/", color: '#f97316', target: '_blank' },
         { id: 5, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ]);
 
     const edges = new vis.DataSet([
-        //{ from: 1, to: 2 },
+        { from: 1, to: 2 },
         { from: 1, to: 3 },
         { from: 1, to: 4 },
         { from: 1, to: 5 },
