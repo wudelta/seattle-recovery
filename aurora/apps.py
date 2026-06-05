@@ -6,6 +6,6 @@ class AuroraConfig(AppConfig):
     name = 'aurora'
 
     def ready(self):
-        # Force-load the node schemas and signal hooks during memory initialization
+        # Force-loads your blueprints and hooks into memory on initialization
         import aurora.nodes
-        import aurora.signals  # <-- ADD THIS LINE HERE
+        import aurora.signals  # <-- THE CRITICAL LINK: Binds your live databases together!

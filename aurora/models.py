@@ -1,6 +1,7 @@
 # aurora/models.py
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
@@ -28,8 +29,13 @@ class ComponentRegistry(models.Model):
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
     
-    # Mandatory, unvalidated, open-ended string field for dynamic minion self-reporting
-    created_by = models.CharField(max_length=150, blank=False, null=False)
+    # STRUCTURAL REFACTOR: Replaces the old CharField string text log completely
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.PROTECT,  # Prevents user deletion from destroying repository logs out-of-band
+        related_name='forged_assets',
+        help_text="The authenticated developer who authorized the execution string."
+    )
     
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)

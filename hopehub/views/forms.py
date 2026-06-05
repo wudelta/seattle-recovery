@@ -1,6 +1,6 @@
 # filepath: hopehub/views/forms.py
 from django import forms
-from ..models import JournalEntry
+from hopehub.models import JournalEntry
 
 class JournalEntryForm(forms.ModelForm):
     class Meta:
