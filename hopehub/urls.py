@@ -34,5 +34,5 @@ urlpatterns = [
     path('my_account/', views.MyAccountView.as_view(), name='my_account'),
     path('contact_us/', views.ContactUsView.as_view(), name='contact_us'),
     path('about_hopehub/', views.AboutHopehubView.as_view(), name='about_hopehub'),
-    path('checkin_wizard/', views.CheckinWizardView.as_view(), name='checkin_wizard'),
+    path('api/bed_locator/', views.bed_locator_endpoint, name='bed_locator_endpoint'),
 ]

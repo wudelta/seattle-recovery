@@ -1,4 +1,4 @@
-from .checkin_wizard_view import CheckinWizardView
+from .bed_locator_view import bed_locator_endpoint
 from .about_hopehub_view import AboutHopehubView
 from .contact_us_view import ContactUsView
 from .my_account_view import MyAccountView
@@ -26,5 +26,5 @@ __all__ = [
     'MyAccountView',
     'ContactUsView',
     'AboutHopehubView',
-    'CheckinWizardView',
+    'bed_locator_endpoint',
 ]

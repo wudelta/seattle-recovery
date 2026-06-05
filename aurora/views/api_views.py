@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from aurora.models import ComponentRegistry
 from aurora.page_skeleton import PageSkeletonBuilder
+from aurora.api_skeleton import ApiSkeletonBuilder
 from aurora.utils.forge_registry import register_new_component
 
 @csrf_exempt
@@ -11,10 +12,7 @@ def execute_blueprint_api(request):
         return JsonResponse({"status": "error"}, status=405)
         
     try:
-        # 1. Extract the raw console text payload from the form field
         raw_cmd = request.POST.get("blueprint", "").strip()
-        
-        # JSON fallback reader for API integrations
         if not raw_cmd:
             try:
                 data = json.loads(request.body.decode('utf-8'))
@@ -28,19 +26,17 @@ def execute_blueprint_api(request):
                 "generated_code": "", "validation": {"valid": True, "errors": [], "warnings": []}
             })
 
-        # ==============================================================================
-        # AUTOMATION COMMANDS ENGINE (TIER 1)
-        # ==============================================================================
         if raw_cmd.startswith("/"):
             parts = raw_cmd.split()
             action = parts[0].lower() if parts else ""
 
-            # ROUTE A: STRUCTURE GENERATION
+            # ==============================================================================
+            # ROUTE A: TEMPLATE AND CBV GENERATION
+            # ==============================================================================
             if action == "/page":
                 if len(parts) < 3:
                     return JsonResponse({
-                        "status": "success", 
-                        "minion_log": "Syntax Error. Expected format: /page <app_name> <page_name> [visibility]", 
+                        "status": "success", "minion_log": "Syntax: /page <app_name> <page_name> [visibility]",
                         "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
                     })
                 
@@ -51,82 +47,109 @@ def execute_blueprint_api(request):
                 c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
                 path = f"templates/{c_app}/{c_page}.html"
                 
-                # Execute disk writing sequence
                 res = PageSkeletonBuilder.forge_page(c_app, c_page, vis)
                 if res.get("status") == "error":
                     return JsonResponse({
-                        "status": "success", 
-                        "minion_log": f"Forge halted: {res.get('message')}", 
+                        "status": "success", "minion_log": f"Forge halted: {res.get('message')}",
                         "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
                     })
                 
-                # Commit tandem database entries (Postgres save auto-syncs Neo4j via signal)
-                asset = register_new_component(path, f"{c_page}_layout", vis, "PageSkeletonBuilder", "Auto layout canvas.")
+                # FIXED: Passed description positional parameter matching forge_registry schema
+                asset = register_new_component(
+                    path, f"{c_page}_layout", vis, "COMPILER_MODULE", 
+                    f"Automated canvas layout template for {c_app} UI."
+                )
                 
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"FORGE SUCCESS: Built structural layout assets for {c_name} inside {c_app}. Registries synchronized (Postgres ID: {str(asset.id)}).",
-                    "generated_code": f"<!-- {path} Built Successfully -->\n",
+                    "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Neo4j Node synchronized).",
+                    "generated_code": f"<!-- Template located at: {path} -->\n",
                     "validation": {"valid": True, "errors": [], "warnings": []}
                 })
 
-            # ROUTE B: SURGICAL INFRASTRUCTURE PURGE
-            elif action == "/destroy":
+            # ==============================================================================
+            # ROUTE B: FUNCTIONAL API ENDPOINT GENERATION
+            # ==============================================================================
+            elif action == "/api":
                 if len(parts) < 3:
                     return JsonResponse({
-                        "status": "success", 
-                        "minion_log": "Syntax Error. Expected format: /destroy <app_name> <page_name>", 
+                        "status": "success", "minion_log": "Syntax: /api <app_name> <endpoint_name> [visibility]",
                         "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
                     })
                 
                 app = parts[1].lower().strip()
-                page = parts[2].lower().strip()
+                endpoint = parts[2].lower().strip()
+                vis = parts[3].lower().strip() if len(parts) > 3 else "private"
                 
-                c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
-                # Ensure the path matches your PageSkeletonBuilder convention precisely
-                path = f"templates/{c_app}/{c_page}.html"
+                c_app, c_endpoint, f_name = ApiSkeletonBuilder.clean_inputs(app, endpoint)
+                path = f"{c_app}/views/{c_endpoint}_view.py"
                 
-                # Safety Guardrail Lock Verification
-                try:
-                    asset = ComponentRegistry.objects.get(file_path=path)
-                    if asset.locked:
-                        return JsonResponse({
-                            "status": "success", 
-                            "minion_log": f"PURGE DENIED: Component '{c_page}' is LOCKED in Postgres.", 
-                            "validation": {"valid": True, "errors": [], "warnings": []}
-                        })
-                except ComponentRegistry.DoesNotExist:
-                    pass
-                
-                # Execute surgical file erasure loop on local disk
-                p_res = PageSkeletonBuilder.purge_page(c_app, c_page)
-                if p_res.get("status") == "error":
+                res = ApiSkeletonBuilder.forge_api(c_app, c_endpoint, vis)
+                if res.get("status") == "error":
                     return JsonResponse({
-                        "status": "success",
-                        "minion_log": f"Purge error: {p_res.get('message')}",
-                        "validation": {"valid": False, "errors": [p_res.get('message')], "warnings": []}
+                        "status": "success", "minion_log": f"Forge halted: {res.get('message')}",
+                        "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
                     })
                 
-                # Clear metadata tracking entry out of tables (Signals handle Neo4j node delete)
-                ComponentRegistry.objects.filter(file_path=path).delete()
+                # FIXED: Passed description positional parameter matching forge_registry schema
+                asset = register_new_component(
+                    path, f"{f_name}", vis, "ENTRY_POINT", 
+                    f"Automated function-based JSON stream endpoint for {c_app} layer."
+                )
                 
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"SURGICAL WIPE SUCCESS: {p_res.get('message')} | Metadata profiles cleared from tandem database tables.",
-                    "generated_code": f"# Erased component: {c_name} from {c_app}\n",
+                    "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Neo4j Node synchronized).",
+                    "generated_code": f"# API Path registered: path('api/{c_endpoint}/', views.{f_name})\n",
+                    "validation": {"valid": True, "errors": [], "warnings": []}
+                })
+
+            # ==============================================================================
+            # ROUTE C: UNIVERSAL SURGICAL PURGE UTILITY
+            # ==============================================================================
+            elif action == "/destroy":
+                if len(parts) < 3:
+                    return JsonResponse({
+                        "status": "success", "minion_log": "Syntax: /destroy <app_name> <component_name>",
+                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
+                    })
+                
+                app = parts[1].lower().strip()
+                name = parts[2].lower().strip()
+                
+                page_path = f"templates/{app}/{name}.html"
+                api_path = f"{app}/views/{name}_view.py"
+                
+                for target_path in [page_path, api_path]:
+                    try:
+                        asset = ComponentRegistry.objects.get(file_path=target_path)
+                        if asset.locked:
+                            return JsonResponse({
+                                "status": "success", "minion_log": f"PURGE DENIED: '{name}' path is LOCKED.",
+                                "validation": {"valid": True, "errors": [], "warnings": []}
+                            })
+                    except ComponentRegistry.DoesNotExist:
+                        pass
+                
+                p_res = PageSkeletonBuilder.purge_page(app, name)
+                a_res = ApiSkeletonBuilder.purge_api(app, name)
+                
+                ComponentRegistry.objects.filter(file_path=page_path).delete()
+                ComponentRegistry.objects.filter(file_path=api_path).delete()
+                
+                return JsonResponse({
+                    "status": "success",
+                    "minion_log": f"SURGICAL WIPE SUCCESS. Templates: {p_res.get('message')} | APIs: {a_res.get('message')}",
+                    "generated_code": f"# All local file branches erased for: {name}\n",
                     "validation": {"valid": True, "errors": [], "warnings": []}
                 })
 
             else:
                 return JsonResponse({
-                    "status": "success", 
-                    "minion_log": f"Unknown action: {action}", 
+                    "status": "success", "minion_log": f"Unknown action: {action}",
                     "validation": {"valid": True, "errors": [], "warnings": []}
                 })
 
-        # ==============================================================================
-        # AI ORCHESTRATION ENGINE GATEWAY (TIER 2)
-        # ==============================================================================
         else:
             return JsonResponse({
                 "status": "success",
