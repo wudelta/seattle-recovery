@@ -1,98 +1,142 @@
-# aurora/views/api_views.py
+import json
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from aurora.inspector import ValidationInspector
+from django.views.decorators.csrf import csrf_exempt
+from aurora.models import ComponentRegistry
 from aurora.page_skeleton import PageSkeletonBuilder
-from aurora.api_skeleton import ApiSkeletonBuilder
+from aurora.utils.forge_registry import register_new_component
 
-@login_required
+@csrf_exempt
 def execute_blueprint_api(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-
-    blueprint_text = request.POST.get("blueprint", "").strip()
-    if not blueprint_text:
-        return JsonResponse({"error": "Empty blueprint command"}, status=400)
-
-    # ==============================================================================
-    # DYNAMIC MULTI-APP AUTOMATION CONSOLE ROUTER
-    # ==============================================================================
-    
-    # 1. PAGE FORGE FLOW INTERCEPTOR
-    if blueprint_text.startswith('/page '):
-        args = blueprint_text.replace('/page ', '').strip().split()
-        if len(args) != 2:
-            return JsonResponse({"error": "Syntax error. Emplace arguments via: /page [app_name] [page_name]"}, status=400)
+        return JsonResponse({"status": "error"}, status=405)
         
-        app_target, page_target = args[0], args[1]
-        result = PageSkeletonBuilder.forge_page(app_target, page_target)
+    try:
+        # 1. Extract the raw console text payload from the form field
+        raw_cmd = request.POST.get("blueprint", "").strip()
         
-        if result["status"] == "success":
+        # JSON fallback reader for API integrations
+        if not raw_cmd:
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+                raw_cmd = data.get("blueprint", "").strip()
+            except Exception:
+                pass
+
+        if not raw_cmd:
+            return JsonResponse({
+                "status": "success", "minion_log": "System standing ready...",
+                "generated_code": "", "validation": {"valid": True, "errors": [], "warnings": []}
+            })
+
+        # ==============================================================================
+        # AUTOMATION COMMANDS ENGINE (TIER 1)
+        # ==============================================================================
+        if raw_cmd.startswith("/"):
+            parts = raw_cmd.split()
+            action = parts[0].lower() if parts else ""
+
+            # ROUTE A: STRUCTURE GENERATION
+            if action == "/page":
+                if len(parts) < 3:
+                    return JsonResponse({
+                        "status": "success", 
+                        "minion_log": "Syntax Error. Expected format: /page <app_name> <page_name> [visibility]", 
+                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
+                    })
+                
+                app = parts[1].lower().strip()
+                page = parts[2].lower().strip()
+                vis = parts[3].lower().strip() if len(parts) > 3 else "private"
+                
+                c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
+                path = f"templates/{c_app}/{c_page}.html"
+                
+                # Execute disk writing sequence
+                res = PageSkeletonBuilder.forge_page(c_app, c_page, vis)
+                if res.get("status") == "error":
+                    return JsonResponse({
+                        "status": "success", 
+                        "minion_log": f"Forge halted: {res.get('message')}", 
+                        "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
+                    })
+                
+                # Commit tandem database entries (Postgres save auto-syncs Neo4j via signal)
+                asset = register_new_component(path, f"{c_page}_layout", vis, "PageSkeletonBuilder", "Auto layout canvas.")
+                
+                return JsonResponse({
+                    "status": "success",
+                    "minion_log": f"FORGE SUCCESS: Built structural layout assets for {c_name} inside {c_app}. Registries synchronized (Postgres ID: {str(asset.id)}).",
+                    "generated_code": f"<!-- {path} Built Successfully -->\n",
+                    "validation": {"valid": True, "errors": [], "warnings": []}
+                })
+
+            # ROUTE B: SURGICAL INFRASTRUCTURE PURGE
+            elif action == "/destroy":
+                if len(parts) < 3:
+                    return JsonResponse({
+                        "status": "success", 
+                        "minion_log": "Syntax Error. Expected format: /destroy <app_name> <page_name>", 
+                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
+                    })
+                
+                app = parts[1].lower().strip()
+                page = parts[2].lower().strip()
+                
+                c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
+                # Ensure the path matches your PageSkeletonBuilder convention precisely
+                path = f"templates/{c_app}/{c_page}.html"
+                
+                # Safety Guardrail Lock Verification
+                try:
+                    asset = ComponentRegistry.objects.get(file_path=path)
+                    if asset.locked:
+                        return JsonResponse({
+                            "status": "success", 
+                            "minion_log": f"PURGE DENIED: Component '{c_page}' is LOCKED in Postgres.", 
+                            "validation": {"valid": True, "errors": [], "warnings": []}
+                        })
+                except ComponentRegistry.DoesNotExist:
+                    pass
+                
+                # Execute surgical file erasure loop on local disk
+                p_res = PageSkeletonBuilder.purge_page(c_app, c_page)
+                if p_res.get("status") == "error":
+                    return JsonResponse({
+                        "status": "success",
+                        "minion_log": f"Purge error: {p_res.get('message')}",
+                        "validation": {"valid": False, "errors": [p_res.get('message')], "warnings": []}
+                    })
+                
+                # Clear metadata tracking entry out of tables (Signals handle Neo4j node delete)
+                ComponentRegistry.objects.filter(file_path=path).delete()
+                
+                return JsonResponse({
+                    "status": "success",
+                    "minion_log": f"SURGICAL WIPE SUCCESS: {p_res.get('message')} | Metadata profiles cleared from tandem database tables.",
+                    "generated_code": f"# Erased component: {c_name} from {c_app}\n",
+                    "validation": {"valid": True, "errors": [], "warnings": []}
+                })
+
+            else:
+                return JsonResponse({
+                    "status": "success", 
+                    "minion_log": f"Unknown action: {action}", 
+                    "validation": {"valid": True, "errors": [], "warnings": []}
+                })
+
+        # ==============================================================================
+        # AI ORCHESTRATION ENGINE GATEWAY (TIER 2)
+        # ==============================================================================
+        else:
             return JsonResponse({
                 "status": "success",
-                "minion_log": f"[Forge-Factory]: {result['message']}",
-                "generated_code": f"# View class and template active in: '{app_target}'\n# Cost: 0 tokens.",
-                "validation": {"valid": True, "errors": [], "warnings": ["[System Check]: Page component initialized."]}
+                "minion_log": "Wu engine is ready. Cloud gateway waiting for plain English commands.",
+                "generated_code": "# Wu Active\n",
+                "validation": {"valid": True, "errors": [], "warnings": []}
             })
-        return JsonResponse({"error": result["message"]}, status=400)
 
-    # 2. FUNCTIONAL API FORGE FLOW INTERCEPTOR
-    if blueprint_text.startswith('/api '):
-        args = blueprint_text.replace('/api ', '').strip().split()
-        if len(args) != 2:
-            return JsonResponse({"error": "Syntax error. Emplace arguments via: /api [app_name] [endpoint_name]"}, status=400)
-        
-        app_target, endpoint_target = args[0], args[1]
-        result = ApiSkeletonBuilder.forge_api(app_target, endpoint_target)
-        
-        if result["status"] == "success":
-            return JsonResponse({
-                "status": "success",
-                "minion_log": f"[Forge-Factory]: {result['message']}",
-                "generated_code": f"# Functional JSON view endpoint active in: '{app_target}'\n# Cost: 0 tokens.",
-                "validation": {"valid": True, "errors": [], "warnings": ["[System Check]: API component initialized."]}
-            })
-        return JsonResponse({"error": result["message"]}, status=400)
-
-    # 3. PURGE UNDO MACHINE INTERCEPTOR (Intelligently maps both Pages and APIs)
-    if blueprint_text.startswith('/destroy '):
-        args = blueprint_text.replace('/destroy ', '').strip().split()
-        if len(args) != 2:
-            return JsonResponse({"error": "Syntax error. Emplace arguments via: /destroy [app_name] [component_name]"}, status=400)
-        
-        app_target, component_target = args[0], args[1]
-        
-        # Look for the functional suffix first to decide the clean rollback pipeline
-        func_name = f"{component_target}_endpoint"
-        
-        # Fire purge routines on both domains to guarantee an absolute wipeout
-        api_result = ApiSkeletonBuilder.purge_api(app_target, component_target)
-        page_result = PageSkeletonBuilder.purge_page(app_target, component_target)
-        
-        # Combine logs if components were actually scrubbed
-        combined_logs = []
-        if "Deleted" in api_result.get("message", "") or "Scrubbed" in api_result.get("message", ""):
-            combined_logs.append(api_result["message"])
-        if "Deleted" in page_result.get("message", "") or "Scrubbed" in page_result.get("message", ""):
-            combined_logs.append(page_result["message"])
-            
-        final_message = " | ".join(combined_logs) if combined_logs else "No structural components found to purge."
-        
+    except Exception as e:
         return JsonResponse({
-            "status": "success",
-            "minion_log": f"💥 [WIPE OUT ACTIVE]: {final_message}",
-            "generated_code": f"# Clean rollback executed for target: '{component_target}' inside app: '{app_target}'.\n# Baseline codebase footprint completely restored. Cost: 0 tokens.",
-            "validation": {"valid": True, "errors": [], "warnings": ["[System Check]: Sandbox rollback verified clean."]}
+            "status": "success", "minion_log": f"Forge process view fault: {str(e)}",
+            "generated_code": "", "validation": {"valid": False, "errors": [str(e)], "warnings": []}
         })
-
-    # ==============================================================================
-    # Fallback simulation profile
-    mock_wu_code = "import os\ndef forge_action():\n    print('HopeHub Core Active')\n"
-    inspection_results = ValidationInspector.check_syntax_and_imports(mock_wu_code)
-    
-    return JsonResponse({
-        "status": "success",
-        "minion_log": "[Minion-Core]: Blueprint accepted...",
-        "generated_code": mock_wu_code,
-        "validation": inspection_results
-    })

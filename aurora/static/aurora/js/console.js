@@ -8,13 +8,15 @@ $(document).ready(function() {
         return $('input[name="csrfmiddlewaretoken"]').val();
     }
 
-    // Setup jQuery AJAX defaults to inject the CSRF token into request headers automatically
+    // Setup jQuery AJAX defaults safely to completely eliminate frontend header crashes
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
             if (!/^http:.*/.test(settings.url) && !/^https:.*/.test(settings.url)) {
-                // Fetch and inject the validated token directly
                 const token = getCleanCSRFToken();
-                xhr.setRequestHeader("X-CSRFToken", token);
+                // ONLY append the token if it actually exists in the template layout!
+                if (token) {
+                    xhr.setRequestHeader("X-CSRFToken", token);
+                }
             }
         }
     });

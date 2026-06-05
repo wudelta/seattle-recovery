@@ -32,3 +32,7 @@ cryptography                 # Native encryption algorithms for security protoco
 
 # 9. Media & Imaging Processor
 Pillow                       # Handles ImageField compilation and media rendering
+
+#10 neo4j Graph extensions
+neomodel
+django-neomodel

@@ -1,14 +1,14 @@
-# hopehub/tests/test_mission_statement_hopehub.py
+# hopehub/tests/test_contact_us_hopehub.py
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-class HopehubMissionStatementViewRouteTest(TestCase):
+class HopehubContactUsViewRouteTest(TestCase):
     """Automated isolated page testing suite."""
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(username="hopehub_pilot", password="password123")
-        self.url = reverse("hopehub:mission_statement")
+        self.url = reverse("hopehub:contact_us")
 
     def test_unauthenticated_user_redirects_to_login(self):
         response = self.client.get(self.url)
@@ -18,4 +18,4 @@ class HopehubMissionStatementViewRouteTest(TestCase):
         self.client.login(username="hopehub_pilot", password="password123")
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "hopehub/mission_statement.html")
+        self.assertTemplateUsed(response, "hopehub/contact_us.html")

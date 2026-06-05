@@ -4,14 +4,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // 1. DATASET MATRIX SPECIFICATIONS
     const nodes = new vis.DataSet([
         { id: 1, label: 'Hopehub Core', url: "/hopehub/", color: '#38bdf8', size: 30 },
-        { id: 2, label: 'About', url: "/hopehub/", color: '#818cf8' },
-        { id: 3, label: 'Contact', url: "/hopehub/", color: '#f97316'},
-        //{ id: 4, label: 'Account', url: "/hopehub/", color: '#f97316' },
+        { id: 2, label: 'About', url: "/hopehub/about_hopehub/", color: '#818cf8' },
+        { id: 3, label: 'Contact', url: "/hopehub/contact_us/", color: '#f97316'},
+        //{ id: 4, label: '', url: "/hopehub/", color: '#f97316' },
         { id: 5, label: 'Resources', url: "/hopehub/", color: '#f43f5e' },
-        { id: 6, label: 'Account', url: "/hopehub/", color: '#d946ef' },
+        { id: 6, label: 'Account', url: "/hopehub/my_account/", color: '#d946ef' },
         { id: 7, label: 'Journal', url: "/hopehub/journal/", color: '#10b981' },
         //{ id: 8, label: '', url: "/hopehub/", color: '#10b981' },
-        { id: 9, label: 'Mission', url: "/hopehub/", color: '#94a3b8' }
+        { id: 9, label: 'Mission', url: "/hopehub/mission_statement/", color: '#94a3b8' }
     ]);
 
     const edges = new vis.DataSet([

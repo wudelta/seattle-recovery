@@ -1,3 +1,8 @@
+from .checkin_wizard_view import CheckinWizardView
+from .about_hopehub_view import AboutHopehubView
+from .contact_us_view import ContactUsView
+from .my_account_view import MyAccountView
+from .mission_statement_view import MissionStatementView
 from .landing import hopehub_landing
 from .journal import JournalView
 from .journal import ProcessJournalEntryView
@@ -17,4 +22,9 @@ __all__ = [
     'JournalView',
     'ProcessJournalEntryView',
     'DeleteJournalEntryView',
+    'MissionStatementView',
+    'MyAccountView',
+    'ContactUsView',
+    'AboutHopehubView',
+    'CheckinWizardView',
 ]
