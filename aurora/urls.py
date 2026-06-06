@@ -1,4 +1,7 @@
-# aurora/urls.py
+# ======================================================================
+# FILE: aurora/urls.py (PATCH 1 OF 1)
+# START: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES
+# ======================================================================
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
@@ -14,7 +17,7 @@ urlpatterns = [
     
     # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
     path('api/command/', views.execute_blueprint_api, name='api_command'),
-
+    
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(
         template_name='aurora/login.html',
@@ -23,3 +26,6 @@ urlpatterns = [
     
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
 ]
+# ======================================================================
+# END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES
+# ======================================================================

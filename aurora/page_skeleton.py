@@ -1,4 +1,7 @@
-# aurora/page_skeleton.py
+# ======================================================================
+# FILE: aurora/page_skeleton.py (PATCH 1 OF 5)
+# START: INITIAL CONFIGURATIONS & CORE IMPORTS
+# ======================================================================
 import os
 import re
 
@@ -11,30 +14,39 @@ class PageSkeletonBuilder:
         page = re.sub(r'[^a-zA-Z0-9_]', '', page_name.lower().strip())
         cls = "".join([part.capitalize() for part in page.split("_")]) + "View"
         return app, page, cls
+# ======================================================================
+# END: INITIAL CONFIGURATIONS & CORE IMPORTS
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/page_skeleton.py (PATCH 2 OF 5)
+# START: FORGE PATH RESOLUTION & HTML TEMPLATE GENERATION
+# ======================================================================
     @classmethod
     def forge_page(cls, target_app: str, page_name: str, visibility: str) -> dict:
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         if not app or not page:
             return {"status": "error", "message": "Invalid architectural parameters."}
-            
+        
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
         
         if not os.path.exists(os.path.join(base_dir, app)):
             return {"status": "error", "message": f"Target app directory '{app}' does not exist on this machine."}
-            
+
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_{page}_{app}.py')
         
+        # FIXED PARADIGM: Isolated filename path to prevent API collision
+        test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
+
         if os.path.exists(view_file) or os.path.exists(template_file):
             return {"status": "error", "message": f"Collision: Component '{page}' already exists in app '{app}'."}
-            
+
         base_template_extends = f"{app}/{app}_base.html"
-        
+
         try:
             # 1. HTML Template Generation
             os.makedirs(os.path.dirname(template_file), exist_ok=True)
@@ -45,14 +57,21 @@ class PageSkeletonBuilder:
                     f'{{% block title %}}{page.replace("_", " ").title()} | Under Construction ({visibility.upper()}){{% endblock %}}\n\n'
                     f'{{% block content %}}\n'
                     f'<div class="d-flex flex-column align-items-center justify-content-center text-center p-5 rounded bg-black" style="min-height: 60vh;">\n'
-                    f'  <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
-                    f'  <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
-                    f'  <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
-                    f'  <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
+                    f'    <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
+                    f'    <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
+                    f'    <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
+                    f'    <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
                     f'</div>\n'
                     f'{{% endblock %}}\n'
                 )
+# ======================================================================
+# END: FORGE PATH RESOLUTION & HTML TEMPLATE GENERATION
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/page_skeleton.py (PATCH 3 OF 5)
+# START: CLASS-BASED VIEW GENERATION & VIEW PACKAGE INITIALIZATION
+# ======================================================================
             # 2. Class-Based View Generation (Conditional LoginRequiredMixin Inheritance)
             os.makedirs(os.path.dirname(view_file), exist_ok=True)
             with open(view_file, 'w') as f:
@@ -89,7 +108,14 @@ class PageSkeletonBuilder:
                     content = "__all__ = [".join(parts)
                 with open(view_init, 'w') as f:
                     f.write(content)
+# ======================================================================
+# END: CLASS-BASED VIEW GENERATION & VIEW PACKAGE INITIALIZATION
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/page_skeleton.py (PATCH 4 OF 5)
+# START: URL ROUTING INJECTION & ISOLATED LIFECYCLE TEST GENERATION
+# ======================================================================
             # 4. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
@@ -110,9 +136,8 @@ class PageSkeletonBuilder:
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
             with open(test_file, 'w') as f:
                 expected_status = "302" if is_private else "200"
-                
                 test_header = (
-                    f'# {app}/tests/test_{page}_{app}.py\n'
+                    f'# {app}/tests/test_page_{page}_{app}.py\n'
                     f'import os\n'
                     f'from django.test import TestCase\n'
                     f'from django.urls import reverse\n'
@@ -149,23 +174,33 @@ class PageSkeletonBuilder:
                     f'            pass\n'
                 )
                 f.write(test_header + test_body_1 + test_body_2)
-                
+
             return {"status": "success", "message": f"Successfully forged '{class_name}' inside app '{app}' ({visibility})."}
         except Exception as e:
             return {"status": "error", "message": f"Failed to execute forge sequence: {str(e)}"}
+# ======================================================================
+# END: URL ROUTING INJECTION & ISOLATED LIFECYCLE TEST GENERATION
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/page_skeleton.py (PATCH 5 OF 5)
+# START: SURGICAL COMPONENT PURGE ROUTINE
+# ======================================================================
     @classmethod
     def purge_page(cls, target_app: str, page_name: str) -> dict:
         """Surgically undoes file builds and deletes registrations completely."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
+        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_{page}_{app}.py')
-        logs = []
         
+        # FIXED PARADIGM: Targeted erasure of the new isolated test filename
+        test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
+        
+        logs = []
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
@@ -175,7 +210,7 @@ class PageSkeletonBuilder:
                 logs.append(f"Deleted template: {page}.html")
             if os.path.exists(test_file):
                 os.remove(test_file)
-                logs.append(f"Deleted test file: test_{page}_{app}.py")
+                logs.append(f"Deleted test file: test_page_{page}_{app}.py")
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -190,6 +225,10 @@ class PageSkeletonBuilder:
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
+                
             return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
         except Exception as e:
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
+# ======================================================================
+# END: SURGICAL COMPONENT PURGE ROUTINE
+# ======================================================================

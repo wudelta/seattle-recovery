@@ -1,4 +1,7 @@
-# aurora/agents.py
+# ======================================================================
+# FILE: aurora/agents.py (PATCH 1 OF 2)
+# START: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE
+# ======================================================================
 import os
 from groq import Groq
 
@@ -41,7 +44,14 @@ AGENT_CONFIGS = {
         )
     }
 }
+# ======================================================================
+# END: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/agents.py (PATCH 2 OF 2)
+# START: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE
+# ======================================================================
 def get_system_response(agent_role: str, user_command: str) -> str:
     """Dispatches processing requests down to explicit Groq inference targets."""
     if not client:
@@ -59,3 +69,6 @@ def get_system_response(agent_role: str, user_command: str) -> str:
         response_format={"type": "json_object"} if agent_role == "Wu_Orchestrator" else None
     )
     return response.choices.message.content
+# ======================================================================
+# END: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE
+# ======================================================================

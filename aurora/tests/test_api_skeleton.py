@@ -1,4 +1,7 @@
-# aurora/tests/test_api_skeleton.py
+# ======================================================================
+# FILE: aurora/tests/test_api_skeleton.py (PATCH 1 OF 3)
+# START: INITIAL CONFIGURATIONS & ISOLATED SANDBOX SETUP
+# ======================================================================
 import os
 import shutil
 from django.test import TestCase
@@ -14,11 +17,12 @@ class ApiSkeletonBuilderTests(TestCase):
         self.test_endpoint = "metrics_stream"
         self.func_name = "metrics_stream_endpoint"
         
-        # Build required layout subdirectories
-        os.makedirs(os.path.join(self.base_dir, self.test_app, 'views'), exist_ok=True)
+        # STRUCTURAL ALIGNMENT: Build 'api' package folder instead of old views directory
+        os.makedirs(os.path.join(self.base_dir, self.test_app, 'api'), exist_ok=True)
+        os.makedirs(os.path.join(self.base_dir, self.test_app, 'tests'), exist_ok=True)
         
         # Initialize basic files with standard project entry configurations
-        self.init_path = os.path.join(self.base_dir, self.test_app, 'views', '__init__.py')
+        self.init_path = os.path.join(self.base_dir, self.test_app, 'api', '__init__.py')
         with open(self.init_path, 'w') as f:
             f.write("__all__ = [\n]")
             
@@ -31,7 +35,14 @@ class ApiSkeletonBuilderTests(TestCase):
         sandbox_path = os.path.join(self.base_dir, self.test_app)
         if os.path.exists(sandbox_path):
             shutil.rmtree(sandbox_path)
+# ======================================================================
+# END: INITIAL CONFIGURATIONS & ISOLATED SANDBOX SETUP
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/tests/test_api_skeleton.py (PATCH 2 OF 3)
+# START: INPUT CLEANING VALIDATION & FORGE FILE ASSET ASSERTIONS
+# ======================================================================
     def test_clean_inputs_normalizes_case_and_characters(self):
         """Verify inputs strip invalid tokens and suffix the function identifier."""
         app, endpoint, func = ApiSkeletonBuilder.clean_inputs(" HopeHub! ", "fetch_DATA_123")
@@ -40,49 +51,69 @@ class ApiSkeletonBuilderTests(TestCase):
         self.assertEqual(func, "fetch_data_123_endpoint")
 
     def test_forge_api_generates_functional_view_with_json_payload(self):
-        """Verify view is created, protected by auth, and delivers JsonResponse payload."""
-        result = ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint)
+        """Verify view is created inside api/, protected by auth, and delivers JsonResponse payload."""
+        # Execute forge with standard baseline visibility parameter
+        result = ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint, visibility="private")
         self.assertEqual(result["status"], "success")
         
-        v_file = os.path.join(self.base_dir, self.test_app, 'views', f'{self.test_endpoint}_view.py')
-        self.assertTrue(os.path.exists(v_file))
+        # ALIGNMENT: Target isolated api folder and verify structural existence
+        api_file = os.path.join(self.base_dir, self.test_app, 'api', f'{self.test_endpoint}_api.py')
+        test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_api_{self.test_endpoint}_{self.test_app}.py')
         
-        with open(v_file, 'r') as f:
+        self.assertTrue(os.path.exists(api_file))
+        self.assertTrue(os.path.exists(test_file))
+        
+        with open(api_file, 'r') as f:
             content = f.read()
-            
-        self.assertIn("from django.http import JsonResponse", content)
-        self.assertIn("from django.contrib.auth.decorators import login_required", content)
-        self.assertIn("@login_required", content)
-        self.assertIn(f"def {self.func_name}(request):", content)
-        self.assertIn('"status": "success"', content)
+            self.assertIn("from django.http import JsonResponse", content)
+            self.assertIn("from django.contrib.auth.decorators import login_required", content)
+            self.assertIn("@login_required", content)
+            self.assertIn(f"def {self.func_name}(request):", content)
+            self.assertIn('"status": "success"', content)
+# ======================================================================
+# END: INPUT CLEANING VALIDATION & FORGE FILE ASSET ASSERTIONS
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/tests/test_api_skeleton.py (PATCH 3 OF 3)
+# START: PACKAGE ROUTING INJECTIONS & REFACTOR-SAFE PURGE VERIFICATION
+# ======================================================================
     def test_forge_api_registers_packages_and_urls_correctly(self):
-        """Verify view function is appended to __init__.py and wired cleanly to urls.py."""
-        ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint)
-        
-        # Check __init__.py export hook
+        """Verify view function is appended to api/__init__.py and wired cleanly to urls.py."""
+        ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint, visibility="private")
+
+        # Check api/__init__.py export hook
         with open(self.init_path, 'r') as f:
             init_content = f.read()
-        self.assertTrue(init_content.startswith(f"from .{self.test_endpoint}_view import {self.func_name}\n"))
+        self.assertTrue(init_content.startswith(f"from .{self.test_endpoint}_api import {self.func_name}\n"))
         self.assertIn(f"'{self.func_name}',", init_content)
-        
-        # Check urls.py routing rule
+
+        # Check urls.py routing rule aligning with api_views naming context
         with open(self.urls_path, 'r') as f:
             urls_content = f.read()
-        expected_route = f"path('api/{self.test_endpoint}/', views.{self.func_name}, name='{self.func_name}'),"
+        expected_route = f"path('api/{self.test_endpoint}/', api_views.{self.func_name}, name='{self.func_name}'),"
         self.assertIn(expected_route, urls_content)
 
     def test_purge_api_removes_files_and_cleans_registrations(self):
-        """Verify API structural footprints disappear entirely after a purge sequence."""
-        ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint)
+        """Verify API structural footprints disappear entirely after an isolated purge sequence."""
+        ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint, visibility="private")
         
         purge_result = ApiSkeletonBuilder.purge_api(self.test_app, self.test_endpoint)
         self.assertEqual(purge_result["status"], "success")
+
+        # Verify physical code files are safely stripped
+        api_file = os.path.join(self.base_dir, self.test_app, 'api', f'{self.test_endpoint}_api.py')
+        test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_api_{self.test_endpoint}_{self.test_app}.py')
         
-        v_file = os.path.join(self.base_dir, self.test_app, 'views', f'{self.test_endpoint}_view.py')
-        self.assertFalse(os.path.exists(v_file))
-        
+        self.assertFalse(os.path.exists(api_file))
+        self.assertFalse(os.path.exists(test_file))
+
+        # Confirm whitelists and routings clean up beautifully
         with open(self.init_path, 'r') as f:
             self.assertNotIn(self.func_name, f.read())
+            
         with open(self.urls_path, 'r') as f:
-            self.assertNotIn(f"views.{self.func_name}", f.read())
+            self.assertNotIn(f"api_views.{self.func_name}", f.read())
+# ======================================================================
+# END: PACKAGE ROUTING INJECTIONS & REFACTOR-SAFE PURGE VERIFICATION
+# ======================================================================

@@ -1,0 +1,9 @@
+1. after testing it works very well. i intentionally tried to think of a scenario that would break it. i created both a /page and an /api called bed_locator. my decision to break out APIs seems to have worked out well. both got created in their respective directories, both had their own URL, both had entries in postgres and neo4j. all good. one /destroy command wipes them both out. also good. even if a module is already there the lock field should prevent me from killing it. there is one problem with the existing process that needs to be fixed. /page hopehub bed_locator creates all needed components including the hopehub/tests/test_bed_locator_hopehub.py. /api creates all new components except it overwrites test_bed_locator_hopehub with the new api test. the page test is then gone. we must create independent tests for both, but i would like one destroy command to wipe them all out. 
+
+2. in the unlikely scenario where someone tries to create a name that is already there the creation should fail. i think it would be good to check if a component by that name already exists and is locked to notify the console so creation doesn't go forward.
+
+3. i don't know where these components get locked so i can't accidentally wipe them out. we must have a step that adds the lock when i am confident they got created properly. of course, there must be an option to override the lock, or change it to unlocked in the case i am sure i want to wipe it out. 
+
+Note. there is one bed_locator node that got created before we added enhancements yesterday that is just hanging out that doesn't get killed by the /destroy command. however, in the project.md we have a step 2. **Dead Code Isolation Utility:** Build a zero-token `/cleanup` or routing check that walks the Neo4j incoming relationship paths to flag and safely isolate any orphaned, unreferenced components. it will be a good test to see if that finds it and deletes it.
+
+

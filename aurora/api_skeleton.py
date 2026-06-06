@@ -1,4 +1,7 @@
-# aurora/api_skeleton.py
+# ======================================================================
+# FILE: aurora/api_skeleton.py (PATCH 1 OF 5)
+# START: INITIAL CONFIGURATIONS & CORE IMPORTS
+# ======================================================================
 import os
 import re
 
@@ -11,28 +14,37 @@ class ApiSkeletonBuilder:
         endpoint = re.sub(r'[^a-zA-Z0-9_]', '', endpoint_name.lower().strip())
         func_name = f"{endpoint}_endpoint"
         return app, endpoint, func_name
+# ======================================================================
+# END: INITIAL CONFIGURATIONS & CORE IMPORTS
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api_skeleton.py (PATCH 2 OF 5)
+# START: FORGE PATH RESOLUTION & FUNCTION-BASED VIEW GENERATION
+# ======================================================================
     @classmethod
     def forge_api(cls, target_app: str, endpoint_name: str, visibility: str) -> dict:
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         if not app or not endpoint:
             return {"status": "error", "message": "Invalid architectural parameters."}
-            
+        
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
         
         if not os.path.exists(os.path.join(base_dir, app)):
             return {"status": "error", "message": f"Target app directory '{app}' does not exist."}
-            
+
         # STRUCTURAL REDIRECT: Target 'api/' directory with matching naming convention
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_{endpoint}_{app}.py')
         
+        # FIXED PARADIGM: Isolated filename path to prevent Page collision
+        test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
+
         if os.path.exists(view_file):
             return {"status": "error", "message": f"Collision: API Component '{endpoint}' already exists."}
-            
+
         try:
             # 1. Generate Function-Based View Returning JSON Payload Data
             os.makedirs(os.path.dirname(view_file), exist_ok=True)
@@ -53,7 +65,14 @@ class ApiSkeletonBuilder:
                     f'    }}\n'
                     f'    return JsonResponse(payload)\n'
                 )
+# ======================================================================
+# END: FORGE PATH RESOLUTION & FUNCTION-BASED VIEW GENERATION
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api_skeleton.py (PATCH 3 OF 5)
+# START: API PACKAGE INITIALIZATION & EXPORT LOOP CONTROL
+# ======================================================================
             # 2. Inject to api/__init__.py whitelist package exporter loop
             mode = 'r+' if os.path.exists(view_init) else 'w+'
             with open(view_init, mode) as f:
@@ -76,7 +95,14 @@ class ApiSkeletonBuilder:
                 f.seek(0)
                 f.write(content)
                 f.truncate()
+# ======================================================================
+# END: API PACKAGE INITIALIZATION & EXPORT LOOP CONTROL
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api_skeleton.py (PATCH 4 OF 5)
+# START: API URL ROUTING & DECOUPLED UNIT TEST GENERATION
+# ======================================================================
             # 3. Inject into target urls.py pattern loop
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
@@ -100,10 +126,8 @@ class ApiSkeletonBuilder:
             with open(test_file, 'w') as f:
                 exp_status = "302" if is_private else "200"
                 fmt_cls = func_name.replace("_", " ").title().replace(" ", "")
-                
-                # Split large text blocks to avoid truncation lines
                 test_header = (
-                    f'# {app}/tests/test_{endpoint}_{app}.py\n'
+                    f'# {app}/tests/test_api_{endpoint}_{app}.py\n'
                     f'import os\n'
                     f'from django.test import TestCase\n'
                     f'from django.urls import reverse\n'
@@ -140,11 +164,18 @@ class ApiSkeletonBuilder:
                     f'            pass\n'
                 )
                 f.write(test_header + test_body_1 + test_body_2)
-                
+
             return {"status": "success", "message": f"Successfully forged API function '{func_name}' inside app '{app}/api/' ({visibility})."}
         except Exception as e:
             return {"status": "error", "message": f"Failed to execute API forge sequence: {str(e)}"}
+# ======================================================================
+# END: API URL ROUTING & DECOUPLED UNIT TEST GENERATION
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api_skeleton.py (PATCH 5 OF 5)
+# START: SURGICAL API COMPONENT PURGE ROUTINE
+# ======================================================================
     @classmethod
     def purge_api(cls, target_app: str, endpoint_name: str) -> dict:
         """Surgically undoes file builds and deletes registrations completely."""
@@ -154,16 +185,18 @@ class ApiSkeletonBuilder:
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_{endpoint}_{app}.py')
-        logs = []
         
+        # FIXED PARADIGM: Targeted erasure of the isolated API test filename
+        test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
+        
+        logs = []
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted api: {endpoint}_api.py")
             if os.path.exists(test_file):
                 os.remove(test_file)
-                logs.append(f"Deleted test file: test_{endpoint}_{app}.py")
+                logs.append(f"Deleted test file: test_api_{endpoint}_{app}.py")
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -178,6 +211,10 @@ class ApiSkeletonBuilder:
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
+                
             return {"status": "success", "message": " | ".join(logs) if logs else "No API components found to purge."}
         except Exception as e:
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
+# ======================================================================
+# END: SURGICAL API COMPONENT PURGE ROUTINE
+# ======================================================================

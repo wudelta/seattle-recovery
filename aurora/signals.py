@@ -1,4 +1,7 @@
-# aurora/signals.py
+# ======================================================================
+# FILE: aurora/signals.py (PATCH 1 OF 2)
+# START: SIGNAL EXPORT & REAL-TIME GRAPH NODE INSERTION SYNCHRONIZER
+# ======================================================================
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from aurora.models import ComponentRegistry
@@ -23,7 +26,14 @@ def sync_postgres_to_neo4j(sender, instance, created, **kwargs):
                 postgres_id=str(instance.id),
                 file_path=instance.file_path
             ).save()
+# ======================================================================
+# END: SIGNAL EXPORT & REAL-TIME GRAPH NODE INSERTION SYNCHRONIZER
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/signals.py (PATCH 2 OF 2)
+# START: SIGNAL EXPORT & REAL-TIME GRAPH NODE PURGE OBLITERATOR
+# ======================================================================
 @receiver(post_delete, sender=ComponentRegistry)
 def purge_from_neo4j_graph(sender, instance, **kwargs):
     """Automated Database Signal: Cleans up graph artifacts on erasure."""
@@ -32,3 +42,6 @@ def purge_from_neo4j_graph(sender, instance, **kwargs):
         node.delete()
     except ComponentNode.DoesNotExist:
         pass
+# ======================================================================
+# END: SIGNAL EXPORT & REAL-TIME GRAPH NODE PURGE OBLITERATOR
+# ======================================================================

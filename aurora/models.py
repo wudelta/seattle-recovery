@@ -1,4 +1,7 @@
-# aurora/models.py
+# ======================================================================
+# FILE: aurora/models.py (PATCH 1 OF 2)
+# START: REGISTRY ENUMERATIONS & CORE SCHEMA MATRIX
+# ======================================================================
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
@@ -10,12 +13,10 @@ class ComponentRegistry(models.Model):
         ('ENTRY_POINT', 'Entry Point / Execution Vector'),
         ('COMPILER_MODULE', 'Standard Codebase Module'),
     ]
-    
     STATUS_CHOICES = [
         ('ACTIVE', 'Active Component'),
         ('STAGED_FOR_DELETION', 'Quarantined / Pending Deletion Review'),
     ]
-
     VISIBILITY_CHOICES = [
         ('PUBLIC', 'Public Access Node'),
         ('PRIVATE', 'Private Protected Node'),
@@ -27,6 +28,14 @@ class ComponentRegistry(models.Model):
     persona = models.CharField(max_length=30, choices=PERSONA_CHOICES, default='COMPILER_MODULE')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
+# ======================================================================
+# END: REGISTRY ENUMERATIONS & CORE SCHEMA MATRIX
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 2 OF 2)
+# START: DESTRUCTIVE CASCADE SAFEGUARDS & META METADATA DEFINITIONS
+# ======================================================================
     locked = models.BooleanField(default=False)
     
     # STRUCTURAL REFACTOR: Replaces the old CharField string text log completely
@@ -36,7 +45,6 @@ class ComponentRegistry(models.Model):
         related_name='forged_assets',
         help_text="The authenticated developer who authorized the execution string."
     )
-    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True)
@@ -50,3 +58,6 @@ class ComponentRegistry(models.Model):
 
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
+# ======================================================================
+# END: DESTRUCTIVE CASCADE SAFEGUARDS & META METADATA DEFINITIONS
+# ======================================================================
