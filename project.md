@@ -1,50 +1,22 @@
 # ======================================================================
-# FILE: project.md (COMPLETE ARCHITECTURAL OVERHAUL)
-# START: MASTER_DIRECTIVES_AND_LIFECYCLE_TESTING_PARADIGM
+# FILE: project.md (PATCH 1 OF 3)
+# START: RESTORE_INCREMENTAL_REFACTOR_PROTOCOL
+# ======================================================================
+## 6. Incremental Refactoring Protocol (The "Go" Loop)
+When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must never return the entire file or multiple patches at once. The engine must strictly parse and deliver the update using the following conversational loop:
+
+1. **The Partition Task**: Break the code updates down into highly localized, un-nested Surgical Block Anchor patches (e.g., `PATCH 1 OF X`, `PATCH 2 OF X`).
+2. **The Single-Block Lock**: Deliver exactly **one single block** (e.g., `PATCH 1 OF X`) in the response window.
+3. **The Yield Block**: Immediately halt output generation, provide a brief summary of what that specific patch modifies, and wait for Delta's confirmation.
+4. **The Step Signal**: The AI must not output the next sequential patch until Delta explicitly enters the text variable keyword: **"go"**.
+# ======================================================================
+# END: RESTORE_INCREMENTAL_REFACTOR_PROTOCOL
 # ======================================================================
 
 # ======================================================================
-# MASTER DIRECTIVES: THE SURGICAL ANCHOR & LIFECYCLE TESTING PARADIGM
+# FILE: project.md (PATCH 2 OF 3)
+# START: UPDATE_OPERATIONAL_BASELINE_TIMER_POSITION
 # ======================================================================
-
-## 1. File Modification Protocols (Anti-Truncation)
-All future code generations, automated refinements, and file edits must adhere strictly to the **Surgical Block Anchor** pattern. Under no circumstances should complete files exceeding 100 lines be dumped or completely rewritten if modifications are localized.
-
-### Explicit Syntax Rules:
-* Every critical logical segment (imports, core view setups, sub-routes, database transactions) must be explicitly bounded by high-visibility uppercase headers and footers.
-* **The Content Contract**: Code updates must only output the precise section requiring modification, enabling the architect to select from anchor-to-anchor in their IDE for seamless replacement.
-
-```python
-# ======================================================================
-# FILE: [app_name]/[module_path].py (PATCH X OF Y)
-# START: [DESCRIPTIVE_SEGMENT_HEADING]
-# ======================================================================
-[Fully indented, functional code block]
-# ======================================================================
-# END: [DESCRIPTIVE_SEGMENT_HEADING]
-# ======================================================================
-```
-
-## 2. Code Generation Engine Mandates
-The `PageSkeletonBuilder` and `ApiSkeletonBuilder` must natively write these exact visual anchors into the files they forge.
-* **HTML Templates**: Must include structured structural comment tags bounding content regions.
-* **Python Modules**: Must write explicit anchor comments wrapping imports, core execution functions, and payload format blocks on initialization.
-
-## 3. Mandatory Testing Lifecycle Parity
-No modification to system mechanics or routing blocks is complete without immediate test alignment.
-* **The Twin-Track Rule**: Every functional code adjustment requires an immediate corresponding audit of its standalone `test_page_*.py` or `test_api_*.py` suite.
-* **Database Isolation Rules**: All test configurations executing data writes against the Relational-Graph Tandem engine must explicitly issue a clean Cypher disconnect and wipe (`MATCH (n) DETACH DELETE n`) during `setUp()` and `tearDown()` cycles to prevent transactional state leakage in the Neo4j loopback port mappings.
-
-# ======================================================================
-# END: MASTER_DIRECTIVES_AND_LIFECYCLE_TESTING_PARADIGM
-# ======================================================================
-
-
-# ======================================================================
-# FILE: project.md (COMPLETE ARCHITECTURAL OVERHAUL)
-# START: CURRENT_OPERATIONAL_BASELINE_AND_TOMORROWS_VECTOR
-# ======================================================================
-
 ## 4. Current Operational Baseline (Where We Are At)
 * [x] Core user login/logout modules configured using native Django authentication logic.
 * [x] High-density fluid 4-panel terminal console cockpit successfully built (`templates/aurora/aurora_console.html`).
@@ -64,12 +36,30 @@ No modification to system mechanics or routing blocks is complete without immedi
 * [x] Implemented Relational-Graph Tandem Data Logging Engine mapping application assets simultaneously.
 * [x] Connected Neo4j Docker Loopback Cluster running password-free natively over local host port mappings.
 * [x] Deployed background Django Post-Save and Post-Delete Signals (`signals.py`) automating real-time graph node syncs.
+* [x] Built the `DeltaNotesEntry` tracking model with full database migration protocols.
+* [x] Decoupled DeltaNotes interface logic completely into an app-scoped static script (`aurora/static/aurora/js/delta_notes.js`).
+* [x] Extracted DeltaNotes styling layer completely into an app-scoped static stylesheet (`aurora/static/aurora/css/delta_notes.css`) for a tightened console layout.
+* [x] Centralized task focus timers from row-level scopes into a single global dashboard control clock.
+* [x] Migrated session focus timer controls onto the right boundary of the main workspace utility header box.
+# ======================================================================
+# END: UPDATE_OPERATIONAL_BASELINE_TIMER_POSITION
+# ======================================================================
 
+# ======================================================================
+# FILE: project.md (PATCH 3 OF 3)
+# START: CLEAN_COMPLETED_VECTORS
+# ======================================================================
 ## 5. Immediate Next Staging Steps (Tomorrow's Vector)
 1. **Automated AST Dependency Topography Scanner:** Build the local static file code analyzer to parse import statements inside newly forged modules and dynamically register `DEPENDS_ON` graph links in Neo4j.
 2. **Dead Code Isolation Utility:** Build a zero-token `/cleanup` or routing check that walks the Neo4j incoming relationship paths to flag and safely isolate any orphaned, unreferenced components.
 3. **Agent Setup Orchestration:** Verify system configurations inside `aurora/agents.py` and activate Wu's 70B model gateway payload parameters to decompose plain English instructions down to targeted 8B Minions.
 
+## 6. Incremental Refactoring Protocol (The "Go" Loop)
+When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must never return the entire file or multiple patches at once. The engine must strictly parse and deliver the update using the following conversational loop:
+1. **The Partition Task**: Break the code updates down into highly localized, un-nested Surgical Block Anchor patches (e.g., `PATCH 1 OF X`, `PATCH 2 OF X`).
+2. **The Single-Block Lock**: Deliver exactly **one single block** (e.g., `PATCH 1 OF X`) in the response window.
+3. **The Yield Block**: Immediately halt output generation, provide a brief summary of what that specific patch modifies, and wait for Delta's confirmation.
+4. **The Step Signal**: The AI must not output the next sequential patch until Delta explicitly enters the text variable keyword: **"go"**.
 # ======================================================================
-# END: CURRENT_OPERATIONAL_BASELINE_AND_TOMORROWS_VECTOR
+# END: CLEAN_COMPLETED_VECTORS
 # ======================================================================

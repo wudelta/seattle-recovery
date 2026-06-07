@@ -1,14 +1,21 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 2)
-# START: REGISTRY ENUMERATIONS & CORE SCHEMA MATRIX
+# FILE: aurora/models.py (PATCH 1 OF 3)
+# START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+# ======================================================================
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/models.py (PATCH 2 OF 3)
+# START: COMPONENT_REGISTRY_CORE_SCHEMA
+# ======================================================================
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
-    
     PERSONA_CHOICES = [
         ('ENTRY_POINT', 'Entry Point / Execution Vector'),
         ('COMPILER_MODULE', 'Standard Codebase Module'),
@@ -28,28 +35,17 @@ class ComponentRegistry(models.Model):
     persona = models.CharField(max_length=30, choices=PERSONA_CHOICES, default='COMPILER_MODULE')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
-# ======================================================================
-# END: REGISTRY ENUMERATIONS & CORE SCHEMA MATRIX
-# ======================================================================
-
-# ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 2)
-# START: DESTRUCTIVE CASCADE SAFEGUARDS & META METADATA DEFINITIONS
-# ======================================================================
     locked = models.BooleanField(default=False)
     
-    # STRUCTURAL REFACTOR: Replaces the old CharField string text log completely
     created_by = models.ForeignKey(
         User, 
-        on_delete=models.PROTECT,  # Prevents user deletion from destroying repository logs out-of-band
-        related_name='forged_assets',
+        on_delete=models.PROTECT, 
+        related_name='forged_assets', 
         help_text="The authenticated developer who authorized the execution string."
     )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True)
-    
-    # Stores target audience scopes natively as a JSON layout array (e.g., ["developers", "investors"])
     description_audiences = models.JSONField(default=list, blank=True)
 
     class Meta:
@@ -59,5 +55,47 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: DESTRUCTIVE CASCADE SAFEGUARDS & META METADATA DEFINITIONS
+# END: COMPONENT_REGISTRY_CORE_SCHEMA
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 3 OF 3)
+# START: DELTA_NOTES_TIMER_SCHEMA
+# ======================================================================
+class DeltaNotesEntry(models.Model):
+    """
+    Tracks daily developer intentions, active task execution blocks, 
+    and accumulated focus time per session window.
+    """
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='delta_notes',
+        help_text="The developer compiling this active workspace iteration note."
+    )
+    text = models.TextField(blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    processed = models.BooleanField(default=False)
+    
+    # Timer Core Mechanics:
+    total_seconds_logged = models.PositiveIntegerField(
+        default=0, 
+        help_text="Total accumulated active focus time recorded in seconds."
+    )
+    last_started_at = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        help_text="Timestamp when the active session timer toggle was engaged."
+    )
+
+    class Meta:
+        verbose_name = "Delta Notes Entry"
+        verbose_name_plural = "Delta Notes Entries"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
+# ======================================================================
+# END: DELTA_NOTES_TIMER_SCHEMA
 # ======================================================================

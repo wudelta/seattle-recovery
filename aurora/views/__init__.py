@@ -1,3 +1,4 @@
+from .delta_notes_view import DeltaNotesView
 # aurora/views/__init__.py
 
 # 1. Base Framework Operations (Binds your active console panels)
@@ -20,4 +21,5 @@ __all__ = [
     
     # 2. Automated AI Forge Automation
     'execute_blueprint_api',
+    'DeltaNotesView',
 ]

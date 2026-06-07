@@ -1,9 +1,32 @@
-1. after testing it works very well. i intentionally tried to think of a scenario that would break it. i created both a /page and an /api called bed_locator. my decision to break out APIs seems to have worked out well. both got created in their respective directories, both had their own URL, both had entries in postgres and neo4j. all good. one /destroy command wipes them both out. also good. even if a module is already there the lock field should prevent me from killing it. there is one problem with the existing process that needs to be fixed. /page hopehub bed_locator creates all needed components including the hopehub/tests/test_bed_locator_hopehub.py. /api creates all new components except it overwrites test_bed_locator_hopehub with the new api test. the page test is then gone. we must create independent tests for both, but i would like one destroy command to wipe them all out. 
+i want to add the daily brief back into the project. i also need to add the project.md in there as well. this should take care of the whole project plan feature i wanted to add. much more simple. i can just feed the project.md and daily brief into genesis or wu at the start of each session. the end session routine will be update the project.md and commit to git. that simple. much better than that complicated thing i was building.
 
-2. in the unlikely scenario where someone tries to create a name that is already there the creation should fail. i think it would be good to check if a component by that name already exists and is locked to notify the console so creation doesn't go forward.
+i also need to add the delta_directives back in. i now know how that should be structured. directives will be stored in the database by target minion or wu. it will contain the rules for each minion or wu. then the minions need to be created.
 
-3. i don't know where these components get locked so i can't accidentally wipe them out. we must have a step that adds the lock when i am confident they got created properly. of course, there must be an option to override the lock, or change it to unlocked in the case i am sure i want to wipe it out. 
+wu: uses the llama 70B model. will have his own directives. no code writing. orchestration only. figure out what i want and pass it off to a minion. helps me write the directives for each minion as dense .md files by minion name. reads his directives, the project.md and the daily_brief for the day at the start of each session, updates the project.md and suggests steps for completion. updates the project.md file at the end of each session.
 
-Note. there is one bed_locator node that got created before we added enhancements yesterday that is just hanging out that doesn't get killed by the /destroy command. however, in the project.md we have a step 2. **Dead Code Isolation Utility:** Build a zero-token `/cleanup` or routing check that walks the Neo4j incoming relationship paths to flag and safely isolate any orphaned, unreferenced components. it will be a good test to see if that finds it and deletes it.
+html_minion: comment anchors to make it clear where a div is located, what it contains and what it calls. no inline css or js. this will be moved into the static folders with the same name as the html file. only the extension will change. html will leverage bootstrap and the bootswatch themes, only writing custom css when directed.
+
+js_minion: comment anchors by function parts. js will use jquery and not do database operations. database calls will be done through an api only. output start and end of functions to stdout. if it fails silently i should be able to see it didn't complete without analyzing the browser output.
+
+python_minion: comment anchors for each subprocess. front end and back end processes will be decoupled. there will be an api for database calls and any complex tasks. the web server will only route api calls to the back end receiving json objects back.
+
+sql_minion: queries the postgress database. receives directives from wu.
+
+graph_minion: queries the neo4j database. receives directives from wu.
+
+doc_minion: updates module documentation stored in the postgress database. will be triggered by minion completing a task.
+
+test_minion: writes the tests for each module. will be triggered by minion completing a task.
 
 
+Project Overview: i am Delta, the project architect. the project name is Seattle Recovery. It contains two applications, aurora and hopehub that each have a web UI. aurora is an AI (Wu) assisted application builder that automates development tasks. it's purpose is to build hopehub. hopehub is a recovery platform to assist people experiencing homelessness, substance use disorder, and mental health issues. it's purpose is to provide information on resources and services available to these people. it will act as an automated case manager to develop an action plan for both physical, and emotional well-being. hopehub will also be AI assisted for the end users.
+
+Development Environment: the project is developed in python using django as the web framework. it uses djangorestframework to decouple the UI from the logic. the UI uses bootstrap with bootswatch themes. the javascript uses jquery. the databases are postgres and neo4j. postgress handles the django admin and other django processes such as login. it also is the repsitory for user information that must be encrypted and secured. neo4j will be used by the AI to find relationships to resources based on user needs for hopehub. for aurora it will track application model dependencies and targets. 
+
+Current State: aurora a landing page, login page and a console for development. it also has a robust application skeleton builder that creates either a user interface or a back end api that does the heavy lifting of database queries and delivers a json payload back to the UI. the skeleton builder is accessed through the console and does not rely on AI assistance so it works completely off-line.
+
+Development Constraints: development is being done on an ubuntu laptop with 2 cores and 8GB ram. the project currently has one developer, Delta. this project has a very low budget and can only utilize free, open source software. the project must conform to enterprise architecture and best practices for development. it will use test driven development (TDD) and everything developed will be documented and diagrammed for support and maintenance. there will also be documentation for various non-technical audiences such as users, stakeholders and developers.
+
+delta_notes
+delta_project
+delta_directives

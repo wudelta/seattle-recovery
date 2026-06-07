@@ -1,0 +1,108 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/delta_notes.html (PATCH 1 OF 4) -->
+<!-- START: DOCUMENT_LAYOUT_EXTENSIONS_AND_HEADERS -->
+<!-- ====================================================================== -->
+{% extends "aurora/aurora_base.html" %}
+{% load static %}
+
+{% block title %}Delta Notes | Active Task Workspace (PRIVATE){% endblock %}
+<!-- ====================================================================== -->
+<!-- END: DOCUMENT_LAYOUT_EXTENSIONS_AND_HEADERS -->
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/delta_notes.html (PATCH 2 OF 4 - REVISED)-->
+<!-- START: HTML_CORE_CONTENT_BLOCK -->
+<!-- ====================================================================== -->
+{% block content %}
+<!-- Link decoupled high-density style sheets directly from the app static repository -->
+<link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
+
+<div class="container-fluid py-2 text-mono" style="font-size: 0.85rem;">
+    <!-- Top Control Bar: Unified Session Interface Configuration -->
+    <div class="row g-2 mb-2">
+        <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-warning">
+            <div class="d-flex align-items-center">
+                <span class="text-warning fw-bold me-3">⚡ DELTA_NOTES:</span>
+                <span class="text-muted me-3">ID: {{ request.user.username }}</span>
+            </div>
+            <!-- Shifted focus timer alignment parameters to mount on the far right boundary -->
+            <div class="d-flex align-items-center">
+                <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center me-3">
+                    <span class="text-info me-2 small">SESSION_TIME:</span>
+                    <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
+                    <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
+                </div>
+                <button id="compile-blueprint-btn" class="btn btn-warning btn-sm py-1 font-monospace fw-bold" style="font-size: 0.8rem;">🚀 Compile to project.md</button>
+                <a href="/aurora/console/" class="btn btn-outline-secondary btn-sm py-1 font-monospace ms-2" style="font-size: 0.8rem;">Console</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Split -->
+    <div class="row g-2">
+        <!-- Left Column: Fast Note Capture Form -->
+        <div class="col-md-4">
+            <div class="card console-panel h-100">
+                <div class="card-header bg-black text-info border-secondary py-1 fw-bold" style="font-size: 0.8rem;">📥 CAPTURE_INTENTION</div>
+                <div class="card-body p-2">
+                    <form id="create-note-form">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <textarea id="note-text" class="form-control console-input" rows="4" placeholder="Enter target parameter configurations..." required style="font-size: 0.8rem;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Add to Active Queue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Active Queue as a strict Checklist -->
+        <div class="col-md-8">
+            <div class="card console-panel h-100">
+                <div class="card-header bg-black text-success border-secondary py-1 d-flex justify-content-between align-items-center" style="font-size: 0.8rem;">
+                    <span class="fw-bold">📋 UNPROCESSED_LOG</span>
+                    <span id="queue-count" class="badge bg-success py-0 px-1">0</span>
+                </div>
+                <div class="card-body p-1">
+                    <div id="notes-container" class="list-group list-group-flush bg-transparent" style="max-height: 55vh; overflow-y: auto;">
+                        <!-- Populate dynamic text rows cleanly -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ====================================================================== -->
+<!-- END: HTML_CORE_CONTENT_BLOCK -->
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/delta_notes.html (PATCH 3 OF 4) -->
+<!-- START: STATIC_ASSET_IMPORT_DECLARATION -->
+<!-- ====================================================================== -->
+<!-- Load decoupled static tracking logic from your isolated workspace asset directory -->
+<script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+<!-- ====================================================================== -->
+<!-- END: STATIC_ASSET_IMPORT_DECLARATION -->
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/delta_notes.html (PATCH 4 OF 4) -->
+<!-- START: STATIC_ASSET_LINKING_AND_WORKSPACE_BOOT -->
+<!-- ====================================================================== -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    // Package dynamic framework parameters securely into a local dictionary payload
+    const systemEndpoints = {
+        endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
+    };
+    
+    // Boot up the unified console engine with active cross-site scripting token configurations
+    initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+});
+</script>
+{% endblock %}
+<!-- ====================================================================== -->
+<!-- END: STATIC_ASSET_LINKING_AND_WORKSPACE_BOOT -->
+<!-- ====================================================================== -->

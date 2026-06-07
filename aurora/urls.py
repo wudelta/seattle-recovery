@@ -1,3 +1,4 @@
+from aurora import api as api_views
 # ======================================================================
 # FILE: aurora/urls.py (PATCH 1 OF 1)
 # START: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES
@@ -25,6 +26,8 @@ urlpatterns = [
     ), name='login'),
     
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
+    path('delta_notes/', views.DeltaNotesView.as_view(), name='delta_notes'),
+    path('api/delta_notes/', api_views.delta_notes_endpoint, name='delta_notes_endpoint'),
 ]
 # ======================================================================
 # END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES
