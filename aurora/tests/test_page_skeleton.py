@@ -5,7 +5,7 @@
 import os
 import shutil
 from django.test import TestCase
-from aurora.page_skeleton import PageSkeletonBuilder
+from aurora.utils.page_skeleton import PageSkeletonBuilder  # Updated path to utils package reference
 
 class PageSkeletonBuilderTests(TestCase):
     """Test suite ensuring absolute architectural compliance for zero-token builds."""
@@ -55,14 +55,11 @@ class PageSkeletonBuilderTests(TestCase):
         """Step 1: Assert HTML file exists and strictly extends the app base layout."""
         result = PageSkeletonBuilder.forge_page(self.test_app, self.test_page, visibility="private")
         self.assertEqual(result["status"], "success")
-        
         t_file = os.path.join(self.base_dir, self.test_app, 'templates', self.test_app, f'{self.test_page}.html')
         test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_page_{self.test_page}_{self.test_app}.py')
-        
         self.assertTrue(os.path.exists(t_file))
         # ALIGNMENT: Ensure the newly isolated page unit test file is successfully written to disk
         self.assertTrue(os.path.exists(test_file))
-        
         with open(t_file, 'r') as f:
             content = f.read()
         self.assertIn(f'{{% extends "{self.test_app}/{self.test_app}_base.html" %}}', content)
@@ -75,7 +72,6 @@ class PageSkeletonBuilderTests(TestCase):
         PageSkeletonBuilder.forge_page(self.test_app, self.test_page, visibility="private")
         v_file = os.path.join(self.base_dir, self.test_app, 'views', f'{self.test_page}_view.py')
         self.assertTrue(os.path.exists(v_file))
-        
         with open(v_file, 'r') as f:
             content = f.read()
         self.assertIn(f"class {self.class_name}(LoginRequiredMixin, TemplateView):", content)
@@ -127,16 +123,15 @@ class PageSkeletonBuilderTests(TestCase):
         PageSkeletonBuilder.forge_page(self.test_app, self.test_page, visibility="private")
         purge_result = PageSkeletonBuilder.purge_page(self.test_app, self.test_page)
         self.assertEqual(purge_result["status"], "success")
-
         v_file = os.path.join(self.base_dir, self.test_app, 'views', f'{self.test_page}_view.py')
         t_file = os.path.join(self.base_dir, self.test_app, 'templates', self.test_app, f'{self.test_page}.html')
         test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_page_{self.test_page}_{self.test_app}.py')
-
+        
         # Verify all physical files (including the isolated test file) are deleted from disk
         self.assertFalse(os.path.exists(v_file))
         self.assertFalse(os.path.exists(t_file))
         self.assertFalse(os.path.exists(test_file))
-
+        
         # Verify lines are scrubbed cleanly from registrations
         with open(self.init_path, 'r') as f:
             self.assertNotIn(self.class_name, f.read())

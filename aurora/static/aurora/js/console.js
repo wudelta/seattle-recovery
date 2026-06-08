@@ -1,5 +1,7 @@
-// aurora/static/aurora/js/console.js
-
+// ======================================================================
+// FILE: aurora/static/aurora/js/console.js (PATCH 1 OF 1)
+// START: SYSTEM ASSET REFERENCE INTEGRITY ALIGNMENT
+// ======================================================================
 $(document).ready(function() {
     console.log("[Aurora] Console automation loop loaded successfully.");
 
@@ -23,10 +25,10 @@ $(document).ready(function() {
 
     /**
      * HOOK 1: Blueprint Submission Button (Command Wu)
+     * Linked downstream to aurora/api/api_commands.py endpoint
      */
     $('#submit-blueprint').on('click', function(e) {
         e.preventDefault();
-        
         const blueprintText = $('#blueprint-input').val().trim();
         console.log("[Aurora] Sending blueprint payload:", blueprintText);
         
@@ -53,8 +55,8 @@ $(document).ready(function() {
                     $feed.html(`<div class="text-light">[System] Code block successfully compiled by Wu.</div>`);
                     $feed.append(`<div class="text-muted small mt-1">${response.minion_log}</div>`);
                     $crucible.text(response.generated_code);
-
                     $inspector.empty();
+
                     const val = response.validation;
                     if (val.valid) {
                         $inspector.append('<div class="text-success fw-bold">✔ Syntax Check: Passed Cleanly</div>');
@@ -96,3 +98,6 @@ $(document).ready(function() {
         $('#minion-feed').append('<div class="text-info mt-2">[Forge] Committing generated modules to active local staging tree...</div>');
     });
 });
+// ======================================================================
+// END: SYSTEM ASSET REFERENCE INTEGRITY ALIGNMENT
+// ======================================================================

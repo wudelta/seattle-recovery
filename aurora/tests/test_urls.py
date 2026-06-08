@@ -4,7 +4,8 @@
 # ======================================================================
 from django.test import TestCase
 from django.urls import reverse, resolve
-from aurora.views import aurora_landing, ConsoleView, execute_blueprint_api
+from aurora.views import aurora_landing, ConsoleView
+from aurora.api import execute_blueprint_api  # Updated import path to target the newly forged api package location
 
 class AuroraUrlRoutingTests(TestCase):
     """Test suite ensuring all core namespaced routes resolve to their correct view targets."""

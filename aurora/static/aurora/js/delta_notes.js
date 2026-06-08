@@ -6,6 +6,10 @@
 let activeTimerInterval = null;
 let activeSecondsCount = 0;
 let isSessionTracking = false;
+
+// Typing Debounce variables to manage automated text-area saving loops
+let autoSaveDebounceTimeout = null;
+const DEBOUNCE_DELAY_MS = 1000; // Fires auto-save 1 second after typing ceases
 // ======================================================================
 // END: GLOBAL_SESSION_TIMER_STATE_CONSTRAINTS
 // ======================================================================
@@ -15,7 +19,6 @@ let isSessionTracking = false;
 // START: ASYNC_QUEUE_LOAD_AND_HIGH_DENSITY_RENDER
 // ======================================================================
 function initDeltaNotesConsole(endpoints, csrfToken) {
-    
     function loadActiveQueue() {
         $.get(endpoints.endpoint_url, function(data) {
             if (data.status === "success") {
@@ -28,18 +31,23 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         const container = $('#notes-container');
         container.empty();
         $('#queue-count').text(entries.length);
-
         if (entries.length === 0) {
             container.append('<div class="text-center text-muted p-4 small">[ Queue pristine. No active intentions registered. ]</div>');
             return;
         }
-
-        // Render clean, high-density checklist rows with zero row-level button clutter
+        
+        // Render clean, high-density checklist rows with modular inline action buttons
         entries.forEach(function(note) {
             const cardHtml = `
-                <div class="list-group-item note-row text-white d-flex align-items-center">
-                    <span class="text-warning me-2">></span>
-                    <div class="text-wrap small">${note.text}</div>
+                <div class="list-group-item note-row text-white d-flex justify-content-between align-items-center p-2 border-secondary bg-transparent">
+                    <div class="d-flex align-items-center flex-grow-1 me-3">
+                        <span class="text-warning me-2">></span>
+                        <div class="text-wrap small note-display-text" id="note-text-display-${note.id}">${note.text}</div>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-outline-warning btn-xs px-2 py-0 edit-note-btn" data-id="${note.id}" style="font-size: 0.75rem;">Edit</button>
+                        <button class="btn btn-outline-danger btn-xs px-2 py-0 delete-note-btn" data-id="${note.id}" style="font-size: 0.75rem;">Delete</button>
+                    </div>
                 </div>
             `;
             container.append(cardHtml);
@@ -74,10 +82,9 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
             if (callback) callback();
             return;
         }
-        
         clearInterval(activeTimerInterval);
         activeTimerInterval = null;
-
+        
         // Commit global focus time directly up to the latest open tracking item
         $.post(endpoints.endpoint_url, {
             action: 'sync_timer',
@@ -112,11 +119,28 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }
     });
 
+    // Keystroke Debounce handler to save typing changes on the fly
+    $('#note-text').on('input', function() {
+        clearTimeout(autoSaveDebounceTimeout);
+        const currentText = $(this).val().trim();
+        if (!currentText) return;
+
+        autoSaveDebounceTimeout = setTimeout(function() {
+            console.log("[Aurora Auto-Save] Typing stabilized. Syncing raw draft state...");
+            // Non-blocking auto-save call to ensure progress isn't lost if you change your mind
+            $.post(endpoints.endpoint_url, {
+                action: 'autosave_draft',
+                text: currentText,
+                csrfmiddlewaretoken: csrfToken
+            });
+        }, DEBOUNCE_DELAY_MS);
+    });
+
     // Capture text intention additions
     $('#create-note-form').on('submit', function(e) {
         e.preventDefault();
+        clearTimeout(autoSaveDebounceTimeout);
         const textInput = $('#note-text');
-        
         $.post(endpoints.endpoint_url, {
             action: 'create_note',
             text: textInput.val(),
@@ -127,6 +151,43 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
                 loadActiveQueue();
             }
         });
+    });
+
+    // Dynamic Row Action Click Delegators: Inline Edit Handlers
+    $('#notes-container').on('click', '.edit-note-btn', function() {
+        const noteId = $(this).data('id');
+        const displayDiv = $(`#note-text-display-${noteId}`);
+        const currentVal = displayDiv.text().trim();
+        const updatedVal = prompt("Modify target intention parameter configurations:", currentVal);
+        
+        if (updatedVal !== null && updatedVal.trim() !== "" && updatedVal.trim() !== currentVal) {
+            $.post(endpoints.endpoint_url, {
+                action: 'edit_note',
+                note_id: noteId,
+                text: updatedVal.trim(),
+                csrfmiddlewaretoken: csrfToken
+            }, function(data) {
+                if (data.status === "success") {
+                    loadActiveQueue();
+                }
+            });
+        }
+    });
+
+    // Dynamic Row Action Click Delegators: Inline Delete Handlers
+    $('#notes-container').on('click', '.delete-note-btn', function() {
+        const noteId = $(this).data('id');
+        if (confirm("Surgically isolate and erase this active log entry?")) {
+            $.post(endpoints.endpoint_url, {
+                action: 'delete_note',
+                note_id: noteId,
+                csrfmiddlewaretoken: csrfToken
+            }, function(data) {
+                if (data.status === "success") {
+                    loadActiveQueue();
+                }
+            });
+        }
     });
 // ======================================================================
 // END: FRONTEND_UI_EVENT_BINDINGS

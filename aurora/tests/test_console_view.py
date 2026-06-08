@@ -29,7 +29,7 @@ class ConsoleViewTests(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(self.url)
         
-        # Verify dashboard is successfully delivered
+        # Verify dashboard is successfully delivered using the new orchestrator template name
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'aurora/aurora_console.html')
         

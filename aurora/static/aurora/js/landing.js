@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { id: 5, label: 'Django Admin', url: "/admin/", color: '#f43f5e' },
         { id: 6, label: 'HopeHub', url: "/hopehub/", color: '#d946ef', target: '_blank' },
         //{ id: 7, label: 'Aurora Forge', url: "http://localhost:8000/aurora/pipeline/under_construction_page/", color: '#818cf8' },
-        //{ id: 8, label: 'Delta Notes', url: "/aurora/add_note/", color: '#10b981' },
+        { id: 8, label: 'Delta Notes', url: "/aurora/delta_notes/", color: '#10b981' },
         { id: 9, label: 'GitHub', url: "https://github.com", color: '#94a3b8', target: '_blank' }
     ]);
 
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { from: 1, to: 5 },
         { from: 1, to: 6 },
         //{ from: 1, to: 7 },
-        //{ from: 1, to: 8 },
+        { from: 1, to: 8 },
         { from: 1, to: 9 }
     ]);
 

@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api_skeleton.py (PATCH 1 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 1 OF 5)
 # START: PACKAGED_IMPORTS_AND_INPUT_SANITIZATION
 # ======================================================================
 import os
@@ -19,7 +19,7 @@ class ApiSkeletonBuilder:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api_skeleton.py (PATCH 2 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 2 OF 5)
 # START: PATH_RESOLUTION_AND_FUNCTION_VIEW_FORGE
 # ======================================================================
     @classmethod
@@ -27,28 +27,22 @@ class ApiSkeletonBuilder:
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         if not app or not endpoint:
             return {"status": "error", "message": "Invalid architectural parameters."}
-
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
-
         if not os.path.exists(os.path.join(base_dir, app)):
             return {"status": "error", "message": f"Target app directory '{app}' does not exist."}
-
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
-
         if os.path.exists(view_file):
             return {"status": "error", "message": f"Collision: API Component '{endpoint}' already exists."}
-
         try:
             # 1. Generate Function-Based View with Explicit Module Anchors
             os.makedirs(os.path.dirname(view_file), exist_ok=True)
             with open(view_file, 'w') as f:
                 dec_import = "from django.contrib.auth.decorators import login_required\n" if is_private else ""
                 dec_line = "@login_required\n" if is_private else ""
-                
                 f.write(
                     f'# ======================================================================\n'
                     f'# FILE: {app}/api/{endpoint}_api.py\n'
@@ -80,7 +74,7 @@ class ApiSkeletonBuilder:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api_skeleton.py (PATCH 3 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 3 OF 5)
 # START: API_PACKAGE_WHITELIST_INJECTION
 # ======================================================================
             # 2. Inject to api/__init__.py whitelist package exporter loop
@@ -110,20 +104,21 @@ class ApiSkeletonBuilder:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api_skeleton.py (PATCH 4 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 4 OF 5)
 # START: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION
 # ======================================================================
             # 3. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     urls_content = f.read()
-                if f"from {app} import api as api_views" not in urls_content:
-                    urls_content = f"from {app} import api as api_views\n" + urls_content
+                # Refactored package alias name from api_views to api_commands
+                if f"from {app} import api as api_commands" not in urls_content:
+                    urls_content = f"from {app} import api as api_commands\n" + urls_content
                 if "urlpatterns = [" in urls_content:
                     p = urls_content.split("urlpatterns = [")
                     sp = p[1].split("]", 1)
                     inner = sp[0].rstrip()
-                    route = f"    path('api/{endpoint}/', api_views.{func_name}, name='{func_name}'),"
+                    route = f"    path('api/{endpoint}/', api_commands.{func_name}, name='{func_name}'),"
                     if route.strip() not in inner:
                         sp[0] = f"{inner}\n{route}\n"
                     p[1] = "]".join(sp)
@@ -175,7 +170,6 @@ class ApiSkeletonBuilder:
                     f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
                     f'# ======================================================================\n'
                 )
-
             return {"status": "success", "message": f"Successfully forged API function '{func_name}' inside app '{app}/api/' ({visibility})."}
         except Exception as e:
             return {"status": "error", "message": f"Failed to execute API forge sequence: {str(e)}"}
@@ -184,7 +178,7 @@ class ApiSkeletonBuilder:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api_skeleton.py (PATCH 5 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 5 OF 5)
 # START: SURGICAL_API_COMPONENT_PURGE_ROUTINE
 # ======================================================================
     @classmethod
@@ -197,12 +191,10 @@ class ApiSkeletonBuilder:
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
         logs = []
-
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted api: {endpoint}_api.py")
-            
             # PRESERVE TEST SUITE INFRASTRUCTURE DURING ACTIVE RUNS
             if os.path.exists(test_file):
                 if "AURORA_TEST_RUNNING" not in os.environ:
@@ -210,7 +202,6 @@ class ApiSkeletonBuilder:
                     logs.append(f"Deleted test file: test_api_{endpoint}_{app}.py")
                 else:
                     logs.append("Preserved test file context during active test suite execution.")
-
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -218,15 +209,14 @@ class ApiSkeletonBuilder:
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Scrubbed api package exporter.")
-
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
-                clean_lines = [l for l in lines if f"api_views.{func_name}" not in l and f"'api/{endpoint}/'" not in l]
+                # Refactored to hunt and clear api_commands syntax footprints instead of api_views
+                clean_lines = [l for l in lines if f"api_commands.{func_name}" not in l and f"'api/{endpoint}/'" not in l]
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
-
             return {"status": "success", "message": " | ".join(logs) if logs else "No API components found to purge."}
         except Exception as e:
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}

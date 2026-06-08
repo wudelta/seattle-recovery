@@ -1,0 +1,24 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/notes_control_bar.html (PATCH 1 OF 1) -->
+<!-- START: CONTROL_BAR_SESSION_INTERFACE_CONFIGURATION -->
+<!-- ====================================================================== -->
+<div class="row g-2 mb-2">
+    <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-warning">
+        <div class="d-flex align-items-center">
+            <span class="text-warning fw-bold me-3">⚡ DELTA_NOTES:</span>
+            <span class="text-muted me-3">ID: {{ request.user.username }}</span>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center me-3">
+                <span class="text-info me-2 small">SESSION_TIME:</span>
+                <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
+                <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
+            </div>
+            <button id="compile-blueprint-btn" class="btn btn-warning btn-sm py-1 font-monospace fw-bold" style="font-size: 0.8rem;">🚀 Compile to project.md</button>
+            <a href="/aurora/console/" class="btn btn-outline-secondary btn-sm py-1 font-monospace ms-2" style="font-size: 0.8rem;">Console</a>
+        </div>
+    </div>
+</div>
+<!-- ====================================================================== -->
+<!-- END: CONTROL_BAR_SESSION_INTERFACE_CONFIGURATION -->
+<!-- ====================================================================== -->

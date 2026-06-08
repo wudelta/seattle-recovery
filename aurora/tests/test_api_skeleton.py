@@ -5,7 +5,7 @@
 import os
 import shutil
 from django.test import TestCase
-from aurora.api_skeleton import ApiSkeletonBuilder
+from aurora.utils.api_skeleton import ApiSkeletonBuilder  # Updated path to utils package reference
 
 class ApiSkeletonBuilderTests(TestCase):
     """Test suite ensuring absolute structural compliance for zero-token API builds."""
@@ -59,17 +59,16 @@ class ApiSkeletonBuilderTests(TestCase):
         # ALIGNMENT: Target isolated api folder and verify structural existence
         api_file = os.path.join(self.base_dir, self.test_app, 'api', f'{self.test_endpoint}_api.py')
         test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_api_{self.test_endpoint}_{self.test_app}.py')
-        
         self.assertTrue(os.path.exists(api_file))
         self.assertTrue(os.path.exists(test_file))
         
         with open(api_file, 'r') as f:
             content = f.read()
-            self.assertIn("from django.http import JsonResponse", content)
-            self.assertIn("from django.contrib.auth.decorators import login_required", content)
-            self.assertIn("@login_required", content)
-            self.assertIn(f"def {self.func_name}(request):", content)
-            self.assertIn('"status": "success"', content)
+        self.assertIn("from django.http import JsonResponse", content)
+        self.assertIn("from django.contrib.auth.decorators import login_required", content)
+        self.assertIn("@login_required", content)
+        self.assertIn(f"def {self.func_name}(request):", content)
+        self.assertIn('"status": "success"', content)
 # ======================================================================
 # END: INPUT CLEANING VALIDATION & FORGE FILE ASSET ASSERTIONS
 # ======================================================================
@@ -81,39 +80,36 @@ class ApiSkeletonBuilderTests(TestCase):
     def test_forge_api_registers_packages_and_urls_correctly(self):
         """Verify view function is appended to api/__init__.py and wired cleanly to urls.py."""
         ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint, visibility="private")
-
+        
         # Check api/__init__.py export hook
         with open(self.init_path, 'r') as f:
             init_content = f.read()
         self.assertTrue(init_content.startswith(f"from .{self.test_endpoint}_api import {self.func_name}\n"))
         self.assertIn(f"'{self.func_name}',", init_content)
-
-        # Check urls.py routing rule aligning with api_views naming context
+        
+        # Check urls.py routing rule aligning with api_commands naming context
         with open(self.urls_path, 'r') as f:
             urls_content = f.read()
-        expected_route = f"path('api/{self.test_endpoint}/', api_views.{self.func_name}, name='{self.func_name}'),"
+        expected_route = f"path('api/{self.test_endpoint}/', api_commands.{self.func_name}, name='{self.func_name}'),"
         self.assertIn(expected_route, urls_content)
 
     def test_purge_api_removes_files_and_cleans_registrations(self):
         """Verify API structural footprints disappear entirely after an isolated purge sequence."""
         ApiSkeletonBuilder.forge_api(self.test_app, self.test_endpoint, visibility="private")
-        
         purge_result = ApiSkeletonBuilder.purge_api(self.test_app, self.test_endpoint)
         self.assertEqual(purge_result["status"], "success")
-
+        
         # Verify physical code files are safely stripped
         api_file = os.path.join(self.base_dir, self.test_app, 'api', f'{self.test_endpoint}_api.py')
         test_file = os.path.join(self.base_dir, self.test_app, 'tests', f'test_api_{self.test_endpoint}_{self.test_app}.py')
-        
         self.assertFalse(os.path.exists(api_file))
         self.assertFalse(os.path.exists(test_file))
-
+        
         # Confirm whitelists and routings clean up beautifully
         with open(self.init_path, 'r') as f:
             self.assertNotIn(self.func_name, f.read())
-            
         with open(self.urls_path, 'r') as f:
-            self.assertNotIn(f"api_views.{self.func_name}", f.read())
+            self.assertNotIn(f"api_commands.{self.func_name}", f.read())
 # ======================================================================
 # END: PACKAGE ROUTING INJECTIONS & REFACTOR-SAFE PURGE VERIFICATION
 # ======================================================================
