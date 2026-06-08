@@ -17,18 +17,52 @@
 <div class="d-flex flex-column h-100 w-100 p-2">
     {% csrf_token %}
     
-    <!-- SECTION A: AUTOMATED AI BLUEPRINT FORGE CONSOLE PANEL -->
-    <div class="workspace-section mb-4" id="ai-blueprint-workspace-container">
-        {% include "aurora/snippets/blueprint_console_panel.html" %}
+    <!-- SECTION A: DELTA NOTES RUNTIME INTENTION TRACKER TASK PANEL (PRIORITY MOUNT) -->
+    <div class="workspace-section mb-4" id="delta-notes-workspace-container">
+        {% include "aurora/snippets/delta_notes_console_panel.html" %}
     </div>
 
-    <!-- SECTION B: DELTA NOTES RUNTIME INTENTION TRACKER TASK PANEL -->
-    <div class="workspace-section border-top border-secondary pt-3" id="delta-notes-workspace-container">
-        <!-- Re-anchoring the delta notes skeleton wrapper frame straight into the cockpit view -->
-        {% include "aurora/snippets/delta_notes_console_panel.html" %}
+    <!-- SECTION B: AUTOMATED AI BLUEPRINT FORGE CONSOLE PANEL -->
+    <div class="workspace-section border-top border-secondary pt-3" id="ai-blueprint-workspace-container">
+        {% include "aurora/snippets/blueprint_console_panel.html" %}
     </div>
 </div>
 {% endblock %}
 <!-- ====================================================================== -->
 <!-- END: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR_SKELETON -->
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 2 OF 2) -->
+<!-- START: CONSOLE_ORCHESTRATOR_SCRIPT_ASSET_LINKING -->
+<!-- ====================================================================== -->
+{% block extra_js %}
+<!-- Core AI Blueprint Console Interface Engine Script -->
+<script src="{% static 'aurora/js/console.js' %}"></script>
+
+<!-- Delta Notes Interactive Task Checklist Engine Script -->
+<script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+
+<script>
+// Use unified jQuery ready gate to completely bypass snippet render timing races
+$(document).ready(function() {
+    console.log("[Aurora Cockpit] DOM elements stabilized. Attaching interactive scripts...");
+    
+    // Package dynamic framework parameters securely into a local dictionary payload
+    const systemEndpoints = {
+        endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
+    };
+    
+    // Explicit initialization check for the enclosed workspace engine closure
+    if (typeof initDeltaNotesConsole === "function") {
+        initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+        console.log("[Aurora Cockpit] Delta Notes click event channels successfully bound.");
+    } else {
+        console.error("[Aurora Cockpit] Architectural error: initDeltaNotesConsole function unresolved.");
+    }
+});
+</script>
+{% endblock %}
+<!-- ====================================================================== -->
+<!-- END: CONSOLE_ORCHESTRATOR_SCRIPT_ASSET_LINKING -->
 <!-- ====================================================================== -->

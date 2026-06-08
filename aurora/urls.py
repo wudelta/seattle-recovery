@@ -5,7 +5,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from aurora import api as api_commands  # Renamed package alias to match architectural standard
+from aurora import api as api_commands
 
 app_name = 'aurora'
 
@@ -26,7 +26,6 @@ urlpatterns = [
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
     
-    path('delta_notes/', views.DeltaNotesView.as_view(), name='delta_notes'),
     path('api/delta_notes/', api_commands.delta_notes_endpoint, name='delta_notes_endpoint'),
 ]
 # ======================================================================

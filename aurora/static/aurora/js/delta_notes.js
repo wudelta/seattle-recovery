@@ -1,24 +1,13 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 1 OF 5)
-// START: GLOBAL_SESSION_TIMER_STATE_CONSTRAINTS
-// ======================================================================
-// Global environment tracking variables for the single-dashboard cockpit
-let activeTimerInterval = null;
-let activeSecondsCount = 0;
-let isSessionTracking = false;
-
-// Typing Debounce variables to manage automated text-area saving loops
-let autoSaveDebounceTimeout = null;
-const DEBOUNCE_DELAY_MS = 1000; // Fires auto-save 1 second after typing ceases
-// ======================================================================
-// END: GLOBAL_SESSION_TIMER_STATE_CONSTRAINTS
-// ======================================================================
-
-// ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 2 OF 5)
-// START: ASYNC_QUEUE_LOAD_AND_HIGH_DENSITY_RENDER
+// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 1 OF 3)
+// START: INITIALIZATION_CLOSURE_AND_STATE_ENCLOSURE
 // ======================================================================
 function initDeltaNotesConsole(endpoints, csrfToken) {
+    // ENCLOSED STATE: Accessible to all nested timer and click loop blocks
+    let activeTimerInterval = null;
+    let activeSecondsCount = 0;
+    let isSessionTracking = false;
+
     function loadActiveQueue() {
         $.get(endpoints.endpoint_url, function(data) {
             if (data.status === "success") {
@@ -36,10 +25,9 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
             return;
         }
         
-        // Render clean, high-density checklist rows with modular inline action buttons
         entries.forEach(function(note) {
             const cardHtml = `
-                <div class="list-group-item note-row text-white d-flex justify-content-between align-items-center p-2 border-secondary bg-transparent">
+                <div class="list-group-item note-row text-white d-flex justify-content-between align-items-center p-2 border-secondary bg-transparent" data-id="${note.id}">
                     <div class="d-flex align-items-center flex-grow-1 me-3">
                         <span class="text-warning me-2">></span>
                         <div class="text-wrap small note-display-text" id="note-text-display-${note.id}">${note.text}</div>
@@ -61,12 +49,12 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         return String(hrs).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
     }
 // ======================================================================
-// END: ASYNC_QUEUE_LOAD_AND_HIGH_DENSITY_RENDER
+// END: INITIALIZATION_CLOSURE_AND_STATE_ENCLOSURE
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 3 OF 5)
-// START: GLOBAL_TIMER_CORE_MANAGEMENT
+// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 2 OF 3)
+// START: ENCLOSED_TIMER_CORE_OPERATIONS
 // ======================================================================
     function startGlobalTimer() {
         if (!activeTimerInterval) {
@@ -85,7 +73,7 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         clearInterval(activeTimerInterval);
         activeTimerInterval = null;
         
-        // Commit global focus time directly up to the latest open tracking item
+        // Commit tracking parameters right up to the latest open Postgres item
         $.post(endpoints.endpoint_url, {
             action: 'sync_timer',
             current_duration: activeSecondsCount,
@@ -93,20 +81,20 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }, function(data) {
             if (callback) callback();
         }).fail(function(xhr) {
-            console.error("Session sync failed: ", xhr.responseText);
+            console.error("Session sync failure: ", xhr.responseText);
             if (callback) callback();
         });
     }
 // ======================================================================
-// END: GLOBAL_TIMER_CORE_MANAGEMENT
+// END: ENCLOSED_TIMER_CORE_OPERATIONS
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 4 OF 5)
-// START: FRONTEND_UI_EVENT_BINDINGS
+// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 3 OF 3)
+// START: STRIPPED_EVENT_BINDINGS_AND_FLOW_CONTROL
 // ======================================================================
-    // Toggle dashboard session focus states
-    $('#global-timer-toggle-btn').on('click', function() {
+    // Toggle dashboard session focus states via strict dynamic document delegation
+    $(document).off('click', '#global-timer-toggle-btn').on('click', '#global-timer-toggle-btn', function() {
         const btn = $(this);
         if (!isSessionTracking) {
             isSessionTracking = true;
@@ -119,27 +107,9 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }
     });
 
-    // Keystroke Debounce handler to save typing changes on the fly
-    $('#note-text').on('input', function() {
-        clearTimeout(autoSaveDebounceTimeout);
-        const currentText = $(this).val().trim();
-        if (!currentText) return;
-
-        autoSaveDebounceTimeout = setTimeout(function() {
-            console.log("[Aurora Auto-Save] Typing stabilized. Syncing raw draft state...");
-            // Non-blocking auto-save call to ensure progress isn't lost if you change your mind
-            $.post(endpoints.endpoint_url, {
-                action: 'autosave_draft',
-                text: currentText,
-                csrfmiddlewaretoken: csrfToken
-            });
-        }, DEBOUNCE_DELAY_MS);
-    });
-
-    // Capture text intention additions
-    $('#create-note-form').on('submit', function(e) {
+    // Capture text intention additions (Direct submission only - debounce removed)
+    $(document).off('submit', '#create-note-form').on('submit', '#create-note-form', function(e) {
         e.preventDefault();
-        clearTimeout(autoSaveDebounceTimeout);
         const textInput = $('#note-text');
         $.post(endpoints.endpoint_url, {
             action: 'create_note',
@@ -154,8 +124,9 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
     });
 
     // Dynamic Row Action Click Delegators: Inline Edit Handlers
-    $('#notes-container').on('click', '.edit-note-btn', function() {
-        const noteId = $(this).data('id');
+    $('#notes-container').off('click', '.edit-note-btn').on('click', '.edit-note-btn', function(e) {
+        e.preventDefault();
+        const noteId = $(this).attr('data-id') || $(this).data('id');
         const displayDiv = $(`#note-text-display-${noteId}`);
         const currentVal = displayDiv.text().trim();
         const updatedVal = prompt("Modify target intention parameter configurations:", currentVal);
@@ -167,38 +138,28 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
                 text: updatedVal.trim(),
                 csrfmiddlewaretoken: csrfToken
             }, function(data) {
-                if (data.status === "success") {
-                    loadActiveQueue();
-                }
+                loadActiveQueue();
             });
         }
     });
 
     // Dynamic Row Action Click Delegators: Inline Delete Handlers
-    $('#notes-container').on('click', '.delete-note-btn', function() {
-        const noteId = $(this).data('id');
+    $('#notes-container').off('click', '.delete-note-btn').on('click', '.delete-note-btn', function(e) {
+        e.preventDefault();
+        const noteId = $(this).attr('data-id') || $(this).data('id');
         if (confirm("Surgically isolate and erase this active log entry?")) {
             $.post(endpoints.endpoint_url, {
                 action: 'delete_note',
                 note_id: noteId,
                 csrfmiddlewaretoken: csrfToken
             }, function(data) {
-                if (data.status === "success") {
-                    loadActiveQueue();
-                }
+                loadActiveQueue();
             });
         }
     });
-// ======================================================================
-// END: FRONTEND_UI_EVENT_BINDINGS
-// ======================================================================
 
-// ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 5 OF 5)
-// START: COMPILATION_AUTOMATION_AND_CLOSURES
-// ======================================================================
     // Compile entire backlog down onto project.md
-    $('#compile-blueprint-btn').on('click', function() {
+    $(document).off('click', '#compile-blueprint-btn').on('click', '#compile-blueprint-btn', function() {
         const btn = $(this);
         btn.prop('disabled', true).text('Syncing Blueprint...');
         
@@ -227,25 +188,9 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }
     });
 
-    // Auto-Pause Protection on Workspace tab switching
-    document.addEventListener("visibilitychange", function() {
-        if (document.hidden && isSessionTracking) {
-            clearInterval(activeTimerInterval);
-            activeTimerInterval = null;
-            // Background update to safe-store seconds before page suspension
-            $.post(endpoints.endpoint_url, {
-                action: 'sync_timer',
-                current_duration: activeSecondsCount,
-                csrfmiddlewaretoken: csrfToken
-            });
-        } else if (!document.hidden && isSessionTracking) {
-            startGlobalTimer();
-        }
-    });
-
     // Initial console populate execution pass
     loadActiveQueue();
 }
 // ======================================================================
-// END: COMPILATION_AUTOMATION_AND_CLOSURES
+// END: STRIPPED_EVENT_BINDINGS_AND_FLOW_CONTROL
 // ======================================================================

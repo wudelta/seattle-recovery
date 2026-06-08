@@ -18,6 +18,12 @@ When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must 
 * [x] Move the skeleton builders to utils folder and fix api_views to import them correctly
 * [x] Move api_views.py from the views folder to api folder, rename to api_commands, fix urls, and register in api/__init__.py
 * [x] Update urls, console views, and javascript files to utilize the api_commands namespace routing matrix
-* [x] Add a typing input debounce handler function to journal notes to save text on the fly without clicking buttons
 * [x] Break out console html view structures into modular snippets and use the include tag to load them
 * [x] Add inline interactive Edit and Delete controls next to unprocessed_log entries in delta_notes to allow updates before processing
+* [x] Integrate the Delta Notes environment directly into the master aurora_console cockpit, deleting redundant files, stale URL routes, and obsolete view exports
+* [x] Remove the experimental journal debounce auto-save loop from the cockpit script asset layer
+* [x] Secure full closure runtime scope alignment for focus session timers and project blueprint markdown compilers
+
+
+## Added via DeltaNotes Lifecycle (2026-06-08 23:01)
+* [ ] fix the console layout to scroll and fit in the screen
