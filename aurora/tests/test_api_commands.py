@@ -204,46 +204,59 @@ class DeltaNotesEndpointTests(TestCase):
 
     def test_delta_notes_post_crud_and_status_toggles(self):
         """Verify note creation, modification, erasure, and completion hooks."""
-        # 1. Test Create Action (writes to verified .text property)
         self.client.post(self.endpoint_url, {"action": "create_note", "text": "Forced Compilation Layer"})
         note = DeltaNotesEntry.objects.get(user=self.user, text="Forced Compilation Layer")
         self.assertFalse(note.processed)
 
-        # 2. Test Edit Action
         self.client.post(self.endpoint_url, {"action": "edit_note", "note_id": note.id, "text": "Updated Layer Spec"})
         note.refresh_from_db()
         self.assertEqual(note.text, "Updated Layer Spec")
 
-        # 3. Test Process Action (Marks completed)
         self.client.post(self.endpoint_url, {"action": "process_note", "note_id": note.id})
         note.refresh_from_db()
         self.assertTrue(note.processed)
 
-        # 4. Test Delete Action
         self.client.post(self.endpoint_url, {"action": "delete_note", "note_id": note.id})
         self.assertFalse(DeltaNotesEntry.objects.filter(id=note.id).exists())
 
     def test_compile_blueprint_uses_non_destructive_appendation(self):
-        """Verify compile action utilizes 'a' mode and inserts timestamp clusters."""
+        """Verify compile action utilizes 'a' mode and inserts timestamp clusters without hurting live files."""
         DeltaNotesEntry.objects.create(user=self.user, text="Surgical Graph Injection Rule", processed=False)
 
-        # Initialize base file with mock history data to verify append actions
-        with open("project.md", "w", encoding="utf-8") as f:
+        # FIXED: Initialize and test against an isolated mock target instead of your production file
+        test_file = "test_project.md"
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
+        with open(test_file, "w", encoding="utf-8") as f:
             f.write("# Historic Baseline Record Data\n")
 
-        response = self.client.post(self.endpoint_url, {"action": "compile_blueprint"})
-        self.assertEqual(response.status_code, 200)
+        from unittest.mock import patch
+        import builtins
+        real_open = builtins.open
+
+        # Redirect filesystem open commands looking for project.md directly onto our safe test artifact path
+        def path_redirector(file, *args, **kwargs):
+            if file == "project.md":
+                return real_open(test_file, *args, **kwargs)
+            return real_open(file, *args, **kwargs)
+
+        with patch('builtins.open', side_effect=path_redirector):
+            response = self.client.post(self.endpoint_url, {"action": "compile_blueprint"})
+            self.assertEqual(response.status_code, 200)
         
-        with open("project.md", "r", encoding="utf-8") as f:
+        with open(test_file, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Assert historic layout was not wiped or corrupted
+        # Assert data changes hit the sandboxed document file layout safely
         self.assertIn("# Historic Baseline Record Data", content)
-        # Assert timestamp subheader blocks were successfully injected
         self.assertIn("## Backlog Export Session Cluster", content)
-        # Assert tracking node was logged cleanly without toggling db states
         self.assertIn("* [ ] Surgical Graph Injection Rule", content)
         self.assertTrue(DeltaNotesEntry.objects.filter(user=self.user, processed=False).exists())
+
+        # Safely clean up our mock testing file artifact
+        if os.path.exists(test_file):
+            os.remove(test_file)
 # ====================================================================== 
 # END: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS 
 # ====================================================================== 
