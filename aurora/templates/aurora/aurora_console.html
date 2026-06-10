@@ -23,7 +23,8 @@
         <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
             <div class="d-flex align-items-center gap-3">
                 <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
-                <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 250px;">
+                <!-- FIXED: Increased max-width threshold to 320px to prevent string truncations -->
+                <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;">
                     <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
                     <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
                 </select>

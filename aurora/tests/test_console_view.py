@@ -1,7 +1,7 @@
-# ======================================================================
-# FILE: aurora/tests/test_console_view.py (PATCH 1 OF 1)
-# START: TERMINAL COCKPIT VIEW CORE AGENT TEST SUITE
-# ======================================================================
+# ====================================================================== 
+# FILE: aurora/tests/test_console_view.py (PATCH 1 OF 1) 
+# START: TERMINAL COCKPIT VIEW CORE AGENT TEST SUITE 
+# ====================================================================== 
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -21,7 +21,6 @@ class ConsoleViewTests(TestCase):
         """Security Check: Requests lacking active sessions must trigger standard login redirects."""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 302)
-        # Ensure the destination path safely routes through your configured login page
         self.assertIn(reverse("aurora:login"), response.url)
 
     def test_authenticated_developer_session_renders_cockpit_with_context_payload(self):
@@ -36,6 +35,14 @@ class ConsoleViewTests(TestCase):
         # Verify the dynamic rendering tokens exist inside the frontend context scope
         self.assertEqual(response.context['architect'], self.username)
         self.assertEqual(response.context['ai_lead'], "Wu")
-# ======================================================================
-# END: TERMINAL COCKPIT VIEW CORE AGENT TEST SUITE
-# ======================================================================
+
+        # Refactored: Assert presence of the permanent console control bar and the wide matrix view selector
+        self.assertContains(response, 'id="console-control-bar-container"')
+        self.assertContains(response, 'id="console-view-selector"')
+        
+        # Verify the dynamic viewport panes exist for matrix rendering switching
+        self.assertContains(response, 'id="delta-notes-workspace-container"')
+        self.assertContains(response, 'id="ai-blueprint-workspace-container"')
+# ====================================================================== 
+# END: TERMINAL COCKPIT VIEW CORE AGENT TEST SUITE 
+# ====================================================================== 
