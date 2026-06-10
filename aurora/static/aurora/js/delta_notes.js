@@ -204,11 +204,11 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
             csrfmiddlewaretoken: csrfToken 
         }, function(data) {
             alert(data.message);
-            btn.prop('disabled', false).text('🚀 Compile to project.md');
+            btn.prop('disabled', false).text('Compile to project.md');
             loadActiveQueue();
         }).fail(function(xhr) {
             alert("Compilation failed: " + xhr.responseText);
-            btn.prop('disabled', false).text('🚀 Compile to project.md');
+            btn.prop('disabled', false).text('Compile to project.md');
         });
     });
 

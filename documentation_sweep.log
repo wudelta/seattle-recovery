@@ -1,0 +1,141 @@
+nohup: ignoring input
+/home/delta/seattle-recovery/venv/lib/python3.12/site-packages/neomodel/__init__.py:2: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+19 objects imported automatically (use -v 2 for details).
+
+Starting master documentation loop. Discovered 67 total baseline targets...
+[1/67] Processing asset context layer: core_logic/neo4j_driver.py
+Successfully populated dual documentation tracks for core_logic/neo4j_driver.py
+[2/67] Processing asset context layer: aurora/inspector.py
+Successfully populated dual documentation tracks for aurora/inspector.py
+[3/67] Processing asset context layer: aurora/utils/ast_scanner.py
+Successfully populated dual documentation tracks for aurora/utils/ast_scanner.py
+[4/67] Processing asset context layer: aurora/nodes.py
+Successfully populated dual documentation tracks for aurora/nodes.py
+[5/67] Processing asset context layer: ingest_for_mental_health_providers.py
+Successfully populated dual documentation tracks for ingest_for_mental_health_providers.py
+[6/67] Processing asset context layer: print_tree.py
+Successfully populated dual documentation tracks for print_tree.py
+[7/67] Processing asset context layer: convert.py
+Successfully populated dual documentation tracks for convert.py
+[8/67] Processing asset context layer: manage.py
+Successfully populated dual documentation tracks for manage.py
+[9/67] Processing asset context layer: core_logic/wsgi.py
+Successfully populated dual documentation tracks for core_logic/wsgi.py
+[10/67] Processing asset context layer: core_logic/__init__.py
+Successfully populated dual documentation tracks for core_logic/__init__.py
+[11/67] Processing asset context layer: core_logic/sessions.py
+Successfully populated dual documentation tracks for core_logic/sessions.py
+[12/67] Processing asset context layer: core_logic/asgi.py
+Successfully populated dual documentation tracks for core_logic/asgi.py
+[13/67] Processing asset context layer: core_logic/urls.py
+Successfully populated dual documentation tracks for core_logic/urls.py
+[14/67] Processing asset context layer: core_logic/settings.py
+Successfully populated dual documentation tracks for core_logic/settings.py
+[15/67] Processing asset context layer: aurora/__init__.py
+Successfully populated dual documentation tracks for aurora/__init__.py
+[16/67] Processing asset context layer: aurora/apps.py
+Successfully populated dual documentation tracks for aurora/apps.py
+[17/67] Processing asset context layer: aurora/models.py
+Successfully populated dual documentation tracks for aurora/models.py
+[18/67] Processing asset context layer: aurora/signals.py
+Successfully populated dual documentation tracks for aurora/signals.py
+[19/67] Processing asset context layer: aurora/agents.py
+Successfully populated dual documentation tracks for aurora/agents.py
+[20/67] Processing asset context layer: aurora/urls.py
+Successfully populated dual documentation tracks for aurora/urls.py
+[21/67] Processing asset context layer: aurora/admin.py
+Successfully populated dual documentation tracks for aurora/admin.py
+[22/67] Processing asset context layer: aurora/utils/forge_registry.py
+Successfully populated dual documentation tracks for aurora/utils/forge_registry.py
+[23/67] Processing asset context layer: aurora/utils/__init__.py
+Successfully populated dual documentation tracks for aurora/utils/__init__.py
+[24/67] Processing asset context layer: aurora/utils/project_bootstrapper.py
+Successfully populated dual documentation tracks for aurora/utils/project_bootstrapper.py
+[25/67] Processing asset context layer: aurora/utils/api_skeleton.py
+Successfully populated dual documentation tracks for aurora/utils/api_skeleton.py
+[26/67] Processing asset context layer: aurora/utils/page_skeleton.py
+Successfully populated dual documentation tracks for aurora/utils/page_skeleton.py
+[27/67] Processing asset context layer: aurora/views/__init__.py
+Successfully populated dual documentation tracks for aurora/views/__init__.py
+[28/67] Processing asset context layer: aurora/views/console_view.py
+Successfully populated dual documentation tracks for aurora/views/console_view.py
+[29/67] Processing asset context layer: aurora/views/landing.py
+Successfully populated dual documentation tracks for aurora/views/landing.py
+[30/67] Processing asset context layer: aurora/views/delta_notes_view.py
+Successfully populated dual documentation tracks for aurora/views/delta_notes_view.py
+[31/67] Processing asset context layer: aurora/migrations/0002_alter_componentregistry_created_by.py
+Successfully populated dual documentation tracks for aurora/migrations/0002_alter_componentregistry_created_by.py
+[32/67] Processing asset context layer: aurora/migrations/0001_initial.py
+Successfully populated dual documentation tracks for aurora/migrations/0001_initial.py
+[33/67] Processing asset context layer: aurora/migrations/__init__.py
+Successfully populated dual documentation tracks for aurora/migrations/__init__.py
+[34/67] Processing asset context layer: aurora/migrations/0003_deltanotesentry.py
+Successfully populated dual documentation tracks for aurora/migrations/0003_deltanotesentry.py
+[35/67] Processing asset context layer: aurora/api/api_commands.py
+Successfully populated dual documentation tracks for aurora/api/api_commands.py
+[36/67] Processing asset context layer: aurora/api/__init__.py
+Successfully populated dual documentation tracks for aurora/api/__init__.py
+[37/67] Processing asset context layer: aurora/api/delta_notes_api.py
+Successfully populated dual documentation tracks for aurora/api/delta_notes_api.py
+[38/67] Processing asset context layer: aurora/tests/test_forge_registry.py
+Successfully populated dual documentation tracks for aurora/tests/test_forge_registry.py
+[39/67] Processing asset context layer: aurora/tests/test_nodes.py
+Successfully populated dual documentation tracks for aurora/tests/test_nodes.py
+[40/67] Processing asset context layer: aurora/tests/test_global_urls.py
+Successfully populated dual documentation tracks for aurora/tests/test_global_urls.py
+[41/67] Processing asset context layer: aurora/tests/__init__.py
+Successfully populated dual documentation tracks for aurora/tests/__init__.py
+[42/67] Processing asset context layer: aurora/tests/test_api_delta_notes_aurora.py
+Successfully populated dual documentation tracks for aurora/tests/test_api_delta_notes_aurora.py
+[43/67] Processing asset context layer: aurora/tests/test_console_view.py
+Successfully populated dual documentation tracks for aurora/tests/test_console_view.py
+[44/67] Processing asset context layer: aurora/tests/test_apps.py
+Successfully populated dual documentation tracks for aurora/tests/test_apps.py
+[45/67] Processing asset context layer: aurora/tests/test_page_skeleton.py
+Successfully populated dual documentation tracks for aurora/tests/test_page_skeleton.py
+[46/67] Processing asset context layer: aurora/tests/test_urls.py
+Successfully populated dual documentation tracks for aurora/tests/test_urls.py
+[47/67] Processing asset context layer: aurora/tests/test_agents.py
+Successfully populated dual documentation tracks for aurora/tests/test_agents.py
+[48/67] Processing asset context layer: aurora/tests/test_api_skeleton.py
+Successfully populated dual documentation tracks for aurora/tests/test_api_skeleton.py
+[49/67] Processing asset context layer: aurora/tests/test_models.py
+Successfully populated dual documentation tracks for aurora/tests/test_models.py
+[50/67] Processing asset context layer: aurora/tests/test_api_ast_scanner.py
+Successfully populated dual documentation tracks for aurora/tests/test_api_ast_scanner.py
+[51/67] Processing asset context layer: aurora/tests/test_signals.py
+Successfully populated dual documentation tracks for aurora/tests/test_signals.py
+[52/67] Processing asset context layer: aurora/tests/test_api_commands.py
+Successfully populated dual documentation tracks for aurora/tests/test_api_commands.py
+[53/67] Processing asset context layer: aurora/tests/test_inspector.py
+Successfully populated dual documentation tracks for aurora/tests/test_inspector.py
+[54/67] Processing asset context layer: aurora/tests/test_landing.py
+Successfully populated dual documentation tracks for aurora/tests/test_landing.py
+[55/67] Processing asset context layer: hopehub/apps.py
+Successfully populated dual documentation tracks for hopehub/apps.py
+[56/67] Processing asset context layer: hopehub/models.py
+Successfully populated dual documentation tracks for hopehub/models.py
+[57/67] Processing asset context layer: hopehub/urls.py
+Successfully populated dual documentation tracks for hopehub/urls.py
+[58/67] Processing asset context layer: hopehub/views/journal.py
+Successfully populated dual documentation tracks for hopehub/views/journal.py
+[59/67] Processing asset context layer: hopehub/views/forms.py
+Successfully populated dual documentation tracks for hopehub/views/forms.py
+[60/67] Processing asset context layer: hopehub/views/__init__.py
+Successfully populated dual documentation tracks for hopehub/views/__init__.py
+[61/67] Processing asset context layer: hopehub/views/landing.py
+Successfully populated dual documentation tracks for hopehub/views/landing.py
+[62/67] Processing asset context layer: hopehub/migrations/0001_initial.py
+Successfully populated dual documentation tracks for hopehub/migrations/0001_initial.py
+[63/67] Processing asset context layer: hopehub/migrations/__init__.py
+Successfully populated dual documentation tracks for hopehub/migrations/__init__.py
+[64/67] Processing asset context layer: hopehub/migrations/0003_governancesection_technicalconstraint_and_more.py
+Successfully populated dual documentation tracks for hopehub/migrations/0003_governancesection_technicalconstraint_and_more.py
+[65/67] Processing asset context layer: hopehub/migrations/0002_alter_journalentry_emotion_and_more.py
+Successfully populated dual documentation tracks for hopehub/migrations/0002_alter_journalentry_emotion_and_more.py
+[66/67] Processing asset context layer: hopehub/api/__init__.py
+Successfully populated dual documentation tracks for hopehub/api/__init__.py
+[67/67] Processing asset context layer: hopehub/tests/__init__.py
+Successfully populated dual documentation tracks for hopehub/tests/__init__.py
+Master background documentation loop finished. System metrics normalized.

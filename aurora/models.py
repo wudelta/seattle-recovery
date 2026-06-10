@@ -16,6 +16,7 @@ from django.utils import timezone
 # ======================================================================
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
+    
     PERSONA_CHOICES = [
         ('ENTRY_POINT', 'Entry Point / Execution Vector'),
         ('COMPILER_MODULE', 'Standard Codebase Module'),
@@ -36,7 +37,6 @@ class ComponentRegistry(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
-    
     created_by = models.ForeignKey(
         User, 
         on_delete=models.PROTECT, 
@@ -45,12 +45,30 @@ class ComponentRegistry(models.Model):
     )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-    description = models.TextField(blank=True)
-    description_audiences = models.JSONField(default=list, blank=True)
+    description = models.TextField(
+        blank=True,
+        help_text="Primary unified summary of what this component module executes."
+    )
+    
+    # Structural Upgrade: Changed default from list to dict for dictionary key value maps
+    description_audiences = models.JSONField(
+        default=dict, 
+        blank=True,
+        help_text="Stores segregated documentation data blocks: developer_docs, stakeholder_docs, end_user_docs."
+    )
 
     class Meta:
         verbose_name = "Component Asset Profile"
         verbose_name_plural = "Component Asset Profiles"
+
+    def update_audience_docs(self, track: str, content: str):
+        """Helper loop to safely write or update a specific audience documentation block."""
+        if not isinstance(self.description_audiences, dict):
+            self.description_audiences = {}
+        
+        # Available tracks: 'developer_docs', 'stakeholder_docs', 'end_user_docs'
+        self.description_audiences[track] = content
+        self.save()
 
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
@@ -64,20 +82,19 @@ class ComponentRegistry(models.Model):
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
-    Tracks daily developer intentions, active task execution blocks, 
-    and accumulated focus time per session window.
+    Tracks daily developer intentions, active task execution blocks, and accumulated focus time per session window.
     """
     user = models.ForeignKey(
         User, 
-        on_delete=models.CASCADE,
-        related_name='delta_notes',
+        on_delete=models.CASCADE, 
+        related_name='delta_notes', 
         help_text="The developer compiling this active workspace iteration note."
     )
     text = models.TextField(blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     processed = models.BooleanField(default=False)
-    
+
     # Timer Core Mechanics:
     total_seconds_logged = models.PositiveIntegerField(
         default=0, 
