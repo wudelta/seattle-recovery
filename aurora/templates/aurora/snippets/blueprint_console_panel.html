@@ -2,36 +2,41 @@
 <!-- FILE: aurora/templates/aurora/snippets/blueprint_console_panel.html (PATCH 1 OF 1) -->
 <!-- START: ISOLATED_AI_BLUEPRINT_FORGE_PANELS -->
 <!-- ====================================================================== -->
-<div class="d-flex flex-column h-100 w-100">
+<div class="d-flex flex-column h-100 w-100 text-mono" style="font-size: 0.85rem;">
     <!-- Top Workspace Split (Input, Streaming Logs, System Validation) -->
-    <div class="row console-top-row g-2 mb-2 flex-grow-1">
-        
+    <div class="row console-top-row g-2 mb-2 flex-grow-1 align-items-stretch">
         <!-- Panel 1: Blueprint Desk -->
-        <div class="col-md-4 d-flex flex-column h-100">
-            <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-purple-emphasis">🛠️ Blueprint Desk</div>
-                <div class="card-body d-flex flex-column p-2">
-                    <textarea id="blueprint-input" class="form-control bg-darker text-info font-monospace flex-grow-1 mb-2 small" placeholder="Enter plain-English commands for Wu..."></textarea>
-                    <button id="submit-blueprint" class="btn btn-success btn-sm w-100 font-monospace fw-bold">Command</button>
+        <div class="col-md-4 d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column">
+                <div class="card-header py-1 font-monospace text-info border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    BLUEPRINT_DESK
+                </div>
+                <div class="card-body d-flex flex-column p-2 bg-transparent flex-grow-1">
+                    <textarea id="blueprint-input" class="form-control console-input flex-grow-1 mb-2" placeholder="Enter plain-English commands for Wu..." style="font-size: 0.8rem;"></textarea>
+                    <button id="submit-blueprint" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Command</button>
                 </div>
             </div>
         </div>
 
         <!-- Panel 2: Minion Assembly Line -->
-        <div class="col-md-4 d-flex flex-column h-100">
-            <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-purple-emphasis">🤖 Minion Assembly Line</div>
-                <div class="card-body p-2 overflow-auto font-monospace small scrollable-panel" id="minion-feed">
+        <div class="col-md-4 d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column">
+                <div class="card-header py-1 font-monospace text-warning border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    MINION_ASSEMBLY_LINE
+                </div>
+                <div class="card-body p-2 overflow-auto small scrollable-panel bg-transparent flex-grow-1" id="minion-feed">
                     <div class="text-muted">[System] Standing by for blueprints...</div>
                 </div>
             </div>
         </div>
 
         <!-- Panel 3: Validation Inspector -->
-        <div class="col-md-4 d-flex flex-column h-100">
-            <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small text-purple-emphasis">🔬 Validation Inspector</div>
-                <div class="card-body p-2 overflow-auto font-monospace small scrollable-panel" id="inspector-output">
+        <div class="col-md-4 d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column">
+                <div class="card-header py-1 font-monospace text-danger border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    VALIDATION_INSPECTOR
+                </div>
+                <div class="card-body p-2 overflow-auto small scrollable-panel bg-transparent flex-grow-1" id="inspector-output">
                     <div class="text-success">✔ Syntax Check: Passed</div>
                 </div>
             </div>
@@ -41,13 +46,13 @@
     <!-- Bottom Workspace Split (Code Crucible Script Review) -->
     <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 40%;">
         <div class="col-12 h-100 d-flex flex-column">
-            <div class="card border-secondary h-100 bg-black text-light">
-                <div class="card-header py-1 font-monospace small d-flex justify-content-between align-items-center text-purple-emphasis">
-                    <span>🔥 Code Crucible</span>
-                    <button id="forge-deploy" class="btn btn-sm py-0 font-monospace text-white" style="background-color: #6f42c1; font-size: 0.75rem;">Forge & Deploy Changes</button>
+            <div class="card console-panel h-100 text-light d-flex flex-column">
+                <div class="card-header py-1 font-monospace d-flex justify-content-between align-items-center fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #b19ffb;">
+                    <span>CODE_CRUCIBLE</span>
+                    <button id="forge-deploy" class="btn btn-outline-info btn-sm py-0 font-monospace" style="font-size: 0.75rem;">Forge & Deploy Changes</button>
                 </div>
-                <div class="card-body p-2 d-flex flex-column h-100 overflow-hidden">
-                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto font-monospace small scrollable-panel" id="code-viewer"># Wu's code blocks stream here...</pre>
+                <div class="card-body p-2 d-flex flex-column h-100 overflow-hidden bg-transparent flex-grow-1">
+                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto scrollable-panel text-success border border-secondary" id="code-viewer" style="font-size: 0.8rem; background-color: #000000;"># Wu's code blocks stream here...</pre>
                 </div>
             </div>
         </div>

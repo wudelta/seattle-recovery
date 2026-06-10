@@ -11,20 +11,44 @@
 <!-- Unified CSS Assets across individual modules -->
 <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column h-100 w-100 p-2">
+<div class="d-flex flex-column h-100 w-100 p-2" style="background-color: #000000;">
     {% csrf_token %}
-    
-    <!-- SECTION A: DELTA NOTES RUNTIME INTENTION TRACKER TASK PANEL (PRIORITY MOUNT) -->
-    <div class="workspace-section mb-4" id="delta-notes-workspace-container">
-        {% include "aurora/snippets/delta_notes_console_panel.html" %}
+
+    <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
+    <div class="row g-2 mb-2" id="console-control-bar-container">
+        <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
+            <div class="d-flex align-items-center gap-3">
+                <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
+                <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 250px;">
+                    <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
+                    <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
+                </select>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
+                    <span class="text-info me-2 small">SESSION_TIME:</span>
+                    <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
+                    <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- SECTION B: AUTOMATED AI BLUEPRINT FORGE CONSOLE PANEL -->
-    <div class="workspace-section border-top border-secondary pt-3" id="ai-blueprint-workspace-container">
-        {% include "aurora/snippets/blueprint_console_panel.html" %}
+    <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
+    <div class="workspace-viewport w-100 flex-grow-1" id="cockpit-viewport-container">
+        <!-- Standardized View Panes: Unified mount properties with mb-4 cleared -->
+        <div class="workspace-section active-pane" id="delta-notes-workspace-container">
+            {% include "aurora/snippets/delta_notes_console_panel.html" %}
+        </div>
+        
+        <div class="workspace-section d-none style-panel-sync" id="ai-blueprint-workspace-container">
+            {% include "aurora/snippets/blueprint_console_panel.html" %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -39,20 +63,32 @@
 {% block extra_js %}
 <!-- Core AI Blueprint Console Interface Engine Script -->
 <script src="{% static 'aurora/js/console.js' %}"></script>
-
 <!-- Delta Notes Interactive Task Checklist Engine Script -->
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
-
 <script>
 // Use unified jQuery ready gate to completely bypass snippet render timing races
 $(document).ready(function() {
     console.log("[Aurora Cockpit] DOM elements stabilized. Attaching interactive scripts...");
-    
+
+    // Event handler for dynamic workspace switching
+    $('#console-view-selector').on('change', function() {
+        const viewMode = $(this).val();
+        console.log("[Aurora Cockpit] Changing active view focus matrix: " + viewMode);
+
+        if (viewMode === 'delta_notes') {
+            $('#ai-blueprint-workspace-container').addClass('d-none');
+            $('#delta-notes-workspace-container').removeClass('d-none');
+        } else if (viewMode === 'blueprint') {
+            $('#delta-notes-workspace-container').addClass('d-none');
+            $('#ai-blueprint-workspace-container').removeClass('d-none');
+        }
+    });
+
     // Package dynamic framework parameters securely into a local dictionary payload
     const systemEndpoints = {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
     };
-    
+
     // Explicit initialization check for the enclosed workspace engine closure
     if (typeof initDeltaNotesConsole === "function") {
         initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');

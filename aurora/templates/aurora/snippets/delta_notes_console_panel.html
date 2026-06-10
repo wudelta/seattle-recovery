@@ -1,49 +1,67 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/snippets/delta_notes_console_panel.html (PATCH 1 OF 1) -->
-<!-- START: ISOLATED_DELTA_NOTES_INTEGRATION_PANELS -->
+<!-- START: CONSOLIDATED_DELTA_NOTES_INTEGRATION_PANELS -->
 <!-- ====================================================================== -->
-<div class="container-fluid py-2 text-mono" style="font-size: 0.85rem;">
-    <!-- Top Control Bar: Unified Session Interface Configuration -->
-    <div class="row g-2 mb-2">
-        <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-warning">
-            <div class="d-flex align-items-center">
-                <span class="text-warning fw-bold me-3">⚡ DELTA_NOTES:</span>
-                <span class="text-muted me-3">ID: {{ request.user.username }}</span>
-            </div>
-            <div class="d-flex align-items-center">
-                <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center me-3">
-                    <span class="text-info me-2 small">SESSION_TIME:</span>
-                    <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
-                    <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
-                </div>
-                <button id="compile-blueprint-btn" class="btn btn-warning btn-sm py-1 font-monospace fw-bold" style="font-size: 0.8rem;">🚀 Compile to project.md</button>
-            </div>
-        </div>
-    </div>
-
+<div class="w-100 h-100 p-0 text-mono" style="font-size: 0.85rem;">
     <!-- Main Workspace Split -->
-    <div class="row g-2">
-        <!-- Left Column: Fast Note Capture Form -->
-        <div class="col-md-4">
-            <div class="card console-panel h-100">
-                <div class="card-header bg-black text-info border-secondary py-1 fw-bold" style="font-size: 0.8rem;">📥 CAPTURE_INTENTION</div>
-                <div class="card-body p-2">
+    <div class="row gx-2 gy-0 m-0 w-100">
+        <!-- Left Column: Consolidated Note Capture Form and File Compilers -->
+        <div class="col-md-4 ps-0">
+            <div class="card console-panel h-100 border-secondary">
+                <div class="card-header bg-transparent text-info border-secondary py-1 fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    CAPTURE_INTENTION
+                </div>
+                <div class="card-body p-2 bg-transparent">
                     <form id="create-note-form">
+                        {% csrf_token %}
                         <div class="mb-2">
-                            <textarea id="note-text" class="form-control console-input" rows="4" placeholder="Enter target parameter configurations..." required style="font-size: 0.8rem;"></textarea>
+                            <textarea id="note-text" class="form-control console-input text-success border-secondary font-monospace" rows="4" placeholder="Enter target parameter configurations..." required style="font-size: 0.8rem;"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Add to Active Queue</button>
+                        <button type="submit" class="btn btn-outline-info btn-sm w-100 py-1 mb-2" style="font-size: 0.8rem;">Add to Active Queue</button>
                     </form>
+                    
+                    <!-- Relocated Blueprint Compiler Button with matching design parameters -->
+                    <button id="compile-blueprint-btn" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Compile to project.md</button>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Active Queue Checklist Layer -->
-        <div class="col-md-8">
-            {% include "aurora/snippets/notes_queue_panel.html" %}
+        <!-- Right Column Matrix: Split Log Viewports (Unprocessed vs Processed) -->
+        <div class="col-md-8 pe-0">
+            <div class="row gx-2 gy-0 h-100">
+                <!-- Sub-Panel A: Unprocessed Queue Layer -->
+                <div class="col-md-6">
+                    <div class="card console-panel h-100 border-secondary">
+                        <div class="card-header bg-transparent text-success border-secondary py-1 d-flex justify-content-between align-items-center" style="font-size: 0.8rem; letter-spacing: 1px;">
+                            <span class="fw-bold text-uppercase">UNPROCESSED_LOG</span>
+                            <span id="queue-count" class="badge bg-success py-0 px-1">0</span>
+                        </div>
+                        <div class="card-body p-1 bg-transparent">
+                            <div id="notes-container" class="list-group list-group-flush bg-transparent" style="max-height: 55vh; overflow-y: auto;">
+                                <!-- Note entries populate here dynamically via javascript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Panel B: Processed Queue Session Log Layer -->
+                <div class="col-md-6">
+                    <div class="card console-panel h-100 border-secondary">
+                        <div class="card-header bg-transparent border-secondary py-1 d-flex justify-content-between align-items-center" style="font-size: 0.8rem; letter-spacing: 1px;">
+                            <span class="fw-bold text-uppercase" style="color: #6c757d;">PROCESSED_LOG</span>
+                            <span id="processed-count" class="badge bg-secondary py-0 px-1">0</span>
+                        </div>
+                        <div class="card-body p-1 bg-transparent">
+                            <div id="processed-notes-container" class="list-group list-group-flush bg-transparent" style="max-height: 55vh; overflow-y: auto;">
+                                <!-- Completed session history records inject here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <!-- ====================================================================== -->
-<!-- END: ISOLATED_DELTA_NOTES_INTEGRATION_PANELS -->
+<!-- END: CONSOLIDATED_DELTA_NOTES_INTEGRATION_PANELS -->
 <!-- ====================================================================== -->

@@ -1,0 +1,50 @@
+/* ====================================================================== */
+/* FILE: aurora/static/aurora/css/blueprint.css (PATCH 1 OF 1) */
+/* START: HIGH_DENSITY_BLUEPRINT_CONSOLE_AESTHETICS */
+/* ====================================================================== */
+
+/* Mirror the consolidated dark panel depth */
+.style-panel-sync .card.console-panel {
+    background-color: #050505 !important;
+    border: 1px solid #222 !important;
+}
+
+/* Enforce the deep black terminal input layer for the blueprint desk */
+#blueprint-input {
+    background-color: #000000 !important;
+    color: #00ff00 !important;
+    border: 1px solid #444444 !important;
+    font-family: monospace;
+}
+
+/* Match the exact amber glow transition state */
+#blueprint-input:focus {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.3) !important;
+    outline: none;
+}
+
+/* Unified look for streaming data feed boxes */
+#minion-feed, 
+#inspector-output,
+#code-viewer {
+    background-color: #000000 !important;
+    border: 1px solid #222222 !important;
+    font-family: monospace;
+}
+
+/* Custom scrolling typography definitions */
+.scrollable-panel {
+    padding: 8px !important;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+}
+
+/* Code crucible block specific highlight adjustments */
+#code-viewer {
+    color: #39ff14 !important; /* Neon terminal green */
+}
+
+/* ====================================================================== */
+/* END: HIGH_DENSITY_BLUEPRINT_CONSOLE_AESTHETICS */
+/* ====================================================================== */
