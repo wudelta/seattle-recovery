@@ -8,3 +8,4 @@ dead_ends/
 .idea/
 .spyproject/
 staticfiles/
+workspace_telemetry.log
