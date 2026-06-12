@@ -16,6 +16,9 @@ urlpatterns = [
     # 2. THE COCKPIT: Your primary working environment that replaces Spyder tools
     path('console/', views.ConsoleView.as_view(), name='console'),
     
+    # NEW ENDPOINT: Route target pointing directly to your new dev_streamer_api module
+    path('console/run/', api_commands.trigger_pipeline, name='trigger_pipeline'),
+    
     # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
     path('api/command/', api_commands.execute_blueprint_api, name='api_command'),
     

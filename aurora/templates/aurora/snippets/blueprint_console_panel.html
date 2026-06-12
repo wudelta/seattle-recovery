@@ -43,9 +43,22 @@
         </div>
     </div>
 
-    <!-- Bottom Workspace Split (Code Crucible Script Review) -->
+    <!-- Bottom Workspace Split (Telemetry Console & Code Crucible Script Review) -->
     <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 40%;">
-        <div class="col-12 h-100 d-flex flex-column">
+        <!-- PANEL: Workspace Telemetry Stream Deck (Cleaned Header) -->
+        <div class="col-md-4 h-100 d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column">
+                <div class="card-header py-1 font-monospace fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #3bc9db;">
+                    WORKSPACE_TELEMETRY
+                </div>
+                <div class="card-body p-2 d-flex flex-column h-100 overflow-hidden bg-transparent flex-grow-1">
+                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto scrollable-panel text-light border border-secondary" id="telemetry-console" style="font-size: 0.75rem; background-color: #000000; white-space: pre-wrap; line-height: 1.4;">[SYSTEM] Telemetry pipeline online. Monitoring real-time background transactions...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 4: Code Crucible Script Review -->
+        <div class="col-md-8 h-100 d-flex flex-column">
             <div class="card console-panel h-100 text-light d-flex flex-column">
                 <div class="card-header py-1 font-monospace d-flex justify-content-between align-items-center fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #b19ffb;">
                     <span>CODE_CRUCIBLE</span>
