@@ -3,6 +3,7 @@
 # START: PACKAGED_IMPORTS_AND_INPUT_SANITIZATION
 # ======================================================================
 import os
+import sys
 import re
 
 class PageSkeletonBuilder:
@@ -26,21 +27,33 @@ class PageSkeletonBuilder:
     def forge_page(cls, target_app: str, page_name: str, visibility: str) -> dict:
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         if not app or not page:
+            sys.stdout.write("[FORGE_ENGINE] [ERROR] Invalid parameters provided to forge page.\n")
+            sys.stdout.flush()
             return {"status": "error", "message": "Invalid architectural parameters."}
+            
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
         if not os.path.exists(os.path.join(base_dir, app)):
+            sys.stdout.write(f"[FORGE_ENGINE] [ERROR] Target app directory '{app}' does not exist on host.\n")
+            sys.stdout.flush()
             return {"status": "error", "message": f"Target app directory '{app}' does not exist on this machine."}
+            
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
+        
         if os.path.exists(view_file) or os.path.exists(template_file):
+            sys.stdout.write(f"[FORGE_ENGINE] [ERROR] Collision detected: Component '{page}' already exists in app '{app}'.\n")
+            sys.stdout.flush()
             return {"status": "error", "message": f"Collision: Component '{page}' already exists in app '{app}'."}
+            
         base_template_extends = f"{app}/{app}_base.html"
         try:
             # 1. HTML Template Generation with Embedded Comment Anchors
+            sys.stdout.write(f"[FORGE_ENGINE] Writing layout template file artifact: {template_file}\n")
+            sys.stdout.flush()
             os.makedirs(os.path.dirname(template_file), exist_ok=True)
             with open(template_file, 'w') as f:
                 f.write(
@@ -52,10 +65,10 @@ class PageSkeletonBuilder:
                     f'<!-- START: FORGED_UI_CONSOLE_CONTAINER -->\n'
                     f'<!-- ====================================================================== -->\n'
                     f'<div class="d-flex flex-column align-items-center justify-content-center text-center p-5 rounded bg-black" style="min-height: 60vh;">\n'
-                    f'    <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
-                    f'    <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
-                    f'    <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
-                    f'    <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
+                    f'  <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
+                    f'  <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
+                    f'  <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
+                    f'  <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
                     f'</div>\n'
                     f'<!-- ====================================================================== -->\n'
                     f'<!-- END: FORGED_UI_CONSOLE_CONTAINER -->\n'
@@ -71,6 +84,8 @@ class PageSkeletonBuilder:
 # START: CLASS_BASED_VIEW_GENERATION_AND_WHITE_LIST_REGISTRATION
 # ======================================================================
             # 2. Class-Based View Generation with Explicit Module Anchors
+            sys.stdout.write(f"[FORGE_ENGINE] Synthesizing View subclass python module: {view_file}\n")
+            sys.stdout.flush()
             os.makedirs(os.path.dirname(view_file), exist_ok=True)
             with open(view_file, 'w') as f:
                 mixin_import = "from django.contrib.auth.mixins import LoginRequiredMixin\n" if is_private else ""
@@ -101,6 +116,8 @@ class PageSkeletonBuilder:
 
             # 3. Inject to views/__init__.py package whitelist safely
             if os.path.exists(view_init):
+                sys.stdout.write(f"[FORGE_ENGINE] Registering {class_name} to views initialization exports layer: {view_init}\n")
+                sys.stdout.flush()
                 with open(view_init, 'r') as f:
                     content = f.read()
                 import_stmt = f"from .{page}_view import {class_name}\n"
@@ -128,6 +145,8 @@ class PageSkeletonBuilder:
 # ======================================================================
             # 4. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
+                sys.stdout.write(f"[FORGE_ENGINE] Injecting layout routing pathway to URL dispatcher configuration: {urls_file}\n")
+                sys.stdout.flush()
                 with open(urls_file, 'r') as f:
                     urls_content = f.read()
                 if "urlpatterns = [" in urls_content:
@@ -143,6 +162,8 @@ class PageSkeletonBuilder:
                     f.write(urls_content)
 
             # 5. Forged Scoped Unit Test Generation for Component Verification
+            sys.stdout.write(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
+            sys.stdout.flush()
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
             with open(test_file, 'w') as f:
                 expected_status = "302" if is_private else "200"
@@ -185,8 +206,12 @@ class PageSkeletonBuilder:
                     f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
                     f'# ======================================================================\n'
                 )
+            sys.stdout.write(f"[FORGE_ENGINE] SUCCESS: Architectural canvas '{class_name}' successfully compiled.\n")
+            sys.stdout.flush()
             return {"status": "success", "message": f"Successfully forged '{class_name}' inside app '{app}' ({visibility})."}
         except Exception as e:
+            sys.stdout.write(f"[FORGE_ENGINE] [CRITICAL] Compilation exception caught inside forge layer: {str(e)}\n")
+            sys.stdout.flush()
             return {"status": "error", "message": f"Failed to execute forge sequence: {str(e)}"}
 # ======================================================================
 # END: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION
@@ -201,26 +226,40 @@ class PageSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
+        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
+        
         logs = []
+        sys.stdout.write(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
+        sys.stdout.flush()
+        
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted view: {page}_view.py")
+                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Physically erased view controller script: {view_file}\n")
+                sys.stdout.flush()
+                
             if os.path.exists(template_file):
                 os.remove(template_file)
                 logs.append(f"Deleted template: {page}.html")
+                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Physically erased template HTML layout: {template_file}\n")
+                sys.stdout.flush()
+                
             # PRESERVE TEST SUITE INFRASTRUCTURE DURING ACTIVE RUNS
             if os.path.exists(test_file):
                 if "AURORA_TEST_RUNNING" not in os.environ:
                     os.remove(test_file)
                     logs.append(f"Deleted test file: test_page_{page}_{app}.py")
+                    sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
+                    sys.stdout.flush()
                 else:
                     logs.append("Preserved test file context during active test suite execution.")
+                    
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -228,6 +267,9 @@ class PageSkeletonBuilder:
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Scrubbed package exporter.")
+                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Cleaned package whitelist references inside: {view_init}\n")
+                sys.stdout.flush()
+                
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
@@ -235,8 +277,15 @@ class PageSkeletonBuilder:
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
+                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
+                sys.stdout.flush()
+                
+            sys.stdout.write(f"[FORGE_ENGINE] Wipe routing complete for {page}. Status: Success.\n")
+            sys.stdout.flush()
             return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
         except Exception as e:
+            sys.stdout.write(f"[FORGE_ENGINE] [CRITICAL] Wipe failure occurred during unlinking procedure: {str(e)}\n")
+            sys.stdout.flush()
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
 # ======================================================================
 # END: SURGICAL_COMPONENT_PURGE_ROUTINE
