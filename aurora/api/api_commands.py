@@ -4,6 +4,7 @@
 # ======================================================================
 import json
 import os
+import sys
 import threading
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -133,137 +134,172 @@ def execute_blueprint_api(request):
 # FILE: aurora/api/api_commands.py (PATCH 3 OF 5)
 # START: PAGE_BLUEPRINT_FORGE_SUBSYSTEM_ROUTING
 # ======================================================================
-            # SUB-ROUTE A: CORE COMPONENT CANVAS LAYOUT FORGE
-            if action == "/page":
-                if len(parts) < 3:
-                    return JsonResponse({
-                        "status": "success",
-                        "minion_log": "Syntax: /page <app_name> <page_name> [visibility]",
-                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
-                    })
-                app = parts[1].lower().strip()
-                page = parts[2].lower().strip()
-                vis = parts[3].lower().strip() if len(parts) > 3 else "private"
-                c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
-                path = f"templates/{c_app}/{c_page}.html"
-
-                # Direct execution prevents connection drops before broadcasts write to the wire
-                res = PageSkeletonBuilder.forge_page(c_app, c_page, vis)
-                if res.get("status") == "error":
-                    return JsonResponse({
-                        "status": "success",
-                        "minion_log": f"Forge halted: {res.get('message')}",
-                        "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
-                    })
-
-                asset = register_new_component(
-                    path, f"{c_page}_layout", vis, request.user, "COMPILER_MODULE", 
-                    f"Automated layout canvas configuration for {c_app}."
-                )
+        # SUB-ROUTE A: CORE COMPONENT CANVAS LAYOUT FORGE
+        if action == "/page":
+            if len(parts) < 3:
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Graph synchronized).",
-                    "generated_code": f"<!-- Layout located at: {path} -->\n",
-                    "validation": {"valid": True, "errors": [], "warnings": []}
+                    "minion_log": "Syntax: /page <app_name> <page_name> [visibility]",
+                    "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
                 })
+            
+            app = parts[1].lower().strip()
+            page = parts[2].lower().strip()
+            vis = parts[3].lower().strip() if len(parts) > 3 else "private"
+            
+            c_app, c_page, c_name = PageSkeletonBuilder.clean_inputs(app, page)
+            path = f"templates/{c_app}/{c_page}.html"
+            
+            # Seed initialization trace line into the target class buffer space
+            PageSkeletonBuilder.emit_log(f"[INFO] Initializing forge sequence for page layout template: '{path}' [{vis}]\n")
+            
+            # Direct calculation builds layout and fills internal telemetry buffer array
+            res = PageSkeletonBuilder.forge_page(c_app, c_page, vis)
+            
+            # SUCK UP COMPILER BLOCK LOGS INLINE: Read and clear memory cache line entries
+            captured_telemetry_logs = PageSkeletonBuilder.flush_telemetry()
+            
+            if res.get("status") == "error":
+                return JsonResponse({
+                    "status": "success",
+                    "minion_log": f"Forge halted: {res.get('message')}",
+                    "telemetry_stream": captured_telemetry_logs,
+                    "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
+                })
+            
+            asset = register_new_component(
+                path, 
+                f"{c_page}_layout", 
+                vis, 
+                request.user, 
+                "COMPILER_MODULE", 
+                f"Automated layout canvas configuration for {c_app}."
+            )
+            
+            captured_telemetry_logs += f"[SUCCESS] Component system synced! Relational UUID: {str(asset.id)} | Graph network node attached.\n"
+            
+            return JsonResponse({
+                "status": "success",
+                "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Graph synchronized).",
+                "generated_code": f"<!-- Layout located at: {path} -->\n",
+                "telemetry_stream": captured_telemetry_logs,
+                "validation": {"valid": True, "errors": [], "warnings": []}
+            })
 # ======================================================================
-# END: PAGE_BLUEPRINT_FORGE_SUBSYSTEM_ROUTING
+# END: PAGE_BLUEPRINT_FORGE_SUBSYSTEM_ROUTING (PATCH 3 OF 5)
 # ======================================================================
 
 # ======================================================================
 # FILE: aurora/api/api_commands.py (PATCH 4 OF 5)
 # START: UNIVERSAL_OBLITERATOR_ROUTING_AND_LOCK_VERIFICATION
 # ======================================================================
-            # SUB-ROUTE B: FUNCTIONAL API ENDPOINT FORGE
-            elif action == "/api":
-                if len(parts) < 3:
-                    return JsonResponse({
-                        "status": "success",
-                        "minion_log": "Syntax: /api <app_name> <endpoint_name> [visibility]",
-                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
-                    })
-                app = parts[1].lower().strip()
-                endpoint = parts[2].lower().strip()
-                vis = parts[3].lower().strip() if len(parts) > 3 else "private"
-                c_app, c_endpoint, f_name = ApiSkeletonBuilder.clean_inputs(app, endpoint)
-                path = f"{c_app}/api/{c_endpoint}_api.py"
-
-                # Direct synchronous call preserves the ASGI protocol channel mapping
-                res = ApiSkeletonBuilder.forge_api(c_app, c_endpoint, vis)
-                if res.get("status") == "error":
-                    return JsonResponse({
-                        "status": "success",
-                        "minion_log": f"Forge halted: {res.get('message')}",
-                        "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
-                    })
-
-                asset = register_new_component(
-                    path, f"{f_name}", vis, request.user, "ENTRY_POINT", 
-                    f"Automated function-based JSON stream endpoint inside {c_app}/api."
-                )
+        # SUB-ROUTE B: FUNCTIONAL API ENDPOINT FORGE
+        elif action == "/api":
+            if len(parts) < 3:
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Graph synchronized).",
-                    "generated_code": f"# API Path registered: path('api/{c_endpoint}/', api_commands.{f_name})\n",
-                    "validation": {"valid": True, "errors": [], "warnings": []}
+                    "minion_log": "Syntax: /api <app_name> <endpoint_name> [visibility]",
+                    "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
                 })
-
-            # SUB-ROUTE C: UNIVERSAL SURGICAL INFRASTRUCTURE OBLITERATOR
-            elif action == "/destroy":
-                if len(parts) < 3:
-                    return JsonResponse({
-                        "status": "success",
-                        "minion_log": "Syntax: /destroy <app_name> <component_name>",
-                        "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
-                    })
-                app_raw = parts[1].lower().strip()
-                name_raw = parts[2].lower().strip()
-                c_app, c_page, _ = PageSkeletonBuilder.clean_inputs(app_raw, name_raw)
-                _, c_endpoint, f_name = ApiSkeletonBuilder.clean_inputs(app_raw, name_raw)
-                page_path = f"templates/{c_app}/{c_page}.html"
-                api_path = f"{c_app}/api/{c_endpoint}_api.py"
-
-                for target_path in [page_path, api_path]:
-                    try:
-                        asset = ComponentRegistry.objects.get(file_path=target_path)
-                        if asset.locked:
-                            return JsonResponse({
-                                "status": "success",
-                                "minion_log": f"PURGE DENIED: '{name_raw}' path infrastructure is LOCKED.",
-                                "validation": {"valid": True, "errors": [], "warnings": []}
-                            })
-                    except ComponentRegistry.DoesNotExist:
-                        pass
-
-                # Direct execution ensures logs write before the socket closes
-                p_res = PageSkeletonBuilder.purge_page(app_raw, name_raw)
-                a_res = ApiSkeletonBuilder.purge_api(app_raw, name_raw)
-
-                from neomodel import db
-                for target_path in [page_path, api_path]:
-                    try:
-                        db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = $path DETACH DELETE n", {"path": target_path})
-                    except Exception:
-                        pass
-
-                for target_path in [page_path, api_path]:
-                    ComponentRegistry.objects.filter(file_path=target_path).delete()
-
+            
+            app = parts[1].lower().strip()
+            endpoint = parts[2].lower().strip()
+            vis = parts[3].lower().strip() if len(parts) > 3 else "private"
+            
+            c_app, c_endpoint, f_name = ApiSkeletonBuilder.clean_inputs(app, endpoint)
+            path = f"{c_app}/api/{c_endpoint}_api.py"
+            
+            res = ApiSkeletonBuilder.forge_api(c_app, c_endpoint, vis)
+            if res.get("status") == "error":
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"SURGICAL WIPE SUCCESS. Templates: {p_res.get('message')} | APIs: {a_res.get('message')} | Graph Nodes: Erased.",
-                    "generated_code": f"# Erased all local codebase artifacts for: {name_raw}\n",
-                    "validation": {"valid": True, "errors": [], "warnings": []}
+                    "minion_log": f"Forge halted: {res.get('message')}",
+                    "validation": {"valid": False, "errors": [res.get('message')], "warnings": []}
                 })
+            
+            asset = register_new_component(
+                path, 
+                f"{f_name}", 
+                vis, 
+                request.user, 
+                "ENTRY_POINT", 
+                f"Automated function-based JSON stream endpoint inside {c_app}/api."
+            )
+            return JsonResponse({
+                "status": "success",
+                "minion_log": f"FORGE SUCCESS: {res.get('message')} (Postgres UUID: {str(asset.id)} -> Graph synchronized).",
+                "generated_code": f"# API Path registered: path('api/{c_endpoint}/', api_commands.{f_name})\n",
+                "validation": {"valid": True, "errors": [], "warnings": []}
+            })
 
-            elif action.startswith("/"):
+        # SUB-ROUTE C: UNIVERSAL SURGICAL INFRASTRUCTURE OBLITERATOR
+        elif action == "/destroy":
+            if len(parts) < 3:
                 return JsonResponse({
                     "status": "success",
-                    "minion_log": f"Unknown automation instruction: {action}",
-                    "validation": {"valid": True, "errors": [], "warnings": []}
+                    "minion_log": "Syntax: /destroy <app_name> <component_name>",
+                    "validation": {"valid": False, "errors": ["Missing parameters"], "warnings": []}
                 })
+            
+            app_raw = parts[1].lower().strip()
+            name_raw = parts[2].lower().strip()
+            
+            c_app, c_page, _ = PageSkeletonBuilder.clean_inputs(app_raw, name_raw)
+            _, c_endpoint, f_name = ApiSkeletonBuilder.clean_inputs(app_raw, name_raw)
+            
+            page_path = f"templates/{c_app}/{c_page}.html"
+            api_path = f"{c_app}/api/{c_endpoint}_api.py"
+            
+            PageSkeletonBuilder.emit_log(f"[INFO] Initializing obliteration check for asset tracking tree: '{name_raw}'\n")
+            
+            for target_path in [page_path, api_path]:
+                try:
+                    asset = ComponentRegistry.objects.get(file_path=target_path)
+                    if asset.locked:
+                        PageSkeletonBuilder.emit_log(f"[ERROR] Purge denied! Infrastructure asset is locked: {target_path}\n")
+                        return JsonResponse({
+                            "status": "success",
+                            "minion_log": f"PURGE DENIED: '{name_raw}' path infrastructure is LOCKED.",
+                            "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
+                            "validation": {"valid": True, "errors": [], "warnings": []}
+                        })
+                except ComponentRegistry.DoesNotExist:
+                    pass
+
+            PageSkeletonBuilder.emit_log("[INFO] System validation passed. Commencing codebase purge operations...\n")
+            p_res = PageSkeletonBuilder.purge_page(app_raw, name_raw)
+            a_res = ApiSkeletonBuilder.purge_api(app_raw, name_raw)
+            
+            PageSkeletonBuilder.emit_log("[INFO] Detaching and flushing Neo4j network graph context loops...\n")
+            from neomodel import db
+            for target_path in [page_path, api_path]:
+                try:
+                    db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = $path DETACH DELETE n", {"path": target_path})
+                except Exception as e:
+                    PageSkeletonBuilder.emit_log(f"[WARNING] Graph node cleanup anomaly: {str(e)}\n")
+
+            PageSkeletonBuilder.emit_log("[INFO] Purging relational PostgreSQL metadata entries...\n")
+            for target_path in [page_path, api_path]:
+                ComponentRegistry.objects.filter(file_path=target_path).delete()
+                
+            PageSkeletonBuilder.emit_log(f"[SUCCESS] Infrastructure completely obliterated for module component context: '{name_raw}'\n")
+            
+            return JsonResponse({
+                "status": "success",
+                "minion_log": f"SURGICAL WIPE SUCCESS. Templates: {p_res.get('message')} | APIs: {a_res.get('message')} | Graph Nodes: Erased.",
+                "generated_code": f"# Erased all local codebase artifacts for: {name_raw}\n",
+                "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
+                "validation": {"valid": True, "errors": [], "warnings": []}
+            })
+
+        elif action.startswith("/"):
+            return JsonResponse({
+                "status": "success",
+                "minion_log": f"Unknown automation instruction: {action}",
+                "validation": {"valid": True, "errors": [], "warnings": []}
+            })
 # ======================================================================
-# END: UNIVERSAL_OBLITERATOR_ROUTING_AND_LOCK_VERIFICATION
+# END: UNIVERSAL_OBLITERATOR_ROUTING_AND_LOCK_VERIFICATION (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
@@ -272,23 +308,24 @@ def execute_blueprint_api(request):
 # ======================================================================
         # TIER 2: AI INTELLECTUAL ORCHESTRATION GATEWAY (Plain English Pipeline)
         else:
-            send_to_console(f"[INFO] Routing command string to conversational pipeline processing layer...")
             return JsonResponse({
                 "status": "success",
                 "minion_log": "Wu engine is ready. Cloud gateway waiting for plain English commands.",
                 "generated_code": "# Wu Active\n",
+                "telemetry_stream": "[INFO] Routing command string to conversational pipeline processing layer...\n",
                 "validation": {"valid": True, "errors": [], "warnings": []}
             })
             
     except Exception as e:
         error_msg = f"Forge process view fault: {str(e)}"
-        send_to_console(f"[FAIL] Core architectural router exception intercepted: {error_msg}")
+        error_telemetry = f"[CRITICAL] Core architectural router exception intercepted: {error_msg}\n"
         return JsonResponse({
             "status": "success",
             "minion_log": error_msg,
             "generated_code": "",
+            "telemetry_stream": error_telemetry,
             "validation": {"valid": False, "errors": [str(e)], "warnings": []}
         })
 # ======================================================================
-# END: AI_ORCHESTRATION_GATEWAY_AND_EXCEPTION_HANDLER
+# END: AI_ORCHESTRATION_GATEWAY_AND_EXCEPTION_HANDLER (PATCH 5 OF 5)
 # ======================================================================

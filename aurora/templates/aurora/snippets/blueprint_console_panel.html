@@ -3,10 +3,10 @@
 <!-- START: ISOLATED_AI_BLUEPRINT_FORGE_PANELS -->
 <!-- ====================================================================== -->
 <div class="d-flex flex-column h-100 w-100 text-mono" style="font-size: 0.85rem;">
-    <!-- Top Workspace Split (Input, Streaming Logs, System Validation) -->
-    <div class="row console-top-row g-2 mb-2 flex-grow-1 align-items-stretch">
+    <!-- Top Workspace Split (Input, Telemetry Pipeline, Streaming Logs, System Validation) -->
+    <div class="row console-top-row g-2 mb-2 flex-grow-1 align-items-stretch" style="height: 60%; min-height: 0;">
         <!-- Panel 1: Blueprint Desk -->
-        <div class="col-md-4 d-flex flex-column">
+        <div class="col-md-4 d-flex flex-column h-100">
             <div class="card console-panel h-100 text-light d-flex flex-column">
                 <div class="card-header py-1 font-monospace text-info border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     BLUEPRINT_DESK
@@ -18,8 +18,22 @@
             </div>
         </div>
 
-        <!-- Panel 2: Minion Assembly Line -->
-        <div class="col-md-4 d-flex flex-column">
+        <!-- Panel 2: Workspace Telemetry Stream Deck (RELOCATED MIDDLE ROW PANEL) -->
+        <div class="col-md-4 d-flex flex-column h-100" style="max-height: 100%; overflow: hidden;">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #0b0c10;">
+                <div class="card-header py-1 font-monospace fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #3bc9db; background-color: #1f2833;">
+                    WORKSPACE_TELEMETRY
+                </div>
+                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="height: calc(100% - 30px); overflow: hidden;">
+                    <pre class="p-2 mb-0 rounded flex-grow-1 text-light border border-secondary" 
+                         id="telemetry-console" 
+                         style="font-size: 0.75rem; background-color: #000000; white-space: pre-wrap; line-height: 1.4; height: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">[SYSTEM] Telemetry pipeline online. Monitoring real-time background transactions...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Minion Assembly Line -->
+        <div class="col-md-4 d-flex flex-column h-100">
             <div class="card console-panel h-100 text-light d-flex flex-column">
                 <div class="card-header py-1 font-monospace text-warning border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     MINION_ASSEMBLY_LINE
@@ -29,9 +43,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Panel 3: Validation Inspector -->
-        <div class="col-md-4 d-flex flex-column">
+    <!-- Bottom Workspace Split (Validation Inspector & Widescreen Code Crucible Review) -->
+    <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 40%; min-height: 0;">
+        <!-- Panel 4: Validation Inspector -->
+        <div class="col-md-4 h-100 d-flex flex-column">
             <div class="card console-panel h-100 text-light d-flex flex-column">
                 <div class="card-header py-1 font-monospace text-danger border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     VALIDATION_INSPECTOR
@@ -41,23 +58,8 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bottom Workspace Split (Telemetry Console & Code Crucible Script Review) -->
-    <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 40%;">
-        <!-- PANEL: Workspace Telemetry Stream Deck (Cleaned Header) -->
-        <div class="col-md-4 h-100 d-flex flex-column">
-            <div class="card console-panel h-100 text-light d-flex flex-column">
-                <div class="card-header py-1 font-monospace fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #3bc9db;">
-                    WORKSPACE_TELEMETRY
-                </div>
-                <div class="card-body p-2 d-flex flex-column h-100 overflow-hidden bg-transparent flex-grow-1">
-                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto scrollable-panel text-light border border-secondary" id="telemetry-console" style="font-size: 0.75rem; background-color: #000000; white-space: pre-wrap; line-height: 1.4;">[SYSTEM] Telemetry pipeline online. Monitoring real-time background transactions...</pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel 4: Code Crucible Script Review -->
+        <!-- Panel 5: Code Crucible Script Review (WIDESCREEN 8-COLUMN LAYOUT) -->
         <div class="col-md-8 h-100 d-flex flex-column">
             <div class="card console-panel h-100 text-light d-flex flex-column">
                 <div class="card-header py-1 font-monospace d-flex justify-content-between align-items-center fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #b19ffb;">

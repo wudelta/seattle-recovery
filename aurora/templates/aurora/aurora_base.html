@@ -1,82 +1,75 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/aurora_base.html (PATCH 1 OF 1) -->
+<!-- START: GLOBAL_PORTAL_SKELETON_STRUCTURE_VIEWPORT_CLAMP -->
+<!-- ====================================================================== -->
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en" style="height: 100%; overflow: hidden;">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Aurora Portal{% endblock %}</title>
-    <!-- Shared Global Solar Theme Core -->
-    <link rel="stylesheet" href="{% static 'css/solar.bootstrap.min.css' %}">
-    <!-- Child Page Specific CSS Inject Hook -->
-    {% block extra_css %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Aurora Portal{% endblock %}</title>
+  <!-- Shared Global Solar Theme Core -->
+  <link rel="stylesheet" href="{% static 'css/solar.bootstrap.min.css' %}">
+  <!-- Child Page Specific CSS Inject Hook -->
+  {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column" style="min-height: 100vh;">
-
-    <!-- NEW HEADER: Responsive and Fluid -->
-    <header class="container-fluid py-4 px-4 bg-transparent flex-shrink-0">
-        <div class="row align-items-center justify-content-between g-3">
-            
-            <!-- Logo on the left -->
-            <div class="col-auto">
-                <a href="{% url 'aurora:landing' %}" class="d-block">
-                    <img src="{% static 'media/aurora_logo.png' %}" alt="Aurora Portal Logo" style="max-width: 150px; height: auto; border: none;">
-                </a>
-            </div>
-
-            <!-- Centered Container for Title + Tagline -->
-            <div class="col-12 col-md-auto d-flex flex-column flex-md-row align-items-center align-items-md-baseline gap-2 text-center text-md-start">
-                <!-- Main Title -->
-                <h1 class="display-4 style="font-weight: 900; letter-spacing: 1px; line-height: 1;">Aurora</h1>
-                <!-- Tagline -->
-                <span class="h5 text-muted fst-italic mb-0">"You imagine it, we build it"</span>
-            </div>
-
-            <!-- Dynamic Authentication Controls (Replaces the empty balancing column) -->
-            <div class="col-12 col-md-auto d-flex justify-content-center justify-content-md-end align-items-center" style="min-width: 150px;">
-                {% if user.is_authenticated %}
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="text-muted small d-none d-lg-inline">Hello, <strong>{{ user.username }}</strong></span>
-                        <form action="{% url 'aurora:logout' %}" method="post" class="m-0 p-0">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm px-3 shadow-sm">
-                                Log Out
-                            </button>
-                        </form>
-                    </div>
-                {% else %}
-                    <!-- Appended ?next={{ request.path }} to dynamically handle redirects -->
-                    <a href="{% url 'aurora:login' %}?next={{ request.path }}" class="btn btn-primary btn-sm px-3 shadow-sm">
-                        Log In
-                    </a>
-                {% endif %}
-            </div>
-
-        </div>
-    </header>
-
-    <!-- Main Viewport Structural Fluid Grid Container -->
-    <div class="container-fluid d-flex flex-column px-4 pb-4 flex-grow-1" style="overflow-y: auto;">
-        
-        <!-- Dynamic Main Graphic Section for all Child Views -->
-        <main class="flex-grow-1 mb-3" style="position: relative; min-height: 200px;">
-            {% block content %}{% endblock %}
-        </main>
-
-        <!-- Footer tracking parameters across the app platform -->
-        <footer class="pt-2 border-top text-muted flex-shrink-0">
-            <small class="mb-0">&copy; 2026 Aurora Project</small>
-        </footer>
-
+<body class="d-flex flex-column" style="height: 100vh; max-height: 100vh; overflow: hidden; background-color: #000000;">
+  
+  <!-- NEW HEADER: Responsive and Fluid -->
+  <header class="container-fluid py-3 px-4 bg-transparent flex-shrink-0">
+    <div class="row align-items-center justify-content-between g-3">
+      <!-- Logo on the left -->
+      <div class="col-auto">
+        <a href="{% url 'aurora:landing' %}" class="d-block">
+          <img src="{% static 'media/aurora_logo.png' %}" alt="Aurora Portal Logo" style="max-width: 150px; height: auto; border: none;">
+        </a>
+      </div>
+      <!-- Centered Container for Title + Tagline -->
+      <div class="col-12 col-md-auto d-flex flex-column flex-md-row align-items-center align-items-md-baseline gap-2 text-center text-md-start">
+        <!-- Main Title -->
+        <h1 class="display-4 text-light" style="font-weight: 900; letter-spacing: 1px; line-height: 1; margin-bottom: 0;">Aurora</h1>
+        <!-- Tagline -->
+        <span class="h5 text-muted fst-italic mb-0">"You imagine it, we build it"</span>
+      </div>
+      <!-- Dynamic Authentication Controls -->
+      <div class="col-12 col-md-auto d-flex justify-content-center justify-content-md-end align-items-center" style="min-width: 150px;">
+        {% if user.is_authenticated %}
+          <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small d-none d-lg-inline">Hello, <strong>{{ user.username }}</strong></span>
+            <form action="{% url 'aurora:logout' %}" method="post" class="m-0 p-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm px-3 shadow-sm">Log Out</button>
+            </form>
+          </div>
+        {% else %}
+          <a href="{% url 'aurora:login' %}?next={{ request.path }}" class="btn btn-primary btn-sm px-3 shadow-sm">Log In</a>
+        {% endif %}
+      </div>
     </div>
+  </header>
 
-    <!-- Core JavaScript Assets -->
-    <!-- Global Vendor Dependency -->
-    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/vis-network.min.js' %}"></script>
-    
-    <!-- Child Page Specific JS Scripts Inject Hook -->
-    {% block extra_js %}{% endblock %}
+  <!-- Main Viewport Structural Fluid Grid Container -->
+  <!-- FIXED: Changed overflow-y: auto to overflow: hidden and forced height calculation bounds to lock child sizes -->
+  <div class="container-fluid d-flex flex-column px-4 pb-2 flex-grow-1" style="overflow: hidden; height: calc(100% - 90px); min-height: 0;">
+    <!-- Dynamic Main Graphic Section for all Child Views -->
+    <main class="flex-grow-1 d-flex flex-column" style="position: relative; min-height: 0; overflow: hidden;">
+      {% block content %}{% endblock %}
+    </main>
+    <!-- Footer tracking parameters across the app platform -->
+    <footer class="pt-1 border-top border-secondary text-muted flex-shrink-0" style="font-size: 0.75rem;">
+      <small class="mb-0">&copy; 2026 Aurora Project</small>
+    </footer>
+  </div>
 
+  <!-- Core JavaScript Assets -->
+  <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'js/vis-network.min.js' %}"></script>
+  <!-- Child Page Specific JS Scripts Inject Hook -->
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
+<!-- ====================================================================== -->
+<!-- END: GLOBAL_PORTAL_SKELETON_STRUCTURE_VIEWPORT_CLAMP (PATCH 1 OF 1) -->
+<!-- ====================================================================== -->
