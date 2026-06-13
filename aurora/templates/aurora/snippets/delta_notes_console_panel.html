@@ -4,40 +4,40 @@
 <!-- ====================================================================== -->
 <div class="w-100 h-100 p-0 text-mono" style="font-size: 0.85rem;">
     <!-- Main Workspace Split -->
-    <div class="row gx-2 gy-0 m-0 w-100">
+    <div class="row gx-2 gy-0 m-0 w-100 h-100">
         <!-- Left Column: Consolidated Note Capture Form and File Compilers -->
-        <div class="col-md-4 ps-0">
-            <div class="card console-panel h-100 border-secondary">
+        <div class="col-md-4 ps-0 h-100 d-flex flex-column">
+            <div class="card console-panel h-100 border-secondary d-flex flex-column">
                 <div class="card-header bg-transparent text-info border-secondary py-1 fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     CAPTURE_INTENTION
                 </div>
-                <div class="card-body p-2 bg-transparent">
-                    <form id="create-note-form">
+                <div class="card-body p-2 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
+                    <form id="create-note-form" class="d-flex flex-column flex-grow-1 mb-2" style="min-height: 0;">
                         {% csrf_token %}
-                        <div class="mb-2">
-                            <textarea id="note-text" class="form-control console-input text-success border-secondary font-monospace" rows="4" placeholder="Enter target parameter configurations..." required style="font-size: 0.8rem;"></textarea>
+                        <div class="flex-grow-1 mb-2 d-flex flex-column" style="min-height: 0;">
+                            <textarea id="note-text" class="form-control console-input text-success border-secondary font-monospace h-100 flex-grow-1" placeholder="Enter target parameter configurations..." required style="font-size: 0.8rem; background-color: #000000; resize: none;"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-outline-info btn-sm w-100 py-1 mb-2" style="font-size: 0.8rem;">Add to Active Queue</button>
+                        <button type="submit" class="btn btn-outline-info btn-sm w-100 py-2 font-monospace" style="font-size: 0.8rem;">Add to Active Queue</button>
                     </form>
-                    
-                    <!-- Relocated Blueprint Compiler Button with matching design parameters -->
-                    <button id="compile-blueprint-btn" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Compile to project.md</button>
+                    <button id="compile-blueprint-btn" class="btn btn-outline-info btn-sm w-100 py-2 font-monospace" style="font-size: 0.8rem;">Compile to project.md</button>
                 </div>
             </div>
         </div>
 
         <!-- Right Column Matrix: Split Log Viewports (Unprocessed vs Processed) -->
-        <div class="col-md-8 pe-0">
+        <div class="col-md-8 pe-0 h-100">
             <div class="row gx-2 gy-0 h-100">
                 <!-- Sub-Panel A: Unprocessed Queue Layer -->
-                <div class="col-md-6">
-                    <div class="card console-panel h-100 border-secondary">
+                <div class="col-md-6 h-100 d-flex flex-column">
+                    <div class="card console-panel h-100 border-secondary d-flex flex-column">
                         <div class="card-header bg-transparent text-success border-secondary py-1 d-flex justify-content-between align-items-center" style="font-size: 0.8rem; letter-spacing: 1px;">
                             <span class="fw-bold text-uppercase">UNPROCESSED_LOG</span>
                             <span id="queue-count" class="badge bg-success py-0 px-1">0</span>
                         </div>
-                        <div class="card-body p-1 bg-transparent">
-                            <div id="notes-container" class="list-group list-group-flush bg-transparent" style="max-height: 55vh; overflow-y: auto;">
+                        <!-- FIXED: Transformed card-body into a column flex layout that stretches lists -->
+                        <div class="card-body p-1 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
+                            <!-- FIXED: Replaced hardcoded max-height with absolute flex-grow boundaries -->
+                            <div id="notes-container" class="list-group list-group-flush bg-transparent flex-grow-1 overflow-auto" style="height: 100%;">
                                 <!-- Note entries populate here dynamically via javascript -->
                             </div>
                         </div>
@@ -45,14 +45,16 @@
                 </div>
 
                 <!-- Sub-Panel B: Processed Queue Session Log Layer -->
-                <div class="col-md-6">
-                    <div class="card console-panel h-100 border-secondary">
+                <div class="col-md-6 h-100 d-flex flex-column">
+                    <div class="card console-panel h-100 border-secondary d-flex flex-column">
                         <div class="card-header bg-transparent border-secondary py-1 d-flex justify-content-between align-items-center" style="font-size: 0.8rem; letter-spacing: 1px;">
                             <span class="fw-bold text-uppercase" style="color: #6c757d;">PROCESSED_LOG</span>
                             <span id="processed-count" class="badge bg-secondary py-0 px-1">0</span>
                         </div>
-                        <div class="card-body p-1 bg-transparent">
-                            <div id="processed-notes-container" class="list-group list-group-flush bg-transparent" style="max-height: 55vh; overflow-y: auto;">
+                        <!-- FIXED: Transformed card-body into a column flex layout that stretches lists -->
+                        <div class="card-body p-1 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
+                            <!-- FIXED: Replaced hardcoded max-height with absolute flex-grow boundaries -->
+                            <div id="processed-notes-container" class="list-group list-group-flush bg-transparent flex-grow-1 overflow-auto" style="height: 100%;">
                                 <!-- Completed session history records inject here dynamically -->
                             </div>
                         </div>

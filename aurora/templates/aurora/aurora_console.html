@@ -23,7 +23,7 @@
     <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
       <div class="d-flex align-items-center gap-3">
         <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
-        <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;">
+        <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;" disabled>
           <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
           <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
         </select>
@@ -39,8 +39,16 @@
   </div>
 
   <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
-  <!-- FIXED: Enforced min-height: 0 and overflow: hidden to contain the flex child dimensions -->
-  <div class="workspace-viewport w-100 flex-grow-1" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+  <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+    
+    <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
+    <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999;">
+        <!-- FIXED: Scaled maximum width parameter to 480px to make the branding layout 2x larger -->
+        <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 480px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
+        <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Cockpit Matrix Offline</h3>
+        <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace dashboard views.</p>
+    </div>
+
     <!-- Standardized View Panes: Unified mount properties with mb-4 cleared -->
     <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
       {% include "aurora/snippets/delta_notes_console_panel.html" %}
@@ -65,12 +73,20 @@
 <!-- Delta Notes Interactive Task Checklist Engine Script -->
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
 <script>
-  // Use unified jQuery ready gate to completely bypass snippet render timing races
   $(document).ready(function() {
     console.log("[Aurora Cockpit] DOM elements stabilized. Attaching interactive scripts...");
     
+    const $viewSelector = $('#console-view-selector');
+    const $timerToggleBtn = $('#global-timer-toggle-btn');
+    const $timerDisplay = $('#session-timer-display');
+    const $gateOverlay = $('#aurora-cockpit-gate-overlay');
+
+    let sessionActive = false;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+
     // Event handler for dynamic workspace switching
-    $('#console-view-selector').on('change', function() {
+    $viewSelector.on('change', function() {
       const viewMode = $(this).val();
       console.log("[Aurora Cockpit] Changing active view focus matrix: " + viewMode);
       if (viewMode === 'delta_notes') {
@@ -82,12 +98,37 @@
       }
     });
 
-    // Package dynamic framework parameters securely into a local dictionary payload
+    // Session status toggle handler
+    $timerToggleBtn.on('click', function(e) {
+      e.preventDefault();
+      sessionActive = !sessionActive;
+
+      if (sessionActive) {
+        // Activate session layout
+        $viewSelector.prop('disabled', false);
+        $gateOverlay.addClass('d-none');
+        $timerToggleBtn.removeClass('btn-outline-success').addClass('btn-outline-danger').text('Pause Session');
+        
+        timerInterval = setInterval(function() {
+          elapsedSeconds++;
+          const hrs = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
+          const mins = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
+          const secs = String(elapsedSeconds % 60).padStart(2, '0');
+          $timerDisplay.text(`${hrs}:${mins}:${secs}`);
+        }, 1000);
+      } else {
+        // Pause session and return to locked screen state
+        $viewSelector.prop('disabled', true);
+        $gateOverlay.removeClass('d-none');
+        $timerToggleBtn.removeClass('btn-outline-danger').addClass('btn-outline-success').text('Start Session');
+        clearInterval(timerInterval);
+      }
+    });
+
     const systemEndpoints = {
       endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
     };
 
-    // Explicit initialization check for the enclosed workspace engine closure
     if (typeof initDeltaNotesConsole === "function") {
       initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
       console.log("[Aurora Cockpit] Delta Notes click event channels successfully bound.");
