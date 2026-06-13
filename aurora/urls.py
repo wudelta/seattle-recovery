@@ -22,15 +22,17 @@ urlpatterns = [
     # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
     path('api/command/', api_commands.execute_blueprint_api, name='api_command'),
     
+    # FIXED: Direct standalone path for the unlocked components tracking matrix registry endpoint
+    path('api/components/unlocked/', api_commands.unlocked_components_endpoint, name='unlocked_components_registry'),
+    
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(
         template_name='aurora/login.html',
         success_url='/aurora/'
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
-    
     path('api/delta_notes/', api_commands.delta_notes_endpoint, name='delta_notes_endpoint'),
 ]
 # ======================================================================
-# END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES
+# END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES (PATCH 1 OF 1)
 # ======================================================================

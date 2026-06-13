@@ -521,6 +521,33 @@ def execute_blueprint_api(request):
             "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
             "validation": {"valid": False, "errors": [str(e)], "warnings": []}
         })
+
+@csrf_exempt
+@login_required
+def unlocked_components_endpoint(request):
+    """
+    Decoupled standalone registry view managing component tracking records.
+    Operates outside the main execute_blueprint_api string log stream buffer layer.
+    """
+    if request.method == "GET":
+        # FIXED: Corrected ordering field key parameter from created_at to date_created
+        unlocked_assets = ComponentRegistry.objects.filter(locked=False).order_by('-date_created')
+        payload = [{"id": str(asset.id), "name": asset.name, "path": asset.file_path} for asset in unlocked_assets]
+        return JsonResponse({"status": "success", "components": payload})
+        
+    elif request.method == "POST":
+        target_id = request.POST.get("component_id")
+        if target_id:
+            # Mutate row lock status directly in the database
+            ComponentRegistry.objects.filter(id=target_id).update(locked=True)
+            PageSkeletonBuilder.emit_log(f"[SUCCESS] Security state mutated. Locked registry record token UUID: {target_id}\n")
+            return JsonResponse({
+                "status": "success", 
+                "telemetry_stream": PageSkeletonBuilder.flush_telemetry()
+            })
+        return JsonResponse({"status": "error", "message": "Missing component_id parameter."}, status=400)
+        
+    return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 # ======================================================================
 # END: AI_ORCHESTRATION_GATEWAY_AND_EXCEPTION_HANDLER (PATCH 5 OF 5)
 # ======================================================================
