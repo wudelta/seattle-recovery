@@ -7,18 +7,18 @@ import sys
 from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
-    help = "Launches the Daphne ASGI development server with development static asset styling support."
+    help = "Launches the Daphne ASGI development server with absolute project entry routing."
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("🚀 Initializing Daphne ASGI Engine Layer..."))
         self.stdout.write("Target Matrix: core_logic.asgi:application @ 127.0.0.1:8000\n")
         
-        # Cleaned command array containing strictly valid Daphne runtime arguments
+        # FIXED ROUTE ARRAY: Explicitly point Daphne to your actual core_logic/asgi.py application
         cmd = [
             sys.executable, "-m", "daphne",
             "-b", "127.0.0.1",
             "-p", "8000",
-            "core_logic.asgi:application"
+            "core_logic.asgi:application"  # <-- Ensures your URLRouter matrix maps into active memory
         ]
         
         try:

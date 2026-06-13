@@ -1,10 +1,11 @@
 # ======================================================================
-# FILE: aurora/utils/api_skeleton.py (PATCH 1 OF 5)
+# FILE: aurora/utils/api_skeleton.py (PATCH 1 of 5)
 # START: PACKAGED_IMPORTS_AND_INPUT_SANITIZATION
 # ======================================================================
 import os
 import re
-import sys  # Injected for unbuffered runtime STDOUT tracking streams
+import traceback
+from aurora.api.dev_streamer_api import send_to_console
 
 class ApiSkeletonBuilder:
     """Automated multi-app builder and destroyer to forge functional API endpoints with visibility safety."""
@@ -27,31 +28,28 @@ class ApiSkeletonBuilder:
     def forge_api(cls, target_app: str, endpoint_name: str, visibility: str) -> dict:
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         if not app or not endpoint:
-            sys.stdout.write("[FORGE_ENGINE] [ERROR] Invalid parameters provided to forge API.\n")
-            sys.stdout.flush()
+            send_to_console("[FORGE_ENGINE] [FAIL] Invalid parameters provided to forge API.")
             return {"status": "error", "message": "Invalid architectural parameters."}
-            
+
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
+
         if not os.path.exists(os.path.join(base_dir, app)):
-            sys.stdout.write(f"[FORGE_ENGINE] [ERROR] Target app directory '{app}' does not exist on host.\n")
-            sys.stdout.flush()
+            send_to_console(f"[FORGE_ENGINE] [FAIL] Target app directory '{app}' does not exist on host.")
             return {"status": "error", "message": f"Target app directory '{app}' does not exist."}
-            
+
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
-        
+
         if os.path.exists(view_file):
-            sys.stdout.write(f"[FORGE_ENGINE] [ERROR] Collision detected: API Component '{endpoint}' already exists.\n")
-            sys.stdout.flush()
+            send_to_console(f"[FORGE_ENGINE] [FAIL] Collision detected: API Component '{endpoint}' already exists.")
             return {"status": "error", "message": f"Collision: API Component '{endpoint}' already exists."}
-            
+
         try:
             # 1. Generate Function-Based View with Explicit Module Anchors
-            sys.stdout.write(f"[FORGE_ENGINE] Writing endpoint logic script file artifact: {view_file}\n")
-            sys.stdout.flush()
+            send_to_console(f"[INFO] Writing endpoint logic script file artifact: {view_file}")
             os.makedirs(os.path.dirname(view_file), exist_ok=True)
             with open(view_file, 'w') as f:
                 dec_import = "from django.contrib.auth.decorators import login_required\n" if is_private else ""
@@ -91,8 +89,7 @@ class ApiSkeletonBuilder:
 # START: API_PACKAGE_WHITELIST_INJECTION
 # ======================================================================
             # 2. Inject to api/__init__.py whitelist package exporter loop
-            sys.stdout.write(f"[FORGE_ENGINE] Appending API hook function to package exports initialization layer: {view_init}\n")
-            sys.stdout.flush()
+            send_to_console(f"[INFO] Appending API hook function to package exports initialization layer: {view_init}")
             mode = 'r+' if os.path.exists(view_init) else 'w+'
             with open(view_init, mode) as f:
                 content = f.read() if mode == 'r+' else ""
@@ -124,8 +121,7 @@ class ApiSkeletonBuilder:
 # ======================================================================
             # 3. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
-                sys.stdout.write(f"[FORGE_ENGINE] Injecting endpoint routing pathway to URL dispatcher configuration: {urls_file}\n")
-                sys.stdout.flush()
+                send_to_console(f"[INFO] Injecting endpoint routing pathway to URL dispatcher configuration: {urls_file}")
                 with open(urls_file, 'r') as f:
                     urls_content = f.read()
                 # Refactored package alias name from api_views to api_commands
@@ -144,8 +140,7 @@ class ApiSkeletonBuilder:
                     f.write(urls_content)
 
             # 4. Forged API Unit Test Generation for Component Verification
-            sys.stdout.write(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
-            sys.stdout.flush()
+            send_to_console(f"[INFO] Writing automated validation test suite harness: {test_file}")
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
             with open(test_file, 'w') as f:
                 exp_status = "302" if is_private else "200"
@@ -189,12 +184,11 @@ class ApiSkeletonBuilder:
                     f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
                     f'# ======================================================================\n'
                 )
-            sys.stdout.write(f"[FORGE_ENGINE] SUCCESS: Functional API module '{func_name}' successfully compiled.\n")
-            sys.stdout.flush()
+            send_to_console(f"[SUCCESS] Functional API module '{func_name}' successfully compiled.")
             return {"status": "success", "message": f"Successfully forged API function '{func_name}' inside app '{app}/api/' ({visibility})."}
         except Exception as e:
-            sys.stdout.write(f"[FORGE_ENGINE] [CRITICAL] Compilation exception caught inside forge layer: {str(e)}\n")
-            sys.stdout.flush()
+            error_trace = f"[FAIL] Compilation exception caught inside forge layer:\n{traceback.format_exc()}"
+            send_to_console(error_trace)
             return {"status": "error", "message": f"Failed to execute API forge sequence: {str(e)}"}
 # ======================================================================
 # END: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION
@@ -209,33 +203,30 @@ class ApiSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         base_dir = os.getcwd()
-        
+
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
-        
         logs = []
-        sys.stdout.write(f"[FORGE_ENGINE] Initializing surgical wipe operation for API endpoint: {app}/api/{endpoint}_api.py\n")
-        sys.stdout.flush()
-        
+
+        send_to_console(f"[INFO] Initializing surgical wipe operation for API endpoint: {app}/api/{endpoint}_api.py")
+
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted api: {endpoint}_api.py")
-                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Physically erased API core script: {view_file}\n")
-                sys.stdout.flush()
-                
+                send_to_console(f"[INFO] [PURGE] Physically erased API core script: {view_file}")
+
             # PRESERVE TEST SUITE INFRASTRUCTURE DURING ACTIVE RUNS
             if os.path.exists(test_file):
                 if "AURORA_TEST_RUNNING" not in os.environ:
                     os.remove(test_file)
                     logs.append(f"Deleted test file: test_api_{endpoint}_{app}.py")
-                    sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
-                    sys.stdout.flush()
+                    send_to_console(f"[INFO] [PURGE] Physically erased test script module: {test_file}")
                 else:
                     logs.append("Preserved test file context during active test suite execution.")
-                    
+
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -243,9 +234,8 @@ class ApiSkeletonBuilder:
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Scrubbed api package exporter.")
-                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Cleaned API package whitelist references inside: {view_init}\n")
-                sys.stdout.flush()
-                
+                send_to_console(f"[INFO] [PURGE] Cleaned API package whitelist references inside: {view_init}")
+
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
@@ -254,15 +244,14 @@ class ApiSkeletonBuilder:
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
-                sys.stdout.write(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
-                sys.stdout.flush()
-                
-            sys.stdout.write(f"[FORGE_ENGINE] Wipe routing complete for API {endpoint}. Status: Success.\n")
-            sys.stdout.flush()
+                send_to_console(f"[INFO] [PURGE] Cleaned application URL configuration space: {urls_file}")
+
+            send_to_console(f"[SUCCESS] Wipe routine complete for API '{endpoint}'. Status: Success.")
             return {"status": "success", "message": " | ".join(logs) if logs else "No API components found to purge."}
+
         except Exception as e:
-            sys.stdout.write(f"[FORGE_ENGINE] [CRITICAL] Wipe failure occurred during API unlinking procedure: {str(e)}\n")
-            sys.stdout.flush()
+            error_trace = f"[FAIL] Wipe failure occurred during API unlinking procedure:\n{traceback.format_exc()}"
+            send_to_console(error_trace)
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
 # ======================================================================
 # END: SURGICAL_API_COMPONENT_PURGE_ROUTINE

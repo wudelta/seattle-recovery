@@ -1,3 +1,4 @@
+from hopehub import api as api_commands
 from hopehub import api as api_views
 # filepath: hopehub/urls.py
 from django.urls import path
@@ -31,4 +32,5 @@ urlpatterns = [
 
     # Anchor Signature for Aurora Forge Automation Engine (Step 4 Target)
     # Network Routing Minion will append paths directly below this line
+    path('api/mission_statement/', api_commands.mission_statement_endpoint, name='mission_statement_endpoint'),
 ]

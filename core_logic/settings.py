@@ -28,6 +28,7 @@ ALLOWED_HOSTS = ['*']  # Temporarily allow everything to clear the connection pa
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',  # <-- CRITICAL: Placed at the absolute top to handle ASGI network routing
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',
-    'django_neomodel',  # <-- ADDED: Third-party graph extension
+    'django_neomodel',  # <-- Third-party graph extension
     'hopehub',
     'aurora',
 ]
@@ -86,6 +87,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core_logic.wsgi.application'
+ASGI_APPLICATION = 'core_logic.asgi.application'  # <-- ADDED: Explicit async server entry routing path
 # ======================================================================
 # END: MIDDLEWARE PIPELINES, CRISPY UI CONFS, & TEMPLATE LOOPS
 # ======================================================================
@@ -140,6 +142,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = 'media/'
 
@@ -150,6 +153,20 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+# ==============================================================================
+# UNIFIED CENTRALIZED ASYNC BROKER LAYER (REDIS SYSTEM INTEGRATION)
+# ==============================================================================
+# Links HTTP worker view threads, async background loops, and automated test environments 
+# into a single, highly performant native local database port wire.
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 # ======================================================================
 # END: DATA STORES, NEO4J LOOPBACK, COOKIE & STATIC PATH PARAMS
 # ======================================================================
