@@ -80,10 +80,16 @@
     const $timerToggleBtn = $('#global-timer-toggle-btn');
     const $timerDisplay = $('#session-timer-display');
     const $gateOverlay = $('#aurora-cockpit-gate-overlay');
+    const $telemetryConsole = $('#telemetry-console');
 
     let sessionActive = false;
     let timerInterval = null;
     let elapsedSeconds = 0;
+
+    // FIXED: Force the telemetry view text box to display ONLY the correct startup message on load
+    if ($telemetryConsole.length) {
+        $telemetryConsole.text("[SYSTEM] Inline telemetry engine online. Awaiting commands...");
+    }
 
     // Event handler for dynamic workspace switching
     $viewSelector.on('change', function() {

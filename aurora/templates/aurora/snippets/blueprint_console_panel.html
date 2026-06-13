@@ -3,71 +3,88 @@
 <!-- START: ISOLATED_AI_BLUEPRINT_FORGE_PANELS -->
 <!-- ====================================================================== -->
 <div class="d-flex flex-column h-100 w-100 text-mono" style="font-size: 0.85rem;">
-    <!-- Top Workspace Split (Input, Telemetry Pipeline, Streaming Logs, System Validation) -->
-    <div class="row console-top-row g-2 mb-2 flex-grow-1 align-items-stretch" style="height: 60%; min-height: 0;">
-        <!-- Panel 1: Blueprint Desk -->
+    <!-- Top Workspace Split: 3 Containers of Exact Equal Width (4 columns each) -->
+    <div class="row console-top-row g-2 mb-2 flex-grow-1 align-items-stretch" style="height: 50%; min-height: 0;">
+        <!-- Panel 1: Blueprint Desk (Equal 4-Column Width) -->
         <div class="col-md-4 d-flex flex-column h-100">
-            <div class="card console-panel h-100 text-light d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
                 <div class="card-header py-1 font-monospace text-info border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     BLUEPRINT_DESK
                 </div>
-                <div class="card-body d-flex flex-column p-2 bg-transparent flex-grow-1">
-                    <textarea id="blueprint-input" class="form-control console-input flex-grow-1 mb-2" placeholder="Enter plain-English commands for Wu..." style="font-size: 0.8rem;"></textarea>
-                    <button id="submit-blueprint" class="btn btn-outline-info btn-sm w-100 py-1" style="font-size: 0.8rem;">Command</button>
+                <div class="card-body d-flex flex-column p-2 bg-transparent flex-grow-1" style="min-height: 0;">
+                    <textarea id="blueprint-input" class="form-control console-input flex-grow-1 mb-2 text-success font-monospace" placeholder="Enter plain-English commands for Wu..." style="font-size: 0.75rem; background-color: #000000; color: #00ff00; border: 1px solid #444444; resize: none; padding: 8px; box-sizing: border-box;"></textarea>
+                    <button id="submit-blueprint" class="btn btn-outline-info btn-sm w-100 py-1 font-monospace" style="font-size: 0.8rem;">Command</button>
                 </div>
             </div>
         </div>
 
-        <!-- Panel 2: Workspace Telemetry Stream Deck (RELOCATED MIDDLE ROW PANEL) -->
+        <!-- Panel 2: Workspace Telemetry Stream Deck (Equal 4-Column Width) -->
         <div class="col-md-4 d-flex flex-column h-100" style="max-height: 100%; overflow: hidden;">
-            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #0b0c10;">
-                <div class="card-header py-1 font-monospace fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #3bc9db; background-color: #1f2833;">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
+                <div class="card-header py-1 font-monospace fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #3bc9db;">
                     WORKSPACE_TELEMETRY
                 </div>
-                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="height: calc(100% - 30px); overflow: hidden;">
-                    <pre class="p-2 mb-0 rounded flex-grow-1 text-light border border-secondary" 
-                         id="telemetry-console" 
-                         style="font-size: 0.75rem; background-color: #000000; white-space: pre-wrap; line-height: 1.4; height: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">[SYSTEM] Telemetry pipeline online. Monitoring real-time background transactions...</pre>
+                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="overflow: hidden;">
+                    <pre class="p-2 mb-0 rounded flex-grow-1 text-muted font-monospace" id="telemetry-console" style="font-size: 0.75rem; background-color: #000000; white-space: pre-wrap; line-height: 1.4; height: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; border: 1px solid #444444; box-sizing: border-box;">[SYSTEM] Inline telemetry engine online. Awaiting commands...</pre>
                 </div>
             </div>
         </div>
 
-        <!-- Panel 3: Minion Assembly Line -->
+        <!-- Panel 3: Minion Assembly Line (Equal 4-Column Width) -->
         <div class="col-md-4 d-flex flex-column h-100">
-            <div class="card console-panel h-100 text-light d-flex flex-column">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
                 <div class="card-header py-1 font-monospace text-warning border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
                     MINION_ASSEMBLY_LINE
                 </div>
-                <div class="card-body p-2 overflow-auto small scrollable-panel bg-transparent flex-grow-1" id="minion-feed">
-                    <div class="text-muted">[System] Standing by for blueprints...</div>
+                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="overflow: hidden;">
+                    <div class="p-2 rounded flex-grow-1 overflow-auto small font-monospace text-light" id="minion-feed" style="font-size: 0.75rem; background-color: #000000; height: 100%; border: 1px solid #444444; box-sizing: border-box;">
+                        <div class="text-muted">[SYSTEM] Standing by for blueprints...</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Workspace Split (Validation Inspector & Widescreen Code Crucible Review) -->
-    <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 40%; min-height: 0;">
-        <!-- Panel 4: Validation Inspector -->
-        <div class="col-md-4 h-100 d-flex flex-column">
-            <div class="card console-panel h-100 text-light d-flex flex-column">
-                <div class="card-header py-1 font-monospace text-danger border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
-                    VALIDATION_INSPECTOR
+    <!-- Bottom Workspace Split: 3 Containers of Exact Equal Width (4 columns each) -->
+    <div class="row console-bottom-row g-2 flex-shrink-0" style="height: 50%; min-height: 0;">
+        <!-- Panel 4: Unlocked Components Registry Grid (Equal 4-Column Width) -->
+        <div class="col-md-4 h-100 d-flex flex-column" style="max-height: 100%; overflow: hidden;">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
+                <div class="card-header py-1 font-monospace text-success border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    UNLOCKED_COMPONENTS
                 </div>
-                <div class="card-body p-2 overflow-auto small scrollable-panel bg-transparent flex-grow-1" id="inspector-output">
-                    <div class="text-success">✔ Syntax Check: Passed</div>
+                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="overflow: hidden;">
+                    <div class="p-2 rounded flex-grow-1 overflow-auto text-light font-monospace" id="unlocked-components-list" style="font-size: 0.75rem; background-color: #000000; height: 100%; border: 1px solid #444444; box-sizing: border-box;">
+                        <div class="text-muted">[Registry] Standing by for session initialization...</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Panel 5: Code Crucible Script Review (WIDESCREEN 8-COLUMN LAYOUT) -->
-        <div class="col-md-8 h-100 d-flex flex-column">
-            <div class="card console-panel h-100 text-light d-flex flex-column">
+        <!-- Panel 5: Validation Inspector (Equal 4-Column Width) -->
+        <div class="col-md-4 h-100 d-flex flex-column" style="max-height: 100%; overflow: hidden;">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
+                <div class="card-header py-1 font-monospace text-danger border-secondary fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">
+                    VALIDATION_INSPECTOR
+                </div>
+                <div class="card-body p-2 d-flex flex-column bg-transparent flex-grow-1" style="overflow: hidden;">
+                    <div class="p-2 rounded flex-grow-1 overflow-auto small font-monospace text-light" id="inspector-output" style="font-size: 0.75rem; background-color: #000000; height: 100%; border: 1px solid #444444; box-sizing: border-box;">
+                        <!-- FIXED: Removed premature passed text and inserted standard muted grey tracking line -->
+                        <div class="text-muted">[SYSTEM] Standing by for verification sequence...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 6: Code Crucible Script Review (Equal 4-Column Width) -->
+        <div class="col-md-4 h-100 d-flex flex-column" style="max-height: 100%; overflow: hidden;">
+            <div class="card console-panel h-100 text-light d-flex flex-column border-secondary" style="background-color: #050505;">
                 <div class="card-header py-1 font-monospace d-flex justify-content-between align-items-center fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px; color: #b19ffb;">
                     <span>CODE_CRUCIBLE</span>
                     <button id="forge-deploy" class="btn btn-outline-info btn-sm py-0 font-monospace" style="font-size: 0.75rem;">Forge & Deploy Changes</button>
                 </div>
                 <div class="card-body p-2 d-flex flex-column h-100 overflow-hidden bg-transparent flex-grow-1">
-                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto scrollable-panel text-success border border-secondary" id="code-viewer" style="font-size: 0.8rem; background-color: #000000;"># Wu's code blocks stream here...</pre>
+                    <pre class="p-2 mb-0 rounded flex-grow-1 overflow-auto font-monospace text-success" id="code-viewer" style="font-size: 0.75rem; background-color: #000000; border: 1px solid #444444; box-sizing: border-box;"># Wu's code blocks stream here...</pre>
                 </div>
             </div>
         </div>
