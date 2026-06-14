@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/dead_code_isolator.py (COMPLETE COMPONENT)
+# FILE: aurora/utils/dead_code_isolator.py (PATCH 1 OF 1)
 # START: FULL_DEAD_CODE_ISOLATOR_ENGINE
 # ======================================================================
 import os
@@ -23,10 +23,15 @@ class DeadCodeIsolator:
 
         # Step 2: Fetch all tracking records from the relational DB layer
         all_tracked_components = ComponentRegistry.objects.filter(status="ACTIVE")
-
+        
         for component in all_tracked_components:
             # System entry points are entry vectors and must never be pruned
             if component.persona == "ENTRY_POINT":
+                continue
+
+            # DEFENSIVE LAYERING: Immediately capture and skip locked entries during record processing
+            if component.locked:
+                report["skipped_locked_files"].append(component.file_path)
                 continue
 
             try:
@@ -35,14 +40,9 @@ class DeadCodeIsolator:
                 
                 # Check for inbound parent connections (files relying on this asset)
                 incoming_dependencies = graph_node.required_by.all()
-
+                
                 # If no other system assets point to this file, it is an orphan
                 if not incoming_dependencies:
-                    # Defense layer: Respect manual safety flags applied by Delta
-                    if component.locked:
-                        report["skipped_locked_files"].append(component.file_path)
-                        continue
-                    
                     # Apply quarantine state directly to the transactional layer
                     component.status = "STAGED_FOR_DELETION"
                     component.description = (
@@ -52,12 +52,12 @@ class DeadCodeIsolator:
                     )
                     component.save()
                     report["quarantined_files"].append(component.file_path)
-
+                    
             except ComponentNode.DoesNotExist:
                 # Fallback safety handler if a database entry misses its graph bubble
                 continue
 
         return report
 # ======================================================================
-# END: FULL_DEAD_CODE_ISOLATOR_ENGINE
+# END: FULL_DEAD_CODE_ISOLATOR_ENGINE (PATCH 1 OF 1)
 # ======================================================================
