@@ -18,8 +18,8 @@ BANNED_DIRECTORIES = ["venv", ".venv", "site-packages", ".git"]
 # ======================================================================
 def register_new_component(file_path: str, name: str, visibility: str, user_instance: User, persona: str = 'COMPILER_MODULE', description: str = ''):
     """
-    Enforces a strict sandbox guardrail. 
-    Registers component footprints into PostgreSQL linked directly to a verified User object instance.
+    Enforces a strict sandbox guardrail.
+    Registers component footprints into PostgreSQL and recalculates graph network lineages.
     """
     path_parts = file_path.replace("\\", "/").split("/")
     if any(banned in path_parts for banned in BANNED_DIRECTORIES):
@@ -28,20 +28,39 @@ def register_new_component(file_path: str, name: str, visibility: str, user_inst
     clean_visibility = visibility.strip().upper()
     if clean_visibility not in ['PUBLIC', 'PRIVATE']:
         clean_visibility = 'PRIVATE'
-
-    # Commit structural record profile to Postgres with strict developer accountability
+        
+    # 1. Commit structural record profile to Postgres (Triggers the new sync signal)
     postgres_entry = ComponentRegistry.objects.create(
         file_path=file_path,
         name=name,
         persona=persona,
         status='ACTIVE',
         visibility=clean_visibility,
-        locked=False,  # Unlocked by default; modified later via explicit lock commands
-        created_by=user_instance,  # Drops the verified User instance key into the relation
+        locked=False,
+        created_by=user_instance,
         description=description,
         description_audiences=["developers"]
     )
+
+    # 2. FIXED: Trigger real-time AST import parsing and map graph network linkages
+    try:
+        from aurora.utils.ast_scanner import OGMTopographyScanner
+        from aurora.utils.page_skeleton import PageSkeletonBuilder
+
+        PageSkeletonBuilder.emit_log("[FORGE_ENGINE] [AST] Initializing topological dependency resolution scanner pass...\n")
+        
+        # Walk active workspace tree path bounds to build structural link lineages
+        base_project_dir = os.getcwd()
+        scanner = OGMTopographyScanner(base_project_dir)
+        scanner.map_workspace_topography()
+        
+        PageSkeletonBuilder.emit_log("[FORGE_ENGINE] [AST] Graph dependency matrix computation finalized successfully.\n")
+        
+    except Exception as graph_err:
+        from aurora.utils.page_skeleton import PageSkeletonBuilder
+        PageSkeletonBuilder.emit_log(f"[WARNING] AST scanner pass failed to complete graph linkages: {str(graph_err)}\n")
+
     return postgres_entry
 # ======================================================================
-# END: SANDBOX GUARDRAILS & POSTGRES RECORD PROVISIONING
+# END: SANDBOX GUARDRAILS & POSTGRES RECORD PROVISIONING (PATCH 2 OF 2)
 # ======================================================================
