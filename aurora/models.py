@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 3)
+# FILE: aurora/models.py (PATCH 1 OF 4)
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,16 +7,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 3)
+# FILE: aurora/models.py (PATCH 2 OF 4)
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
-    
     PERSONA_CHOICES = [
         ('ENTRY_POINT', 'Entry Point / Execution Vector'),
         ('COMPILER_MODULE', 'Standard Codebase Module'),
@@ -38,9 +37,9 @@ class ComponentRegistry(models.Model):
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
     created_by = models.ForeignKey(
-        User, 
-        on_delete=models.PROTECT, 
-        related_name='forged_assets', 
+        User,
+        on_delete=models.PROTECT,
+        related_name='forged_assets',
         help_text="The authenticated developer who authorized the execution string."
     )
     date_created = models.DateTimeField(auto_now_add=True)
@@ -49,10 +48,9 @@ class ComponentRegistry(models.Model):
         blank=True,
         help_text="Primary unified summary of what this component module executes."
     )
-    
     # Structural Upgrade: Changed default from list to dict for dictionary key value maps
     description_audiences = models.JSONField(
-        default=dict, 
+        default=dict,
         blank=True,
         help_text="Stores segregated documentation data blocks: developer_docs, stakeholder_docs, end_user_docs."
     )
@@ -65,7 +63,6 @@ class ComponentRegistry(models.Model):
         """Helper loop to safely write or update a specific audience documentation block."""
         if not isinstance(self.description_audiences, dict):
             self.description_audiences = {}
-        
         # Available tracks: 'developer_docs', 'stakeholder_docs', 'end_user_docs'
         self.description_audiences[track] = content
         self.save()
@@ -73,11 +70,55 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA
+# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 4)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 3)
+# FILE: aurora/models.py (PATCH 3 OF 4)
+# START: STATIC_CONTENT_AND_DELTA_DIRECTIVES_SCHEMAS
+# ======================================================================
+class StaticContent(models.Model):
+    """Stores the HTML content for informational pages."""
+    component_registry = models.ForeignKey(
+        'ComponentRegistry',
+        on_delete=models.CASCADE,
+        related_name='static_contents',
+        help_text="The parent component registry for this static content."
+    )
+    title = models.CharField(max_length=255, help_text="Title of the informational page.")
+    html_content = models.TextField(help_text="Raw HTML content for the page.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"StaticContent: {self.title} (Parent: {self.component_registry_id})"
+
+
+class DeltaDirectives(models.Model):
+    """Stores constraints and instructions for AI minions."""
+    component_registry = models.ForeignKey(
+        'ComponentRegistry',
+        on_delete=models.CASCADE,
+        related_name='delta_directives',
+        help_text="The parent component registry for these AI directives."
+    )
+    directive_name = models.CharField(max_length=255, help_text="Name or purpose of the directive.")
+    instructions = models.TextField(help_text="Specific prompts or guidelines for the AI.")
+    constraints = models.JSONField(default=dict, blank=True, help_text="Structured boundaries/rules for the AI.")
+    is_active = models.BooleanField(default=True, help_text="Toggle to enable or disable these directives.")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Delta Directives"
+
+    def __str__(self):
+        return f"DeltaDirectives: {self.directive_name} (Parent: {self.component_registry_id})"
+# ======================================================================
+# END: STATIC_CONTENT_AND_DELTA_DIRECTIVES_SCHEMAS (PATCH 3 OF 4)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 4 OF 4)
 # START: DELTA_NOTES_TIMER_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
@@ -85,9 +126,9 @@ class DeltaNotesEntry(models.Model):
     Tracks daily developer intentions, active task execution blocks, and accumulated focus time per session window.
     """
     user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='delta_notes', 
+        User,
+        on_delete=models.CASCADE,
+        related_name='delta_notes',
         help_text="The developer compiling this active workspace iteration note."
     )
     text = models.TextField(blank=False)
@@ -97,12 +138,12 @@ class DeltaNotesEntry(models.Model):
 
     # Timer Core Mechanics:
     total_seconds_logged = models.PositiveIntegerField(
-        default=0, 
+        default=0,
         help_text="Total accumulated active focus time recorded in seconds."
     )
     last_started_at = models.DateTimeField(
-        null=True, 
-        blank=True, 
+        null=True,
+        blank=True,
         help_text="Timestamp when the active session timer toggle was engaged."
     )
 
@@ -114,5 +155,5 @@ class DeltaNotesEntry(models.Model):
     def __str__(self):
         return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
 # ======================================================================
-# END: DELTA_NOTES_TIMER_SCHEMA
+# END: DELTA_NOTES_TIMER_SCHEMA (PATCH 4 OF 4)
 # ======================================================================
