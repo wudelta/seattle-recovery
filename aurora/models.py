@@ -17,8 +17,23 @@ from django.utils import timezone
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
     PERSONA_CHOICES = [
-        ('ENTRY_POINT', 'Entry Point / Execution Vector'),
-        ('COMPILER_MODULE', 'Standard Codebase Module'),
+        ('Core Vectors', [
+            ('ENTRY_POINT', 'Entry Point / Execution Vector'),
+            ('COMPILER_MODULE', 'Standard Codebase Module'),
+        ]),
+        ('Web Assets & Client Interface', [
+            ('UI_LAYOUT', 'UI Layout (.html)'),
+            ('UI_STYLE', 'UI Style (.css)'),
+            ('UI_LOGIC', 'UI Logic (.js)'),
+            ('UI_MEDIA', 'UI Media (.jpeg, .png, etc.)'),
+        ]),
+        ('System Config & Documentation', [
+            ('DOCUMENTATION', 'Documentation (.md, .txt)'),
+            ('CONFIGURATION', 'Configuration Registry (.ini, .yaml, .json)'),
+        ]),
+        ('Logs & Diagnostics', [
+            ('DIAGNOSTIC_LOG', 'System Execution Log (.log)'),
+        ]),
     ]
     STATUS_CHOICES = [
         ('ACTIVE', 'Active Component'),

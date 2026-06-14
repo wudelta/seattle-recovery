@@ -42,6 +42,18 @@ class ComponentRegistryModelTests(TestCase):
         self.assertFalse(entry.locked)
         self.assertEqual(str(entry), "medical_logs [COMPILER_MODULE] - Locked: False")
 
+    def test_new_persona_choices_can_be_saved_successfully(self):
+        """Taxonomy Check: Verify that the new grouped persona keys persist correctly in database."""
+        test_personas = ['UI_LAYOUT', 'UI_STYLE', 'UI_LOGIC', 'UI_MEDIA', 'DOCUMENTATION', 'CONFIGURATION', 'DIAGNOSTIC_LOG']
+        for idx, persona_key in enumerate(test_personas):
+            entry = ComponentRegistry.objects.create(
+                file_path=f"app/test_assets/file_{idx}.ext",
+                name=f"test_asset_{idx}",
+                persona=persona_key,
+                created_by=self.user
+            )
+            self.assertEqual(entry.persona, persona_key)
+
     def test_duplicate_file_paths_are_strictly_blocked_by_database(self):
         """Constraint Check: Unique parameters must trigger IntegrityError on collisions."""
         ComponentRegistry.objects.create(**self.valid_params)
