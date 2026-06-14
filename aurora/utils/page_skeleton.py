@@ -24,8 +24,9 @@ class PageSkeletonBuilder:
         cls._telemetry_buffer = []
         return logs
 
-    @staticmethod
-    def clean_inputs(app_name: str, page_name: str):
+    @classmethod
+    def clean_inputs(cls, app_name: str, page_name: str):
+        """Sanitizes configuration arguments and computes class-based naming conventions."""
         app = re.sub(r'[^a-zA-Z0-9_]', '', app_name.lower().strip())
         page = re.sub(r'[^a-zA-Z0-9_]', '', page_name.lower().strip())
         cls_name = "".join([part.capitalize() for part in page.split("_")]) + "View"
@@ -44,14 +45,14 @@ class PageSkeletonBuilder:
         if not app or not page:
             cls.emit_log("[FORGE_ENGINE] [ERROR] Invalid parameters provided to forge page.\n")
             return {"status": "error", "message": "Invalid architectural parameters."}
-            
+        
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
         
         if not os.path.exists(os.path.join(base_dir, app)):
             cls.emit_log(f"[FORGE_ENGINE] [ERROR] Target app directory '{app}' does not exist on host.\n")
             return {"status": "error", "message": f"Target app directory '{app}' does not exist on this machine."}
-            
+        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
@@ -61,7 +62,7 @@ class PageSkeletonBuilder:
         if os.path.exists(view_file) or os.path.exists(template_file):
             cls.emit_log(f"[FORGE_ENGINE] [ERROR] Collision detected: Component '{page}' already exists in app '{app}'.\n")
             return {"status": "error", "message": f"Collision: Component '{page}' already exists in app '{app}'."}
-            
+        
         base_template_extends = f"{app}/{app}_base.html"
         try:
             # 1. HTML Template Generation with Embedded Comment Anchors
@@ -77,10 +78,10 @@ class PageSkeletonBuilder:
                     f'<!-- START: FORGED_UI_CONSOLE_CONTAINER -->\n'
                     f'<!-- ====================================================================== -->\n'
                     f'<div class="d-flex flex-column align-items-center justify-content-center text-center p-5 rounded bg-black" style="min-height: 60vh;">\n'
-                    f'    <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
-                    f'    <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
-                    f'    <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
-                    f'    <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
+                    f'  <div class="spinner-border text-warning mb-4" role="status" style="width: 3rem; height: 3rem;"></div>\n'
+                    f'  <h2 class="display-5 text-warning font-monospace">🚧 Under Construction ({visibility.upper()}) 🚧</h2>\n'
+                    f'  <p class="lead text-muted font-monospace mt-2">The class-based structure for <strong>{class_name}</strong> has been forged in <strong>{app}</strong>.</p>\n'
+                    f'  <a href="{{{{ return_path }}}}" class="btn btn-outline-warning btn-sm font-monospace mt-3">Return to Dashboard</a>\n'
                     f'</div>\n'
                     f'<!-- ====================================================================== -->\n'
                     f'<!-- END: FORGED_UI_CONSOLE_CONTAINER -->\n'
@@ -151,7 +152,7 @@ class PageSkeletonBuilder:
 
 # ======================================================================
 # FILE: aurora/utils/page_skeleton.py (PATCH 4 OF 5)
-# START: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION
+# START: CLEAN_URL_ROUTING_INJECTION_AND_TEST_GENERATION
 # ======================================================================
             # 4. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
@@ -169,7 +170,7 @@ class PageSkeletonBuilder:
                     urls_content = "urlpatterns = [".join(parts)
                 with open(urls_file, 'w') as f:
                     f.write(urls_content)
-    
+
             # 5. Forged Scoped Unit Test Generation for Component Verification
             cls.emit_log(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
@@ -213,59 +214,34 @@ class PageSkeletonBuilder:
                     f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
                     f'# ======================================================================\n'
                 )
-    
-            # CRITICAL DEBUG: Track down why the graph linkage pass is dropping entries
-            try:
-                from aurora.utils.forge_registry import register_new_component
-                from django.contrib.auth import get_user_model
-                from neomodel import db
-                
-                User_Model = get_user_model()
-                sys_operator = User_Model.objects.filter(is_staff=True).first()
-                rel_view_path = f"{app}/views/{page}_view.py"
-                
-                cls.emit_log(f"[DIAGNOSTIC] Checking target HTML footprint: {template_file}\n")
-                cls.emit_log(f"[DIAGNOSTIC] Checking target Python View footprint: {rel_view_path}\n")
-    
-                # 1. Force register the view module footprint
-                view_asset = register_new_component(
-                    file_path=rel_view_path,
-                    name=f"{page}_view",
-                    visibility=visibility,
-                    user_instance=sys_operator,
-                    persona="CONTROLLER_MODULE",
-                    description=f"Generated view handler engine code module for application context: {app}.",
-                    run_scanner=False
-                )
-                cls.emit_log(f"[DIAGNOSTIC] View script registered in DB with primary key UUID: {view_asset.id}\n")
-    
-                # 2. Directly run a raw Cypher command to completely bypass OGM caching bottlenecks
-                cypher_link_query = """
-                    MATCH (h:ComponentNode {file_path: $html_path})
-                    MATCH (v:ComponentNode {file_path: $view_path})
-                    MERGE (h)-[r:DEPENDS_ON]->(v)
-                    RETURN count(r) as relationship_created
-                """
-                params = {"html_path": template_file, "view_path": rel_view_path}
-                result, meta = db.cypher_query(cypher_link_query, params)
-                
-                cls.emit_log(f"[DIAGNOSTIC] Direct Cypher relationship merge output counter: {result[0][0]}\n")
-                
-                # 3. Fire the general workspace scanner sweep
-                from aurora.utils.ast_scanner import OGMTopographyScanner
-                scanner = OGMTopographyScanner(os.getcwd())
-                scanner.map_workspace_topography()
-                cls.emit_log("[FORGE_ENGINE] Complete multi-track components cataloged. AST topography lines wired up.\n")
-            except Exception as sync_err:
-                cls.emit_log(f"[CRITICAL DIAGNOSTIC ERROR] Graph synchronization stage aborted: {str(sync_err)}\n")
-    
+
+            # Centralization: Register Python View module only.
+            from aurora.utils.forge_registry import register_new_component
+            from django.contrib.auth import get_user_model
+            User_Model = get_user_model()
+            
+            # FIX: Fallback layout protection to prevent null value in "created_by" column during test environments
+            sys_operator = User_Model.objects.filter(is_staff=True).first()
+            if not sys_operator:
+                sys_operator = User_Model.objects.create_user(username="test_forge_operator", is_staff=True)
+
+            rel_view_path = f"{app}/views/{page}_view.py"
+            register_new_component(
+                file_path=rel_view_path,
+                name=f"{page}_view",
+                visibility=visibility,
+                user_instance=sys_operator,
+                persona="CONTROLLER_MODULE",
+                description=f"Generated view handler engine code module for application context: {app}.",
+                run_scanner=False
+            )
             cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Architectural canvas '{class_name}' successfully compiled.\n")
             return {"status": "success", "message": f"Successfully forged '{class_name}' inside app '{app}' ({visibility})."}
         except Exception as e:
             cls.emit_log(f"[FORGE_ENGINE] [CRITICAL] Compilation exception caught inside forge layer: {str(e)}\n")
             return {"status": "error", "message": f"Failed to execute forge sequence: {str(e)}"}
 # ======================================================================
-# END: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION (PATCH 4 OF 5)
+# END: CLEAN_URL_ROUTING_INJECTION_AND_TEST_GENERATION (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
@@ -277,14 +253,15 @@ class PageSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
+        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
         logs = []
-        cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
         
+        cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
@@ -333,7 +310,7 @@ class PageSkeletonBuilder:
                 logs.append("Purged controller view metadata mappings.")
             except Exception as scrub_err:
                 cls.emit_log(f"[WARNING] Database mirror cleanup anomaly: {str(scrub_err)}\n")
-
+                
             cls.emit_log(f"[FORGE_ENGINE] Wipe routing complete for {page}. Status: Success.\n")
             return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
         except Exception as e:
