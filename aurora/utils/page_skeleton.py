@@ -8,7 +8,6 @@ import re
 
 class PageSkeletonBuilder:
     """Automated multi-app builder and destroyer with public/private scoping mechanics."""
-    
     _telemetry_buffer = []
 
     @classmethod
@@ -170,7 +169,7 @@ class PageSkeletonBuilder:
                     urls_content = "urlpatterns = [".join(parts)
                 with open(urls_file, 'w') as f:
                     f.write(urls_content)
-
+    
             # 5. Forged Scoped Unit Test Generation for Component Verification
             cls.emit_log(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
@@ -192,7 +191,6 @@ class PageSkeletonBuilder:
                     f'    def setUp(self):\n'
                     f'        self.test_user = User.objects.create_user(username="test_dev", password="password")\n'
                     f'        self.expected_path = "templates/{app}/{page}.html"\n'
-                    f'        # Enforce graph loopback isolation by clearing unique paths before validation\n'
                     f'        try:\n'
                     f'            db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = \'" + self.expected_path + "\' DETACH DELETE n")\n'
                     f'        except Exception:\n'
@@ -215,6 +213,52 @@ class PageSkeletonBuilder:
                     f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
                     f'# ======================================================================\n'
                 )
+    
+            # CRITICAL DEBUG: Track down why the graph linkage pass is dropping entries
+            try:
+                from aurora.utils.forge_registry import register_new_component
+                from django.contrib.auth import get_user_model
+                from neomodel import db
+                
+                User_Model = get_user_model()
+                sys_operator = User_Model.objects.filter(is_staff=True).first()
+                rel_view_path = f"{app}/views/{page}_view.py"
+                
+                cls.emit_log(f"[DIAGNOSTIC] Checking target HTML footprint: {template_file}\n")
+                cls.emit_log(f"[DIAGNOSTIC] Checking target Python View footprint: {rel_view_path}\n")
+    
+                # 1. Force register the view module footprint
+                view_asset = register_new_component(
+                    file_path=rel_view_path,
+                    name=f"{page}_view",
+                    visibility=visibility,
+                    user_instance=sys_operator,
+                    persona="CONTROLLER_MODULE",
+                    description=f"Generated view handler engine code module for application context: {app}.",
+                    run_scanner=False
+                )
+                cls.emit_log(f"[DIAGNOSTIC] View script registered in DB with primary key UUID: {view_asset.id}\n")
+    
+                # 2. Directly run a raw Cypher command to completely bypass OGM caching bottlenecks
+                cypher_link_query = """
+                    MATCH (h:ComponentNode {file_path: $html_path})
+                    MATCH (v:ComponentNode {file_path: $view_path})
+                    MERGE (h)-[r:DEPENDS_ON]->(v)
+                    RETURN count(r) as relationship_created
+                """
+                params = {"html_path": template_file, "view_path": rel_view_path}
+                result, meta = db.cypher_query(cypher_link_query, params)
+                
+                cls.emit_log(f"[DIAGNOSTIC] Direct Cypher relationship merge output counter: {result[0][0]}\n")
+                
+                # 3. Fire the general workspace scanner sweep
+                from aurora.utils.ast_scanner import OGMTopographyScanner
+                scanner = OGMTopographyScanner(os.getcwd())
+                scanner.map_workspace_topography()
+                cls.emit_log("[FORGE_ENGINE] Complete multi-track components cataloged. AST topography lines wired up.\n")
+            except Exception as sync_err:
+                cls.emit_log(f"[CRITICAL DIAGNOSTIC ERROR] Graph synchronization stage aborted: {str(sync_err)}\n")
+    
             cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Architectural canvas '{class_name}' successfully compiled.\n")
             return {"status": "success", "message": f"Successfully forged '{class_name}' inside app '{app}' ({visibility})."}
         except Exception as e:
@@ -233,13 +277,11 @@ class PageSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
-        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
-        
         logs = []
         cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
         
@@ -281,9 +323,19 @@ class PageSkeletonBuilder:
                 logs.append("Erased url routing node.")
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
                 
+            # Scrub decoupled view controller registrations out of the tracking layer
+            try:
+                from aurora.models import ComponentRegistry
+                from neomodel import db
+                rel_view_path = f"{app}/views/{page}_view.py"
+                ComponentRegistry.objects.filter(file_path=rel_view_path).delete()
+                db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = $path DETACH DELETE n", {"path": rel_view_path})
+                logs.append("Purged controller view metadata mappings.")
+            except Exception as scrub_err:
+                cls.emit_log(f"[WARNING] Database mirror cleanup anomaly: {str(scrub_err)}\n")
+
             cls.emit_log(f"[FORGE_ENGINE] Wipe routing complete for {page}. Status: Success.\n")
             return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
-            
         except Exception as e:
             cls.emit_log(f"[FORGE_ENGINE] [CRITICAL] Wipe failure occurred during unlinking procedure: {str(e)}\n")
             return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
