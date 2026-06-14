@@ -1,13 +1,14 @@
-# ====================================================================== 
-# FILE: aurora/tests/test_api_commands.py (PATCH 1 OF 4) 
-# START: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION 
-# ====================================================================== 
+# ======================================================================
+# FILE: aurora/tests/test_api_commands.py (PATCH 1 OF 4)
+# START: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION
+# ======================================================================
 import json
 import os
 import shutil
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from neomodel import db as neomodel_db # Imported to execute direct cypher isolation flushes
 from aurora.models import ComponentRegistry, DeltaNotesEntry
 
 class ExecuteBlueprintApiTests(TestCase):
@@ -15,6 +16,9 @@ class ExecuteBlueprintApiTests(TestCase):
 
     def setUp(self):
         """Configure clean testing sandboxes, user authentication, and endpoints."""
+        # CONSTRAINT C IMPLEMENTATION: Clear graph residue from prior test execution runs
+        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+
         self.base_dir = os.getcwd()
         self.test_app = "hopehub_sandbox"
         self.client = Client()
@@ -46,6 +50,9 @@ class ExecuteBlueprintApiTests(TestCase):
 
     def tearDown(self):
         """Wipe out simulated codebase additions completely to ensure test isolation."""
+        # CONSTRAINT C IMPLEMENTATION: Flush simulated graph footprints to preserve immaculate state
+        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+
         sandbox_path = os.path.join(self.base_dir, self.test_app)
         if os.path.exists(sandbox_path):
             shutil.rmtree(sandbox_path)
@@ -53,9 +60,9 @@ class ExecuteBlueprintApiTests(TestCase):
         # FIXED: Removed os.remove("project.md"). Instead, only target the isolated sandboxed test artifact.
         if os.path.exists("test_project.md"):
             os.remove("test_project.md")
-# ====================================================================== 
-# END: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION 
-# ====================================================================== 
+# ======================================================================
+# END: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION (PATCH 1 OF 4)
+# ======================================================================
 
 # ======================================================================
 # FILE: aurora/tests/test_api_commands.py (PATCH 2 OF 4)
@@ -86,16 +93,16 @@ class ExecuteBlueprintApiTests(TestCase):
             
         self.assertIn("FORGE SUCCESS", data["minion_log"])
         self.assertTrue(data["validation"]["valid"])
-        
+
         # Verify physical disk write operations inside sandbox folder
         html_path = os.path.join(self.base_dir, self.test_app, 'templates', self.test_app, 'terminal_core.html')
         self.assertTrue(os.path.exists(html_path))
-        
+
         # Verify component database record registration matches path formatting
         db_path = f"templates/{self.test_app}/terminal_core.html"
         self.assertTrue(ComponentRegistry.objects.filter(file_path=db_path).exists())
 # ======================================================================
-# END: GATING CHECKS & DIAGNOSTIC PAGE BLUEPRINT FORGE VALIDATION
+# END: GATING CHECKS & DIAGNOSTIC PAGE BLUEPRINT FORGE VALIDATION (PATCH 2 OF 4)
 # ======================================================================
 
 # ======================================================================
@@ -114,11 +121,11 @@ class ExecuteBlueprintApiTests(TestCase):
             
         self.assertIn("FORGE SUCCESS", data["minion_log"])
         self.assertTrue(data["validation"]["valid"])
-        
+
         # Verify physical disk code placement inside sandbox folder
         api_path = os.path.join(self.base_dir, self.test_app, 'api', 'telemetry_stream_api.py')
         self.assertTrue(os.path.exists(api_path))
-        
+
         # Verify structural registration record exists inside database layer
         db_path = f"{self.test_app}/api/telemetry_stream_api.py"
         self.assertTrue(ComponentRegistry.objects.filter(file_path=db_path).exists())
@@ -130,13 +137,13 @@ class ExecuteBlueprintApiTests(TestCase):
         data = json.loads(response.content.decode('utf-8'))
         self.assertIn("Unknown automation instruction", data["minion_log"])
 # ======================================================================
-# END: API ENDPOINT FORGE SUBSYSTEM DIAGNOSTIC VALIDATION
+# END: API ENDPOINT FORGE SUBSYSTEM DIAGNOSTIC VALIDATION (PATCH 3 OF 4)
 # ======================================================================
 
-# ====================================================================== 
-# FILE: aurora/tests/test_api_commands.py (PATCH 4 OF 4) 
-# START: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS 
-# ====================================================================== 
+# ======================================================================
+# FILE: aurora/tests/test_api_commands.py (PATCH 4 OF 4)
+# START: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS
+# ======================================================================
     def test_destroy_command_wipes_unlocked_assets_completely(self):
         """Verify /destroy sweeps both page and api files along with DB footprints."""
         self.client.post(self.url, {"blueprint": f"/page {self.test_app} data_node public"})
@@ -160,8 +167,13 @@ class ExecuteBlueprintApiTests(TestCase):
         """Verify /destroy safely aborts if an asset is explicitly marked locked."""
         db_path = f"templates/{self.test_app}/secure_vault.html"
         asset = ComponentRegistry.objects.create(
-            file_path=db_path, name="secure_vault", persona="COMPILER_MODULE",
-            status="ACTIVE", visibility="PUBLIC", locked=True, created_by=self.user
+            file_path=db_path,
+            name="secure_vault",
+            persona="COMPILER_MODULE",
+            status="ACTIVE",
+            visibility="PUBLIC",
+            locked=True,
+            created_by=self.user
         )
         html_path = os.path.join(self.base_dir, self.test_app, 'templates', self.test_app, 'secure_vault.html')
         os.makedirs(os.path.dirname(html_path), exist_ok=True)
@@ -191,11 +203,10 @@ class DeltaNotesEndpointTests(TestCase):
         """Verify GET request cleanly segments unprocessed and processed logs."""
         DeltaNotesEntry.objects.create(user=self.user, text="Active Directive Alpha", processed=False)
         DeltaNotesEntry.objects.create(user=self.user, text="Completed Directive Beta", processed=True)
-
+        
         response = self.client.get(self.endpoint_url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        
         self.assertEqual(data["status"], "success")
         self.assertEqual(len(data["unprocessed"]), 1)
         self.assertEqual(len(data["processed"]), 1)
@@ -207,56 +218,51 @@ class DeltaNotesEndpointTests(TestCase):
         self.client.post(self.endpoint_url, {"action": "create_note", "text": "Forced Compilation Layer"})
         note = DeltaNotesEntry.objects.get(user=self.user, text="Forced Compilation Layer")
         self.assertFalse(note.processed)
-
+        
         self.client.post(self.endpoint_url, {"action": "edit_note", "note_id": note.id, "text": "Updated Layer Spec"})
         note.refresh_from_db()
         self.assertEqual(note.text, "Updated Layer Spec")
-
+        
         self.client.post(self.endpoint_url, {"action": "process_note", "note_id": note.id})
         note.refresh_from_db()
         self.assertTrue(note.processed)
-
+        
         self.client.post(self.endpoint_url, {"action": "delete_note", "note_id": note.id})
         self.assertFalse(DeltaNotesEntry.objects.filter(id=note.id).exists())
 
     def test_compile_blueprint_uses_non_destructive_appendation(self):
         """Verify compile action utilizes 'a' mode and inserts timestamp clusters without hurting live files."""
         DeltaNotesEntry.objects.create(user=self.user, text="Surgical Graph Injection Rule", processed=False)
-
-        # FIXED: Initialize and test against an isolated mock target instead of your production file
         test_file = "test_project.md"
         if os.path.exists(test_file):
             os.remove(test_file)
-
+            
         with open(test_file, "w", encoding="utf-8") as f:
             f.write("# Historic Baseline Record Data\n")
-
+            
         from unittest.mock import patch
         import builtins
         real_open = builtins.open
-
-        # Redirect filesystem open commands looking for project.md directly onto our safe test artifact path
+        
         def path_redirector(file, *args, **kwargs):
             if file == "project.md":
                 return real_open(test_file, *args, **kwargs)
             return real_open(file, *args, **kwargs)
-
+            
         with patch('builtins.open', side_effect=path_redirector):
             response = self.client.post(self.endpoint_url, {"action": "compile_blueprint"})
             self.assertEqual(response.status_code, 200)
-        
+            
         with open(test_file, "r", encoding="utf-8") as f:
             content = f.read()
-
-        # Assert data changes hit the sandboxed document file layout safely
+            
         self.assertIn("# Historic Baseline Record Data", content)
         self.assertIn("## Backlog Export Session Cluster", content)
         self.assertIn("* [ ] Surgical Graph Injection Rule", content)
         self.assertTrue(DeltaNotesEntry.objects.filter(user=self.user, processed=False).exists())
-
-        # Safely clean up our mock testing file artifact
+        
         if os.path.exists(test_file):
             os.remove(test_file)
-# ====================================================================== 
-# END: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS 
-# ====================================================================== 
+# ======================================================================
+# END: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS (PATCH 4 OF 4)
+# ======================================================================
