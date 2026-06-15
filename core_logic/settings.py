@@ -13,22 +13,25 @@ from neomodel import config as neomodel_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 env = environ.Env()
-# Reads the local .env file if it exists, but falls back gracefully in production containers
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# FIX: Explicit dual-track path mapping to force load the .env file from the current directory
+env_file_path = os.path.join(BASE_DIR, '.env')
+if not os.path.exists(env_file_path):
+    # Fallback to current working directory if execution occurs via a nested module hook
+    env_file_path = os.path.join(os.getcwd(), '.env')
+
+environ.Env.read_env(env_file_path)
 
 # Now Django reads environment variables seamlessly:
-SECRET_KEY = env('SECRET_KEY')
-
+SECRET_KEY = env('SECRET_KEY', default="django-insecure-fallback-key-token")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = ['*']  # Temporarily allow everything to clear the connection path
+ALLOWED_HOSTS = ['*'] # Temporarily allow everything to clear the connection path
 
 # Application definition
 INSTALLED_APPS = [
-    'daphne',  # <-- CRITICAL: Placed at the absolute top to handle ASGI network routing
+    'daphne', # <-- CRITICAL: Placed at the absolute top to handle ASGI network routing
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,12 +41,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',
-    'django_neomodel',  # <-- Third-party graph extension
+    'django_neomodel', # <-- Third-party graph extension
     'hopehub',
     'aurora',
 ]
 # ======================================================================
-# END: ENVIRONMENT INITIALIZATION & APP MANIFEST REGISTER
+# END: ENVIRONMENT INITIALIZATION & APP MANIFEST REGISTER (PATCH 1 OF 3)
 # ======================================================================
 
 # ======================================================================
@@ -142,7 +145,6 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = 'media/'
 
@@ -157,7 +159,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # ==============================================================================
 # UNIFIED CENTRALIZED ASYNC BROKER LAYER (REDIS SYSTEM INTEGRATION)
 # ==============================================================================
-# Links HTTP worker view threads, async background loops, and automated test environments 
+# Links HTTP worker view threads, async background loops, and automated test environments
 # into a single, highly performant native local database port wire.
 CHANNEL_LAYERS = {
     "default": {
@@ -167,6 +169,11 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# ==============================================================================
+# UNIFIED API ENDPOINT INFERENCE KEYS (GROQ HARDWARE BRIDGE)
+# ==============================================================================
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 # ======================================================================
-# END: DATA STORES, NEO4J LOOPBACK, COOKIE & STATIC PATH PARAMS
+# END: DATA STORES, NEO4J LOOPBACK, COOKIE & STATIC PATH PARAMS (PATCH 3 OF 3)
 # ======================================================================

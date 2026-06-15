@@ -1,9 +1,10 @@
 # ======================================================================
 # FILE: aurora/utils/documenter.py (PATCH 1 OF 1)
-# START: DEEP_DIAGNOSTIC_DOCUMENTER_CRAWLER
+# START: BATCH_PAUSE_THROTTLED_DOCUMENTER_CRAWLER
 # ======================================================================
 import os
 import sys
+import time
 from django.conf import settings
 from aurora.models import ComponentRegistry
 from aurora.minions.engine import MinionRunner
@@ -39,8 +40,8 @@ class WorkspaceDocumenter:
 
     def execute_documentation_sweep(self) -> dict:
         """
-        Orchestrates the workspace crawl loop. Evaluates pre-existing status,
-        runs dual-audience documentation pipelines, and persists values to DB.
+        Orchestrates the workspace crawl loop. Processes records in chunks of 10,
+        pausing for 60 seconds between batches to respect Groq Cloud TPM caps.
         """
         report = {
             "processed_files": [],
@@ -49,15 +50,20 @@ class WorkspaceDocumenter:
         }
         
         active_components = self.get_active_components()
-        self.log(f"🔎 [SWEEP START] Found {active_components.count()} active components to verify.")
+        total_count = active_components.count()
+        self.log(f"🔎 [SWEEP START] Found {total_count} active components to evaluate.")
+
+        processed_in_current_batch = 0
+        current_index = 0
 
         for component in active_components:
+            current_index += 1
             path = component.file_path
-            self.log(f"⚡ Processing component '{component.name}' at path: {path}")
+            self.log(f"⚡ [{current_index}/{total_count}] Evaluating component '{component.name}' at path: {path}")
 
             # 1. Optimization Check: Skip if both doc fields are already filled
             audiences = component.description_audiences or {}
-            if audiences.get("developer_docs") and audiences.get("stakeholder_docs"):
+            if audiences.get("developer_docs") and audiences.get("stakeholder_docs") and component.description:
                 self.log(f"⏩ [SKIP] Complete documentation already exists for: {path}")
                 report["skipped_files"].append(path)
                 continue
@@ -71,32 +77,39 @@ class WorkspaceDocumenter:
 
             try:
                 # 3. Audience Prompt Step 1: Technical Developer Context
-                self.log(f"🤖 [AI RUN] Requesting developer_docs generation via minion_AI_writer...")
+                self.log(f"🤖 [AI RUN] Requesting developer_docs generation...")
                 dev_prompt = f"Analyze this source code module and generate a detailed developer-oriented engineering architecture overview:\n\n{code_content}"
                 dev_docs = self.runner.run_minion_task("minion_AI_writer", dev_prompt)
                 
                 # 4. Audience Prompt Step 2: Non-Technical Stakeholder Context
-                self.log(f"🤖 [AI RUN] Requesting stakeholder_docs generation via minion_AI_writer...")
+                self.log(f"🤖 [AI RUN] Requesting stakeholder_docs generation...")
                 stakeholder_prompt = f"Analyze this source code module and translate its utility into a clean business value overview for non-technical stakeholders:\n\n{code_content}"
                 stakeholder_docs = self.runner.run_minion_task("minion_AI_writer", stakeholder_prompt)
 
-                # DIAGNOSTIC ADALAYER: Force log the direct outputs to expose the exact failure string
+                # Validate execution error payloads from the underlying engine
                 if "Error:" in dev_docs or "Error:" in stakeholder_docs:
-                    self.log(f"🚨 [DIAGNOSTIC TRACE] Dev Output: {dev_docs}")
-                    self.log(f"🚨 [DIAGNOSTIC TRACE] Stakeholder Output: {stakeholder_docs}")
+                    self.log(f"❌ [API FAULT] Engine execution returned an internal error state.")
                     report["failures"].append(path)
                     continue
 
-                # 5. Database Save State: Mutation update and field write tracking
-                self.log(f"💾 [DB WRITE] Appending audience text structures to PostgreSQL schema...")
-                component.description_audiences = {
-                    "developer_docs": dev_docs,
-                    "stakeholder_docs": stakeholder_docs
-                }
-                component.save()
+                # 5. Database Save State: Route text strings to respective model targets
+                self.log(f"💾 [DB WRITE] Saving plain-text overview and rich documentation dictionaries...")
+                component.description = f"Automated engineering profile for module {component.name} handling runtime codebase assets."
+                component.update_audience_docs("developer_docs", dev_docs)
+                component.update_audience_docs("stakeholder_docs", stakeholder_docs)
                 
-                self.log(f"✅ [SUCCESS] Row changes successfully committed to database for: {path}")
+                self.log(f"✅ [SUCCESS] Fields successfully committed for: {path}")
                 report["processed_files"].append(path)
+                
+                # 6. Batch Throttling Engine
+                processed_in_current_batch += 1
+                
+                # If we processed 10 active files, and there are still more records remaining, pause
+                if processed_in_current_batch >= 10 and current_index < total_count:
+                    self.log(f"\n⏳ [BATCH LIMIT REACHED] Processed {processed_in_current_batch} records in this slot.")
+                    self.log("⏸️ Pausing execution loop for 60 seconds to completely refresh your token rate limits...\n")
+                    time.sleep(60)
+                    processed_in_current_batch = 0 # Reset batch counter
 
             except Exception as loop_err:
                 self.log(f"💥 [CRASH] Fatal mutation failure on component loop: {str(loop_err)}")
@@ -111,6 +124,7 @@ class WorkspaceDocumenter:
         """
         try:
             self.log(f"🧹 [DB clean] Wiping documentation fields for: {component.file_path}")
+            component.description = ""
             component.description_audiences = {}
             component.save()
             return True
@@ -118,5 +132,5 @@ class WorkspaceDocumenter:
             self.log(f"❌ [DB clean FAULT] Failed to clear component state: {str(err)}")
             return False
 # ======================================================================
-# END: DEEP_DIAGNOSTIC_DOCUMENTER_CRAWLER
+# END: BATCH_PAUSE_THROTTLED_DOCUMENTER_CRAWLER
 # ======================================================================

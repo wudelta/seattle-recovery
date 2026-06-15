@@ -25,8 +25,76 @@ Development Environment: the project is developed in python using django as the 
 
 Current State: aurora a landing page, login page and a console for development. it also has a robust application skeleton builder that creates either a user interface or a back end api that does the heavy lifting of database queries and delivers a json payload back to the UI. the skeleton builder is accessed through the console and does not rely on AI assistance so it works completely off-line.
 
-Development Constraints: development is being done on an ubuntu laptop with 2 cores and 8GB ram. the project currently has one developer, Delta. this project has a very low budget and can only utilize free, open source software. the project must conform to enterprise architecture and best practices for development. it will use test driven development (TDD) and everything developed will be documented and diagrammed for support and maintenance. there will also be documentation for various non-technical audiences such as users, stakeholders and developers.
+Development Constraints: development is being done on an ubuntu laptop with 2 cores and 8GB ram. the project currently has one developer, Delta. this project has a very low budget and can only utilize free, open source software. the project must conform class DeltaDirectives(models.Model):
+    """
+    Standalone configuration engine storing system instructions, prompts,
+    and model processing boundaries for your AI minion fleet.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    directive_name = models.CharField(
+        max_length=255, 
+        unique=True, 
+        db_index=True,
+        help_text="The system lookup name identifying this minion (e.g., 'minion_AI_writer')."
+    )
+    instructions = models.TextField(help_text="The absolute master system prompt directive for this model.")
+    constraints = models.JSONField(
+        default=dict, 
+        blank=True, 
+        help_text="Stores engine controls like {'model': 'llama-3.1-8b-instant', 'temperature': 0.3}"
+    )
+    is_active = models.BooleanField(default=True, help_text="Toggle to enable or disable this minion profile.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-delta_notes
-delta_project
-delta_directives
+    class Meta:
+        verbose_name = "Delta Directive Profile"
+        verbose_name_plural = "Delta Directive Profiles"
+
+    @classmethod
+    def provision_standard_minions(cls) -> int:
+        """Programmatically seeds the database with default settings for the core minion fleet."""
+        minion_fleet = {
+            "minion_wu": {
+                "instructions": "Act as the master project orchestrator. Parse complex multi-step tasks, evaluate repo requirements, and delegate isolated tasks down to the specialized 8B fleet.",
+                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1}
+            },
+            "minion_UI_layout": {
+                "instructions": "Generate structural layouts. Produce clean, well-formed HTML skeleton layout blocks based on context.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4}
+            },
+            "minion_UI_style": {
+                "instructions": "Generate interface style themes. Output clean utility or custom CSS styling rules.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3}
+            },
+            "minion_UI_logic": {
+                "instructions": "Generate client interactivity. Output pure modern JavaScript block strings code blocks.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2}
+            },
+            "minion_anamod": {
+                "instructions": "Analyze existing repository code modules. Propose clean code modifications or file patches safely.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1}
+            },
+            "minion_AI_writer": {
+                "instructions": "Refactor raw text blocks. Polish clarity, style, documentation records, and structural layout phrasing.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6}
+            }
+        }
+
+        seeded_count = 0
+        for name, data in minion_fleet.items():
+            obj, created = cls.objects.get_or_create(
+                directive_name=name,
+                defaults={
+                    "instructions": data["instructions"],
+                    "constraints": data["constraints"],
+                    "is_active": True
+                }
+            )
+            if created:
+                seeded_count += 1
+        return seeded_count
+
+    def __str__(self):
+        return f"{self.directive_name} [Active: {self.is_active}]"
+
