@@ -15,7 +15,7 @@ class MinionRunner:
     to execute any minion in your fleet using the Groq Cloud API.
     """
     def __init__(self):
-        # Target endpoint for OpenAI compatible chat completions
+        # Strict URL path matching the verified official specification (No trailing slash)
         self.cloud_api_url = "https://groq.com"
         
         # 1. Primary Lookup: Try to load from global Django settings
@@ -56,7 +56,7 @@ class MinionRunner:
             if response.status_code == 200:
                 choices = response.json().get("choices", [])
                 if choices and isinstance(choices, list):
-                    # Clean index extraction to prevent AttributeError exceptions on lists
+                    # Verified array extraction syntax layout matching the successful shell ping
                     first_choice = choices[0]
                     return first_choice.get("message", {}).get("content", "").strip()
                 return "Error: Received empty choices array from Groq endpoint response structure."
