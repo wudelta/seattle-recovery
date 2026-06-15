@@ -125,6 +125,21 @@ class ChildModelsRelationshipTests(TestCase):
         # Cascading Deletion Check
         self.parent_component.delete()
         self.assertEqual(DeltaDirectives.objects.count(), 0)
+
+    def test_provision_standard_minions_seeds_entire_fleet(self):
+        """Factory Check: Verify programmatic minion creation populates all 6 core rows."""
+        minions = DeltaDirectives.provision_standard_minions(self.parent_component)
+        self.assertEqual(len(minions), 6)
+        
+        # Verify specific identities exist
+        names = [m.directive_name for m in minions]
+        self.assertIn("minion_wu", names)
+        self.assertIn("minion_UI_layout", names)
+        self.assertIn("minion_AI_writer", names)
+        
+        # Verify Groq model constraint tagging persisted cleanly
+        wu_minion = DeltaDirectives.objects.get(directive_name="minion_wu")
+        self.assertEqual(wu_minion.constraints["model"], "llama-3.3-70b-versatile")
 # ======================================================================
 # END: CHILD_MODELS_RELATIONSHIP_AND_CONSTRAINTS_TESTS (PATCH 2 OF 2)
 # ======================================================================

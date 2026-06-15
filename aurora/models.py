@@ -126,6 +126,55 @@ class DeltaDirectives(models.Model):
     class Meta:
         verbose_name_plural = "Delta Directives"
 
+    @classmethod
+    def provision_standard_minions(cls, parent_component):
+        """Programmatically registers the core fleet of token-saving Groq/Llama minion profiles."""
+        minion_fleet = [
+            {
+                "directive_name": "minion_wu",
+                "instructions": "Act as the master project orchestrator. Parse complex multi-step tasks, evaluate repo requirements, and delegate isolated tasks down to the specialized 8B fleet.",
+                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1, "role": "orchestrator"}
+            },
+            {
+                "directive_name": "minion_UI_layout",
+                "instructions": "Generate structural layouts. Produce clean, well-formed HTML skeleton layout blocks based on context.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4, "role": "html_generator"}
+            },
+            {
+                "directive_name": "minion_UI_style",
+                "instructions": "Generate interface style themes. Output clean utility or custom CSS styling rules.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3, "role": "css_generator"}
+            },
+            {
+                "directive_name": "minion_UI_logic",
+                "instructions": "Generate client interactivity. Output pure modern JavaScript block strings code blocks.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2, "role": "js_generator"}
+            },
+            {
+                "directive_name": "minion_anamod",
+                "instructions": "Analyze existing repository code modules. Propose clean code modifications or file patches safely.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1, "role": "file_modifier"}
+            },
+            {
+                "directive_name": "minion_AI_writer",
+                "instructions": "Refactor raw text blocks. Polish clarity, style, documentation records, and structural layout phrasing.",
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6, "role": "text_rewriter"}
+            }
+        ]
+        
+        created_instances = []
+        for config in minion_fleet:
+            obj, created = cls.objects.get_or_create(
+                component_registry=parent_component,
+                directive_name=config["directive_name"],
+                defaults={
+                    "instructions": config["instructions"],
+                    "constraints": config["constraints"]
+                }
+            )
+            created_instances.append(obj)
+        return created_instances
+
     def __str__(self):
         return f"DeltaDirectives: {self.directive_name} (Parent: {self.component_registry_id})"
 # ======================================================================
