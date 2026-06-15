@@ -1,6 +1,6 @@
 # ======================================================================
 # FILE: aurora/minions/engine.py (PATCH 1 OF 1)
-# START: COMPLETE_UNIVERSAL_GROQ_FLEET_ENGINE
+# START: CLEAN_UNIVERSAL_GROQ_FLEET_ENGINE
 # ======================================================================
 import os
 import sys
@@ -15,8 +15,8 @@ class MinionRunner:
     to execute any minion in your fleet using the Groq Cloud API.
     """
     def __init__(self):
-        # Strict URL path matching the verified official specification (No trailing slash)
-        self.cloud_api_url = "https://groq.com"
+        # Corrected: Strict official endpoint path with NO trailing slash to prevent 405 errors
+        self.cloud_api_url = "https://api.groq.com/openai/v1/chat/completions"
         
         # 1. Primary Lookup: Try to load from global Django settings
         self.api_key = getattr(settings, "GROQ_API_KEY", "")
@@ -56,7 +56,6 @@ class MinionRunner:
             if response.status_code == 200:
                 choices = response.json().get("choices", [])
                 if choices and isinstance(choices, list):
-                    # Verified array extraction syntax layout matching the successful shell ping
                     first_choice = choices[0]
                     return first_choice.get("message", {}).get("content", "").strip()
                 return "Error: Received empty choices array from Groq endpoint response structure."
@@ -91,5 +90,5 @@ class MinionRunner:
             temperature=temperature
         )
 # ======================================================================
-# END: COMPLETE_UNIVERSAL_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
+# END: CLEAN_UNIVERSAL_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
 # ======================================================================
