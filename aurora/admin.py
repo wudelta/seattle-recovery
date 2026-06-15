@@ -12,16 +12,9 @@ class StaticContentInline(admin.StackedInline):
     fields = ('title', 'html_content')
 
 
-class DeltaDirectivesInline(admin.StackedInline):
-    """Allows editing child AI minion boundaries directly inside the parent Component Profile."""
-    model = DeltaDirectives
-    extra = 1
-    fields = ('directive_name', 'instructions', 'constraints', 'is_active')
-
-
 @admin.register(ComponentRegistry)
 class ComponentRegistryAdmin(admin.ModelAdmin):
-    """Exposes the 65 tracked system assets visually for manual documentation."""
+    """Exposes the tracked system assets visually for manual documentation."""
     # Column views visible directly on your master list index page
     list_display = ('name', 'file_path', 'persona', 'status', 'locked', 'date_modified')
     
@@ -32,8 +25,8 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
     list_filter = ('persona', 'status', 'locked')
     
     # Inline management layout injection for parent-child relationship control
-    inlines = [StaticContentInline, DeltaDirectivesInline]
-
+    inlines = [StaticContentInline]
+    
     # Organize fields inside your visual editor form panel layout cleanly
     fieldsets = (
         ('System Identity Parity Anchors', {
@@ -58,10 +51,26 @@ class StaticContentAdmin(admin.ModelAdmin):
 
 @admin.register(DeltaDirectives)
 class DeltaDirectivesAdmin(admin.ModelAdmin):
-    """Dedicated management grid for standalone AI constraint rule modifications."""
-    list_display = ('directive_name', 'component_registry', 'is_active', 'created_at')
-    search_fields = ('directive_name', 'instructions', 'component_registry__name')
+    """
+    Dedicated management grid for standalone AI constraint rule modifications.
+    Gives you a clean interface to tweak prompts and rules for later expansions.
+    """
+    list_display = ('directive_name', 'is_active', 'created_at', 'updated_at')
+    search_fields = ('directive_name', 'instructions')
     list_filter = ('is_active', 'created_at')
+    
+    # Organizes your dense prompt layouts cleanly within the edit form
+    fieldsets = (
+        ('Minion Core Identity', {
+            'fields': ('directive_name', 'is_active')
+        }),
+        ('Dense AI Prompt Instructions', {
+            'fields': ('instructions',)
+        }),
+        ('Structured Parameter Boundaries & Rules', {
+            'fields': ('constraints',)
+        }),
+    )
 # ======================================================================
 # END: COMPONENT_REGISTRY_ADMIN_REGISTRATION (PATCH 1 OF 1)
 # ======================================================================

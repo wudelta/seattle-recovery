@@ -1,37 +1,47 @@
 # ======================================================================
 # FILE: aurora/minions/engine.py (PATCH 1 OF 1)
-# START: UNIVERSAL_GROQ_FLEET_ENGINE
+# START: COMPLETE_UNIVERSAL_GROQ_FLEET_ENGINE
 # ======================================================================
 import os
 import sys
 import requests
+from django.conf import settings
 from aurora.models import DeltaDirectives
 
 class MinionRunner:
     """
     Universal Cloud-Driven AI Execution Engine.
-    Dynamically loads instructions and parameter limits out of DeltaDirectives
-    rows to execute any minion in your fleet using the Groq Cloud API.
+    Dynamically loads instructions and parameter limits out of DeltaDirectives rows 
+    to execute any minion in your fleet using the Groq Cloud API.
     """
-
     def __init__(self):
-        # Configured to use Groq's standard cloud compatibility layer endpoint
+        # Target endpoint for OpenAI compatible chat completions
         self.cloud_api_url = "https://groq.com"
-        self.api_key = os.environ.get("MINION_CLOUD_API_KEY", "")
+        
+        # 1. Primary Lookup: Try to load from global Django settings
+        self.api_key = getattr(settings, "GROQ_API_KEY", "")
+        
+        # 2. Secondary Lookup: Try standard system environment layout
+        if not self.api_key:
+            self.api_key = os.environ.get("GROQ_API_KEY", "")
+            
+        # 3. Test/TDD Alignment Fallback: Check for custom test harness environment keys
+        if not self.api_key:
+            self.api_key = os.environ.get("MINION_CLOUD_API_KEY", "")
 
     def query_groq_llm(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3) -> str:
         """Sends a structured chat request payload straight to the Groq Gateway."""
         if not self.api_key:
-            sys.stderr.write("[WARNING] Groq API Key (MINION_CLOUD_API_KEY) is missing.\n")
+            sys.stderr.write("[WARNING] Groq API Key (settings.GROQ_API_KEY) is missing.\n")
             return "Error: Groq API Key unassigned."
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-
+        
         payload = {
-            "model": model_tag,  # Dynamic identifier string loaded from DB
+            "model": model_tag,
             "messages": [
                 {"role": "system", "content": system_directive},
                 {"role": "user", "content": user_prompt}
@@ -39,30 +49,37 @@ class MinionRunner:
             "temperature": temperature,
             "stream": False
         }
-
+        
         try:
             response = requests.post(self.cloud_api_url, json=payload, headers=headers, timeout=45)
+            
             if response.status_code == 200:
                 choices = response.json().get("choices", [])
-                if choices:
-                    return choices[0].get("message", {}).get("content", "").strip()
-            else:
-                sys.stderr.write(f"[GROQ API FAULT] Status {response.status_code}: {response.text}\n")
+                if choices and isinstance(choices, list):
+                    # Clean index extraction to prevent AttributeError exceptions on lists
+                    first_choice = choices[0]
+                    return first_choice.get("message", {}).get("content", "").strip()
+                return "Error: Received empty choices array from Groq endpoint response structure."
+            
+            error_msg = f"Error: [GROQ API FAULT] Status {response.status_code}: {response.text}"
+            sys.stderr.write(f"{error_msg}\n")
+            return error_msg
+            
         except requests.exceptions.RequestException as err:
-            sys.stderr.write(f"[CONNECTION ERROR] Groq connection failed: {str(err)}\n")
-        return ""
+            error_catch = f"Error: [CONNECTION ERROR] Groq connection failed: {str(err)}"
+            sys.stderr.write(f"{error_catch}\n")
+            return error_catch
 
     def run_minion_task(self, minion_name: str, task_input: str) -> str:
         """
-        Loads a specific minion row from DeltaDirectives and processes 
-        the target work through its assigned model parameter tag.
+        Loads a specific minion row from DeltaDirectives and processes the target work 
+        through its assigned model parameter tag.
         """
         try:
             directive = DeltaDirectives.objects.get(directive_name=minion_name, is_active=True)
         except DeltaDirectives.DoesNotExist:
             return f"Error: Minion configuration row '{minion_name}' is missing or inactive."
 
-        # Fetch configurations stored in the database fields
         model_tag = directive.constraints.get("model", "llama-3.1-8b-instant")
         temperature = directive.constraints.get("temperature", 0.3)
         system_instructions = directive.instructions
@@ -74,5 +91,5 @@ class MinionRunner:
             temperature=temperature
         )
 # ======================================================================
-# END: UNIVERSAL_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
+# END: COMPLETE_UNIVERSAL_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
 # ======================================================================

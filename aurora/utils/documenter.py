@@ -1,100 +1,122 @@
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 1 OF 2)
-# START: WORKSPACE_CRAWLER_INITIALIZATION_AND_DISK_READER
+# FILE: aurora/utils/documenter.py (PATCH 1 OF 1)
+# START: DEEP_DIAGNOSTIC_DOCUMENTER_CRAWLER
 # ======================================================================
 import os
 import sys
+from django.conf import settings
 from aurora.models import ComponentRegistry
 from aurora.minions.engine import MinionRunner
 
 class WorkspaceDocumenter:
     """
-    Crawls active registered project components, extracts raw source contents, 
-    and leverages the data-driven MinionRunner engine to generate multi-audience documentation.
+    Crawls active registered application modules from disk, passes code to 
+    the Groq fleet AI writer minion, and synchronizes the generated output.
     """
+    def __init__(self, runner=None):
+        self.runner = runner or MinionRunner()
+        # Default fallback stream pointer to stdout if not overridden by the command bridge
+        self.emit_log = lambda text: sys.stdout.write(text)
 
-    def __init__(self, workspace_root: str = "."):
-        self.workspace_root = os.path.abspath(workspace_root)
-        self.runner = MinionRunner()
+    def log(self, message: str):
+        """Helper tool to cleanly format and broadcast tracking feeds."""
+        self.emit_log(f"{message}\n")
 
-    def read_source_code(self, relative_path: str) -> str:
-        """Safely extracts raw source text from the physical filesystem disk track."""
-        full_path = os.path.join(self.workspace_root, relative_path)
-        if not os.path.exists(full_path):
-            sys.stderr.write(f"[DOCUMENTER WARNING] File target missing from disk: {relative_path}\n")
+    def get_active_components(self):
+        """Fetches active workspace components tracked inside the PostgreSQL ledger."""
+        return ComponentRegistry.objects.filter(status="ACTIVE")
+
+    def read_source_code(self, absolute_path: str) -> str:
+        """Safely pulls code text files from disk straight into memory buffers."""
+        if not os.path.exists(absolute_path):
             return ""
         try:
-            with open(full_path, "r", encoding="utf-8") as f:
-                return f.read()
-        except Exception as read_err:
-            sys.stderr.write(f"[DOCUMENTER ERROR] Critical file read failure on {relative_path}: {str(read_err)}\n")
+            with open(absolute_path, "r", encoding="utf-8") as file_stream:
+                return file_stream.read()
+        except Exception as err:
+            self.log(f"⚠️ [FILE READ EXCEPTION] Path {absolute_path}: {str(err)}")
             return ""
-# ======================================================================
-# END: WORKSPACE_CRAWLER_INITIALIZATION_AND_DISK_READER (PATCH 1 OF 2)
-# ======================================================================
 
-# ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 2 OF 2)
-# START: CRAWLER_INFERENCE_LOOP_AND_RELATIONAL_WRITER
-# ======================================================================
     def execute_documentation_sweep(self) -> dict:
         """
-        Discovers all active registered components, filters out fully 
-        documented tracks, and processes targets via the AI writer minion.
+        Orchestrates the workspace crawl loop. Evaluates pre-existing status,
+        runs dual-audience documentation pipelines, and persists values to DB.
         """
-        unprocessed_components = ComponentRegistry.objects.filter(status="ACTIVE")
-        report = {"processed_files": [], "skipped_files": [], "failures": []}
+        report = {
+            "processed_files": [],
+            "skipped_files": [],
+            "failures": []
+        }
+        
+        active_components = self.get_active_components()
+        self.log(f"🔎 [SWEEP START] Found {active_components.count()} active components to verify.")
 
-        for component in unprocessed_components:
-            # Optimization: Skip files that already possess complete dual-track descriptions
-            has_dev = component.description_audiences.get("developer_docs") if isinstance(component.description_audiences, dict) else None
-            has_stake = component.description_audiences.get("stakeholder_docs") if isinstance(component.description_audiences, dict) else None
-            
-            if has_dev and has_stake:
-                report["skipped_files"].append(component.file_path)
+        for component in active_components:
+            path = component.file_path
+            self.log(f"⚡ Processing component '{component.name}' at path: {path}")
+
+            # 1. Optimization Check: Skip if both doc fields are already filled
+            audiences = component.description_audiences or {}
+            if audiences.get("developer_docs") and audiences.get("stakeholder_docs"):
+                self.log(f"⏩ [SKIP] Complete documentation already exists for: {path}")
+                report["skipped_files"].append(path)
                 continue
 
-            raw_code = self.read_source_code(component.file_path)
-            if not raw_code:
-                report["failures"].append(f"{component.file_path} (Empty/Missing)")
+            # 2. File Check: Read source module from disk path
+            code_content = self.read_source_code(path)
+            if not code_content:
+                self.log(f"❌ [FAILURE] Target file missing or empty on disk: {path}")
+                report["failures"].append(path)
                 continue
 
-            # 1. Compile Detailed Technical Developer Prompt
-            dev_prompt = (
-                f"Analyze this source code module text:\n\n{raw_code}\n\n"
-                f"Write a highly detailed technical description for software developers. "
-                f"Focus on syntax logic, import dependencies, and operational responsibilities."
-            )
-            dev_docs = self.runner.run_minion_task("minion_AI_writer", dev_prompt)
+            try:
+                # 3. Audience Prompt Step 1: Technical Developer Context
+                self.log(f"🤖 [AI RUN] Requesting developer_docs generation via minion_AI_writer...")
+                dev_prompt = f"Analyze this source code module and generate a detailed developer-oriented engineering architecture overview:\n\n{code_content}"
+                dev_docs = self.runner.run_minion_task("minion_AI_writer", dev_prompt)
+                
+                # 4. Audience Prompt Step 2: Non-Technical Stakeholder Context
+                self.log(f"🤖 [AI RUN] Requesting stakeholder_docs generation via minion_AI_writer...")
+                stakeholder_prompt = f"Analyze this source code module and translate its utility into a clean business value overview for non-technical stakeholders:\n\n{code_content}"
+                stakeholder_docs = self.runner.run_minion_task("minion_AI_writer", stakeholder_prompt)
 
-            # 2. Compile High-Level Non-Technical Stakeholder Prompt
-            stakeholder_prompt = (
-                f"Analyze this source code module text:\n\n{raw_code}\n\n"
-                f"Write a simple, high-level functional overview for non-technical business stakeholders. "
-                f"Describe what this file achieves in plain English without discussing raw syntax or variables."
-            )
-            stakeholder_docs = self.runner.run_minion_task("minion_AI_writer", stakeholder_prompt)
+                # DIAGNOSTIC ADALAYER: Force log the direct outputs to expose the exact failure string
+                if "Error:" in dev_docs or "Error:" in stakeholder_docs:
+                    self.log(f"🚨 [DIAGNOSTIC TRACE] Dev Output: {dev_docs}")
+                    self.log(f"🚨 [DIAGNOSTIC TRACE] Stakeholder Output: {stakeholder_docs}")
+                    report["failures"].append(path)
+                    continue
 
-            # 3. Securely commit blocks directly to the relational fields
-            if dev_docs and "Error:" not in dev_docs:
-                component.update_audience_docs("developer_docs", dev_docs)
-            if stakeholder_docs and "Error:" not in stakeholder_docs:
-                component.update_audience_docs("stakeholder_docs", stakeholder_docs)
+                # 5. Database Save State: Mutation update and field write tracking
+                self.log(f"💾 [DB WRITE] Appending audience text structures to PostgreSQL schema...")
+                component.description_audiences = {
+                    "developer_docs": dev_docs,
+                    "stakeholder_docs": stakeholder_docs
+                }
+                component.save()
+                
+                self.log(f"✅ [SUCCESS] Row changes successfully committed to database for: {path}")
+                report["processed_files"].append(path)
 
-            report["processed_files"].append(component.file_path)
+            except Exception as loop_err:
+                self.log(f"💥 [CRASH] Fatal mutation failure on component loop: {str(loop_err)}")
+                report["failures"].append(path)
 
         return report
 
-# Standalone execution hook wrapper layer
-if __name__ == "__main__":
-    import django
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core_logic.settings')
-    django.setup()
-    
-    print("🤖 [DOCUMENTER] Initializing automated workspace documentation sweep...")
-    documenter = WorkspaceDocumenter()
-    sweep_report = documenter.execute_documentation_sweep()
-    print(f"📊 [SWEEP COMPLETE] Processed: {len(sweep_report['processed_files'])} | Skipped: {len(sweep_report['skipped_files'])} | Faults: {len(sweep_report['failures'])}")
+    def clear_component_documentation(self, component) -> bool:
+        """
+        Utility maintenance helper to reset the JSON documentation fields 
+        for a targeted component row when forced updates are required.
+        """
+        try:
+            self.log(f"🧹 [DB clean] Wiping documentation fields for: {component.file_path}")
+            component.description_audiences = {}
+            component.save()
+            return True
+        except Exception as err:
+            self.log(f"❌ [DB clean FAULT] Failed to clear component state: {str(err)}")
+            return False
 # ======================================================================
-# END: CRAWLER_INFERENCE_LOOP_AND_RELATIONAL_WRITER (PATCH 2 OF 2)
+# END: DEEP_DIAGNOSTIC_DOCUMENTER_CRAWLER
 # ======================================================================

@@ -90,7 +90,7 @@ class ComponentRegistry(models.Model):
 
 # ======================================================================
 # FILE: aurora/models.py (PATCH 3 OF 4)
-# START: STATIC_CONTENT_AND_DELTA_DIRECTIVES_SCHEMAS
+# START: CLEAN_STATIC_CONTENT_AND_STANDALONE_DIRECTIVES_SCHEMAS
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
@@ -110,75 +110,79 @@ class StaticContent(models.Model):
 
 
 class DeltaDirectives(models.Model):
-    """Stores constraints and instructions for AI minions."""
-    component_registry = models.ForeignKey(
-        'ComponentRegistry',
-        on_delete=models.CASCADE,
-        related_name='delta_directives',
-        help_text="The parent component registry for these AI directives."
+    """
+    Standalone configuration engine storing system instructions, prompts,
+    and model processing boundaries for your AI minion fleet.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    directive_name = models.CharField(
+        max_length=255, 
+        unique=True, 
+        db_index=True,
+        help_text="The system lookup name identifying this minion (e.g., 'minion_AI_writer')."
     )
-    directive_name = models.CharField(max_length=255, help_text="Name or purpose of the directive.")
-    instructions = models.TextField(help_text="Specific prompts or guidelines for the AI.")
-    constraints = models.JSONField(default=dict, blank=True, help_text="Structured boundaries/rules for the AI.")
-    is_active = models.BooleanField(default=True, help_text="Toggle to enable or disable these directives.")
+    instructions = models.TextField(help_text="The absolute master system prompt directive for this model.")
+    constraints = models.JSONField(
+        default=dict, 
+        blank=True, 
+        help_text="Stores engine controls like {'model': 'llama-3.1-8b-instant', 'temperature': 0.3}"
+    )
+    is_active = models.BooleanField(default=True, help_text="Toggle to enable or disable this minion profile.")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = "Delta Directives"
+        verbose_name = "Delta Directive Profile"
+        verbose_name_plural = "Delta Directive Profiles"
 
     @classmethod
-    def provision_standard_minions(cls, parent_component):
-        """Programmatically registers the core fleet of token-saving Groq/Llama minion profiles."""
-        minion_fleet = [
-            {
-                "directive_name": "minion_wu",
+    def provision_standard_minions(cls) -> int:
+        """Programmatically seeds the database with default settings for the core minion fleet."""
+        minion_fleet = {
+            "minion_wu": {
                 "instructions": "Act as the master project orchestrator. Parse complex multi-step tasks, evaluate repo requirements, and delegate isolated tasks down to the specialized 8B fleet.",
-                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1, "role": "orchestrator"}
+                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1}
             },
-            {
-                "directive_name": "minion_UI_layout",
+            "minion_UI_layout": {
                 "instructions": "Generate structural layouts. Produce clean, well-formed HTML skeleton layout blocks based on context.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4, "role": "html_generator"}
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4}
             },
-            {
-                "directive_name": "minion_UI_style",
+            "minion_UI_style": {
                 "instructions": "Generate interface style themes. Output clean utility or custom CSS styling rules.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3, "role": "css_generator"}
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3}
             },
-            {
-                "directive_name": "minion_UI_logic",
+            "minion_UI_logic": {
                 "instructions": "Generate client interactivity. Output pure modern JavaScript block strings code blocks.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2, "role": "js_generator"}
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2}
             },
-            {
-                "directive_name": "minion_anamod",
+            "minion_anamod": {
                 "instructions": "Analyze existing repository code modules. Propose clean code modifications or file patches safely.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1, "role": "file_modifier"}
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1}
             },
-            {
-                "directive_name": "minion_AI_writer",
+            "minion_AI_writer": {
                 "instructions": "Refactor raw text blocks. Polish clarity, style, documentation records, and structural layout phrasing.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6, "role": "text_rewriter"}
+                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6}
             }
-        ]
-        
-        created_instances = []
-        for config in minion_fleet:
+        }
+
+        seeded_count = 0
+        for name, data in minion_fleet.items():
             obj, created = cls.objects.get_or_create(
-                component_registry=parent_component,
-                directive_name=config["directive_name"],
+                directive_name=name,
                 defaults={
-                    "instructions": config["instructions"],
-                    "constraints": config["constraints"]
+                    "instructions": data["instructions"],
+                    "constraints": data["constraints"],
+                    "is_active": True
                 }
             )
-            created_instances.append(obj)
-        return created_instances
+            if created:
+                seeded_count += 1
+        return seeded_count
 
     def __str__(self):
-        return f"DeltaDirectives: {self.directive_name} (Parent: {self.component_registry_id})"
+        return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: STATIC_CONTENT_AND_DELTA_DIRECTIVES_SCHEMAS (PATCH 3 OF 4)
+# END: CLEAN_STATIC_CONTENT_AND_STANDALONE_DIRECTIVES_SCHEMAS (PATCH 3 OF 4)
 # ======================================================================
 
 # ======================================================================
