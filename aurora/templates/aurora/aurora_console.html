@@ -44,7 +44,7 @@
     <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
     <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999;">
         <!-- FIXED: Scaled maximum width parameter to 480px to make the branding layout 2x larger -->
-        <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 480px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
+        <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
         <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Cockpit Matrix Offline</h3>
         <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace dashboard views.</p>
     </div>
@@ -74,63 +74,6 @@
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
 <script>
   $(document).ready(function() {
-    console.log("[Aurora Cockpit] DOM elements stabilized. Attaching interactive scripts...");
-    
-    const $viewSelector = $('#console-view-selector');
-    const $timerToggleBtn = $('#global-timer-toggle-btn');
-    const $timerDisplay = $('#session-timer-display');
-    const $gateOverlay = $('#aurora-cockpit-gate-overlay');
-    const $telemetryConsole = $('#telemetry-console');
-
-    let sessionActive = false;
-    let timerInterval = null;
-    let elapsedSeconds = 0;
-
-    // FIXED: Force the telemetry view text box to display ONLY the correct startup message on load
-    if ($telemetryConsole.length) {
-        $telemetryConsole.text("[SYSTEM] Inline telemetry engine online. Awaiting commands...");
-    }
-
-    // Event handler for dynamic workspace switching
-    $viewSelector.on('change', function() {
-      const viewMode = $(this).val();
-      console.log("[Aurora Cockpit] Changing active view focus matrix: " + viewMode);
-      if (viewMode === 'delta_notes') {
-        $('#ai-blueprint-workspace-container').addClass('d-none');
-        $('#delta-notes-workspace-container').removeClass('d-none');
-      } else if (viewMode === 'blueprint') {
-        $('#delta-notes-workspace-container').addClass('d-none');
-        $('#ai-blueprint-workspace-container').removeClass('d-none');
-      }
-    });
-
-    // Session status toggle handler
-    $timerToggleBtn.on('click', function(e) {
-      e.preventDefault();
-      sessionActive = !sessionActive;
-
-      if (sessionActive) {
-        // Activate session layout
-        $viewSelector.prop('disabled', false);
-        $gateOverlay.addClass('d-none');
-        $timerToggleBtn.removeClass('btn-outline-success').addClass('btn-outline-danger').text('Pause Session');
-        
-        timerInterval = setInterval(function() {
-          elapsedSeconds++;
-          const hrs = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
-          const mins = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
-          const secs = String(elapsedSeconds % 60).padStart(2, '0');
-          $timerDisplay.text(`${hrs}:${mins}:${secs}`);
-        }, 1000);
-      } else {
-        // Pause session and return to locked screen state
-        $viewSelector.prop('disabled', true);
-        $gateOverlay.removeClass('d-none');
-        $timerToggleBtn.removeClass('btn-outline-danger').addClass('btn-outline-success').text('Start Session');
-        clearInterval(timerInterval);
-      }
-    });
-
     const systemEndpoints = {
       endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
     };
@@ -138,8 +81,6 @@
     if (typeof initDeltaNotesConsole === "function") {
       initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
       console.log("[Aurora Cockpit] Delta Notes click event channels successfully bound.");
-    } else {
-      console.error("[Aurora Cockpit] Architectural error: initDeltaNotesConsole function unresolved.");
     }
   });
 </script>

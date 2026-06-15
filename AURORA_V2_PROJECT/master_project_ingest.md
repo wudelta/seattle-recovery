@@ -64,7 +64,7 @@ To prevent network drops, token bloating, and source file truncation under low-b
 # ======================================================================
 [Fully indented, functional python/html/javascript code block]
 # ======================================================================
-# END: [DESCRIPTIVE_SEGMENT_HEADING]
+# END: [DESCRIPTIVE_SEGMENT_HEADING] (PATCH X OF Y)
 # ======================================================================
 ```
 
@@ -79,15 +79,7 @@ To prevent network drops, token bloating, and source file truncation under low-b
 
 ---
 
-## 4. DOCUMENTATION STRATEGY MATRIX
-All assets produced under the project lifecycle must maintain multi-audience compliance across a Docs-as-Code markdown strategy:
-1. **Developer Track**: Raw API specifications (OpenAPI/Swagger), AST graph schema dependencies, and transactional migrations.
-2. **Stakeholder Track**: Functional architectural layout context views (C4 Model layout schemas) establishing systemic scope and project safety.
-3. **End-User Track**: Simple, clear, non-technical instructions, flowcharts, and operational guides explaining action-plan workflows.
-
----
-
-## 5. Incremental Refactoring Protocol (The "Go" Loop)
+## 4. Incremental Refactoring Protocol (The "Go" Loop)
 When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must never return the entire file or multiple patches at once. The engine must strictly parse and deliver the update using the following conversational loop:
 1. **The Partition Task**: Break the code updates down into highly localized, un-nested Surgical Block Anchor patches (e.g., `PATCH 1 OF X`, `PATCH 2 OF X`).
 2. **The Single-Block Lock**: Deliver exactly **one single block** (e.g., `PATCH 1 OF X`) in the response window.
@@ -97,16 +89,9 @@ When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must 
 
 ---
 
-## 6. Refactoring & Code Delivery Standards
+## 5. Refactoring & Code Delivery Standards
 1. **Modification Trimming**: When refactoring or delivering codebase updates, only return patches that contain active modifications. Do not output unedited code blocks.
 2. **Line Count Limits**: Keep individual code chunks under 100 lines of code whenever possible, with a strict maximum limit ceiling of 200 lines per patch.
-
----
-
-## 7. Immediate Next Staging Steps (Todays's Vector)
-1. **Automated AST Dependency Topography Scanner**: Build the local static file code analyzer to parse import statements inside newly forged modules and dynamically register `DEPENDS_ON` graph links in Neo4j.
-2. **Dead Code Isolation Utility**: Build a zero-token `/cleanup` or routing check that walks the Neo4j incoming relationship paths to flag and safely isolate any orphaned, unreferenced components.
-3. **Agent Setup Orchestration**: Verify system configurations inside `aurora/agents.py` and activate Wu's 70B model gateway payload parameters to decompose plain English instructions down to targeted 8B Minions.
 
 # ======================================================================
 # END OF INGEST PROFILE - RUN TARGET LOGIC NOW

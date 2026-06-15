@@ -71,9 +71,10 @@
 
     <!-- Core JavaScript Assets -->
     <!-- Removed jQuery since Bootstrap 5 operates on pure JS -->
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/vis-network.min.js' %}"></script>
-    
+   
     <!-- Child Page Specific JS Scripts Inject Hook -->
     {% block extra_js %}{% endblock %}
 
