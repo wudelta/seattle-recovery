@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/tests/test_api_commands.py (PATCH 1 OF 4)
+# FILE: aurora/tests/test_api_commands.py (PATCH 1 OF 5)
 # START: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION
 # ======================================================================
 import json
@@ -8,7 +8,7 @@ import shutil
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from neomodel import db as neomodel_db # Imported to execute direct cypher isolation flushes
+from neomodel import db as neomodel_db  # Imported to execute direct cypher isolation flushes
 from aurora.models import ComponentRegistry, DeltaNotesEntry
 
 class ExecuteBlueprintApiTests(TestCase):
@@ -18,22 +18,20 @@ class ExecuteBlueprintApiTests(TestCase):
         """Configure clean testing sandboxes, user authentication, and endpoints."""
         # CONSTRAINT C IMPLEMENTATION: Clear graph residue from prior test execution runs
         neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
-
         self.base_dir = os.getcwd()
         self.test_app = "hopehub_sandbox"
         self.client = Client()
-        
         # Provision authenticated developer account footprint
         self.user = User.objects.create_user(username="dev_agent", password="secure_password_123")
         self.client.login(username="dev_agent", password="secure_password_123")
-        
+
         # Build the top-level app folder right in os.getcwd()
         os.makedirs(os.path.join(self.base_dir, self.test_app), exist_ok=True)
         os.makedirs(os.path.join(self.base_dir, self.test_app, 'views'), exist_ok=True)
         os.makedirs(os.path.join(self.base_dir, self.test_app, 'api'), exist_ok=True)
         os.makedirs(os.path.join(self.base_dir, self.test_app, 'templates', self.test_app), exist_ok=True)
         os.makedirs(os.path.join(self.base_dir, self.test_app, 'tests'), exist_ok=True)
-        
+
         # Initialize necessary project index modules cleanly
         for path in [
             os.path.join(self.base_dir, self.test_app, 'views', '__init__.py'),
@@ -41,10 +39,10 @@ class ExecuteBlueprintApiTests(TestCase):
         ]:
             with open(path, 'w') as f:
                 f.write("__all__ = [\n]")
-                
+
         with open(os.path.join(self.base_dir, self.test_app, 'urls.py'), 'w') as f:
             f.write("urlpatterns = [\n]")
-            
+
         self.url = reverse("aurora:api_command")
         self.notes_url = reverse("aurora:delta_notes_endpoint")
 
@@ -52,20 +50,18 @@ class ExecuteBlueprintApiTests(TestCase):
         """Wipe out simulated codebase additions completely to ensure test isolation."""
         # CONSTRAINT C IMPLEMENTATION: Flush simulated graph footprints to preserve immaculate state
         neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
-
         sandbox_path = os.path.join(self.base_dir, self.test_app)
         if os.path.exists(sandbox_path):
             shutil.rmtree(sandbox_path)
-            
         # FIXED: Removed os.remove("project.md"). Instead, only target the isolated sandboxed test artifact.
         if os.path.exists("test_project.md"):
             os.remove("test_project.md")
 # ======================================================================
-# END: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION (PATCH 1 OF 4)
+# END: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION (PATCH 1 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/tests/test_api_commands.py (PATCH 2 OF 4)
+# FILE: aurora/tests/test_api_commands.py (PATCH 2 OF 5)
 # START: GATING CHECKS & DIAGNOSTIC PAGE BLUEPRINT FORGE VALIDATION
 # ======================================================================
     def test_http_method_gating_rejects_get_requests(self):
@@ -87,10 +83,8 @@ class ExecuteBlueprintApiTests(TestCase):
         response = self.client.post(self.url, {"blueprint": cmd})
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content.decode('utf-8'))
-        
         if not data["validation"]["valid"] or "FORGE SUCCESS" not in data["minion_log"]:
             print(f"\n[DIAGNOSTIC BACKEND ENGINE LOG]: {json.dumps(data, indent=4)}\n")
-            
         self.assertIn("FORGE SUCCESS", data["minion_log"])
         self.assertTrue(data["validation"]["valid"])
 
@@ -102,11 +96,11 @@ class ExecuteBlueprintApiTests(TestCase):
         db_path = f"templates/{self.test_app}/terminal_core.html"
         self.assertTrue(ComponentRegistry.objects.filter(file_path=db_path).exists())
 # ======================================================================
-# END: GATING CHECKS & DIAGNOSTIC PAGE BLUEPRINT FORGE VALIDATION (PATCH 2 OF 4)
+# END: GATING CHECKS & DIAGNOSTIC PAGE BLUEPRINT FORGE VALIDATION (PATCH 2 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/tests/test_api_commands.py (PATCH 3 OF 4)
+# FILE: aurora/tests/test_api_commands.py (PATCH 3 OF 5)
 # START: API ENDPOINT FORGE SUBSYSTEM DIAGNOSTIC VALIDATION
 # ======================================================================
     def test_api_command_forges_assets_and_registers_component(self):
@@ -115,10 +109,8 @@ class ExecuteBlueprintApiTests(TestCase):
         response = self.client.post(self.url, {"blueprint": cmd})
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content.decode('utf-8'))
-        
         if not data["validation"]["valid"] or "FORGE SUCCESS" not in data["minion_log"]:
             print(f"\n[DIAGNOSTIC API ENGINE LOG]: {json.dumps(data, indent=4)}\n")
-            
         self.assertIn("FORGE SUCCESS", data["minion_log"])
         self.assertTrue(data["validation"]["valid"])
 
@@ -137,11 +129,11 @@ class ExecuteBlueprintApiTests(TestCase):
         data = json.loads(response.content.decode('utf-8'))
         self.assertIn("Unknown automation instruction", data["minion_log"])
 # ======================================================================
-# END: API ENDPOINT FORGE SUBSYSTEM DIAGNOSTIC VALIDATION (PATCH 3 OF 4)
+# END: API ENDPOINT FORGE SUBSYSTEM DIAGNOSTIC VALIDATION (PATCH 3 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/tests/test_api_commands.py (PATCH 4 OF 4)
+# FILE: aurora/tests/test_api_commands.py (PATCH 4 OF 5)
 # START: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS
 # ======================================================================
     def test_destroy_command_wipes_unlocked_assets_completely(self):
@@ -152,7 +144,7 @@ class ExecuteBlueprintApiTests(TestCase):
         api_path = os.path.join(self.base_dir, self.test_app, 'api', 'data_node_api.py')
         self.assertTrue(os.path.exists(html_path))
         self.assertTrue(os.path.exists(api_path))
-
+        
         destroy_cmd = f"/destroy {self.test_app} data_node"
         response = self.client.post(self.url, {"blueprint": destroy_cmd})
         self.assertEqual(response.status_code, 200)
@@ -179,7 +171,7 @@ class ExecuteBlueprintApiTests(TestCase):
         os.makedirs(os.path.dirname(html_path), exist_ok=True)
         with open(html_path, 'w') as f:
             f.write("<!-- Protected Vault Canvas -->")
-
+            
         destroy_cmd = f"/destroy {self.test_app} secure_vault"
         response = self.client.post(self.url, {"blueprint": destroy_cmd})
         self.assertEqual(response.status_code, 200)
@@ -187,7 +179,49 @@ class ExecuteBlueprintApiTests(TestCase):
         self.assertIn("PURGE DENIED: 'secure_vault' path infrastructure is LOCKED", data["minion_log"])
         self.assertTrue(os.path.exists(html_path))
         self.assertTrue(ComponentRegistry.objects.filter(file_path=db_path).exists())
+# ======================================================================
+# END: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS (PATCH 4 OF 5)
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/tests/test_api_commands.py (PATCH 5 OF 5)
+# START: BIND COMMAND UTILITY VALIDATION & DELTA NOTES SUITE
+# ======================================================================
+    def test_bind_command_modifies_template_and_injects_jquery_callback(self):
+        """Verify /bind command locates existing templates and embeds async ajax loaders."""
+        html_dir = os.path.join(self.base_dir, self.test_app, 'templates', self.test_app)
+        os.makedirs(html_dir, exist_ok=True)
+        html_target_file = os.path.join(html_dir, 'dashboard_view.html')
+        
+        with open(html_target_file, 'w', encoding='utf-8') as f:
+            f.write("<h1>Under Construction Placeholder</h1>")
+            
+        cmd = f"/bind {self.test_app} dashboard_view get_content_api"
+        response = self.client.post(self.url, {"blueprint": cmd})
+        
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content.decode('utf-8'))
+        
+        self.assertTrue(data["validation"]["valid"])
+        self.assertIn("SUCCESS: HTML view container bound", data["minion_log"])
+        self.assertIn("[BIND_ENGINE] Commencing binding orchestration", data["telemetry_stream"])
+        
+        with open(html_target_file, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+            
+        self.assertIn("url: '/api/get_content_api/'", updated_content)
+        self.assertIn("id='json_payload_render'", updated_content)
+        self.assertNotIn("Under Construction Placeholder", updated_content)
+
+    def test_bind_command_handles_missing_parameters_gracefully(self):
+        """Verify /bind safely aborts and logs failures if short arguments are supplied."""
+        cmd = f"/bind {self.test_app} incomplete_arguments"
+        response = self.client.post(self.url, {"blueprint": cmd})
+        
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content.decode('utf-8'))
+        self.assertFalse(data["validation"]["valid"])
+        self.assertIn("Syntax: /bind <app_name> <function_name> <api_name>", data["minion_log"])
 
 class DeltaNotesEndpointTests(TestCase):
     """Integration test suite validating DeltaNotesEntry multi-state tracking loops."""
@@ -203,7 +237,6 @@ class DeltaNotesEndpointTests(TestCase):
         """Verify GET request cleanly segments unprocessed and processed logs."""
         DeltaNotesEntry.objects.create(user=self.user, text="Active Directive Alpha", processed=False)
         DeltaNotesEntry.objects.create(user=self.user, text="Completed Directive Beta", processed=True)
-        
         response = self.client.get(self.endpoint_url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -236,7 +269,6 @@ class DeltaNotesEndpointTests(TestCase):
         test_file = "test_project.md"
         if os.path.exists(test_file):
             os.remove(test_file)
-            
         with open(test_file, "w", encoding="utf-8") as f:
             f.write("# Historic Baseline Record Data\n")
             
@@ -255,7 +287,6 @@ class DeltaNotesEndpointTests(TestCase):
             
         with open(test_file, "r", encoding="utf-8") as f:
             content = f.read()
-            
         self.assertIn("# Historic Baseline Record Data", content)
         self.assertIn("## Backlog Export Session Cluster", content)
         self.assertIn("* [ ] Surgical Graph Injection Rule", content)
@@ -264,5 +295,5 @@ class DeltaNotesEndpointTests(TestCase):
         if os.path.exists(test_file):
             os.remove(test_file)
 # ======================================================================
-# END: DESTRUCTION CLEANUP & STRUCTURAL LOCK ASSERTIONS (PATCH 4 OF 4)
+# END: BIND COMMAND UTILITY VALIDATION & DELTA NOTES SUITE (PATCH 5 OF 5)
 # ======================================================================

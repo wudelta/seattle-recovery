@@ -1,6 +1,6 @@
 # ======================================================================
-# FILE: aurora/api/endpoints.py (PATCH 1 OF 1)
-# START: STANDARD_DJANGO_WEB_VIEW_ENDPOINTS
+# FILE: aurora/api/endpoints.py (PATCH 1 OF 3)
+# START: STANDARD_DJANGO_WEB_VIEW_ENDPOINTS_IMPORTS_AND_GET_NOTES
 # ======================================================================
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -15,20 +15,24 @@ def delta_notes_endpoint(request):
     Coordinates GET lists and processes isolated POST state actions.
     """
     from aurora.models import DeltaNotesEntry
-    
     if request.method == "GET":
         unprocessed_nodes = DeltaNotesEntry.objects.filter(user=request.user, processed=False).order_by('-created_at')
         processed_nodes = DeltaNotesEntry.objects.filter(user=request.user, processed=True).order_by('-updated_at')[:50]
-        
         unprocessed_payload = [{"id": n.id, "text": n.text} for n in unprocessed_nodes]
         processed_payload = [{"id": n.id, "text": n.text} for n in processed_nodes]
-        
         return JsonResponse({
             "status": "success",
             "unprocessed": unprocessed_payload,
             "processed": processed_payload
         })
+# ======================================================================
+# END: STANDARD_DJANGO_WEB_VIEW_ENDPOINTS_IMPORTS_AND_GET_NOTES (PATCH 1 OF 3)
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api/endpoints.py (PATCH 2 OF 3)
+# START: DELTA_NOTES_POST_MUTATION_AND_COMPILATION
+# ======================================================================
     elif request.method == "POST":
         action = request.POST.get("action")
         if action == "create_note":
@@ -36,26 +40,22 @@ def delta_notes_endpoint(request):
             if text:
                 DeltaNotesEntry.objects.create(user=request.user, text=text, processed=False)
             return JsonResponse({"status": "success"})
-            
         elif action == "edit_note":
             note_id = request.POST.get("note_id")
             text = request.POST.get("text", "").strip()
             if note_id and text:
                 DeltaNotesEntry.objects.filter(user=request.user, id=note_id).update(text=text)
             return JsonResponse({"status": "success"})
-            
         elif action == "delete_note":
             note_id = request.POST.get("note_id")
             if note_id:
                 DeltaNotesEntry.objects.filter(user=request.user, id=note_id).delete()
             return JsonResponse({"status": "success"})
-            
         elif action == "process_note":
             note_id = request.POST.get("note_id")
             if note_id:
                 DeltaNotesEntry.objects.filter(user=request.user, id=note_id).update(processed=True)
             return JsonResponse({"status": "success"})
-            
         elif action == "compile_blueprint":
             PageSkeletonBuilder.emit_log("[BACKLOG] Commencing compilation of master project.md footprint...\n")
             unprocessed_notes = DeltaNotesEntry.objects.filter(user=request.user, processed=False).order_by('created_at')
@@ -83,15 +83,18 @@ def delta_notes_endpoint(request):
                     "message": f"File generation block fault: {str(e)}",
                     "telemetry_stream": PageSkeletonBuilder.flush_telemetry()
                 }, status=500)
-                
         elif action == "sync_timer":
             return JsonResponse({"status": "success"})
-            
         return JsonResponse({"status": "error", "message": f"Invalid action: {action}"}, status=400)
-
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+# ======================================================================
+# END: DELTA_NOTES_POST_MUTATION_AND_COMPILATION (PATCH 2 OF 3)
+# ======================================================================
 
-
+# ======================================================================
+# FILE: aurora/api/endpoints.py (PATCH 3 OF 3)
+# START: UNLOCKED_COMPONENTS_AND_BIND_COMMAND_ROUTING_VIEW
+# ======================================================================
 @csrf_exempt
 @login_required
 def unlocked_components_endpoint(request):
@@ -100,7 +103,6 @@ def unlocked_components_endpoint(request):
         unlocked_assets = ComponentRegistry.objects.filter(locked=False).order_by('-date_created')
         payload = [{"id": str(asset.id), "name": asset.name, "path": asset.file_path} for asset in unlocked_assets]
         return JsonResponse({"status": "success", "components": payload})
-        
     elif request.method == "POST":
         target_id = request.POST.get("component_id")
         if target_id:
@@ -111,8 +113,27 @@ def unlocked_components_endpoint(request):
                 "telemetry_stream": PageSkeletonBuilder.flush_telemetry()
             })
         return JsonResponse({"status": "error", "message": "Missing component_id parameter."}, status=400)
-        
     return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+@csrf_exempt
+@login_required
+def bind_command_endpoint(request):
+    """Console bridge endpoint routing raw /bind strings to the standalone handler."""
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    
+    raw_cmd = request.POST.get("blueprint", "").strip()
+    if not raw_cmd.startswith("/bind"):
+        return JsonResponse({
+            "status": "success",
+            "minion_log": "Invalid console engine routing path. Expected /bind prefix.",
+            "validation": {"valid": False, "errors": ["Invalid command format"], "warnings": []}
+        })
+    
+    parts = [p.strip() for p in raw_cmd.split(" ") if p.strip()]
+    from aurora.api.handlers.bind import BindCommandHandler
+    handler = BindCommandHandler()
+    return handler.execute(request, parts, raw_cmd)
 # ======================================================================
-# END: STANDARD_DJANGO_WEB_VIEW_ENDPOINTS (PATCH 1 OF 1)
+# END: UNLOCKED_COMPONENTS_AND_BIND_COMMAND_ROUTING_VIEW (PATCH 3 OF 3)
 # ======================================================================
