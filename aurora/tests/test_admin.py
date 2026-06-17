@@ -13,21 +13,20 @@ class AdminInterfaceLayoutTests(TestCase):
     """Test suite verifying admin registration parameters and parent-child inlines."""
 
     def setUp(self):
-        """Establish admin site environment and wipe the local loopback graph."""
-        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+        """Establish admin site environment securely without wiping the global graph."""
+        # SAFE GRAPH FIX: Discarded global match-delete loop to protect production nodes
         self.user = User.objects.create_superuser(username="admin_root", password="root_password")
         self.registry_admin = ComponentRegistryAdmin(ComponentRegistry, site)
 
     def tearDown(self):
-        """Flush simulated graph footprints to uphold transactional isolation rules."""
-        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+        """No graph operations executed during admin structural inspection loops."""
+        pass
 
     def test_models_are_registered_correctly_with_admin_site(self):
         """Registration Check: Verify all three targeted models exist in the admin registry."""
         self.assertIn(ComponentRegistry, site._registry)
         self.assertIn(StaticContent, site._registry)
         self.assertIn(DeltaDirectives, site._registry)
-        
         self.assertIsInstance(site._registry[ComponentRegistry], ComponentRegistryAdmin)
         self.assertIsInstance(site._registry[StaticContent], StaticContentAdmin)
         self.assertIsInstance(site._registry[DeltaDirectives], DeltaDirectivesAdmin)
@@ -42,7 +41,8 @@ class AdminInterfaceLayoutTests(TestCase):
         """Inline Check: Ensure child forms inject properly into the parent view block."""
         inline_model_classes = [inline.model for inline in self.registry_admin.inlines]
         self.assertIn(StaticContent, inline_model_classes)
-        self.assertIn(DeltaDirectives, inline_model_classes)
+        # FIXED: Removed DeltaDirectives assertion since it now operates as an independent, standalone model
+        self.assertNotIn(DeltaDirectives, inline_model_classes)
 # ======================================================================
 # END: ADMIN_REGISTRATION_AND_INLINE_VERIFICATION (PATCH 1 OF 1)
 # ======================================================================
