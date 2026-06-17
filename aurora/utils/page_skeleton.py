@@ -5,24 +5,22 @@
 import os
 import sys
 import re
+from aurora.utils.telemetry import TelemetryLogger
 
 class PageSkeletonBuilder:
     """Automated multi-app builder and destroyer with public/private scoping mechanics."""
-    _telemetry_buffer = []
 
     @classmethod
     def emit_log(cls, text: str):
-        """Writes to terminal STDOUT and stores the text in the memory buffer."""
+        """Writes to terminal STDOUT and stores the text in the shared thread-safe telemetry buffer."""
         sys.stdout.write(text)
         sys.stdout.flush()
-        cls._telemetry_buffer.append(text)
+        TelemetryLogger.emit(text)
 
     @classmethod
     def flush_telemetry(cls) -> str:
         """Returns the accumulated logs as a single string and clears the buffer."""
-        logs = "".join(cls._telemetry_buffer)
-        cls._telemetry_buffer = []
-        return logs
+        return TelemetryLogger.flush()
 
     @classmethod
     def clean_inputs(cls, app_name: str, page_name: str):
@@ -45,24 +43,19 @@ class PageSkeletonBuilder:
         if not app or not page:
             cls.emit_log("[FORGE_ENGINE] [ERROR] Invalid parameters provided to forge page.\n")
             return {"status": "error", "message": "Invalid architectural parameters."}
-        
         is_private = visibility.lower().strip() != "public"
         base_dir = os.getcwd()
-        
         if not os.path.exists(os.path.join(base_dir, app)):
             cls.emit_log(f"[FORGE_ENGINE] [ERROR] Target app directory '{app}' does not exist on host.\n")
             return {"status": "error", "message": f"Target app directory '{app}' does not exist on this machine."}
-        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
-        
         if os.path.exists(view_file) or os.path.exists(template_file):
             cls.emit_log(f"[FORGE_ENGINE] [ERROR] Collision detected: Component '{page}' already exists in app '{app}'.\n")
             return {"status": "error", "message": f"Collision: Component '{page}' already exists in app '{app}'."}
-        
         base_template_extends = f"{app}/{app}_base.html"
         try:
             # 1. HTML Template Generation with Embedded Comment Anchors
@@ -215,16 +208,12 @@ class PageSkeletonBuilder:
                     f'# ======================================================================\n'
                 )
 
-            # Centralization: Register Python View module only.
             from aurora.utils.forge_registry import register_new_component
             from django.contrib.auth import get_user_model
             User_Model = get_user_model()
-            
-            # FIX: Fallback layout protection to prevent null value in "created_by" column during test environments
             sys_operator = User_Model.objects.filter(is_staff=True).first()
             if not sys_operator:
                 sys_operator = User_Model.objects.create_user(username="test_forge_operator", is_staff=True)
-
             rel_view_path = f"{app}/views/{page}_view.py"
             register_new_component(
                 file_path=rel_view_path,
@@ -253,27 +242,22 @@ class PageSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
-        
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
         logs = []
-        
         cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted view: {page}_view.py")
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased view controller script: {view_file}\n")
-                
             if os.path.exists(template_file):
                 os.remove(template_file)
                 logs.append(f"Deleted template: {page}.html")
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased template HTML layout: {template_file}\n")
-                
-            # PRESERVE TEST SUITE INFRASTRUCTURE DURING ACTIVE RUNS
             if os.path.exists(test_file):
                 if "AURORA_TEST_RUNNING" not in os.environ:
                     os.remove(test_file)
@@ -281,7 +265,6 @@ class PageSkeletonBuilder:
                     cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
                 else:
                     logs.append("Preserved test file context during active test suite execution.")
-                    
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -290,7 +273,6 @@ class PageSkeletonBuilder:
                     f.writelines(clean_lines)
                 logs.append("Scrubbed package exporter.")
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned package whitelist references inside: {view_init}\n")
-                
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
@@ -299,8 +281,6 @@ class PageSkeletonBuilder:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
-                
-            # Scrub decoupled view controller registrations out of the tracking layer
             try:
                 from aurora.models import ComponentRegistry
                 from neomodel import db
@@ -310,7 +290,6 @@ class PageSkeletonBuilder:
                 logs.append("Purged controller view metadata mappings.")
             except Exception as scrub_err:
                 cls.emit_log(f"[WARNING] Database mirror cleanup anomaly: {str(scrub_err)}\n")
-                
             cls.emit_log(f"[FORGE_ENGINE] Wipe routing complete for {page}. Status: Success.\n")
             return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
         except Exception as e:
