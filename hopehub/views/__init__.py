@@ -1,4 +1,3 @@
-from .mission_statement_view import MissionStatementView
 from .landing import hopehub_landing
 from .journal import JournalView
 from .journal import ProcessJournalEntryView
@@ -18,6 +17,4 @@ __all__ = [
     'JournalView',
     'ProcessJournalEntryView',
     'DeleteJournalEntryView',
-    'bed_locator_endpoint',
-    'MissionStatementView',
 ]

@@ -50,9 +50,16 @@ The "Seattle Recovery" project is a dual-application ecosystem structured using 
 * **Relational Storage Layer**: PostgreSQL. Handles all transactional logic, administrative tracking loops, security credentials, and identity access control. User data must be fully encrypted, sandboxed, and isolated.
 * **Graph Network Layer**: Neo4j. Operating via local Docker loopback port mappings password-free. Leverages background Django Post-Save and Post-Delete signals (`signals.py`) to keep the relational and network data models synchronized in real time.
 
----
+# ======================================================================
+# END OF INGEST PROFILE - RUN TARGET LOGIC NOW
+# ======================================================================
 
-## 3. STRICT AI GENERATION RULES & CONSTRAINTS
+# ======================================================================
+# MINION ANAMOD INGEST: AURORA
+# IDENTITY CONTEXT: DELTA (PROJECT ARCHITECT)
+# # ======================================================================
+
+## 1. STRICT AI GENERATION RULES & CONSTRAINTS
 
 ### CONSTRAINT A: SURGICAL BLOCK ANCHOR ENGINE (FILE EDITS)
 To prevent network drops, token bloating, and source file truncation under low-bandwidth/low-spec execution environments, AI engines must **NEVER** dump whole source files if changes are localized. All file modifications must use the exact format below:
@@ -79,7 +86,7 @@ To prevent network drops, token bloating, and source file truncation under low-b
 
 ---
 
-## 4. Incremental Refactoring Protocol (The "Go" Loop)
+## 2. Incremental Refactoring Protocol (The "Go" Loop)
 When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must never return the entire file or multiple patches at once. The engine must strictly parse and deliver the update using the following conversational loop:
 1. **The Partition Task**: Break the code updates down into highly localized, un-nested Surgical Block Anchor patches (e.g., `PATCH 1 OF X`, `PATCH 2 OF X`).
 2. **The Single-Block Lock**: Deliver exactly **one single block** (e.g., `PATCH 1 OF X`) in the response window.
@@ -89,7 +96,7 @@ When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must 
 
 ---
 
-## 5. Refactoring & Code Delivery Standards
+## 3. Refactoring & Code Delivery Standards
 1. **Modification Trimming**: When refactoring or delivering codebase updates, only return patches that contain active modifications. Do not output unedited code blocks.
 2. **Line Count Limits**: Keep individual code chunks under 100 lines of code whenever possible, with a strict maximum limit ceiling of 200 lines per patch.
 

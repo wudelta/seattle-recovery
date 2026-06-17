@@ -13,3 +13,14 @@
 ## 2. ACTIVE BACKLOG (PENDING WORKSPACE DIRECTIVES)
 * [ ] **Modular Test Suite Partitioning**: Split the monolithic 200+ line master testing file `aurora/tests/test_api_commands.py` into isolated, under-100-line testing suites targeting individual handlers to preserve host memory.
 * [ ] **Production API Integration**: Populate the core database querying functions inside `hopehub/api/get_content_api.py` to replace placeholder arrays with relational-graph tandem lookups mapping live physical and mental well-being recovery action resources.
+
+# ======================================================================
+# FILE: project.md (PATCH EXCERPT APPENDATION)
+# START: GRAPH_INTEGRITY_AND_TEST_POLLUTION_LEAK_TRACKING
+# ======================================================================
+## 3. CRITICAL DEFECT MATRIX & TRUST RESTORATION
+* [ ] **Eliminate Production Graph Pollution**: Fix the architectural test leak where 8 battery tests are generating active, live-labeled production elements instead of isolated sandbox mock records.
+* [ ] **Enforce Ironclad Test Boundaries**: Audit all tests across the root `tests/` workspace directory to ensure zero cross-contamination of transactional credentials or node graphs.
+# ======================================================================
+# END: GRAPH_INTEGRITY_AND_TEST_POLLUTION_LEAK_TRACKING
+# ======================================================================
