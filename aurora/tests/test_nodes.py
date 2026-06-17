@@ -12,23 +12,35 @@ class ComponentNodeTests(TestCase):
 
     def setUp(self):
         """Establish structural baseline identities and flush test graph space."""
-        # Standard safety cleanup on the loopback connection to keep testing space pristine
-        db.cypher_query("MATCH (n:ComponentNode) DETACH DELETE n")
+        super().setUp()
         
         self.src_uuid = str(uuid.uuid4())
         self.dest_uuid = str(uuid.uuid4())
-        
         self.src_path = "app/hopehub/pages/bed_locator.py"
         self.dest_path = "app/api/bed_locator_api.py"
+        
+        # TRANSACT-GRAPH ISOLATION ENGINE: Constrain deletion targets strictly to known paths
+        self.tracked_paths = set([self.src_path, self.dest_path])
+        self.flush_graph_database()
 
     def tearDown(self):
         """Clean graph entries to avoid pipeline clutter."""
-        db.cypher_query("MATCH (n:ComponentNode) DETACH DELETE n")
+        self.flush_graph_database()
+        super().tearDown()
+
+    def flush_graph_database(self):
+        """Surgically purges Neo4j nodes containing our specific unique path identifiers."""
+        try:
+            db.cypher_query(
+                "MATCH (n:ComponentNode) WHERE n.file_path IN $paths DETACH DELETE n",
+                {"paths": list(self.tracked_paths)}
+            )
+        except Exception:
+            pass
 
     def test_node_instantiation_sets_properties_accurately(self):
         """Graph Check: Verify node saves unique strings and indexing attributes securely."""
         node = ComponentNode(postgres_id=self.src_uuid, file_path=self.src_path).save()
-        
         self.assertEqual(node.postgres_id, self.src_uuid)
         self.assertEqual(node.file_path, self.src_path)
         
