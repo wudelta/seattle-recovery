@@ -1,6 +1,6 @@
 # ======================================================================
 # FILE: aurora/tests/test_api_commands.py (PATCH 1 OF 5)
-# START: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION
+# START: SYSTEM IMPORTS, MOCK FIXTURES & SAFE GRAPH SEPARATION
 # ======================================================================
 import json
 import os
@@ -15,12 +15,21 @@ class ExecuteBlueprintApiTests(TestCase):
     """Integration tests verifying the Dual-Tier View Stream Router and commands."""
 
     def setUp(self):
-        """Configure clean testing sandboxes, user authentication, and endpoints."""
-        # CONSTRAINT C IMPLEMENTATION: Clear graph residue from prior test execution runs
-        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+        """Configure clean testing sandboxes, user authentication, and endpoints safely."""
         self.base_dir = os.getcwd()
         self.test_app = "hopehub_sandbox"
         self.client = Client()
+        
+        # SAFE GRAPH ARCHITECTURE FIX: Delete leaked graph residues from prior sandbox test matches
+        try:
+            neomodel_db.cypher_query(
+                "MATCH (n) WHERE n.file_path STARTS WITH $prefix OR n.file_path CONTAINS $sandbox "
+                "DETACH DELETE n", 
+                {"prefix": f"{self.test_app}/", "sandbox": f"/{self.test_app}/"}
+            )
+        except Exception:
+            pass
+        
         # Provision authenticated developer account footprint
         self.user = User.objects.create_user(username="dev_agent", password="secure_password_123")
         self.client.login(username="dev_agent", password="secure_password_123")
@@ -48,16 +57,23 @@ class ExecuteBlueprintApiTests(TestCase):
 
     def tearDown(self):
         """Wipe out simulated codebase additions completely to ensure test isolation."""
-        # CONSTRAINT C IMPLEMENTATION: Flush simulated graph footprints to preserve immaculate state
-        neomodel_db.cypher_query("MATCH (n) DETACH DELETE n")
+        # SAFE GRAPH ARCHITECTURE FIX: Surgically wipe only the generated sandbox network nodes
+        try:
+            neomodel_db.cypher_query(
+                "MATCH (n) WHERE n.file_path STARTS WITH $prefix OR n.file_path CONTAINS $sandbox "
+                "DETACH DELETE n", 
+                {"prefix": f"{self.test_app}/", "sandbox": f"/{self.test_app}/"}
+            )
+        except Exception:
+            pass
+        
         sandbox_path = os.path.join(self.base_dir, self.test_app)
         if os.path.exists(sandbox_path):
             shutil.rmtree(sandbox_path)
-        # FIXED: Removed os.remove("project.md"). Instead, only target the isolated sandboxed test artifact.
         if os.path.exists("test_project.md"):
             os.remove("test_project.md")
 # ======================================================================
-# END: SYSTEM IMPORTS, MOCK FIXTURES & TEST CLIENT INITIALIZATION (PATCH 1 OF 5)
+# END: SYSTEM IMPORTS, MOCK FIXTURES & SAFE GRAPH SEPARATION (PATCH 1 OF 5)
 # ======================================================================
 
 # ======================================================================
