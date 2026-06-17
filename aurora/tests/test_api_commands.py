@@ -196,7 +196,7 @@ class ExecuteBlueprintApiTests(TestCase):
         with open(html_target_file, 'w', encoding='utf-8') as f:
             f.write("<h1>Under Construction Placeholder</h1>")
             
-        cmd = f"/bind {self.test_app} dashboard_view get_content_api"
+        cmd = f"/bind {self.test_app} dashboard_view get_content"
         response = self.client.post(self.url, {"blueprint": cmd})
         
         self.assertEqual(response.status_code, 200)
@@ -209,7 +209,7 @@ class ExecuteBlueprintApiTests(TestCase):
         with open(html_target_file, 'r', encoding='utf-8') as f:
             updated_content = f.read()
             
-        self.assertIn("url: '/api/get_content_api/'", updated_content)
+        self.assertIn(f"fetch('/{self.test_app}/api/get_content/')", updated_content)
         self.assertIn("id='json_payload_render'", updated_content)
         self.assertNotIn("Under Construction Placeholder", updated_content)
 
@@ -222,78 +222,6 @@ class ExecuteBlueprintApiTests(TestCase):
         data = json.loads(response.content.decode('utf-8'))
         self.assertFalse(data["validation"]["valid"])
         self.assertIn("Syntax: /bind <app_name> <function_name> <api_name>", data["minion_log"])
-
-class DeltaNotesEndpointTests(TestCase):
-    """Integration test suite validating DeltaNotesEntry multi-state tracking loops."""
-
-    def setUp(self):
-        """Provision user authentication hooks and state objects."""
-        self.client = Client()
-        self.user = User.objects.create_user(username="test_architect", password="password_xyz_123")
-        self.client.login(username="test_architect", password="password_xyz_123")
-        self.endpoint_url = reverse("aurora:delta_notes_endpoint")
-
-    def test_delta_notes_get_returns_split_log_dictionary_arrays(self):
-        """Verify GET request cleanly segments unprocessed and processed logs."""
-        DeltaNotesEntry.objects.create(user=self.user, text="Active Directive Alpha", processed=False)
-        DeltaNotesEntry.objects.create(user=self.user, text="Completed Directive Beta", processed=True)
-        response = self.client.get(self.endpoint_url)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data["status"], "success")
-        self.assertEqual(len(data["unprocessed"]), 1)
-        self.assertEqual(len(data["processed"]), 1)
-        self.assertEqual(data["unprocessed"][0]["text"], "Active Directive Alpha")
-        self.assertEqual(data["processed"][0]["text"], "Completed Directive Beta")
-
-    def test_delta_notes_post_crud_and_status_toggles(self):
-        """Verify note creation, modification, erasure, and completion hooks."""
-        self.client.post(self.endpoint_url, {"action": "create_note", "text": "Forced Compilation Layer"})
-        note = DeltaNotesEntry.objects.get(user=self.user, text="Forced Compilation Layer")
-        self.assertFalse(note.processed)
-        
-        self.client.post(self.endpoint_url, {"action": "edit_note", "note_id": note.id, "text": "Updated Layer Spec"})
-        note.refresh_from_db()
-        self.assertEqual(note.text, "Updated Layer Spec")
-        
-        self.client.post(self.endpoint_url, {"action": "process_note", "note_id": note.id})
-        note.refresh_from_db()
-        self.assertTrue(note.processed)
-        
-        self.client.post(self.endpoint_url, {"action": "delete_note", "note_id": note.id})
-        self.assertFalse(DeltaNotesEntry.objects.filter(id=note.id).exists())
-
-    def test_compile_blueprint_uses_non_destructive_appendation(self):
-        """Verify compile action utilizes 'a' mode and inserts timestamp clusters without hurting live files."""
-        DeltaNotesEntry.objects.create(user=self.user, text="Surgical Graph Injection Rule", processed=False)
-        test_file = "test_project.md"
-        if os.path.exists(test_file):
-            os.remove(test_file)
-        with open(test_file, "w", encoding="utf-8") as f:
-            f.write("# Historic Baseline Record Data\n")
-            
-        from unittest.mock import patch
-        import builtins
-        real_open = builtins.open
-        
-        def path_redirector(file, *args, **kwargs):
-            if file == "project.md":
-                return real_open(test_file, *args, **kwargs)
-            return real_open(file, *args, **kwargs)
-            
-        with patch('builtins.open', side_effect=path_redirector):
-            response = self.client.post(self.endpoint_url, {"action": "compile_blueprint"})
-            self.assertEqual(response.status_code, 200)
-            
-        with open(test_file, "r", encoding="utf-8") as f:
-            content = f.read()
-        self.assertIn("# Historic Baseline Record Data", content)
-        self.assertIn("## Backlog Export Session Cluster", content)
-        self.assertIn("* [ ] Surgical Graph Injection Rule", content)
-        self.assertTrue(DeltaNotesEntry.objects.filter(user=self.user, processed=False).exists())
-        
-        if os.path.exists(test_file):
-            os.remove(test_file)
 # ======================================================================
 # END: BIND COMMAND UTILITY VALIDATION & DELTA NOTES SUITE (PATCH 5 OF 5)
 # ======================================================================

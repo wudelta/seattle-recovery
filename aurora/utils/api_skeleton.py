@@ -127,11 +127,9 @@ class ApiSkeletonBuilder:
 # ======================================================================
             # 3. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
-                # FIXED: Changed prefix from [INFO] to [FORGE_ENGINE]
                 cls.emit_log(f"[FORGE_ENGINE] Injecting endpoint routing pathway to URL dispatcher configuration: {urls_file}\n")
                 with open(urls_file, 'r') as f:
                     urls_content = f.read()
-                # Refactored package alias name from api_views to api_commands
                 if f"from {app} import api as api_commands" not in urls_content:
                     urls_content = f"from {app} import api as api_commands\n" + urls_content
                 if "urlpatterns = [" in urls_content:
@@ -145,9 +143,8 @@ class ApiSkeletonBuilder:
                     urls_content = "urlpatterns = [".join(p)
                 with open(urls_file, 'w') as f:
                     f.write(urls_content)
-
+    
             # 4. Forged API Unit Test Generation for Component Verification
-            # FIXED: Changed prefix from [INFO] to [FORGE_ENGINE]
             cls.emit_log(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
             os.makedirs(os.path.dirname(test_file), exist_ok=True)
             with open(test_file, 'w') as f:
@@ -169,7 +166,6 @@ class ApiSkeletonBuilder:
                     f'    def setUp(self):\n'
                     f'        self.test_user = User.objects.create_user(username="test_dev", password="password")\n'
                     f'        self.expected_path = "{app}/api/{endpoint}_api.py"\n'
-                    f'        # Enforce graph loopback isolation by clearing unique paths before validation\n'
                     f'        try:\n'
                     f'            db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = \'" + self.expected_path + "\' DETACH DELETE n")\n'
                     f'        except Exception:\n'
@@ -211,32 +207,24 @@ class ApiSkeletonBuilder:
         """Surgically undoes file builds and deletes registrations completely."""
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         base_dir = os.getcwd()
-        
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
         test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
-        
         logs = []
         cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for API endpoint: {app}/api/{endpoint}_api.py\n")
-        
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted api: {endpoint}_api.py")
-                # FIXED: Aligned trace prefix style from [INFO] to [FORGE_ENGINE]
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased API core script: {view_file}\n")
-                
-            # PRESERVE TEST SUITE INFRASTRUCTURE DURING ACTIVE RUNS
             if os.path.exists(test_file):
                 if "AURORA_TEST_RUNNING" not in os.environ:
                     os.remove(test_file)
                     logs.append(f"Deleted test file: test_api_{endpoint}_{app}.py")
-                    # FIXED: Aligned trace prefix style from [INFO] to [FORGE_ENGINE]
                     cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
                 else:
                     logs.append("Preserved test file context during active test suite execution.")
-                    
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
@@ -244,23 +232,17 @@ class ApiSkeletonBuilder:
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Scrubbed api package exporter.")
-                # FIXED: Aligned trace prefix style from [INFO] to [FORGE_ENGINE]
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned API package whitelist references inside: {view_init}\n")
-                
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
-                # Refactored to hunt and clear api_commands syntax footprints instead of api_views
                 clean_lines = [l for l in lines if f"api_commands.{func_name}" not in l and f"'api/{endpoint}/'" not in l]
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
                 logs.append("Erased url routing node.")
-                # FIXED: Aligned trace prefix style from [INFO] to [FORGE_ENGINE]
                 cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
-                
             cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Wipe routine complete for API '{endpoint}'. Status: Success.\n")
             return {"status": "success", "message": " | ".join(logs) if logs else "No API components found to purge."}
-            
         except Exception as e:
             error_trace = f"[FAIL] Wipe failure occurred during API unlinking procedure:\n{traceback.format_exc()}"
             cls.emit_log(f"{error_trace}\n")
