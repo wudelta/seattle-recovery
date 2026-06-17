@@ -1,6 +1,6 @@
 # ======================================================================
-# FILE: aurora/api/handlers/bind.py (PATCH 1 OF 1)
-# START: BIND_SLASH_COMMAND_PROCESSOR
+# FILE: aurora/api/handlers/bind.py (PATCH 1 OF 2)
+# START: FIXED_BIND_ROUTING_AND_PATH_RESOLUTION
 # ======================================================================
 import os
 from django.http import JsonResponse
@@ -8,7 +8,7 @@ from aurora.api.handlers.base import BaseCommandHandler
 from aurora.utils.telemetry import TelemetryLogger
 
 class BindCommandHandler(BaseCommandHandler):
-    """Processes /bind <app_name> <function_name> <api_name> using decoupled telemetry."""
+    """Processes /bind <app_name> <function_name> <api_name> with exact absolute paths."""
     
     def execute(self, request, parts: list, raw_cmd: str) -> JsonResponse:
         if len(parts) < 4:
@@ -43,8 +43,15 @@ class BindCommandHandler(BaseCommandHandler):
             target_html_path = possible_paths[0]
             TelemetryLogger.emit(f"[WARNING] Template file not found. Generating directory branch: {os.path.dirname(target_html_path)}\n")
             os.makedirs(os.path.dirname(target_html_path), exist_ok=True)
+# ======================================================================
+# END: FIXED_BIND_ROUTING_AND_PATH_RESOLUTION (PATCH 1 OF 2)
+# ======================================================================
 
-        # Build clean Bootstrap UI card stream layout block with jQuery callbacks
+# ======================================================================
+# FILE: aurora/api/handlers/bind.py (PATCH 2 OF 2)
+# START: FIXED_BIND_ABSOLUTE_URL_INJECTION
+# ======================================================================
+        # Build clean Bootstrap UI card stream layout block with explicit URL strings
         injected_js_ui = (
             f"<div class='container mt-4'>\n"
             f"  <div class='card shadow-sm'>\n"
@@ -57,26 +64,28 @@ class BindCommandHandler(BaseCommandHandler):
             f"  </div>\n"
             f"</div>\n"
             f"<script>\n"
-            f"  $(document).ready(function() {{\n"
-            f"    $.ajax({{\n"
-            f"      url: '/api/{api_name}/',\n"
-            f"      type: 'GET',\n"
-            f"      success: function(data) {{\n"
-            f"        $('#json_payload_render').text(JSON.stringify(data, null, 2));\n"
-            f"      }},\n"
-            f"      error: function(err) {{\n"
-            f"        $('#json_payload_render').html('<span class=\"text-danger\">Failed to retrieve streaming payload resource.</span>');\n"
-            f"      }}\n"
-            f"    }});\n"
+            f"  // Absolute fetch URL strategy to avoid browser scope path confusion\n"
+            f"  document.addEventListener('DOMContentLoaded', function() {{\n"
+            f"    fetch('/{app_name}/api/{api_name}/')\n"
+            f"      .then(response => {{\n"
+            f"        if (!response.ok) throw new Error('Network stream error');\n"
+            f"        return response.json();\n"
+            f"      }})\n"
+            f"      .then(data => {{\n"
+            f"        document.getElementById('json_payload_render').textContent = JSON.stringify(data, null, 2);\n"
+            f"      }})\n"
+            f"      .catch(err => {{\n"
+            f"        document.getElementById('json_payload_render').innerHTML = '<span class=\"text-danger\">Failed to retrieve streaming payload resource.</span>';\n"
+            f"      }});\n"
             f"  }});\n"
             f"</script>\n"
         )
         
         try:
-            TelemetryLogger.emit(f"[BIND_ENGINE] Committing jQuery asynchronous ajax layout write patch to disk...\n")
+            TelemetryLogger.emit(f"[BIND_ENGINE] Committing absolute URL template patch to disk...\n")
             with open(target_html_path, "w", encoding="utf-8") as f:
                 f.write(injected_js_ui)
-            status_msg = f"SUCCESS: HTML view container bound to backend target '/api/{api_name}/'."
+            status_msg = f"SUCCESS: HTML view container bound to backend target '/{app_name}/api/{api_name}/'."
             TelemetryLogger.emit(f"[SUCCESS] Disk IO write verification finalized. Target: {target_html_path}\n")
             valid_flag = True
             errs = []
@@ -95,5 +104,5 @@ class BindCommandHandler(BaseCommandHandler):
             "validation": {"valid": valid_flag, "errors": errs, "warnings": []}
         })
 # ======================================================================
-# END: BIND_SLASH_COMMAND_PROCESSOR (PATCH 1 OF 1)
+# END: FIXED_BIND_ABSOLUTE_URL_INJECTION (PATCH 2 OF 2)
 # ======================================================================
