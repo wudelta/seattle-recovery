@@ -13,6 +13,7 @@ from neomodel import config as neomodel_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 env = environ.Env()
 
 # FIX: Explicit dual-track path mapping to force load the .env file from the current directory
@@ -21,13 +22,16 @@ if not os.path.exists(env_file_path):
     # Fallback to current working directory if execution occurs via a nested module hook
     env_file_path = os.path.join(os.getcwd(), '.env')
 
-environ.Env.read_env(env_file_path)
+if os.path.exists(env_file_path):
+    environ.Env.read_env(env_file_path)
 
 # Now Django reads environment variables seamlessly:
-SECRET_KEY = env('SECRET_KEY', default="django-insecure-fallback-key-token")
+SECRET_KEY = env('DJANGO_SECRET_KEY', default="django-insecure-fallback-key-token")
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ['*'] # Temporarily allow everything to clear the connection path
+DEBUG = env.bool('DEBUG', default=True)
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -42,6 +46,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'django_neomodel', # <-- Third-party graph extension
+    'core_logic',      # <-- Shared files core application
     'hopehub',
     'aurora',
 ]
@@ -90,9 +95,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core_logic.wsgi.application'
-ASGI_APPLICATION = 'core_logic.asgi.application'  # <-- ADDED: Explicit async server entry routing path
+ASGI_APPLICATION = 'core_logic.asgi.application' # <-- ADDED: Explicit async server entry routing path
 # ======================================================================
-# END: MIDDLEWARE PIPELINES, CRISPY UI CONFS, & TEMPLATE LOOPS
+# END: MIDDLEWARE PIPELINES, CRISPY UI CONFS, & TEMPLATE LOOPS (PATCH 2 OF 3)
 # ======================================================================
 
 # ======================================================================
@@ -102,20 +107,26 @@ ASGI_APPLICATION = 'core_logic.asgi.application'  # <-- ADDED: Explicit async se
 # Databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST', default='postgres'),
+        'PORT': env('DB_PORT', default='5432'),
     }
 }
 
 # ==============================================================================
 # GRAPH DATABASE CONFIGURATION (NEO4J TANDEM LAYER)
 # ==============================================================================
-# Satisfies the library parser format while leveraging your auth-free container
-neomodel_config.DATABASE_URL = 'bolt://a:a@localhost:7687'
+# Dynamically builds the production-ready connection URI string using your auth parameters
+NEO4J_SCHEME = "bolt"
+NEO4J_USER = env('NEO4J_USER', default='neo4j')
+NEO4J_PASSWORD = env('NEO4J_PASSWORD', default='secure_graph_password_2026')
+NEO4J_HOST = env('DB_HOST', default='neo4j')
+NEO4J_PORT = env('NEO4J_PORT', default='7687')
+
+neomodel_config.DATABASE_URL = f"{NEO4J_SCHEME}://{NEO4J_USER}:{NEO4J_PASSWORD}@{NEO4J_HOST}:{NEO4J_PORT}"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -173,7 +184,7 @@ CHANNEL_LAYERS = {
 # ==============================================================================
 # UNIFIED API ENDPOINT INFERENCE KEYS (GROQ HARDWARE BRIDGE)
 # ==============================================================================
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_API_KEY = env("GROQ_API_KEY", default="")
 # ======================================================================
 # END: DATA STORES, NEO4J LOOPBACK, COOKIE & STATIC PATH PARAMS (PATCH 3 OF 3)
 # ======================================================================

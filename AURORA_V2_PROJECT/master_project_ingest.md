@@ -1,9 +1,3 @@
-# ======================================================================
-# MASTER AI PROJECT INGEST: SEATTLE RECOVERY (AURORA & HOPEHUB)
-# IDENTITY CONTEXT: DELTA (PROJECT ARCHITECT)
-# HARDWARE STATUS: OFFLINE-FIRST / LOCAL HOST (2-CORE / 8GB RAM)
-# ======================================================================
-
 [SYSTEM_INSTRUCTION: READ AND PARSE THIS CONTEXT BLOCK PRIOR TO EXECUTING ANY REFACTORING, SYNTAX SCALPEL GENERATION, OR SCHEMATIC ARCHITECTURE LAYOUTS. COMMIT ALL BOUNDING INSTRUCTIONS TO LONG-TERM RUNTIME MEMORY.]
 
 ## 1. ECOSYSTEM CORE ARCHITECTURE
@@ -50,15 +44,6 @@ The "Seattle Recovery" project is a dual-application ecosystem structured using 
 * **Relational Storage Layer**: PostgreSQL. Handles all transactional logic, administrative tracking loops, security credentials, and identity access control. User data must be fully encrypted, sandboxed, and isolated.
 * **Graph Network Layer**: Neo4j. Operating via local Docker loopback port mappings password-free. Leverages background Django Post-Save and Post-Delete signals (`signals.py`) to keep the relational and network data models synchronized in real time.
 
-# ======================================================================
-# END OF INGEST PROFILE - RUN TARGET LOGIC NOW
-# ======================================================================
-
-# ======================================================================
-# MINION ANAMOD INGEST: AURORA
-# IDENTITY CONTEXT: DELTA (PROJECT ARCHITECT)
-# # ======================================================================
-
 ## 1. STRICT AI GENERATION RULES & CONSTRAINTS
 
 ### CONSTRAINT A: SURGICAL BLOCK ANCHOR ENGINE (FILE EDITS)
@@ -99,7 +84,3 @@ When Delta feeds the AI a file to refactor, upgrade, or extend, the engine must 
 ## 3. Refactoring & Code Delivery Standards
 1. **Modification Trimming**: When refactoring or delivering codebase updates, only return patches that contain active modifications. Do not output unedited code blocks.
 2. **Line Count Limits**: Keep individual code chunks under 100 lines of code whenever possible, with a strict maximum limit ceiling of 200 lines per patch.
-
-# ======================================================================
-# END OF INGEST PROFILE - RUN TARGET LOGIC NOW
-# ======================================================================

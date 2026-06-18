@@ -1,6 +1,6 @@
 # ======================================================================
 # PROJECT MILESTONE RECORD: SEATTLE RECOVERY ARCHITECTURE UPDATES
-# TIMESTAMP: 2026-06-16 (DELTA-ARCHITECT SESSION CONFIRMATION)
+# TIMESTAMP: 2026-06-17 (DELTA-ARCHITECT SESSION CONFIRMATION)
 # ======================================================================
 
 ## 1. COMPLETED ACCOMPLISHMENTS (CURRENT IMMACULATE BASELINE)
@@ -8,19 +8,16 @@
 * [x] **Zero-Dependency Native Fetch UI**: Migrated the front-end injection engine from jQuery dependent `$.ajax` syntax to an offline-first browser native `fetch()` layout. This eliminates CDN internet lookup loops and completely satisfies the local hardware constraint loop.
 * [x] **Decoupled System Telemetry**: Built a stateless, thread-safe `TelemetryLogger` module utility (`aurora/utils/telemetry.py`) running on localized thread storage blocks.
 * [x] **Utility Core Refactoring**: Overhauled both `page_skeleton.py` and `api_skeleton.py` core forge engines to scrub out old cross-coupled references and route status logs safely through the thread-isolated `TelemetryLogger`.
-* [x] **Twin-Track Baseline Pass**: Verified all functionality with a comprehensive test run execution checkpoint, returning a 100% green status sweep across all structural system commands.
+* [x] **Ironclad Test Suite Sandboxing**: Audited and refactored the entire test suite backlog (`test_api_ast_scanner.py`, `test_api_commands.py`, `test_api_dead_code.py`, `test_nodes.py`, and `test_page_skeleton.py`). Every suite now executes within randomized UUID file paths under `settings.BASE_DIR`.
+* [x] **Defused Production Graph Pollution**: Eliminated dangerous global `DETACH DELETE` queries. Implemented a surgical, parameterized Cypher tracking sweep (`IN $paths` and signature constraints) to shield the live Neo4j production graph from data corruption.
+* [x] **Modular Test Suite Partitioning**: Fragmented the high-density `test_api_commands.py` file into un-nested, highly focused Surgical Block Anchor patches under line limits.
+* [x] **Minion Architecture Blueprinting**: Established the prompt definitions, structural markdown instructions, model targets (`llama-3.3-70b-specdec`), and JSON constraints (`thou_shalt` / `thou_shalt_not`) for `minion_test_writer` and `minion_AI_writer`.
 
 ## 2. ACTIVE BACKLOG (PENDING WORKSPACE DIRECTIVES)
-* [ ] **Modular Test Suite Partitioning**: Split the monolithic 200+ line master testing file `aurora/tests/test_api_commands.py` into isolated, under-100-line testing suites targeting individual handlers to preserve host memory.
+* [ ] **Deploy Minion UI Creation Dashboard**: Build out the Django `MinionForgeForm`, views, and AJAX controller pipeline to sanitize, preview via regex parsing, and commit custom minion configurations to the `DeltaDirectives` PostgreSQL database.
+* [ ] **Assemble Interactive QA Test Dashboard**: Implement the `test_minion_dashboard.html` template and connect the `scan_test_suite_violations` view route to enable one-click visual test suite auditing and dynamic auto-healing pipelines.
 * [ ] **Production API Integration**: Populate the core database querying functions inside `hopehub/api/get_content_api.py` to replace placeholder arrays with relational-graph tandem lookups mapping live physical and mental well-being recovery action resources.
 
 # ======================================================================
-# FILE: project.md (PATCH EXCERPT APPENDATION)
-# START: GRAPH_INTEGRITY_AND_TEST_POLLUTION_LEAK_TRACKING
-# ======================================================================
-## 3. CRITICAL DEFECT MATRIX & TRUST RESTORATION
-* [ ] **Eliminate Production Graph Pollution**: Fix the architectural test leak where 8 battery tests are generating active, live-labeled production elements instead of isolated sandbox mock records.
-* [ ] **Enforce Ironclad Test Boundaries**: Audit all tests across the root `tests/` workspace directory to ensure zero cross-contamination of transactional credentials or node graphs.
-# ======================================================================
-# END: GRAPH_INTEGRITY_AND_TEST_POLLUTION_LEAK_TRACKING
+# END OF FILE: project.md (CURRENT STATE IMMUTABLE SNAPSHOT)
 # ======================================================================
