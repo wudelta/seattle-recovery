@@ -1,0 +1,70 @@
+# ======================================================================
+# FILE: docker-compose.yml (PATCH 1 OF 1)
+# START: DOCKER_COMPOSE_CORE_BLUEPRINT
+# ======================================================================
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: seattle_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    command: [
+      "postgres",
+      "-c", "shared_buffers=256MB",
+      "-c", "effective_cache_size=768MB",
+      "-c", "work_mem=16MB",
+      "-c", "maintenance_work_mem=64MB"
+    ]
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          cpus: '0.50'
+          memory: 1024M
+    networks:
+      - recovery_net
+
+  neo4j:
+    image: neo4j:5.12-community
+    container_name: seattle_neo4j
+    ports:
+      - "7474:7474"   # Dashboard UI
+      - "7687:7687"   # Bolt Driver Connection
+    environment:
+      - NEO4J_AUTH=neo4j/secure_graph_password_2026
+      - NEO4J_server_memory_heap_initial__size=256m
+      - NEO4J_server_memory_heap_max__size=512m
+      - NEO4J_server_memory_pagecache_size=256m
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+        limits:
+          cpus: '0.50'
+          memory: 1024M  # Strict 1GB memory boundary wall
+    networks:
+      - recovery_net
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+
+networks:
+  recovery_net:
+    driver: bridge
+# ======================================================================
+# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)
+# ======================================================================
