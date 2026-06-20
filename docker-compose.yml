@@ -1,8 +1,7 @@
-# ======================================================================
-# FILE: docker-compose.yml (PATCH 1 OF 1)
-# START: DOCKER_COMPOSE_CORE_BLUEPRINT
-# ======================================================================
-version: '3.8'
+# ====================================================================== #
+# FILE: docker-compose.yml (PATCH 1 OF 1)                                #
+# START: DOCKER_COMPOSE_CORE_BLUEPRINT                                   #
+# ====================================================================== #
 
 services:
   postgres:
@@ -12,13 +11,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    command: [
-      "postgres",
-      "-c", "shared_buffers=256MB",
-      "-c", "effective_cache_size=768MB",
-      "-c", "work_mem=16MB",
-      "-c", "maintenance_work_mem=64MB"
-    ]
+    command: [ "postgres", "-c", "shared_buffers=256MB", "-c", "effective_cache_size=768MB", "-c", "work_mem=16MB", "-c", "maintenance_work_mem=64MB" ]
     ports:
       - "5432:5432"
     volumes:
@@ -37,10 +30,10 @@ services:
     image: neo4j:5.12-community
     container_name: seattle_neo4j
     ports:
-      - "7474:7474"   # Dashboard UI
-      - "7687:7687"   # Bolt Driver Connection
+      - "7474:7474" # Dashboard UI
+      - "7687:7687" # Bolt Driver Connection
     environment:
-      - NEO4J_AUTH=neo4j/secure_graph_password_2026
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
       - NEO4J_server_memory_heap_initial__size=256m
       - NEO4J_server_memory_heap_max__size=512m
       - NEO4J_server_memory_pagecache_size=256m
@@ -53,7 +46,47 @@ services:
           memory: 256M
         limits:
           cpus: '0.50'
-          memory: 1024M  # Strict 1GB memory boundary wall
+          memory: 1024M # Strict 1GB memory boundary wall
+    networks:
+      - recovery_net
+
+  redis_broker:
+    image: redis:7-alpine
+    container_name: seattle_redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - recovery_net
+
+  django_app:
+    build: .
+    container_name: seattle_django
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    depends_on:
+      - postgres
+      - neo4j
+      - redis_broker
+    networks:
+      - recovery_net
+
+  web_server:
+    build: ./webserver
+    container_name: seattle_web
+    ports:
+      - "3000:3000"
+    volumes:
+      - static_volume:/app/staticfiles:ro
+    depends_on:
+      - django_app
     networks:
       - recovery_net
 
@@ -61,10 +94,11 @@ volumes:
   postgres_data:
   neo4j_data:
   neo4j_logs:
+  static_volume:
 
 networks:
   recovery_net:
     driver: bridge
-# ======================================================================
-# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)
-# ======================================================================
+# ====================================================================== #
+# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)                     #
+# ====================================================================== #

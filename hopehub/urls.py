@@ -33,4 +33,5 @@ urlpatterns = [
     # Anchor Signature for Aurora Forge Automation Engine (Step 4 Target)
     # Network Routing Minion will append paths directly below this line
     path('api/get_content/', api_commands.get_content_endpoint, name='get_content_endpoint'),
+    path('mission/', views.MissionView.as_view(), name='mission'),
 ]

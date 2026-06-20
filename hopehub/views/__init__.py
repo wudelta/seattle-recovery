@@ -1,3 +1,4 @@
+from .mission_view import MissionView
 from .landing import hopehub_landing
 from .journal import JournalView
 from .journal import ProcessJournalEntryView
@@ -17,4 +18,5 @@ __all__ = [
     'JournalView',
     'ProcessJournalEntryView',
     'DeleteJournalEntryView',
+    'MissionView',
 ]
