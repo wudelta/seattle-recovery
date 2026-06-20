@@ -9,3 +9,5 @@ dead_ends/
 .spyproject/
 staticfiles/
 workspace_telemetry.log
+# Strict Blacklist for Automated Container Backups
+database_backups/

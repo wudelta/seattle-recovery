@@ -40,6 +40,7 @@ sqlparse==0.5.5
 typing-extensions==4.15.0
 typing-inspection==0.4.2
 urllib3==2.7.0
+watchdog==4.0.1
 
 # Fixed version bridges for django-neomodel compatibility
 setuptools==69.5.1
