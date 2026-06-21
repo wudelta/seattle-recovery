@@ -2,6 +2,7 @@
 <!-- FILE: aurora/templates/aurora/snippets/delta_notes_console_panel.html (PATCH 1 OF 1) -->
 <!-- START: CONSOLIDATED_DELTA_NOTES_INTEGRATION_PANELS -->
 <!-- ====================================================================== -->
+{% load static %}
 <div class="w-100 h-100 p-0 text-mono" style="font-size: 0.85rem;">
     <!-- Main Workspace Split -->
     <div class="row gx-2 gy-0 m-0 w-100 h-100">
@@ -23,7 +24,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Right Column Matrix: Split Log Viewports (Unprocessed vs Processed) -->
         <div class="col-md-8 pe-0 h-100">
             <div class="row gx-2 gy-0 h-100">
@@ -34,16 +34,13 @@
                             <span class="fw-bold text-uppercase">UNPROCESSED_LOG</span>
                             <span id="queue-count" class="badge bg-success py-0 px-1">0</span>
                         </div>
-                        <!-- FIXED: Transformed card-body into a column flex layout that stretches lists -->
                         <div class="card-body p-1 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
-                            <!-- FIXED: Replaced hardcoded max-height with absolute flex-grow boundaries -->
                             <div id="notes-container" class="list-group list-group-flush bg-transparent flex-grow-1 overflow-auto" style="height: 100%;">
                                 <!-- Note entries populate here dynamically via javascript -->
                             </div>
                         </div>
                     </div>
                 </div>
-
                 <!-- Sub-Panel B: Processed Queue Session Log Layer -->
                 <div class="col-md-6 h-100 d-flex flex-column">
                     <div class="card console-panel h-100 border-secondary d-flex flex-column">
@@ -51,9 +48,7 @@
                             <span class="fw-bold text-uppercase" style="color: #6c757d;">PROCESSED_LOG</span>
                             <span id="processed-count" class="badge bg-secondary py-0 px-1">0</span>
                         </div>
-                        <!-- FIXED: Transformed card-body into a column flex layout that stretches lists -->
                         <div class="card-body p-1 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
-                            <!-- FIXED: Replaced hardcoded max-height with absolute flex-grow boundaries -->
                             <div id="processed-notes-container" class="list-group list-group-flush bg-transparent flex-grow-1 overflow-auto" style="height: 100%;">
                                 <!-- Completed session history records inject here dynamically -->
                             </div>

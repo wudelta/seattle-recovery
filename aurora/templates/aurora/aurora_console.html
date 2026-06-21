@@ -68,21 +68,25 @@
 <!-- START: CONSOLE_ORCHESTRATOR_SCRIPT_ASSET_LINKING -->
 <!-- ====================================================================== -->
 {% block extra_js %}
-<!-- Core AI Blueprint Console Interface Engine Script -->
+<!-- Core Main Layout Panel Orchestrator -->
 <script src="{% static 'aurora/js/console.js' %}"></script>
-<!-- Delta Notes Interactive Task Checklist Engine Script -->
-<script src="{% static 'aurora/js/delta_notes.js' %}"></script>
-<script>
-  $(document).ready(function() {
-    const systemEndpoints = {
-      endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
-    };
 
-    if (typeof initDeltaNotesConsole === "function") {
-      initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
-      console.log("[Aurora Cockpit] Delta Notes click event channels successfully bound.");
-    }
-  });
+<!-- Standalone Decoupled Feature Modules -->
+<script src="{% static 'aurora/js/blueprint.js' %}"></script>
+<script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+
+<script>
+    $(document).ready(function() {
+        const systemEndpoints = {
+            endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
+        };
+
+        // Standardized standalone feature initializations 
+        if (typeof initDeltaNotesConsole === "function") {
+            initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+            console.log("[Aurora Cockpit] Delta Notes pipeline channels successfully mapped.");
+        }
+    });
 </script>
 {% endblock %}
 <!-- ====================================================================== -->
