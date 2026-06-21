@@ -1,0 +1,40 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html (PATCH 1 OF 1) -->
+<!-- START: ANAMOD_SNIPPET_CONSOLE_LAYOUT -->
+<!-- ====================================================================== -->
+<div class="h-100 w-100 d-flex flex-column p-0 m-0" style="background-color: #000000; overflow: hidden;">
+    <div class="row g-2 flex-grow-1 min-vh-0 m-0 p-0 h-100">
+        <!-- Editor Input Core (Left Track) -->
+        <div class="col-lg-7 d-flex flex-column h-100 p-1">
+            <div class="card bg-black h-100 d-flex flex-column border-secondary shadow-sm p-2 m-0" style="background-color: #050505 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
+                    <span class="font-monospace text-warning text-uppercase small" style="letter-spacing: 1px;">AI Fragment Input Canvas</span>
+                    <button class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2" style="font-size: 0.75rem;" onclick="document.getElementById('code-input-area').value = '';">Wipe Canvas</button>
+                </div>
+                <textarea id="code-input-area" class="form-control font-monospace p-3 flex-grow-1" rows="15" 
+                    placeholder="# Paste local execution fragment scripts from your LLM pipeline here...&#10;def test_recovery_pipeline():&#10;    assert True"
+                    style="background-color: #0a0a0a; color: #4ade80; border: 1px solid #222; font-size: 13px; resize: none; min-height: 0;"></textarea>
+                
+                <div class="d-flex justify-content-end gap-2 mt-2 flex-shrink-0">
+                    <button id="btn-validate-syntax" class="btn btn-outline-warning font-monospace px-3 py-1 text-uppercase fw-bold btn-sm" style="letter-spacing: 1px;">Compile Syntax</button>
+                    <button id="btn-run-tests" class="btn btn-outline-success font-monospace px-4 py-1 text-uppercase fw-bold btn-sm" style="letter-spacing: 1px;">Execute Sandbox</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Logs Core (Right Track) -->
+        <div class="col-lg-5 d-flex flex-column h-100 p-1">
+            <div class="card bg-black h-100 d-flex flex-column border-secondary shadow-sm p-0 m-0" style="background-color: #020202 !important;">
+                <div class="bg-dark text-light px-3 py-2 border-secondary border-bottom d-flex justify-content-between align-items-center flex-shrink-0" style="background-color: #111 !important; border-top: 1px solid #222;">
+                    <span class="font-monospace text-info text-uppercase small" style="letter-spacing: 1px;">Terminal Out Logs</span>
+                    <span id="execution-timer" class="badge bg-black text-muted font-monospace" style="border: 1px solid #222; font-size: 0.8rem;">0.00s</span>
+                </div>
+                <pre id="terminal-log-stream" class="p-3 m-0 flex-grow-1 font-monospace text-secondary" 
+                    style="background-color: #010101; font-size: 12px; overflow-y: auto; white-space: pre-wrap; min-height: 0; line-height: 1.5; color: #888 !important;">System diagnostic stack standing by. Awaiting instruction block allocation...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ====================================================================== -->
+<!-- END: ANAMOD_SNIPPET_CONSOLE_LAYOUT (PATCH 1 OF 1) -->
+<!-- ====================================================================== -->

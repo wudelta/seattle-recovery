@@ -34,15 +34,18 @@ $(document).ready(function() {
     $viewSelector.on('change', function() {
         const viewMode = $(this).val();
         
-        // Hide all panes cleanly
-        $('#delta-notes-workspace-container, #ai-blueprint-workspace-container').addClass('d-none');
+        // Dynamic Engine: Instantly drop visibility on all layout panes matching workspace sections
+        $('.workspace-viewport .workspace-section').addClass('d-none').removeClass('active-pane');
         
         if (viewMode === 'delta_notes') {
-            $('#delta-notes-workspace-container').removeClass('d-none');
+            $('#delta-notes-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['delta_notes']);
         } else if (viewMode === 'blueprint') {
-            $('#ai-blueprint-workspace-container').removeClass('d-none');
+            $('#ai-blueprint-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['blueprint']);
+        } else if (viewMode === 'anamod') {
+            $('#anamod-workspace-container').removeClass('d-none').addClass('active-pane');
+            $(document).trigger('aurora:view_changed', ['anamod']);
         }
     });
 // ======================================================================
@@ -53,10 +56,10 @@ $(document).ready(function() {
 // FILE: aurora/static/aurora/js/console.js (PATCH 2 OF 2)
 // START: HOOK_2_SESSION_LIFE_CYCLE_GATEKEEPER
 // ======================================================================
-    /**
-     * HOOK 2: COCKPIT SESSION LIFE-CYCLE GATEKEEPER SWITCH
-     * Handles UI states and safely handles PostgreSQL session timer synchronization metrics
-     */
+/**
+ * HOOK 2: COCKPIT SESSION LIFE-CYCLE GATEKEEPER SWITCH
+ * Handles UI states and safely handles PostgreSQL session timer synchronization metrics
+ */
     $timerToggleBtn.on('click', function(e) {
         e.preventDefault();
         sessionActive = !sessionActive;
@@ -74,7 +77,7 @@ $(document).ready(function() {
                 const secs = String(elapsedSeconds % 60).padStart(2, '0');
                 $timerDisplay.text(`${hrs}:${mins}:${secs}`);
             }, 1000);
-
+            
             // Broadcast session activation out to independent workspace panel listeners
             $(document).trigger('aurora:session_started');
         } else {
@@ -82,13 +85,12 @@ $(document).ready(function() {
             $viewSelector.prop('disabled', true);
             $gateOverlay.removeClass('d-none');
             $timerToggleBtn.removeClass('btn-outline-danger').addClass('btn-outline-success').text('Start Session');
-            
             clearInterval(timerInterval);
             
             if ($unlockedList.length) {
                 $unlockedList.html('<div class="text-muted p-1">[Registry] Standing by for session initialization...</div>');
             }
-
+            
             // Broadcast session termination out to independent workspace panel listeners
             $(document).trigger('aurora:session_stopped', [elapsedSeconds]);
         }

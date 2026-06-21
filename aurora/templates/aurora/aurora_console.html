@@ -16,47 +16,50 @@
 
 {% block content %}
 <div class="d-flex flex-column h-100 w-100 p-2" style="background-color: #000000; overflow: hidden; box-sizing: border-box;">
-  {% csrf_token %}
-
-  <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
-  <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
-    <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
-      <div class="d-flex align-items-center gap-3">
-        <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
-        <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;" disabled>
-          <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
-          <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
-        </select>
-      </div>
-      <div class="d-flex align-items-center">
-        <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
-          <span class="text-info me-2 small">SESSION_TIME:</span>
-          <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
-          <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
-  <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+    {% csrf_token %}
     
-    <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
-    <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999;">
-        <!-- FIXED: Scaled maximum width parameter to 480px to make the branding layout 2x larger -->
-        <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
-        <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Console Matrix Offline</h3>
-        <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace console views.</p>
+    <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
+    <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
+        <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
+            <div class="d-flex align-items-center gap-3">
+                <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
+                <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;" disabled>
+                    <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
+                    <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
+                    <option value="anamod">ANAMOD_CONSOLE_PANEL</option>
+                </select>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
+                    <span class="text-info me-2 small">SESSION_TIME:</span>
+                    <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
+                    <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Standardized View Panes: Unified mount properties with mb-4 cleared -->
-    <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
-      {% include "aurora/snippets/delta_notes_console_panel.html" %}
+    <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
+    <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+        <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
+        <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999;">
+            <!-- FIXED: Scaled maximum width parameter to 480px to make the branding layout 2x larger -->
+            <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
+            <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Console Matrix Offline</h3>
+            <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace console views.</p>
+        </div>
+
+        <!-- Standardized View Panes: Unified mount properties with mb-4 cleared -->
+        <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
+            {% include "aurora/snippets/delta_notes_console_panel.html" %}
+        </div>
+        <div class="workspace-section d-none style-panel-sync h-100 w-100" id="ai-blueprint-workspace-container" style="min-height: 0; overflow: hidden;">
+            {% include "aurora/snippets/blueprint_console_panel.html" %}
+        </div>
+        <div class="workspace-section d-none style-panel-sync h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
+            {% include "aurora/snippets/anamod_console_panel.html" %}
+        </div>
     </div>
-    <div class="workspace-section d-none style-panel-sync h-100 w-100" id="ai-blueprint-workspace-container" style="min-height: 0; overflow: hidden;">
-      {% include "aurora/snippets/blueprint_console_panel.html" %}
-    </div>
-  </div>
 </div>
 {% endblock %}
 <!-- ====================================================================== -->
@@ -74,19 +77,26 @@
 <!-- Standalone Decoupled Feature Modules -->
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+<script src="{% static 'aurora/js/anamod.js' %}"></script>
 
 <script>
-    $(document).ready(function() {
-        const systemEndpoints = {
-            endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
-        };
+  $(document).ready(function() {
+    const systemEndpoints = {
+      endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
+    };
 
-        // Standardized standalone feature initializations 
-        if (typeof initDeltaNotesConsole === "function") {
-            initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
-            console.log("[Aurora Cockpit] Delta Notes pipeline channels successfully mapped.");
-        }
-    });
+    // Standardized standalone feature initializations
+    if (typeof initDeltaNotesConsole === "function") {
+      initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+      console.log("[Aurora Cockpit] Delta Notes pipeline channels successfully mapped.");
+    }
+
+    // Safely fire external anamod binding engine loops using global lifecycle context
+    if (typeof window.initAnamodConsole === "function") {
+      window.initAnamodConsole('{{ csrf_token }}');
+      console.log("[Aurora Cockpit] Anamod compiler pipeline successfully initialized.");
+    }
+  });
 </script>
 {% endblock %}
 <!-- ====================================================================== -->
