@@ -1,0 +1,100 @@
+/* ====================================================================== */
+/* FILE: aurora/static/aurora/css/anamod.css (PATCH 1 OF 1) */
+/* START: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET */
+/* ====================================================================== */
+/**
+ * Aurora System Automation Loop - Anamod Layout Rules
+ * Structural core for transparent caret input overlays and Prism syncing.
+ */
+
+.anamod-panel-root {
+    background-color: #000000;
+    overflow: hidden;
+}
+
+.anamod-editor-card {
+    background-color: #050505 !important;
+}
+
+.anamod-terminal-card {
+    background-color: #020202 !important;
+}
+
+.anamod-terminal-header {
+    background-color: #111111 !important;
+    border-top: 1px solid #222222;
+}
+
+.anamod-terminal-stream {
+    background-color: #010101;
+    font-size: 12px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    min-height: 0;
+    line-height: 1.5;
+    color: #888888 !important;
+}
+
+.execution-timer-badge {
+    border: 1px solid #222222;
+    font-size: 0.8rem;
+}
+
+/* Core Multi-Layer Canvas Synchronizer Bracket */
+.editor-workspace {
+    position: relative;
+    flex-grow: 1;
+    min-height: 0;
+    background-color: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 4px;
+}
+
+/* Shared typographic rules ensuring caret and syntax colors sit exactly 1:1 */
+.sync-metrics {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    tab-size: 4 !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    border-radius: 4px !important;
+}
+
+/* Floating transparent interactive surface layer */
+#code-input-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: transparent;
+    background: transparent !important;
+    caret-color: #4ade80; /* Flashing terminal insert cursor remains visible */
+    resize: none;
+    z-index: 2;
+    white-space: pre;
+    overflow: auto;
+}
+
+/* Static colored syntax block drawing underneath the text field */
+#highlight-render-pane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none; /* Passes pointer tracking through to the textarea surface */
+    overflow: hidden;
+    background-color: #0a0a0a !important;
+}
+
+#highlight-code-target {
+    white-space: pre !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+/* ====================================================================== */
+/* END: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET (PATCH 1 OF 1) */
+/* ====================================================================== */

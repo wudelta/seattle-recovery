@@ -18,6 +18,52 @@
     function initAnamodConsole(csrfToken) {
         console.log("[Anamod Channel] Establishing local event listener loop bindings...");
 
+        const $textarea = $('#code-input-area');
+        const $highlightPane = $('#highlight-code-target');
+        const $scrollSyncSource = $('#code-input-area');
+        const $scrollSyncTarget = $('#highlight-render-pane');
+
+        function triggerFreshHighlight() {
+            if ($textarea.length && $highlightPane.length && typeof Prism !== 'undefined') {
+                let rawText = $textarea.val();
+                
+                // Keep trailing newline if present to prevent caret position flickering on blank lines
+                if (rawText[rawText.length - 1] === "\n") {
+                    rawText += " ";
+                }
+                
+                // Escape raw text blocks securely before feeding Prism engine
+                const escapedText = rawText
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+
+                $highlightPane.html(escapedText);
+                Prism.highlightElement($highlightPane[0]);
+            }
+        }
+
+        // Run initial highlighting pass on load
+        triggerFreshHighlight();
+
+        // Catch multiple input channels to refresh layout on pastes and edits instantly
+        $(document).on('input keyup paste', '#code-input-area', function() {
+            triggerFreshHighlight();
+        });
+
+        // Sync dual-layer scroll positions exactly across both axes
+        $(document).on('scroll', '#code-input-area', function() {
+            $scrollSyncTarget.scrollTop($scrollSyncSource.scrollTop());
+            $scrollSyncTarget.scrollLeft($scrollSyncSource.scrollLeft());
+        });
+
+        // Handle the UI Wipe Button through instance clear
+        $(document).on('click', '#btn-clear-canvas', function(e) {
+            e.preventDefault();
+            $textarea.val('');
+            triggerFreshHighlight();
+        });
+
         // Wire event handlers to your custom execution triggers
         $(document).on('click', '#btn-validate-syntax', function(e) {
             e.preventDefault();
@@ -40,7 +86,6 @@
         const $terminalLog = $('#terminal-log-stream');
         const $timerDisplay = $('#execution-timer');
 
-        // Transition visual component arrays to dynamic running modes
         if ($statusBadge.length) $statusBadge.attr('class', 'status-badge status-running');
         if ($statusText.length) $statusText.text('Executing');
         
