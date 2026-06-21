@@ -64,7 +64,7 @@ services:
     build: .
     container_name: seattle_django
     # FIXED: Provided an explicit timeout value (1) and forced SIGKILL to instantly free port 8000
-    command: ["watchmedo", "auto-restart", "--signal=SIGKILL", "--kill-after=1", "--directory=.", "--pattern=*.py", "--recursive", "--", "daphne", "-b", "0.0.0.0", "-p", "8000", "core_logic.asgi:application"]
+    #command: ["watchmedo", "auto-restart", "--signal=SIGKILL", "--kill-after=1", "--directory=.", "--pattern=*.py", "--recursive", "--", "daphne", "-b", "0.0.0.0", "-p", "8000", "core_logic.asgi:application"]
     ports:
       - "8000:8000"
     env_file:
