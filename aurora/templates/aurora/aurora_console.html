@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
     <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
     <link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
+    <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
     <!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
     <link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
 {% endblock %}
@@ -77,7 +78,10 @@
     <!-- Flattened Offline App Static UI Dependencies Bound to Verified Local Paths -->
     <script src="{% static 'js/jstree.min.js' %}"></script>
     <script src="{% static 'js/vs/loader.js' %}"></script>
+    
+    <!-- Decoupled Functional IDE Assets Loaded Separately -->
     <script src="{% static 'aurora/js/anamod.js' %}"></script>
+    <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
     
     <script>
         $(document).ready(function() {
@@ -93,6 +97,11 @@
                 if (!anamodInitialized && window.initAnamodConsole) {
                     console.log("[Anamod Orchestrator] View active. Loading editor components...");
                     window.initAnamodConsole('{{ csrf_token }}');
+                    
+                    // Initialize the separate file tree module file instantly
+                    if (typeof window.initAnamodWorkspaceTree === 'function') {
+                        window.initAnamodWorkspaceTree();
+                    }
                     anamodInitialized = true;
                 } else if (window.resizeAnamodEditor) {
                     window.resizeAnamodEditor();

@@ -1,12 +1,11 @@
 /* ====================================================================== */
-/* FILE: aurora/static/aurora/css/anamod.css (PATCH 1 OF 1) */
-/* START: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET */
+/* FILE: aurora/static/aurora/css/anamod.css (PATCH 1 OF 1)               */
+/* START: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET                      */
 /* ====================================================================== */
 /**
  * Aurora System Automation Loop - Anamod Layout Rules
- * Structural core for contenteditable workspace execution canvases.
+ * Structural core optimized for local offline Monaco Editor workspace panels.
  */
-
 .anamod-panel-root {
     background-color: #000000;
     overflow: hidden;
@@ -40,52 +39,24 @@
     font-size: 0.8rem;
 }
 
-/* Core Multi-Layer Canvas Synchronizer Bracket */
-.editor-workspace {
-    position: relative;
-    flex-grow: 1;
-    min-height: 0;
-    background-color: #0c0d12;
-    border: 1px solid #222222;
-    border-radius: 4px;
+/* CUSTOM SPYDER-LIKE PROJECT TREE STYLING INDICATORS */
+.anamod-tree-folder-text {
+    color: #ffca28 !important; /* Standout Spyder-like folder gold tint */
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
 }
 
-/* Target internal Prism formatting spans to explicitly force text colors */
-#highlight-render-pane .token.keyword {
-    color: #4ade80 !important; /* Vivid Python keywords */
-    font-weight: bold !important;
+/* Ensure selected or hovered items in tree remain readable under high-contrast dark mode */
+.jstree-default .jstree-hovered {
+    background: #252526 !important;
+    border-radius: 2px;
 }
 
-#highlight-render-pane .token.function {
-    color: #38bdf8 !important; /* Blue function blocks */
-}
-
-#highlight-render-pane .token.string {
-    color: #eab308 !important; /* High-visibility yellow strings */
-}
-
-#highlight-render-pane .token.comment {
-    color: #64748b !important; /* Italicized gray comment frames */
-    font-style: italic !important;
-}
-
-#highlight-render-pane .token.operator {
-    color: #fb923c !important; /* Orange operational syntax tokens */
-}
-
-#highlight-render-pane .token.number {
-    color: #c084fc !important; /* Purple numeric primitive indicators */
-}
-
-#highlight-render-pane .token.boolean {
-    color: #f43f5e !important; /* Coral boolean primitives */
-}
-
-#highlight-code-target {
-    white-space: pre !important;
-    background: transparent !important;
-    padding: 0 !important;
+.jstree-default .jstree-clicked {
+    background: #37373d !important;
+    border-radius: 2px;
+    box-shadow: none !important;
 }
 /* ====================================================================== */
-/* END: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET (PATCH 1 OF 1) */
+/* END: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET (PATCH 1 OF 1)         */
 /* ====================================================================== */
