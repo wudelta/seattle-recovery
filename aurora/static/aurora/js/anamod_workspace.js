@@ -25,9 +25,11 @@
                             nodes.forEach(node => {
                                 if (node.children && Array.isArray(node.children)) {
                                     node.type = 'folder';
-                                    node.icon = 'jstree-folder text-warning fw-bold';
                                     
-                                    // Inject custom folder text styles and collapse by default
+                                    // FIXED: Setting icon to false forces jsTree to strip away its internal image container
+                                    node.icon = false; 
+                                    
+                                    // Inject custom folder text styling classes and collapse by default
                                     node.a_attr = { "class": "anamod-tree-folder-text font-weight-bold" };
                                     node.state = { opened: false };
                                     
@@ -47,15 +49,13 @@
                                 }
                             });
 
-                            // DETERMINISTIC SORT GRID: Forces folders to the top, then sorts everything alphabetically
+                            // Forces folders to the top, then sorts everything alphabetically
                             nodes.sort((a, b) => {
                                 const isAFolder = (a.type === 'folder');
                                 const isBFolder = (b.type === 'folder');
                                 
-                                if (isAFolder && !isBFolder) return -1;  // 'a' is a folder, move it up
-                                if (!isAFolder && isBFolder) return 1;   // 'b' is a folder, move it up
-                                
-                                // Fallback: Standard case-insensitive alphabetical string comparison
+                                if (isAFolder && !isBFolder) return -1;
+                                if (!isAFolder && isBFolder) return 1;
                                 return a.text.localeCompare(b.text, undefined, { sensitivity: 'base', numeric: true });
                             });
                         }
