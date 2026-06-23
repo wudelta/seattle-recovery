@@ -1,8 +1,8 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html (PATCH 1 OF 1) -->
-<!-- START: ANAMOD_WORKSPACE_INTERFACE_BOARD                               -->
+<!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP                                  -->
 <!-- ====================================================================== -->
-<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; height: 100vh; min-height: 500px;">
+<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden;">
     
     <!-- COLUMN 1: LEFT FILE SYSTEM DIRECTORY TREE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
@@ -13,8 +13,8 @@
     </div>
 
     <!-- COLUMN 2: CENTER EDITOR CODE VIEWPORT -->
-    <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e; min-width: 400px;">
-        <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px; min-height: 35px;">
+    <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
+        <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
             <div id="active-file-indicator" class="text-warning small text-truncate" style="max-width: 400px;">
                 No file active
             </div>
@@ -23,8 +23,8 @@
             </div>
         </div>
         
-        <!-- FIXED VIEWPORT CONTAINER: Absolute framing isolates Monaco from flexbox sizing bugs -->
-        <div class="position-relative w-100 flex-grow-1" style="background-color: #1e1e1e;">
+        <!-- FIXED ENFORCEMENT WRAPPER: Absolute constraints stop Monaco from pushing past the screen footprint -->
+        <div class="position-relative w-100 flex-grow-1" style="min-height: 0; background-color: #1e1e1e;">
             <div id="anamod-monaco-viewport" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%;"></div>
         </div>
     </div>
@@ -56,5 +56,5 @@
     
 </div>
 <!-- ====================================================================== -->
-<!-- END: ANAMOD_WORKSPACE_INTERFACE_BOARD                                 -->
+<!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1)                     -->
 <!-- ====================================================================== -->
