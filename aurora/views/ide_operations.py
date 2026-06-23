@@ -1,6 +1,6 @@
 # ======================================================================
 # FILE: aurora/views/ide_operations.py (PATCH 1 OF 1)
-# START: IDE_AND_SANDBOX_CORE_LOGIC
+# START: FULL_IDE_OPERATIONS_BACKEND_SUITE
 # ======================================================================
 import os
 import json
@@ -13,17 +13,28 @@ from django.views.decorators.csrf import csrf_exempt
 def get_file_tree(path="/app"):
     """Scans the local filesystem to generate a hierarchical JSON structure."""
     name = os.path.basename(path)
-    ignored = {'.git', '__pycache__', 'node_modules', '.pytest_cache', 'postgres_data'}
+    ignored = {'.git', '__pycache__', 'node_modules', '.pytest_cache', 'postgres_data', 'staticfiles'}
     
     if os.path.isdir(path):
+        try:
+            items = os.listdir(path)
+        except PermissionError:
+            return None
+            
+        children = []
+        for x in items:
+            if x in ignored:
+                continue
+            child_node = get_file_tree(os.path.join(path, x))
+            if child_node:
+                children.append(child_node)
+                
         return {
-            "text": name if name else "Project Root",
+            "text": name if name else "Workspace Root",
             "type": "folder",
             "path": path,
-            "children": [
-                get_file_tree(os.path.join(path, x)) 
-                for x in os.listdir(path) if x not in ignored
-            ]
+            "children": children,
+            "state": {"opened": True}
         }
     else:
         return {
@@ -35,19 +46,30 @@ def get_file_tree(path="/app"):
 
 @csrf_exempt
 def file_tree_api(request):
-    """API Endpoint returning the JSON project folder tree."""
-    return JsonResponse(get_file_tree("/app"))
+    """API Endpoint returning a strict JSON array root format for jsTree."""
+    root_structure = get_file_tree("/app")
+    if root_structure:
+        return JsonResponse([root_structure], safe=False)
+    return JsonResponse([], safe=False)
 
 @csrf_exempt
 def file_operation_api(request):
-    """API Endpoint handling reading and writing files to the host mount."""
+    """API Endpoint handling reading and writing files safely to the host mount."""
     if request.method == 'GET':
         file_path = request.GET.get('path')
         if not file_path or not os.path.exists(file_path):
             return JsonResponse({'error': 'File not found'}, status=404)
         
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return JsonResponse({'content': f.read()})
+        # Guard clause: Prevent reading non-text/binary formats that crash string parsers
+        binary_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.pyc', '.pdf', '.zip', '.tar', '.gz'}
+        if any(file_path.lower().endswith(ext) for ext in binary_extensions):
+            return JsonResponse({'content': '# Binary Asset detected. Contents hidden inside text viewport.'})
+            
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return JsonResponse({'content': f.read()})
+        except Exception as e:
+            return JsonResponse({'error': f'Could not decode file: {str(e)}'}, status=500)
             
     elif request.method == 'POST':
         data = json.loads(request.body)
@@ -123,5 +145,5 @@ def lint_code_api(request):
     clean_errors = result.stdout.replace(temp_file_path, "current_file.py")
     return JsonResponse({'errors': clean_errors if clean_errors else "✅ No linting issues found!"})
 # ======================================================================
-# END: IDE_AND_SANDBOX_CORE_LOGIC (PATCH 1 OF 1)
+# END: FULL_IDE_OPERATIONS_BACKEND_SUITE (PATCH 1 OF 1)
 # ======================================================================

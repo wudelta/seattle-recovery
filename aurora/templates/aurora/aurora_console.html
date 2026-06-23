@@ -1,6 +1,6 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 1 OF 2) -->
-<!-- START: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR_SKELETON -->
+<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 1 OF 1) -->
+<!-- START: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR -->
 <!-- ====================================================================== -->
 {% extends "aurora/aurora_base.html" %}
 {% load static %}
@@ -12,12 +12,14 @@
 <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
+
+<!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
+<link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column h-100 w-100 p-2" style="background-color: #000000; overflow: hidden; box-sizing: border-box;">
     {% csrf_token %}
-    
     <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
     <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
         <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
@@ -42,34 +44,31 @@
     <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
     <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
         <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
-        <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999;">
-            <!-- FIXED: Scaled maximum width parameter to 480px to make the branding layout 2x larger -->
+        <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999; pointer-events: auto;">
             <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
             <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Console Matrix Offline</h3>
             <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace console views.</p>
         </div>
 
-        <!-- Standardized View Panes: Unified mount properties with mb-4 cleared -->
+        <!-- Standardized View Panes: Delta Notes is active-pane immediately on start -->
         <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/delta_notes_console_panel.html" %}
         </div>
+        
         <div class="workspace-section d-none style-panel-sync h-100 w-100" id="ai-blueprint-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/blueprint_console_panel.html" %}
+            <!-- FIXED UNLOCKED_COMPONENTS ANCHOR LOCATION -->
+            <!-- Placing the tag unstyled at the bottom of the Blueprint panel allows it to render naturally within the screen flow without breaking Delta Notes or leaking to the header grid -->
+            <div id="unlocked-components-list"></div>
         </div>
-        <div class="workspace-section d-none style-panel-sync h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
+        
+        <div class="workspace-section d-none h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/anamod_console_panel.html" %}
         </div>
     </div>
 </div>
 {% endblock %}
-<!-- ====================================================================== -->
-<!-- END: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR_SKELETON (PATCH 1 OF 2) -->
-<!-- ====================================================================== -->
 
-<!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 2 OF 2) -->
-<!-- START: CONSOLE_ORCHESTRATOR_SCRIPT_ASSET_LINKING -->
-<!-- ====================================================================== -->
 {% block extra_js %}
 <!-- Core Main Layout Panel Orchestrator -->
 <script src="{% static 'aurora/js/console.js' %}"></script>
@@ -77,28 +76,39 @@
 <!-- Standalone Decoupled Feature Modules -->
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+
+<!-- Flattened Offline App Static UI Dependencies Bound to Root Paths -->
+<script src="{% static 'js/jstree.min.js' %}"></script>
+<script src="{% static 'js/monaco-loader.min.js' %}"></script>
 <script src="{% static 'aurora/js/anamod.js' %}"></script>
 
 <script>
-  $(document).ready(function() {
+$(document).ready(function() {
     const systemEndpoints = {
-      endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
+        endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}"
     };
 
-    // Standardized standalone feature initializations
     if (typeof initDeltaNotesConsole === "function") {
-      initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
-      console.log("[Aurora Cockpit] Delta Notes pipeline channels successfully mapped.");
+        initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
     }
 
-    // Safely fire external anamod binding engine loops using global lifecycle context
     if (typeof window.initAnamodConsole === "function") {
-      window.initAnamodConsole('{{ csrf_token }}');
-      console.log("[Aurora Cockpit] Anamod compiler pipeline successfully initialized.");
+        window.initAnamodConsole('{{ csrf_token }}');
     }
-  });
+
+    // Intercept default panel state swaps driven by console.js events
+    $(document).on('aurora:session_started', function() {
+        if (window.resizeAnamodEditor) { window.resizeAnamodEditor(); }
+    });
+
+    $(document).on('aurora:view_changed', function(e, viewMode) {
+        if (viewMode === 'anamod' && window.resizeAnamodEditor) {
+            window.resizeAnamodEditor();
+        }
+    });
+});
 </script>
 {% endblock %}
 <!-- ====================================================================== -->
-<!-- END: CONSOLE_ORCHESTRATOR_SCRIPT_ASSET_LINKING (PATCH 2 OF 2) -->
+<!-- END: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR (PATCH 1 OF 1) -->
 <!-- ====================================================================== -->

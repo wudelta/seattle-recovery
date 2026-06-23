@@ -1,141 +1,193 @@
 // ======================================================================
 // FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 1)
-// START: ANAMOD_STANDALONE_CONSOLE_CONTROLLER
+// START: COMPLETE_ANAMOD_FRONTEND_CONTROLLER
 // ======================================================================
-/**
- * Aurora System Automation Loop - Anamod Interface Module
- * Handles local python compilation and docker verification triggers.
- */
-(function(window, $) {
-    'use strict';
+(function(window) {
+    let editor = null;
+    let currentFilePath = null;
 
-    // Execution endpoint configuration parameters
-    const SANDBOX_API_ENDPOINT = '/api/console/sandbox/';
-
-    /**
-     * Initializes structural tracking bindings for the Anamod sandbox environment.
-     */
-    function initAnamodConsole(csrfToken) {
-        console.log("[Anamod Channel] Establishing local event listener loop bindings...");
-
-        const $textarea = $('#code-input-area');
-        const $highlightPane = $('#highlight-code-target');
-        const $scrollSyncSource = $('#code-input-area');
-        const $scrollSyncTarget = $('#highlight-render-pane');
-
-        function triggerFreshHighlight() {
-            if ($textarea.length && $highlightPane.length && typeof Prism !== 'undefined') {
-                let rawText = $textarea.val();
-                
-                // Keep trailing newline if present to prevent caret position flickering on blank lines
-                if (rawText[rawText.length - 1] === "\n") {
-                    rawText += " ";
+    window.initAnamodConsole = function(csrfToken) {
+        console.log("[Anamod Workspace] Spawning control channels...");
+        
+        // 1. Initialize Monaco Editor Frame inside a safe layout calculation block
+        if (typeof require !== 'undefined') {
+            require.config({ paths: { 'vs': '/static/js/vs' }});
+            
+            // Explicitly force Monaco to resolve internal background workers absolutely from local folders
+            window.MonacoEnvironment = {
+                getWorkerUrl: function(workerId, label) {
+                    return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
+                        `self.MonacoEnvironment = { baseUrl: '/static/js/vs' }; importScripts('/static/js/vs/base/worker/workerMain.js');`
+                    );
                 }
-                
-                // Escape raw text blocks securely before feeding Prism engine
-                const escapedText = rawText
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;");
+            };
 
-                $highlightPane.html(escapedText);
-                Prism.highlightElement($highlightPane[0]);
-            }
+            require(['vs/editor/editor.main'], function() {
+                const targetDom = document.getElementById('anamod-monaco-viewport');
+                if (!targetDom) return;
+                
+                editor = monaco.editor.create(targetDom, {
+                    value: "# Select a modular file from the directory tree to start coding...\n",
+                    language: 'python',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontSize: 13,
+                    fontFamily: 'Fira Code, Courier New, monospace',
+                    minimap: { enabled: false },
+                    readOnly: false
+                });
+                editor.layout();
+                console.log("[Anamod Workspace] Monaco core editor engine unlocked and active.");
+            });
         }
 
-        // Run initial highlighting pass on load
-        triggerFreshHighlight();
-
-        // Catch multiple input channels to refresh layout on pastes and edits instantly
-        $(document).on('input keyup paste', '#code-input-area', function() {
-            triggerFreshHighlight();
-        });
-
-        // Sync dual-layer scroll positions exactly across both axes
-        $(document).on('scroll', '#code-input-area', function() {
-            $scrollSyncTarget.scrollTop($scrollSyncSource.scrollTop());
-            $scrollSyncTarget.scrollLeft($scrollSyncSource.scrollLeft());
-        });
-
-        // Handle the UI Wipe Button through instance clear
-        $(document).on('click', '#btn-clear-canvas', function(e) {
-            e.preventDefault();
-            $textarea.val('');
-            triggerFreshHighlight();
-        });
-
-        // Wire event handlers to your custom execution triggers
-        $(document).on('click', '#btn-validate-syntax', function(e) {
-            e.preventDefault();
-            transmitCodePayload('check_syntax', csrfToken);
-        });
-
-        $(document).on('click', '#btn-run-tests', function(e) {
-            e.preventDefault();
-            transmitCodePayload('run_sandbox', csrfToken);
-        });
-    }
-
-    /**
-     * Transmits raw string editor values downstream to the seattle_django network interface.
-     */
-    function transmitCodePayload(targetAction, csrfToken) {
-        const payloadBlock = $('#code-input-area').val();
-        const $statusBadge = $('#engine-status');
-        const $statusText = $('#status-text');
-        const $terminalLog = $('#terminal-log-stream');
-        const $timerDisplay = $('#execution-timer');
-
-        if ($statusBadge.length) $statusBadge.attr('class', 'status-badge status-running');
-        if ($statusText.length) $statusText.text('Executing');
-        
-        $terminalLog.text('>> Initiating remote compilation sequence inside cluster...\n').css('color', '#eab308');
-
-        let startTimestamp = performance.now();
-
-        $.ajax({
-            url: SANDBOX_API_ENDPOINT,
-            type: 'POST',
-            contentType: 'application/json',
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            data: JSON.stringify({
-                code: payloadBlock,
-                action: targetAction
-            }),
-            success: function(response) {
-                let executionTime = ((performance.now() - startTimestamp) / 1000).toFixed(2);
-                $timerDisplay.text(executionTime + 's');
-                if ($statusBadge.length) $statusBadge.attr('class', 'status-badge status-active');
-                if ($statusText.length) $statusText.text('Sandbox Ready');
-
-                if (response.success) {
-                    $terminalLog
-                        .text('>> PIPELINE SUCCESS\n\n' + (response.stdout || 'Process completed with zero returned stack logs.'))
-                        .css('color', '#4ade80');
-                } else {
-                    $terminalLog
-                        .text('>> EXECUTION REJECTED (EXIT CODE: ' + response.exit_code + ')\n\n' + (response.stderr || response.stdout))
-                        .css('color', '#f43f5e');
+        // 2. Initialize jsTree Component Loader with Flat Theme Overrides
+        const $treeContainer = $('#anamod-file-tree');
+        $treeContainer.jstree({
+            'core': {
+                'data': {
+                    'url': '/aurora/api/files/tree/',
+                    'dataType': 'json'
+                },
+                'themes': { 
+                    'name': 'default', 
+                    'dots': true, 
+                    'icons': true,
+                    'url': '/static/css/jstree-style.min.css'
                 }
             },
-            error: function(xhr) {
-                let executionTime = ((performance.now() - startTimestamp) / 1000).toFixed(2);
-                $timerDisplay.text(executionTime + 's');
-                if ($statusBadge.length) $statusBadge.attr('class', 'status-badge status-active');
-                if ($statusText.length) $statusText.text('Error State');
+            'types': {
+                'default': { 'icon': 'jstree-folder' },
+                'file': { 'icon': 'jstree-file' }
+            },
+            'plugins': ['types']
+        });
 
-                let errorLog = xhr.responseJSON ? xhr.responseJSON.error : 'Network pipeline execution fault occurred.';
-                $terminalLog.text('>> SYSTEM PIPELINE ERROR:\n' + errorLog).css('color', '#f43f5e');
+        // 3. Handle File Tree Node Selection Lifecycle
+        $treeContainer.on("select_node.jstree", function (e, data) {
+            const selectedNode = data.node.original;
+            if (selectedNode && selectedNode.type === 'file') {
+                loadWorkspaceFile(selectedNode.path);
             }
         });
-    }
 
-    // Expose registration layer parameters safely to the root context engine
-    window.initAnamodConsole = initAnamodConsole;
+        // 4. Client Side AJAX Storage Pipeline View Wrappers
+        function loadWorkspaceFile(filePath) {
+            updateTerminalStream(`[SYSTEM] Reading file trace: ${filePath}...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'GET',
+                data: { path: filePath },
+                success: function(response) {
+                    currentFilePath = filePath;
+                    
+                    if (editor !== null && typeof editor.setValue === 'function') {
+                        editor.setValue(response.content);
+                        
+                        const ext = filePath.split('.').pop().toLowerCase();
+                        if (ext === 'py') {
+                            monaco.editor.setModelLanguage(editor.getModel(), 'python');
+                        } else if (ext === 'css') {
+                            monaco.editor.setModelLanguage(editor.getModel(), 'css');
+                        } else if (ext === 'html') {
+                            monaco.editor.setModelLanguage(editor.getModel(), 'html');
+                        } else if (ext === 'js') {
+                            monaco.editor.setModelLanguage(editor.getModel(), 'javascript');
+                        } else if (ext === 'json') {
+                            monaco.editor.setModelLanguage(editor.getModel(), 'json');
+                        }
+                        
+                        setTimeout(function() { editor.layout(); }, 50);
+                    } else {
+                        updateTerminalStream(`[WARNING] Core editor initializing. Re-click file to display.\n`);
+                    }
+                    
+                    $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath);
+                    toggleActionButtons(true);
+                    // FIXED: Removed the stray token 'Pis' causing the script interpreter runtime to crash
+                    updateTerminalStream(`[SYSTEM] File loaded successfully into viewport.\n`);
+                },
+                error: function(xhr) {
+                    updateTerminalStream(`[ERROR] Failed to load target node filesystem pointer: ${xhr.statusText}\n`);
+                }
+            });
+        }
 
-})(window, window.jQuery);
+        $('#anamod-save-btn').on('click', function() {
+            if (!currentFilePath || !editor) return;
+            updateTerminalStream(`[SYSTEM] Syncing active layout buffers to host disk...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ path: currentFilePath, content: editor.getValue() }),
+                success: function() {
+                    updateTerminalStream(`[SUCCESS] File buffers saved to physical disk address.\n`);
+                },
+                error: function(xhr) {
+                    updateTerminalStream(`[ERROR] Commit transaction rejected: ${xhr.statusText}\n`);
+                }
+            });
+        });
+
+        // 5. Sandbox Code Execution Channels
+        $('#anamod-run-btn').on('click', function() {
+            if (!editor) return;
+            updateTerminalStream(`[SYSTEM] Deploying micro-worker runtime inside sandboxed engine...\n`);
+            $.ajax({
+                url: '/aurora/api/sandbox/run/',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ code: editor.getValue() }),
+                success: function(response) {
+                    updateTerminalStream(`[SANDBOX RUN OUTPUT]\n${response.output}`);
+                },
+                error: function(xhr) {
+                    updateTerminalStream(`[ERROR] Worker failed to initialize or timed out: ${xhr.statusText}\n`);
+                }
+            });
+        });
+
+        // 6. Asynchronous Flake8 Linter Interface Call
+        $('#anamod-lint-btn').on('click', function() {
+            if (!editor) return;
+            updateTerminalStream(`[SYSTEM] Piping file syntax to analysis checker...\n`);
+            $.ajax({
+                url: '/aurora/api/sandbox/lint/',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ code: editor.getValue() }),
+                success: function(response) {
+                    updateTerminalStream(`[LINTER ENGINE RESULTS]\n${response.errors}\n`);
+                },
+                error: function(xhr) {
+                    updateTerminalStream(`[ERROR] Linter execution subsystem crashed: ${xhr.statusText}\n`);
+                }
+            });
+        });
+
+        window.resizeAnamodEditor = function() {
+            if (editor) {
+                setTimeout(function() { editor.layout(); }, 100);
+            }
+        };
+
+        function toggleActionButtons(enabled) {
+            $('#anamod-run-btn, #anamod-lint-btn, #anamod-save-btn').prop('disabled', !enabled);
+        }
+
+        function updateTerminalStream(message) {
+            const $term = $('#anamod-terminal-stream');
+            if ($term.length) {
+                $term.text($term.text() + message);
+                $term.scrollTop($term.scrollHeight);
+            }
+        }
+    };
+})(window);
 // ======================================================================
-// END: ANAMOD_STANDALONE_CONSOLE_CONTROLLER (PATCH 1 OF 1)
+// END: COMPLETE_ANAMOD_FRONTEND_CONTROLLER (PATCH 1 OF 1)
 // ======================================================================

@@ -11,3 +11,11 @@ staticfiles/
 workspace_telemetry.log
 # Strict Blacklist for Automated Container Backups
 database_backups/
+
+# Monaco Vendor Exclusions
+node_modules/
+package/
+static/js/vs/
+
+aurora/static/aurora/css/vendor/
+aurora/static/aurora/js/vendor/
