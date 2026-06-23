@@ -63,8 +63,7 @@ services:
   django_app:
     build: .
     container_name: seattle_django
-    # FIXED: Provided an explicit timeout value (1) and forced SIGKILL to instantly free port 8000
-    #command: ["watchmedo", "auto-restart", "--signal=SIGKILL", "--kill-after=1", "--directory=.", "--pattern=*.py", "--recursive", "--", "daphne", "-b", "0.0.0.0", "-p", "8000", "core_logic.asgi:application"]
+    user: "root" # Required to access the mounted docker socket
     ports:
       - "8000:8000"
     env_file:
@@ -72,6 +71,7 @@ services:
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
+      - /var/run/docker.sock:/var/run/docker.sock # Allows Django to spawn sandbox containers
     depends_on:
       - postgres
       - neo4j

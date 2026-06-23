@@ -27,7 +27,7 @@ function initBlueprintConsole() {
             success: function(response) {
                 if (response.status === 'success' && response.components) {
                     if (response.components.length === 0) {
-                        $unlockedList.html('<div class="text-muted p-1">[Registry] Zero unlocked assets detected.</div>');
+                        $unlockedList.html('<div class="text-muted p-1">[REGISTRY] Zero unlocked assets detected.</div>');
                         return;
                     }
                     $unlockedList.empty();

@@ -21,15 +21,3 @@
 # ======================================================================
 # END OF FILE: project.md (CURRENT STATE IMMUTABLE SNAPSHOT)
 # ======================================================================
-
-
-## Backlog Export Session Cluster (2026-06-21 21:26:27)
-* [ ] in the aurora_console the pause button in the SESSION_TIME box is pink on pink so you can't read it. make it mimic the start session. leave it pink and don't change the style, just make it muted transparent until hover over. then change it to white on pink exactly like the Log Out button in aurora_base.html
-* [ ] aurora/static/aurora/js/console.js has to be split up. snippets must have their own .js file and console.js is just for aurora_console.html. it also needs to be renamed aurora_console.js
-* [ ] review the /bind command aurora/api/handlers/bind.py to see what it's currently doing and make sure it's ready for production.
-* [ ] i can only see what /slash commands are available right now by looking in aurora/api/blueprint.py. i need a help view tied to the blueprint console that tells me the list of commands, a general description and the syntax for use. this needs to be updated by minion_slash_command when new ones are created.
-* [ ] add a priority field to DeltaNotesEntry (1-10) to help prioritize tasks and make it required. then add a slide selector to DELTA_NOTES_CONSOLE_PANEL right below the text box, before the Add to Active Queue button.
-* [ ] change the edit button on the UNPROCESSED_LOG to be more functional. right now its just a message box. it will no longer work once we add the priority field anyway.
-* [ ] create a project_dashboard view in the console and a model. this view will be the next step in the project pipeline. it will take the unprocessed DeltaNotes entries and process them into AI instructions, assign to a minion and allow me to click an execute button. then they attempt to implement and submit for approval.
-* [ ] i love this hover-over help text that pops up when i mouse over this text box in the CAPTURE_INTENTION dashboard. add that to the landing page vis graph in aurora first, and then hopehub.
-* [ ] the SESSION_TIME needs to go somewhere and do something. add a time log table to the models and start logging active time spent in the console by user.

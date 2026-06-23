@@ -450,7 +450,7 @@ Under attack?
       document.removeEventListener('astro:before-swap', cleanup);
     });
   })();
-</script> <main id="main-content" class="relative w-full max-w-full overflow-x-clip" tabindex="-1"> <div class="gap-section flex flex-col">  <section id="home-hero" class="bg-background-100 relative z-10 md:px-2 md:pt-[72px]" data-cms-path="pages.home.hero" data-astro-cid-zoedcjun> <div class="relative h-full w-full md:pt-2 md:pb-3" data-astro-cid-zoedcjun> <astro-island uid="Ze42DA" prefix="r51" component-url="/_astro/index.BYieu1Gl.js" component-export="CornerLines" renderer-url="/_astro/client.D4IwMSYo.js" props="{&quot;internal&quot;:[0,false],&quot;className&quot;:[0,&quot;hidden md:block&quot;],&quot;data-astro-cid-zoedcjun&quot;:[0,true]}" ssr client="idle" opts="{&quot;name&quot;:&quot;CornerLines&quot;,&quot;value&quot;:true}" await-children><div class="corner-lines-container" aria-hidden="true" data-astro-cid-zoedcjun="true"><svg class="corner-line top-line absolute top-0 left-1/2 h-1 w-[200dvw] -translate-x-1/2 transition-opacity duration-[2000ms] ease-out opacity-50 hidden md:block" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="0.5" x2="100%" y2="0.5" stroke="var(--color-border-100)" stroke-width="1" stroke-dasharray="16,16"></line></svg><svg class="corner-line bottom-line absolute bottom-0 left-1/2 h-1 w-[200dvw] -translate-x-1/2 transition-opacity duration-[2000ms] ease-out opacity-0 hidden md:block" preserveAspectRatio="none"><line x1="0" y1="0.5" x2="100%" y2="0.5" stroke="var(--color-border-100)" stroke-width="1" stroke-dasharray="16,16"></line></svg></div><!--astro:end--></astro-island> <div class="mx-auto w-full max-w-[1480px]" data-astro-cid-zoedcjun> <div class="md:shadow-stack bg-accent-100 mt-14 md:m-0 mx-1 md:p-0 px-2 rounded-xl flex items-center justify-center relative isolate overflow-hidden border-b md:rounded-2xl md:border-0 min-h-[600px] md:min-h-[720px] pt-12" data-astro-cid-zoedcjun> <div class="absolute inset-0 z-0" data-astro-cid-zoedcjun> <div data-id="canvas" data-canvas-variant="default" data-cms-preview-heavy="hero-video" data-hero-video-canvas class="pointer-events-none absolute left-1/2 -translate-x-1/2 z-0 w-[150%] md:w-full overflow-hidden mask-radial-[50%_100%] mask-radial-from-80% mask-t-from-0 mask-b-from-100% top-auto bottom-0 h-[128%] md:top-0 md:bottom-auto md:h-full" aria-hidden="true"> <div class="bg-accent-100/30 absolute top-1/2 left-1/2 z-0 h-[160%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] blur-3xl" aria-hidden="true"></div>  <video data-hero-background-video data-hero-video-pending="true" data-hero-video-loaded="false" poster="/static/hero-poster.avif" class="absolute bottom-0 left-1/2 z-1 min-h-full min-w-full origin-bottom transform-[translate3d(-50%,0,0)] object-cover object-bottom opacity-0 transition-opacity duration-500 ease-out [-webkit-backface-visibility:hidden] backface-hidden data-[hero-video-loaded=true]:opacity-100 motion-reduce:transition-none" autoplay loop muted playsinline preload="none" aria-hidden="true"> <source data-src="/static/hero-background-video.mp4" type="video/mp4"> </video> </div> <script>
+</script> <main id="main-content" class="relative w-full max-w-full overflow-x-clip" tabindex="-1"> <div class="gap-section flex flex-col">  <section id="home-hero" class="bg-background-100 relative z-10 md:px-2 md:pt-[72px]" data-cms-path="pages.home.hero" data-astro-cid-zoedcjun> <div class="relative h-full w-full md:pt-2 md:pb-3" data-astro-cid-zoedcjun> <astro-island uid="Ze42DA" prefix="r51" component-url="/_astro/index.BYieu1Gl.js" component-export="CornerLines" renderer-url="/_astro/client.D4IwMSYo.js" props="{&quot;internal&quot;:[0,false],&quot;className&quot;:[0,&quot;hidden md:block&quot;],&quot;data-astro-cid-zoedcjun&quot;:[0,true]}" ssr client="idle" opts="{&quot;name&quot;:&quot;CornerLines&quot;,&quot;value&quot;:true}" await-children><div class="corner-lines-container" aria-hidden="true" data-astro-cid-zoedcjun="true"><svg class="corner-line top-line absolute top-0 left-1/2 h-1 w-[200dvw] -translate-x-1/2 transition-opacity duration-[2000ms] ease-out opacity-50 hidden md:block" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="0.5" x2="100%" y2="0.5" stroke="var(--color-border-100)" stroke-width="1" stroke-dasharray="16,16"></line></svg><svg class="corner-line bottom-line absolute bottom-0 left-1/2 h-1 w-[200dvw] -translate-x-1/2 transition-opacity duration-[2000ms] ease-out opacity-0 hidden md:block" preserveAspectRatio="none"><line x1="0" y1="0.5" x2="100%" y2="0.5" stroke="var(--color-border-100)" stroke-width="1" stroke-dasharray="16,16"></line></svg></div><!--astro:end--></astro-island> <div class="mx-auto w-full max-w-[1480px]" data-astro-cid-zoedcjun> <div class="md:shadow-stack bg-accent-100 mt-14 md:m-0 mx-1 md:p-0 px-2 rounded-xl flex items-center justify-center relative isolate overflow-hidden border-b md:rounded-2xl md:border-0 min-h-[600px] md:min-h-[720px] pt-12" data-astro-cid-zoedcjun> <div class="absolute inset-0 z-0" data-astro-cid-zoedcjun> <div data-id="canvas" data-canvas-variant="default" data-cms-preview-heavy="hero-video" data-hero-video-canvas class="pointer-events-none absolute left-1/2 -translate-x-1/2 z-0 w-[150%] md:w-full overflow-hidden top-auto bottom-0 h-[128%] md:top-0 md:bottom-auto md:h-full" aria-hidden="true"> <div class="bg-accent-100/30 absolute top-1/2 left-1/2 z-0 h-[160%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] blur-3xl" aria-hidden="true"></div>  <img data-hero-video-poster src="/static/hero-poster.avif" alt="" aria-hidden="true" decoding="async" fetchpriority="high" class="absolute bottom-0 left-1/2 z-1 h-full w-full origin-bottom transform-[translate3d(-50%,0,0)] mask-t-from-0 mask-b-from-100% mask-radial-[50%_100%] mask-radial-from-80% object-cover object-bottom [-webkit-backface-visibility:hidden] backface-hidden"> <video data-hero-background-video data-hero-video-pending="true" data-hero-video-loaded="false" poster="/static/hero-poster.avif" class="absolute bottom-0 left-1/2 z-2 h-full w-full origin-bottom transform-[translate3d(-50%,0,0)] object-cover object-bottom mask-radial-[50%_100%] mask-radial-from-80% mask-t-from-0 mask-b-from-100% opacity-0 transition-opacity duration-500 ease-out [-webkit-backface-visibility:hidden] backface-hidden data-[hero-video-loaded=true]:opacity-100 motion-reduce:transition-none" autoplay loop muted playsinline preload="none" aria-hidden="true"> <source data-src="/static/hero-background-video.mp4" type="video/mp4"> </video> </div> <script>
   (function () {
     if (typeof window === 'undefined') return;
 
@@ -531,20 +531,39 @@ Under attack?
       source.removeAttribute('data-src');
       video.dataset.heroVideoPending = 'false';
 
+      // Safari only autoplays reliably when muted/playsInline are set as
+      // properties (not just attributes), so reassert them before playing.
+      video.muted = true;
+      video.playsInline = true;
+
       var reveal = function () {
         video.dataset.heroVideoLoaded = 'true';
       };
-      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        reveal();
-      } else {
-        video.addEventListener('loadeddata', reveal, { once: true });
-      }
+      var hide = function () {
+        video.dataset.heroVideoLoaded = 'false';
+      };
+
+      // Reveal only while playing; hide on pause so Safari Low Power Mode's
+      // native overlay is never visible.
+      video.addEventListener('playing', reveal);
+      video.addEventListener('pause', hide);
+
+      var playAttempts = 0;
+      var tryPlay = function () {
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.catch(function () {
+            // Retry on canplay since Safari often rejects play() before enough data is buffered.
+            if (playAttempts < 1) {
+              playAttempts += 1;
+              video.addEventListener('canplay', tryPlay, { once: true });
+            }
+          });
+        }
+      };
 
       video.load();
-      var playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function () {});
-      }
+      tryPlay();
     }
 
     for (var i = 0; i < videos.length; i += 1) {
