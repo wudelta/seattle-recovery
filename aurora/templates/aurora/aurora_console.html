@@ -1,6 +1,6 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 1 OF 1)      -->
-<!-- START: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR                           -->
+<!-- START: TEMPLATE_LEVEL_BUFFER_TRACKER                                  -->
 <!-- ====================================================================== -->
 {% extends "aurora/aurora_base.html" %}
 {% load static %}
@@ -92,13 +92,11 @@
                 initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
             }
 
-            // Lazy initialization gate to protect Monaco from unrendered layout sizing traps
             function triggerAnamodLoad() {
                 if (!anamodInitialized && window.initAnamodConsole) {
                     console.log("[Anamod Orchestrator] View active. Loading editor components...");
                     window.initAnamodConsole('{{ csrf_token }}');
                     
-                    // Initialize the separate file tree module file instantly
                     if (typeof window.initAnamodWorkspaceTree === 'function') {
                         window.initAnamodWorkspaceTree();
                     }
@@ -108,19 +106,37 @@
                 }
             }
 
-            // Fire mount sequences if session starts or views shift to the editor panel
             $(document).on('aurora:session_started', function() {
                 const currentView = $('#console-view-selector').val();
-                if (currentView === 'anamod') {
-                    triggerAnamodLoad();
-                }
+                if (currentView === 'anamod') { triggerAnamodLoad(); }
             });
 
             $(document).on('aurora:view_changed', function(e, viewMode) {
-                if (viewMode === 'anamod') {
-                    // Delay execution slightly to ensure Bootstrap's .d-none removal is active
-                    setTimeout(triggerAnamodLoad, 80);
+                if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
+            });
+
+            // SELF-CONTAINED UN-SAVED CHANGES INDICATOR TRACKER
+            // Listens directly to keyboard text modification inputs inside Monaco's workspace viewport frame
+            $(document).on('keydown', '#anamod-monaco-viewport .monaco-editor textarea', function() {
+                const $indicator = $('#active-file-indicator');
+                const titleText = $indicator.text().trim();
+                
+                if (titleText && !titleText.endsWith('*')) {
+                    $indicator.text(titleText + ' *').addClass('text-warning');
+                    $('#anamod-save-btn').removeClass('btn-outline-warning').addClass('btn-warning text-dark font-weight-bold');
                 }
+            });
+
+            // Resets the state look when the save action button transaction finishes successfully
+            $(document).on('click', '#anamod-save-btn', function() {
+                const $btn = $(this);
+                // Delay evaluation slightly to allow the core script's AJAX transaction loop to finish committing to disk
+                setTimeout(function() {
+                    const $indicator = $('#active-file-indicator');
+                    const titleText = $indicator.text().replace(' *', '').trim();
+                    $indicator.text(titleText).removeClass('text-warning');
+                    $btn.removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
+                }, 400);
             });
         });
     </script>
