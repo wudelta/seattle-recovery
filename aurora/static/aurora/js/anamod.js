@@ -1,6 +1,6 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 1)
-// START: COMPLETE_ANAMOD_FRONTEND_CONTROLLER
+// FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 2)
+// START: METRIC_OFFLINE_MONACO_REQUIRE_INIT
 // ======================================================================
 (function(window) {
     let editor = null;
@@ -9,23 +9,42 @@
     window.initAnamodConsole = function(csrfToken) {
         console.log("[Anamod Workspace] Spawning control channels...");
         
-        // 1. Initialize Monaco Editor Frame inside a safe layout calculation block
-        if (typeof require !== 'undefined') {
-            require.config({ paths: { 'vs': '/static/js/vs' }});
-            
-            // Explicitly force Monaco to resolve internal background workers absolutely from local folders
-            window.MonacoEnvironment = {
-                getWorkerUrl: function(workerId, label) {
-                    return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
-                        `self.MonacoEnvironment = { baseUrl: '/static/js/vs' }; importScripts('/static/js/vs/base/worker/workerMain.js');`
-                    );
-                }
-            };
+        // Define offline internal workers to use local paths
+        window.MonacoEnvironment = {
+            getWorkerUrl: function(workerId, label) {
+                if (label === 'json') return '/static/js/vs/language/json/jsonWorker.js';
+                if (label === 'css') return '/static/js/vs/language/css/cssWorker.js';
+                if (label === 'html') return '/static/js/vs/language/html/htmlWorker.js';
+                if (label === 'typescript' || label === 'javascript') return '/static/js/vs/language/typescript/tsWorker.js';
+                return '/static/js/vs/base/worker/workerMain.js';
+            }
+        };
 
-            require(['vs/editor/editor.main'], function() {
-                const targetDom = document.getElementById('anamod-monaco-viewport');
-                if (!targetDom) return;
-                
+        function mountEditorInstance(callback) {
+            const targetDom = document.getElementById('anamod-monaco-viewport');
+            if (!targetDom) return;
+
+            if (typeof monaco !== 'undefined' && monaco.editor) {
+                buildMonacoInstance(targetDom);
+                if (callback) callback();
+                return;
+            }
+
+            // Official offline configuration using the verified local baseUrl
+            if (typeof require !== 'undefined' && typeof require.config === 'function') {
+                require.config({ baseUrl: '/static/js' });
+                require(['vs/editor/editor.main'], function() {
+                    buildMonacoInstance(targetDom);
+                    if (callback) callback();
+                });
+            } else {
+                updateTerminalStream(`[ERROR] Monaco vs/loader.js framework missing from template scope.\n`);
+            }
+        }
+
+        function buildMonacoInstance(targetDom) {
+            if (editor !== null) return;
+            try {
                 editor = monaco.editor.create(targetDom, {
                     value: "# Select a modular file from the directory tree to start coding...\n",
                     language: 'python',
@@ -37,10 +56,22 @@
                     readOnly: false
                 });
                 editor.layout();
-                console.log("[Anamod Workspace] Monaco core editor engine unlocked and active.");
-            });
+                updateTerminalStream(`[SYSTEM] Monaco core engine connected and fully typable.\n`);
+            } catch (err) {
+                updateTerminalStream(`[CRITICAL ERROR] Failed to build instance: ${err.message}\n`);
+            }
         }
 
+        // Initialize editor component immediately on panel load
+        mountEditorInstance();
+// ======================================================================
+// END: METRIC_OFFLINE_MONACO_REQUIRE_INIT (PATCH 1 OF 2)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/anamod.js (PATCH 2 OF 2)
+// START: STANDALONE_JSTREE_AND_AJAX_CHANNELS
+// ======================================================================
         // 2. Initialize jsTree Component Loader with Flat Theme Overrides
         const $treeContainer = $('#anamod-file-tree');
         $treeContainer.jstree({
@@ -64,7 +95,7 @@
         });
 
         // 3. Handle File Tree Node Selection Lifecycle
-        $treeContainer.on("select_node.jstree", function (e, data) {
+        $treeContainer.off("select_node.jstree").on("select_node.jstree", function (e, data) {
             const selectedNode = data.node.original;
             if (selectedNode && selectedNode.type === 'file') {
                 loadWorkspaceFile(selectedNode.path);
@@ -85,27 +116,21 @@
                         editor.setValue(response.content);
                         
                         const ext = filePath.split('.').pop().toLowerCase();
-                        if (ext === 'py') {
-                            monaco.editor.setModelLanguage(editor.getModel(), 'python');
-                        } else if (ext === 'css') {
-                            monaco.editor.setModelLanguage(editor.getModel(), 'css');
-                        } else if (ext === 'html') {
-                            monaco.editor.setModelLanguage(editor.getModel(), 'html');
-                        } else if (ext === 'js') {
-                            monaco.editor.setModelLanguage(editor.getModel(), 'javascript');
-                        } else if (ext === 'json') {
-                            monaco.editor.setModelLanguage(editor.getModel(), 'json');
-                        }
+                        if (ext === 'py') monaco.editor.setModelLanguage(editor.getModel(), 'python');
+                        else if (ext === 'css') monaco.editor.setModelLanguage(editor.getModel(), 'css');
+                        else if (ext === 'html') monaco.editor.setModelLanguage(editor.getModel(), 'html');
+                        else if (ext === 'js') monaco.editor.setModelLanguage(editor.getModel(), 'javascript');
+                        else if (ext === 'json') monaco.editor.setModelLanguage(editor.getModel(), 'json');
                         
                         setTimeout(function() { editor.layout(); }, 50);
+                        updateTerminalStream(`[SYSTEM] File loaded successfully into viewport.\n`);
                     } else {
                         updateTerminalStream(`[WARNING] Core editor initializing. Re-click file to display.\n`);
+                        mountEditorInstance();
                     }
                     
                     $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath);
-                    toggleActionButtons(true);
-                    // FIXED: Removed the stray token 'Pis' causing the script interpreter runtime to crash
-                    updateTerminalStream(`[SYSTEM] File loaded successfully into viewport.\n`);
+                    $('#anamod-run-btn, #anamod-lint-btn, #anamod-save-btn').prop('disabled', false);
                 },
                 error: function(xhr) {
                     updateTerminalStream(`[ERROR] Failed to load target node filesystem pointer: ${xhr.statusText}\n`);
@@ -113,7 +138,7 @@
             });
         }
 
-        $('#anamod-save-btn').on('click', function() {
+        $('#anamod-save-btn').off('click').on('click', function() {
             if (!currentFilePath || !editor) return;
             updateTerminalStream(`[SYSTEM] Syncing active layout buffers to host disk...\n`);
             $.ajax({
@@ -132,7 +157,7 @@
         });
 
         // 5. Sandbox Code Execution Channels
-        $('#anamod-run-btn').on('click', function() {
+        $('#anamod-run-btn').off('click').on('click', function() {
             if (!editor) return;
             updateTerminalStream(`[SYSTEM] Deploying micro-worker runtime inside sandboxed engine...\n`);
             $.ajax({
@@ -142,7 +167,7 @@
                 headers: { 'X-CSRFToken': csrfToken },
                 data: JSON.stringify({ code: editor.getValue() }),
                 success: function(response) {
-                    updateTerminalStream(`[SANDBOX RUN OUTPUT]\n${response.output}`);
+                    updateTerminalStream(`[SANDBOX RUN OUTPUT]\n${response.output}\n`);
                 },
                 error: function(xhr) {
                     updateTerminalStream(`[ERROR] Worker failed to initialize or timed out: ${xhr.statusText}\n`);
@@ -151,7 +176,7 @@
         });
 
         // 6. Asynchronous Flake8 Linter Interface Call
-        $('#anamod-lint-btn').on('click', function() {
+        $('#anamod-lint-btn').off('click').on('click', function() {
             if (!editor) return;
             updateTerminalStream(`[SYSTEM] Piping file syntax to analysis checker...\n`);
             $.ajax({
@@ -170,24 +195,20 @@
         });
 
         window.resizeAnamodEditor = function() {
-            if (editor) {
-                setTimeout(function() { editor.layout(); }, 100);
+            if (editor !== null && typeof editor.layout === 'function') {
+                editor.layout();
             }
         };
-
-        function toggleActionButtons(enabled) {
-            $('#anamod-run-btn, #anamod-lint-btn, #anamod-save-btn').prop('disabled', !enabled);
-        }
 
         function updateTerminalStream(message) {
             const $term = $('#anamod-terminal-stream');
             if ($term.length) {
-                $term.text($term.text() + message);
-                $term.scrollTop($term.scrollHeight);
+                $term.append(message);
+                $term.scrollTop($term[0].scrollHeight);
             }
         }
     };
 })(window);
 // ======================================================================
-// END: COMPLETE_ANAMOD_FRONTEND_CONTROLLER (PATCH 1 OF 1)
+// END: STANDALONE_JSTREE_AND_AJAX_CHANNELS (PATCH 2 OF 2)
 // ======================================================================
