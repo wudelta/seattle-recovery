@@ -39,20 +39,94 @@
     font-size: 0.8rem;
 }
 
-/* CUSTOM SPYDER-LIKE folders AND OVERRIDES */
+/* TREE SCALING OVERRIDES: Compact typography and text truncation bounds */
+#anamod-file-tree {
+    font-size: 0.78rem !important;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    padding-left: 0 !important; /* Strips container padding boundaries */
+}
+
+/* ROOT SHIFT CORRECTION: Pulls the top level tier hard left to recover 1/4 inch of padding space */
+#anamod-file-tree > ul {
+    margin-left: -16px !important;
+    padding-left: 0 !important;
+}
+
+/* FIXED TRUNCATION RULE: Uses valid standard native property tags to force ellipsis clips */
+#anamod-file-tree .jstree-anchor {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: calc(100% - 24px) !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    padding-left: 2px !important;
+}
+
+#anamod-file-tree .jstree-node {
+    line-height: 20px !important;
+    min-height: 20px !important;
+    margin-left: 12px !important; /* Preserves compact nested branch indentation */
+}
+
+/* CUSTOM SPYDER-LIKE FOLDERS AND OVERRIDES */
 .anamod-tree-folder-text {
     color: #ffca28 !important; /* Standout Spyder-like folder gold tint */
     font-weight: 600 !important;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
 }
 
-/* HARD INJECTION EXTRACTION: Inserts a folder text glyph icon directly inside the layout span stream */
+/* Hard inject folder glyph natively inside text flow layout rules */
 .anamod-tree-folder-text::before {
     content: "📁 " !important;
     font-style: normal !important;
     display: inline-block;
-    margin-right: 6px;
-    font-size: 0.95rem;
+    margin-right: 4px;
+    font-size: 0.82rem;
+}
+
+/* LOCALIZED FILE ICONS: Restricts rules strictly to the project tree view element modules */
+#anamod-file-tree .text-info::before {
+    content: "🐍 " !important; /* Python file identifier */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+#anamod-file-tree .text-danger::before {
+    content: "🌐 " !important; /* HTML layout template identifier */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+#anamod-file-tree .text-success::before {
+    content: "🎨 " !important; /* CSS presentation asset identifier */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+/* FIXED SCRIPT LIFECYCLE TARGET: Resolves syntax typo token parsing rules safely */
+#anamod-file-tree .text-warning:not(.anamod-tree-folder-text)::before {
+    content: "📜 " !important; /* JavaScript asset identifier */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+#anamod-file-tree .text-secondary::before {
+    content: "⚙️ " !important; /* JSON / INI / YAML configuration module */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+#anamod-file-tree .text-muted::before {
+    content: "📄 " !important; /* Standard fallback document */
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 4px;
 }
 
 /* Ensure selected or hovered items in tree remain readable under high-contrast dark mode */
