@@ -39,11 +39,20 @@
     font-size: 0.8rem;
 }
 
-/* CUSTOM SPYDER-LIKE PROJECT TREE STYLING INDICATORS */
+/* CUSTOM SPYDER-LIKE folders AND OVERRIDES */
 .anamod-tree-folder-text {
     color: #ffca28 !important; /* Standout Spyder-like folder gold tint */
     font-weight: 600 !important;
     letter-spacing: 0.5px;
+}
+
+/* HARD INJECTION EXTRACTION: Inserts a folder text glyph icon directly inside the layout span stream */
+.anamod-tree-folder-text::before {
+    content: "📁 " !important;
+    font-style: normal !important;
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 0.95rem;
 }
 
 /* Ensure selected or hovered items in tree remain readable under high-contrast dark mode */
