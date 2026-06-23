@@ -15,21 +15,24 @@
                 'data': {
                     'url': '/aurora/api/files/tree/',
                     'dataType': 'json',
-                    // Clean client-side preprocessing hook to format nodes and apply types
+                    // Clean client-side preprocessing hook to format, type, and sort nodes
                     'dataFilter': function(rawString) {
                         let jsonArray = JSON.parse(rawString);
                         
-                        function transformNodeMeta(nodes) {
+                        function transformAndSortNodeMeta(nodes) {
                             if (!nodes || !Array.isArray(nodes)) return;
+                            
                             nodes.forEach(node => {
                                 if (node.children && Array.isArray(node.children)) {
                                     node.type = 'folder';
                                     node.icon = 'jstree-folder text-warning fw-bold';
                                     
-                                    // Inject a custom class to make folder text stand out from files
+                                    // Inject custom folder text styles and collapse by default
                                     node.a_attr = { "class": "anamod-tree-folder-text font-weight-bold" };
                                     node.state = { opened: false };
-                                    transformNodeMeta(node.children);
+                                    
+                                    // Deep recurse into nested subfolders
+                                    transformAndSortNodeMeta(node.children);
                                 } else {
                                     // Extract explicit extensions to handle specialized icon coloring
                                     const ext = node.text.split('.').pop().toLowerCase();
@@ -43,9 +46,21 @@
                                     else node.icon = 'jstree-file text-muted';
                                 }
                             });
+
+                            // DETERMINISTIC SORT GRID: Forces folders to the top, then sorts everything alphabetically
+                            nodes.sort((a, b) => {
+                                const isAFolder = (a.type === 'folder');
+                                const isBFolder = (b.type === 'folder');
+                                
+                                if (isAFolder && !isBFolder) return -1;  // 'a' is a folder, move it up
+                                if (!isAFolder && isBFolder) return 1;   // 'b' is a folder, move it up
+                                
+                                // Fallback: Standard case-insensitive alphabetical string comparison
+                                return a.text.localeCompare(b.text, undefined, { sensitivity: 'base', numeric: true });
+                            });
                         }
                         
-                        transformNodeMeta(jsonArray);
+                        transformAndSortNodeMeta(jsonArray);
                         return JSON.stringify(jsonArray);
                     }
                 },
