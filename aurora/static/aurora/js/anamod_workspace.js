@@ -171,12 +171,14 @@
             
             if (nodeData && nodeData.data && nodeData.data.path) {
                 let parentFolderPath = nodeData.data.path;
+                let folderIdToOpen = selectedNodeId; // Capture fixed reference scope
                 
                 const inputName = prompt(`Add New File Here\nDirectory Context: ${parentFolderPath}\nEnter file name (e.g., 'utils.py'):`);
                 if (!inputName || !inputName.trim()) return;
                 
                 let cleanParent = parentFolderPath.replace(/^\/app\/?/, '').trim();
                 let fullNewFilePath = cleanParent ? (cleanParent.replace(/\/$/, '') + '/' + inputName.trim()) : inputName.trim();
+                let finalContainerPath = '/app/' + fullNewFilePath;
                 
                 window.updateAnamodTerminal(`[SYSTEM] Scaffolding new file node within directory tree folder matrix...\n`);
                 $.ajax({
@@ -187,8 +189,41 @@
                     data: JSON.stringify({ path: fullNewFilePath, content: "" }),
                     success: function() {
                         window.updateAnamodTerminal(`[SUCCESS] New file nested and created at target directory mount address.\n`);
-                        treeInstance.open_node(selectedNodeId);
-                        if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
+                        
+                        // Core correction: intercept the post-refresh milestone event first
+                        $treeContainer.one('refresh.jstree', function() {
+                            console.log("[Anamod Workspace Tree] Rebuild finished. Enforcing layout expansion parameters...");
+                            
+                            // 1. Force the parent branch layout folder structure open post-refresh
+                            treeInstance.open_node(folderIdToOpen, function() {
+                                // 2. Minor micro-task timeout ensures children metadata nodes render completely inside the cache matrix
+                                setTimeout(function() {
+                                    let foundNodeId = null;
+                                    
+                                    Object.keys(treeInstance._model.data).forEach(function(id) {
+                                        let item = treeInstance._model.data[id];
+                                        if (item.data && item.data.path === finalContainerPath) {
+                                            foundNodeId = id;
+                                        }
+                                    });
+                                    
+                                    if (foundNodeId) {
+                                        console.log("[Anamod Workspace Tree] New file node resolved. Shifting viewport focus.");
+                                        treeInstance.deselect_all();
+                                        treeInstance.select_node(foundNodeId);
+                                    } else {
+                                        console.warn("[Anamod Workspace Tree] Focus route path resolution failed for pointer: " + finalContainerPath);
+                                    }
+                                }, 80);
+                            });
+                        });
+
+                        // Fire layout reconstruction immediately after establishing the post-refresh event hook
+                        if (typeof window.refreshWorkspaceTree === 'function') {
+                            window.refreshWorkspaceTree();
+                        } else {
+                            treeInstance.refresh();
+                        }
                     },
                     error: function(xhr) {
                         window.updateAnamodTerminal(`[ERROR] Folder relative allocation failure: ${xhr.statusText}\n`);
