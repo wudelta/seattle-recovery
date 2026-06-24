@@ -5,9 +5,17 @@
 (function(window) {
     window.initAnamodWorkspaceTree = function() {
         console.log("[Anamod Workspace Tree] Mounting decoupled tree asset...");
-
         const $treeContainer = $('#anamod-file-tree');
         if (!$treeContainer.length) return;
+
+        // Hoist global hot-reload utility hook so the core controller can force asynchronous refreshes
+        window.refreshWorkspaceTree = function() {
+            const treeInstance = $treeContainer.jstree(true);
+            if (treeInstance) {
+                console.log("[Anamod Workspace Tree] Invalidating cache matrices, reloading tree layout...");
+                treeInstance.refresh();
+            }
+        };
 
         // 1. Initialize jsTree with Flat CSS Theme Stylesheets
         $treeContainer.jstree({
@@ -15,31 +23,20 @@
                 'data': {
                     'url': '/aurora/api/files/tree/',
                     'dataType': 'json',
-                    // Clean client-side preprocessing hook to format, type, and sort nodes
                     'dataFilter': function(rawString) {
                         let jsonArray = JSON.parse(rawString);
-                        
                         function transformAndSortNodeMeta(nodes) {
                             if (!nodes || !Array.isArray(nodes)) return;
-                            
                             nodes.forEach(node => {
                                 if (node.children && Array.isArray(node.children)) {
                                     node.type = 'folder';
-                                    
-                                    // FIXED: Setting icon to false forces jsTree to strip away its internal image container
-                                    node.icon = false; 
-                                    
-                                    // Inject custom folder text styling classes and collapse by default
+                                    node.icon = false; // Strips away default image layout containers
                                     node.a_attr = { "class": "anamod-tree-folder-text font-weight-bold" };
                                     node.state = { opened: false };
-                                    
-                                    // Deep recurse into nested subfolders
                                     transformAndSortNodeMeta(node.children);
                                 } else {
-                                    // Extract explicit extensions to handle specialized icon coloring
                                     const ext = node.text.split('.').pop().toLowerCase();
                                     node.type = 'file';
-                                    
                                     if (ext === 'py') node.icon = 'jstree-file text-info fw-bold';
                                     else if (ext === 'html' || ext === 'htm') node.icon = 'jstree-file text-danger';
                                     else if (ext === 'css') node.icon = 'jstree-file text-success';
@@ -49,24 +46,21 @@
                                 }
                             });
 
-                            // Forces folders to the top, then sorts everything alphabetically
                             nodes.sort((a, b) => {
                                 const isAFolder = (a.type === 'folder');
                                 const isBFolder = (b.type === 'folder');
-                                
                                 if (isAFolder && !isBFolder) return -1;
                                 if (!isAFolder && isBFolder) return 1;
                                 return a.text.localeCompare(b.text, undefined, { sensitivity: 'base', numeric: true });
                             });
                         }
-                        
                         transformAndSortNodeMeta(jsonArray);
                         return JSON.stringify(jsonArray);
                     }
                 },
-                'themes': { 
-                    'name': 'default', 
-                    'dots': true, 
+                'themes': {
+                    'name': 'default',
+                    'dots': true,
                     'icons': true,
                     'url': '/static/css/jstree-style.min.css'
                 }
@@ -83,13 +77,11 @@
             const activeNode = data.node;
             if (!activeNode) return;
 
-            // Automatically open or collapse a subfolder row when clicked
             if (activeNode.type === 'folder' || (activeNode.children && activeNode.children.length > 0)) {
                 $treeContainer.jstree(true).toggle_node(data.node);
                 return;
             }
 
-            // Framework-Native Path Resolution: Extract wrapped path metadata safely
             if (activeNode.data && activeNode.data.path) {
                 if (typeof window.loadWorkspaceFile === 'function') {
                     window.loadWorkspaceFile(activeNode.data.path);
