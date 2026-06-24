@@ -1,6 +1,6 @@
 /* ====================================================================== */
-/* FILE: aurora/static/aurora/css/anamod.css (PATCH 1 OF 1)               */
-/* START: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET                      */
+/* FILE: aurora/static/aurora/css/anamod.css (PATCH 1 OF 1) */
+/* START: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET */
 /* ====================================================================== */
 /**
  * Aurora System Automation Loop - Anamod Layout Rules
@@ -43,40 +43,65 @@
 #anamod-file-tree {
     font-size: 0.78rem !important;
     font-family: 'Fira Code', 'Courier New', monospace;
-    padding-left: 0 !important; /* Strips container padding boundaries */
+    padding-left: 0 !important;
+    overflow-x: auto !important; /* Force native horizontal scroll wrapper */
+    overflow-y: auto !important;
 }
 
-/* ROOT SHIFT CORRECTION: Pulls the top level tier hard left to recover 1/4 inch of padding space */
+/* ROOT SHIFT CORRECTION: Pulls the top level tier left to recover panel space */
 #anamod-file-tree > ul {
     margin-left: -16px !important;
     padding-left: 0 !important;
-}
-
-/* FIXED TRUNCATION RULE: Uses valid standard native property tags to force ellipsis clips */
-#anamod-file-tree .jstree-anchor {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: calc(100% - 24px) !important;
-    height: 20px !important;
-    line-height: 20px !important;
-    padding-left: 2px !important;
+    display: inline-block !important; /* Protects layout sizes for wide path nodes */
+    min-width: 100% !important;
 }
 
 #anamod-file-tree .jstree-node {
-    line-height: 20px !important;
-    min-height: 20px !important;
-    margin-left: 12px !important; /* Preserves compact nested branch indentation */
+    line-height: 22px !important;
+    min-height: 22px !important;
+}
+
+/* Standard jsTree text anchoring formatting parameters with zero intrusive flex overrides */
+#anamod-file-tree .jstree-anchor {
+    white-space: nowrap !important;
+    height: 22px !important;
+    line-height: 22px !important;
+    padding-left: 2px !important;
+    box-sizing: border-box !important;
+}
+
+/* High-utility dark dropdown custom item styles for the floating right-click wrapper */
+#anamod-tree-context-menu .dropdown-item:hover {
+    background-color: #2b2b2e !important;
+    color: #ffffff !important;
+}
+
+#anamod-tree-context-menu #ctx-delete-btn:hover {
+    background-color: #cf222e !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode inputs configuration for jsTree inline rename actions */
+input.jstree-rename-input {
+    background-color: #252526 !important;
+    color: #f8f9fa !important;
+    border: 1px solid #007acc !important;
+    border-radius: 2px !important;
+    font-family: 'Fira Code', 'Courier New', monospace !important;
+    font-size: 0.76rem !important;
+    padding: 0 4px !important;
+    height: 18px !important;
+    outline: none !important;
+    box-shadow: 0 0 3px rgba(0, 122, 204, 0.6) !important;
 }
 
 /* CUSTOM SPYDER-LIKE FOLDERS AND OVERRIDES */
 .anamod-tree-folder-text {
-    color: #ffca28 !important; /* Standout Spyder-like folder gold tint */
+    color: #ffca28 !important;
     font-weight: 600 !important;
     letter-spacing: 0.2px;
 }
 
-/* Hard inject folder glyph natively inside text flow layout rules */
 .anamod-tree-folder-text::before {
     content: "📁 " !important;
     font-style: normal !important;
@@ -85,51 +110,49 @@
     font-size: 0.82rem;
 }
 
-/* LOCALIZED FILE ICONS: Restricts rules strictly to the project tree view element modules */
+/* LOCALIZED FILE ICONS */
 #anamod-file-tree .text-info::before {
-    content: "🐍 " !important; /* Python file identifier */
+    content: "🐍 " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
 #anamod-file-tree .text-danger::before {
-    content: "🌐 " !important; /* HTML layout template identifier */
+    content: "🌐 " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
 #anamod-file-tree .text-success::before {
-    content: "🎨 " !important; /* CSS presentation asset identifier */
+    content: "🎨 " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
-/* FIXED SCRIPT LIFECYCLE TARGET: Resolves syntax typo token parsing rules safely */
 #anamod-file-tree .text-warning:not(.anamod-tree-folder-text)::before {
-    content: "📜 " !important; /* JavaScript asset identifier */
+    content: "📜 " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
 #anamod-file-tree .text-secondary::before {
-    content: "⚙️ " !important; /* JSON / INI / YAML configuration module */
+    content: "⚙️ " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
 #anamod-file-tree .text-muted::before {
-    content: "📄 " !important; /* Standard fallback document */
+    content: "📄 " !important;
     font-style: normal !important;
     display: inline-block;
     margin-right: 4px;
 }
 
-/* Ensure selected or hovered items in tree remain readable under high-contrast dark mode */
 .jstree-default .jstree-hovered {
     background: #252526 !important;
     border-radius: 2px;
@@ -141,5 +164,5 @@
     box-shadow: none !important;
 }
 /* ====================================================================== */
-/* END: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET (PATCH 1 OF 1)         */
+/* END: ANAMOD_STANDALONE_PRESENTATION_STYLESHEET (PATCH 1 OF 1) */
 /* ====================================================================== */

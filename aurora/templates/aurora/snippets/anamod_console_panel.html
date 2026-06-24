@@ -2,7 +2,7 @@
 <!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html (PATCH 1 OF 1) -->
 <!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
-<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden;">
+<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; position: relative;">
     <!-- COLUMN 1: LEFT FILE SYSTEM DIRECTORY TREE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
         <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
@@ -59,6 +59,13 @@
             🖥️ Isolated Sandbox Console Output
         </div>
         <pre id="anamod-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Initialize session trace matrix...</pre>
+    </div>
+
+    <!-- DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE -->
+    <div id="anamod-tree-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 130px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
+        <button id="ctx-rename-btn" class="dropdown-item px-2 py-1 text-light bg-transparent border-0 text-start w-100" style="cursor: pointer;">✏️ Rename File</button>
+        <div class="dropdown-divider my-1 border-secondary"></div>
+        <button id="ctx-delete-btn" class="dropdown-item px-2 py-1 text-danger bg-transparent border-0 text-start w-100" style="cursor: pointer;">🗑️ Delete File</button>
     </div>
 </div>
 <!-- ====================================================================== -->
