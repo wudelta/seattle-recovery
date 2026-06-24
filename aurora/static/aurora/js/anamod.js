@@ -1,24 +1,22 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 1)
-// START: CLEAN_IDE_CORE_CONTROLLER
+// FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 3)
+// START: ANAMOD_CORE_BASE_AND_LOADER
 // ======================================================================
 (function(window) {
-    window.editorInstance = null; // Exposed inside window context for the tree module
+    window.editorInstance = null;
     let currentFilePath = null;
 
     window.initAnamodConsole = function(csrfToken) {
         console.log("[Anamod Workspace] Spawning control channels...");
-        
-        // Hoist global terminal logging utility hook
+
         window.updateAnamodTerminal = function(message) {
             const $term = $('#anamod-terminal-stream');
             if ($term.length) {
                 $term.append(message);
-                $term.scrollTop($term[0].scrollHeight);
+                $term.scrollTop($term.scrollHeight);
             }
         };
 
-        // Define standalone worker overrides
         window.MonacoEnvironment = {
             getWorkerUrl: function(workerId, label) {
                 if (label === 'json') return '/static/js/vs/language/json/jsonWorker.js';
@@ -32,19 +30,17 @@
         function mountEditorInstance() {
             const targetDom = document.getElementById('anamod-monaco-viewport');
             if (!targetDom) return;
-
             if (typeof monaco !== 'undefined' && monaco.editor) {
                 buildMonacoInstance(targetDom);
                 return;
             }
-
             if (typeof require !== 'undefined' && typeof require.config === 'function') {
                 require.config({ baseUrl: '/static/js' });
                 require(['vs/editor/editor.main'], function() {
                     buildMonacoInstance(targetDom);
                 });
             } else {
-                window.updateAnamodTerminal(`[ERROR] Monaco vs/loader.js framework missing from template.\n`);
+                window.updateAnamodTerminal(`[ERROR] Monaco vs/loader.js missing.\n`);
             }
         }
 
@@ -61,8 +57,16 @@
                     minimap: { enabled: false },
                     readOnly: false
                 });
+
+                // Bind Monaco's native content mutation loopback directly to the tracker hook
+                window.editorInstance.onDidChangeModelContent(function() {
+                    if (typeof window.triggerAnamodDirtyState === 'function') {
+                        window.triggerAnamodDirtyState();
+                    }
+                });
+
                 window.editorInstance.layout();
-                window.updateAnamodTerminal(`[SYSTEM] Monaco core engine connected and fully typable.\n`);
+                window.updateAnamodTerminal(`[SYSTEM] Monaco core engine connected.\n`);
             } catch (err) {
                 window.updateAnamodTerminal(`[CRITICAL ERROR] Failed to build instance: ${err.message}\n`);
             }
@@ -70,7 +74,6 @@
 
         mountEditorInstance();
 
-        // 4. Client Side AJAX Storage Pipeline View Wrappers (Exposed globally for workspace tree)
         window.loadWorkspaceFile = function(filePath) {
             window.updateAnamodTerminal(`[SYSTEM] Reading file trace: ${filePath}...\n`);
             $.ajax({
@@ -79,10 +82,8 @@
                 data: { path: filePath },
                 success: function(response) {
                     currentFilePath = filePath;
-                    
                     if (window.editorInstance !== null && typeof window.editorInstance.setValue === 'function') {
                         window.editorInstance.setValue(response.content);
-                        
                         const ext = filePath.split('.').pop().toLowerCase();
                         if (ext === 'py') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'python');
                         else if (ext === 'css') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'css');
@@ -93,19 +94,28 @@
                         setTimeout(function() { window.editorInstance.layout(); }, 50);
                         window.updateAnamodTerminal(`[SYSTEM] File loaded successfully into viewport.\n`);
                     } else {
-                        window.updateAnamodTerminal(`[WARNING] Core editor initializing. Re-click file to display.\n`);
+                        window.updateAnamodTerminal(`[WARNING] Core editor initializing. Re-click file.\n`);
                         mountEditorInstance();
                     }
                     
-                    $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath);
-                    $('#anamod-run-btn, #anamod-lint-btn, #anamod-save-btn').prop('disabled', false);
+                    $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath).removeClass('text-warning');
+                    $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', false);
+                    $('#anamod-save-btn').prop('disabled', true).removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
+                    $('#anamod-discard-btn').prop('disabled', true).removeClass('btn-danger text-dark font-weight-bold').addClass('btn-outline-danger');
                 },
                 error: function(xhr) {
                     window.updateAnamodTerminal(`[ERROR] Failed to load target node filesystem pointer: ${xhr.statusText}\n`);
                 }
             });
         };
+// ======================================================================
+// END: ANAMOD_CORE_BASE_AND_LOADER (PATCH 1 OF 3)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/anamod.js (PATCH 2 OF 3)
+// START: ANAMOD_SAVE_AND_DISCARD_PIPELINE
+// ======================================================================
         // 5. Action Controls Backend Pipeline Form Integrations
         $('#anamod-save-btn').off('click').on('click', function() {
             if (!currentFilePath || !window.editorInstance) return;
@@ -116,11 +126,44 @@
                 contentType: 'application/json',
                 headers: { 'X-CSRFToken': csrfToken },
                 data: JSON.stringify({ path: currentFilePath, content: window.editorInstance.getValue() }),
-                success: function() { window.updateAnamodTerminal(`[SUCCESS] File buffers saved to physical disk address.\n`); },
-                error: function(xhr) { window.updateAnamodTerminal(`[ERROR] Commit transaction rejected: ${xhr.statusText}\n`); }
+                success: function() {
+                    window.updateAnamodTerminal(`[SUCCESS] File buffers saved to physical disk address.\n`);
+                    // Trigger custom event notifying tracker that disk commit is finalized
+                    $(document).trigger('buffer:saved');
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Commit transaction rejected: ${xhr.statusText}\n`);
+                }
             });
         });
 
+        // Discard Button Handler: Re-fetch pristine snapshot from server disk file node
+        $('#anamod-discard-btn').off('click').on('click', function() {
+            if (!currentFilePath || !window.editorInstance) return;
+            window.updateAnamodTerminal(`[SYSTEM] Discarding unsaved modifications, fetching head state...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'GET',
+                data: { path: currentFilePath },
+                success: function(response) {
+                    window.editorInstance.setValue(response.content);
+                    window.updateAnamodTerminal(`[SUCCESS] Buffer rolled back cleanly to match source storage state.\n`);
+                    // Trigger custom event notifying tracker that rollback execution is complete
+                    $(document).trigger('buffer:discarded');
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Reversion routine failure: ${xhr.statusText}\n`);
+                }
+            });
+        });
+// ======================================================================
+// END: ANAMOD_SAVE_AND_DISCARD_PIPELINE (PATCH 2 OF 3)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/anamod.js (PATCH 3 OF 3)
+// START: ANAMOD_RUNTIME_AND_RESIZER
+// ======================================================================
         $('#anamod-run-btn').off('click').on('click', function() {
             if (!window.editorInstance) return;
             window.updateAnamodTerminal(`[SYSTEM] Deploying micro-worker runtime inside sandboxed engine...\n`);
@@ -130,8 +173,12 @@
                 contentType: 'application/json',
                 headers: { 'X-CSRFToken': csrfToken },
                 data: JSON.stringify({ code: window.editorInstance.getValue() }),
-                success: function(response) { window.updateAnamodTerminal(`[SANDBOX RUN OUTPUT]\n${response.output}\n`); },
-                error: function(xhr) { window.updateAnamodTerminal(`[ERROR] Worker failed to initialize or timed out: ${xhr.statusText}\n`); }
+                success: function(response) {
+                    window.updateAnamodTerminal(`[SANDBOX RUN OUTPUT]\n${response.output}\n`);
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Worker failed to initialize or timed out: ${xhr.statusText}\n`);
+                }
             });
         });
 
@@ -144,8 +191,12 @@
                 contentType: 'application/json',
                 headers: { 'X-CSRFToken': csrfToken },
                 data: JSON.stringify({ code: window.editorInstance.getValue() }),
-                success: function(response) { window.updateAnamodTerminal(`[LINTER ENGINE RESULTS]\n${response.errors}\n`); },
-                error: function(xhr) { window.updateAnamodTerminal(`[ERROR] Linter execution subsystem crashed: ${xhr.statusText}\n`); }
+                success: function(response) {
+                    window.updateAnamodTerminal(`[LINTER ENGINE RESULTS]\n${response.errors}\n`);
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Linter execution subsystem crashed: ${xhr.statusText}\n`);
+                }
             });
         });
 
@@ -157,5 +208,5 @@
     };
 })(window);
 // ======================================================================
-// END: CLEAN_IDE_CORE_CONTROLLER (PATCH 1 OF 1)
+// END: ANAMOD_RUNTIME_AND_RESIZER (PATCH 3 OF 3)
 // ======================================================================

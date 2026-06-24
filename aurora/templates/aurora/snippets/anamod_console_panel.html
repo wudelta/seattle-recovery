@@ -1,9 +1,8 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html (PATCH 1 OF 1) -->
-<!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP                                  -->
+<!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
 <div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden;">
-    
     <!-- COLUMN 1: LEFT FILE SYSTEM DIRECTORY TREE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
         <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
@@ -22,7 +21,6 @@
                 Monaco Workspace Ready
             </div>
         </div>
-        
         <!-- FIXED ENFORCEMENT WRAPPER: Absolute constraints stop Monaco from pushing past the screen footprint -->
         <div class="position-relative w-100 flex-grow-1" style="min-height: 0; background-color: #1e1e1e;">
             <div id="anamod-monaco-viewport" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%;"></div>
@@ -34,7 +32,6 @@
         <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
             🛠️ Action Control Matrix
         </div>
-        
         <div class="d-grid gap-2 mb-3">
             <button id="anamod-run-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase" disabled>
                 ⚡ Execute Sandbox Run
@@ -42,19 +39,25 @@
             <button id="anamod-lint-btn" class="btn btn-outline-info btn-sm font-monospace text-uppercase" disabled>
                 🔍 Lint Active Code
             </button>
-            <button id="anamod-save-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase" disabled>
-                💾 Save Buffer Changes
-            </button>
+            <div class="row g-1">
+                <div class="col-6">
+                    <button id="anamod-save-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100" disabled>
+                        💾 Save
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button id="anamod-discard-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled>
+                        ❌ Discard
+                    </button>
+                </div>
+            </div>
         </div>
-        
         <div class="text-uppercase small font-weight-bold text-muted mb-1" style="letter-spacing: 1px; font-size: 0.75rem;">
             🖥️ Isolated Sandbox Console Output
         </div>
-        
         <pre id="anamod-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Initialize session trace matrix...</pre>
     </div>
-    
 </div>
 <!-- ====================================================================== -->
-<!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1)                     -->
+<!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1) -->
 <!-- ====================================================================== -->

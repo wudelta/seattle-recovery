@@ -5,27 +5,43 @@
 $(document).ready(function() {
     console.log("[Anamod Tracker] Activating high-performance DOM buffer delegation engine...");
 
-    // 1. Listen for keydown events inside Monaco's workspace viewport text fields via global delegation
-    $(document).on('keydown', '#anamod-monaco-viewport .monaco-editor textarea', function() {
+    // Hoist a globally accessible hook so Monaco can notify the tracker of exact text mutations
+    window.triggerAnamodDirtyState = function() {
         const $indicator = $('#active-file-indicator');
         const titleText = $indicator.text().trim();
-        
-        if (titleText && !titleText.endsWith('*')) {
-            $indicator.text(titleText + ' *').addClass('text-warning');
-            $('#anamod-save-btn').removeClass('btn-outline-warning').addClass('btn-warning text-dark font-weight-bold');
-        }
-    });
 
-    // 2. Intercept save action button transaction completions to clear the dirty token state
-    $(document).on('click', '#anamod-save-btn', function() {
-        const $btn = $(this);
-        // Delay execution slightly to allow the primary core script's AJAX transaction loop to finish commits to disk
-        setTimeout(function() {
-            const $indicator = $('#active-file-indicator');
-            const titleText = $indicator.text().replace(' *', '').trim();
-            $indicator.text(titleText).removeClass('text-warning');
-            $btn.removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
-        }, 400);
+        // Only mark dirty if a file is loaded and not already marked modified
+        if (titleText && titleText !== "No file active" && !titleText.endsWith('*')) {
+            $indicator.text(titleText + ' *').addClass('text-warning');
+            
+            // Enable and highlight Save button
+            $('#anamod-save-btn').prop('disabled', false)
+                .removeClass('btn-outline-warning')
+                .addClass('btn-warning text-dark font-weight-bold');
+                
+            // Enable and highlight Discard button
+            $('#anamod-discard-btn').prop('disabled', false)
+                .removeClass('btn-outline-danger')
+                .addClass('btn-danger text-dark font-weight-bold');
+        }
+    };
+
+    // 2. Clear dirty state marks only when primary AJAX transactions succeed via global events
+    $(document).on('buffer:saved buffer:discarded', function() {
+        const $indicator = $('#active-file-indicator');
+        const titleText = $indicator.text().replace(' *', '').trim();
+        
+        $indicator.text(titleText).removeClass('text-warning');
+
+        // Cool down Save button to disabled outline state
+        $('#anamod-save-btn').prop('disabled', true)
+            .removeClass('btn-warning text-dark font-weight-bold')
+            .addClass('btn-outline-warning');
+
+        // Cool down Discard button to disabled outline state
+        $('#anamod-discard-btn').prop('disabled', true)
+            .removeClass('btn-danger text-dark font-weight-bold')
+            .addClass('btn-outline-danger');
     });
 });
 // ======================================================================
