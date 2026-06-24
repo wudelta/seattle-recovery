@@ -136,7 +136,6 @@
                 data: JSON.stringify({ path: currentFilePath, content: window.editorInstance.getValue() }),
                 success: function() {
                     window.updateAnamodTerminal(`[SUCCESS] File buffers saved to physical disk address.\n`);
-                    // Trigger custom event notifying tracker that disk commit is finalized
                     $(document).trigger('buffer:saved');
                 },
                 error: function(xhr) {
@@ -156,7 +155,6 @@
                 success: function(response) {
                     window.editorInstance.setValue(response.content);
                     window.updateAnamodTerminal(`[SUCCESS] Buffer rolled back cleanly to match source storage state.\n`);
-                    // Trigger custom event notifying tracker that rollback execution is complete
                     $(document).trigger('buffer:discarded');
                 },
                 error: function(xhr) {
@@ -179,12 +177,9 @@
                 data: JSON.stringify({ path: fileName.trim(), content: "" }),
                 success: function() {
                     window.updateAnamodTerminal(`[SUCCESS] New storage file successfully committed to disk layout.\n`);
-                    
-                    // Re-render or hot-reload your tree hierarchy if your global function is exposed
                     if (typeof window.refreshWorkspaceTree === 'function') {
                         window.refreshWorkspaceTree();
                     } else if (typeof window.loadWorkspaceFile === 'function') {
-                        // Directly shift view into the freshly created empty file buffer context
                         window.loadWorkspaceFile(fileName.trim());
                     }
                 },
@@ -193,6 +188,53 @@
                 }
             });
         });
+
+        // Global Rename Callback: Intercepts inline tree node renames and syncs them to disk
+        window.renameWorkspaceFile = function(oldPath, newName) {
+            window.updateAnamodTerminal(`[SYSTEM] Renaming storage node to: ${newName}...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'PUT',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ path: oldPath, new_name: newName }),
+                success: function() {
+                    window.updateAnamodTerminal(`[SUCCESS] Asset renamed successfully inside project tree.\n`);
+                    if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Rename transaction rejected: ${xhr.statusText}\n`);
+                    if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
+                }
+            });
+        };
+
+        // Global Delete Callback: Confirms and executes removal of the targeted file path
+        window.deleteWorkspaceFile = function(filePath) {
+            const fileName = filePath.split('/').pop();
+            if (!confirm(`Are you absolutely sure you want to permanently delete "${fileName}"?`)) return;
+
+            window.updateAnamodTerminal(`[SYSTEM] Purging file node from system: ${filePath}...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'DELETE',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ path: filePath }),
+                success: function() {
+                    window.updateAnamodTerminal(`[SUCCESS] File permanently removed from physical disk structure.\n`);
+                    if (currentFilePath === filePath) {
+                        currentFilePath = null;
+                        if (window.editorInstance) window.editorInstance.setValue("# Select a modular file from the directory tree to start coding...\n");
+                        $('#active-file-indicator').text("No file active").removeClass('text-warning');
+                    }
+                    if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] Purge execution failure: ${xhr.statusText}\n`);
+                }
+            });
+        };
 // ======================================================================
 // END: ANAMOD_SAVE_AND_DISCARD_PIPELINE (PATCH 2 OF 3)
 // ======================================================================

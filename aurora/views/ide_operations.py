@@ -76,20 +76,18 @@ def file_tree_api(request):
 # ======================================================================
 @csrf_exempt
 def file_operation_api(request):
-    """API Endpoint handling reading and writing files safely to the host mount."""
+    """API Endpoint handling reading, writing, renaming, and deleting files safely."""
     if request.method == 'GET':
         file_path = request.GET.get('path')
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
             
-        # Secure baseline anchoring: force path evaluation inside the workspace container root folder
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         if not os.path.exists(file_path):
             return JsonResponse({'error': f'File not found: {file_path}'}, status=404)
 
-        # Guard clause: Prevent reading non-text/binary formats that crash string parsers
         binary_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.pyc', '.pdf', '.zip', '.tar', '.gz'}
         if any(file_path.lower().endswith(ext) for ext in binary_extensions):
             return JsonResponse({'content': '# Binary Asset detected. Contents hidden inside text viewport.'})
@@ -108,12 +106,10 @@ def file_operation_api(request):
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
 
-        # Secure baseline anchoring: force newly initialized paths to save directly into the project root directory
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         try:
-            # Ensure target parent subdirectory tree exists before committing new file allocations to disk
             parent_dir = os.path.dirname(file_path)
             if parent_dir and not os.path.exists(parent_dir):
                 os.makedirs(parent_dir, exist_ok=True)
@@ -123,6 +119,53 @@ def file_operation_api(request):
             return JsonResponse({'status': 'success'})
         except Exception as e:
             return JsonResponse({'error': f'Failed to write file: {str(e)}'}, status=500)
+
+    elif request.method == 'PUT':
+        data = json.loads(request.body)
+        file_path = data.get('path')
+        new_name = data.get('new_name')
+
+        if not file_path or not new_name:
+            return JsonResponse({'error': 'Missing source path or new name payload'}, status=400)
+
+        if not file_path.startswith('/app/'):
+            file_path = os.path.join('/app', file_path.lstrip('/'))
+
+        if not os.path.exists(file_path):
+            return JsonResponse({'error': 'Target file to rename does not exist'}, status=404)
+
+        try:
+            parent_dir = os.path.dirname(file_path)
+            new_file_path = os.path.join(parent_dir, new_name)
+            
+            # Execute filesystem migration
+            os.rename(file_path, new_file_path)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'error': f'Rename tracking failure: {str(e)}'}, status=500)
+
+    elif request.method == 'DELETE':
+        data = json.loads(request.body)
+        file_path = data.get('path')
+
+        if not file_path:
+            return JsonResponse({'error': 'No targeting path provided for purge action'}, status=400)
+
+        if not file_path.startswith('/app/'):
+            file_path = os.path.join('/app', file_path.lstrip('/'))
+
+        if not os.path.exists(file_path):
+            return JsonResponse({'error': 'File already absent from disk hierarchy'}, status=404)
+
+        try:
+            if os.path.isdir(file_path):
+                import shutil
+                shutil.rmtree(file_path)
+            else:
+                os.remove(file_path)
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'error': f'Purge validation routine failure: {str(e)}'}, status=500)
 # ======================================================================
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART2 (PATCH 2 OF 3)
 # ======================================================================
