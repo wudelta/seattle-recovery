@@ -1,51 +1,38 @@
 # Project Milestone Snapshot & Strategy Blueprint
+## System Architecture: Anamod IDE Web Suite (Ubuntu Isolated Platform)
 
-We have built a highly interactive, decoupled, dark-themed, desktop-grade development environment. The core hierarchy operates correctly on your offline Ubuntu laptop inside its isolated Docker container stack. 
+We have successfully engineered a highly interactive, decoupled, dark-themed, desktop-grade development environment. The core hierarchy operates correctly on your offline Ubuntu laptop inside its isolated Docker container stack. By moving file operations to an explicit right-click context layer and standardizing vanilla jsTree behaviors, we eliminated layout anomalies and restored high-performance rendering.
 
-By utilizing client-side pre-processing hooks and DOM-level metadata delegation, we successfully aligned the application layout interface with the untouched, recursive Python backend scanner file.
-
---- 
+---
 
 ## 📊 Status Matrix: Completed Architecture
 
-### 1. Unified Layout Framework (`aurora_console.html`)
-*   **Status**: **Stable / Intact**
-*   **Accomplished**: Configured lazy-initialization gates that load Monaco and the decoupled file tree only when the active viewport explicitly shifts to the IDE layout container. This completely eliminates canvas sizing rendering anomalies.
+### 1. Unified Layout Framework (`anamod_console_panel.html`)
+* **Status**: **Stable / Intact**
+* **Accomplished**: Embedded a clean flexbox layout hierarchy containing a dedicated button panel. Integrated a floating, hidden-by-default, dark dropdown Context Menu block (`#anamod-tree-context-menu`) to handle node mutations safely outside row layout nodes. Added a responsive `➕` New File button.
 
-### 2. Isolated Workspace Tree Module (`anamod_workspace.js`)
-*   **Status**: **Stable / Intact**
-*   **Accomplished**: Built a client-side recursive tree-flattening processor script that applies explicit Spyder-like extension color traits, overrides unaligned theme backgrounds, and enforces standard directory folder typography layouts. It natively forces folder branches cleanly to the top of the grid using alphabetical sort arrays.
+### 2. Desktop-Grade Tree Controller (`anamod_workspace.js`)
+* **Status**: **Stable / Intact**
+* **Accomplished**: Revamped the jsTree lifecycle wrapper to use native block calculations, restoring horizontal overflow scroller support for long file paths. Engineered an intelligent relative position tracking system for the context menu that detects screen boundaries and flips the popup upwards near the bottom edge. Wired up native double-click handlers for file renames and folder toggles.
 
-### 3. Core Workspace Controller UI Actions (`anamod.js`)
-*   **Status**: **Stable / Intact**
-*   **Accomplished**: Houses the terminal trace feedback streams, Monaco text viewport engine instances, sandboxed Docker micro-worker code runtime routers, and standard syntax validation checks.
+### 3. Core Workspace Controller Actions (`anamod.js`)
+* **Status**: **Stable / Intact**
+* **Accomplished**: Reversed the `window.updateAnamodTerminal` output trace using `.prepend()` to automatically force the newest execution alerts to the top of the stack. Wired up native `onDidChangeModelContent` listeners directly into Monaco to trigger highlighted dirty states for deletions and additions alike. Integrated AJAX pipelines for new file creations, renames, and disk purges. Added an extension guard that locks out the Run and Lint buttons on non-Python nodes.
 
-### 4. Custom Dark-Theme Stylesheet Overrides (`anamod.css`)
-*   **Status**: **Stable / Intact**
-*   **Accomplished**: Extracted dead tracking rules to reduce asset weight. Injected a compact text overflow ellipsis clipping block alongside a negative left margin container configuration rule that pulls the root directory folder flush to the left panel edge, maximizing usable screen real estate. It forces high-contrast folder icons to render flawlessly using native CSS `::before` pseudo-element injections.
-
----
-
-## 🛠️ Roadblocks & Silent Compilation Traps
-
-The current hurdle blocking the synchronized **Save / Discard Button Lock Protection Suite** is a strict environment parser mismatch inside Spyder's internal linter engine. 
-
-When you inject long, multi-token class selectors into global document event listener callbacks, the background AST syntax compiler fails to properly trace the string boundaries. It misinterprets the query arguments, flags a syntax error, and cascades red warning underlines over the tracking comment headers.
+### 4. Anchored Filesystem Backend View (`ide_operations.py`)
+* **Status**: **Stable / Intact**
+* **Accomplished**: Rewrote the server view layers to automatically intercept relative client operations and anchor them securely to `/app/` inside the container mount, preventing file lookup crashes. Built safe directory handling rules that execute automated `os.makedirs()` calls for new subdirectories and recursively scrub folders via `shutil.rmtree()`.
 
 ---
 
-## 🚀 Action Plan & Pending Modifications
+## 🚀 Immediate Next Initiative: Twin-Track Execution Testing
 
-To resolve this syntax trap while maintaining strict protocol boundaries, our immediate next step is to isolate the multi-token selector string parameters into clear, single-line variable references. This satisfies Spyder's compiler while keeping your workspace synchronized button rules active.
+Our primary focus has pivoted to testing and optimizing the isolated compiler sandbox buttons now that the baseline environment layout is completely stable. We will methodically verify both pipeline routes using broken and valid code vectors to ensure the IDE handles runtime executions reliably.
 
-Here is the exact layout map of the file modules requiring execution updates:
+### Step 1: Verification of the `🔍 Lint Active Code` API
+We will intentionally feed broken Python syntax (such as missing colons or unclosed parentheses) into the Monaco viewport to test our upgraded `flake8` subprocess module. This verification step will confirm that:
+1. `flake8` environment error diagnostics are being surfaced explicitly instead of falling back to a silent default message.
+2. System standard error exceptions are cleanly caught, stripped of temporary path naming fragments, and piped to the terminal console layout block.
 
-[Workspace UI Event Loop]│├──► aurora/static/aurora/js/anamod_tracker.js  (Overhaul event string variables to clear Spyder red line)│└──► aurora/static/aurora/js/anamod.js          (Add initial disabled state loops on fresh file load calls)
-
-### Next Immediate Steps
-
-### Step 1: Realignment of `aurora/static/aurora/js/anamod_tracker.js`
-We will replace the tracking script asset that you reverted from Git. By separating the compound target selection string (`'#anamod-monaco-viewport .monaco-editor textarea'`) out into a plain, independent local variable initialization statement right before the jQuery method fires, we satisfy Spyder's linter. This turns the file completely green while letting you type and see both the Save and Discard buttons highlight or cool down in perfect unison.
-
-### Step 2: Optimization of `aurora/static/aurora/js/anamod.js`
-We will apply logical function patches to your core controller file to update the internal file loading loop wrapper. This ensures that the exact millisecond a brand-new file node is pulled freshly from the project tree, both the Save and Discard action buttons are automatically initialized as disabled, grayed-out outlines. This prevents click inputs on unmodified buffers and makes the workspace act exactly like a professional, native IDE layout panel.
+### Step 2: Debugging of the `⚡ Execute Sandbox Run` API
+We will address the `docker-py` container limits inside `run_code_api`. We will verify that splitting the worker workflow down into a separate creation sequence (`client.containers.create`) and container wait threshold ceiling block (`container.wait(timeout=5)`) fully resolves the unexpected keyword parameter crash. We will test running valid Python print routines and capture raw stream outputs in the top of the panel window.

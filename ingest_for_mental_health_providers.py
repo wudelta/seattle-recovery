@@ -24,7 +24,7 @@ def final_mission_ingest():
     UNWIND $batch AS item
     // Use COALESCE to provide a fallback if site_name or agency_name is null
     MERGE (p:Provider {
-        agency: COALESCE(item.agency_name, "Unknown Agency"), 
+        agency: COALESCE(item.agency_name, "Unknown Agency"),
         site: COALESCE(item.site_name, "Unknown Site")
     })
     SET p.phone = item.phone_number,

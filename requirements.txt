@@ -47,11 +47,9 @@ typing-extensions==4.15.0
 typing-inspection==0.4.2
 urllib3==2.7.0
 watchdog==4.0.1
-# Fixed version bridges for django-neomodel compatibility
 setuptools==69.5.1
 neo4j==5.14.0
 neomodel==5.0.1
-# PostgreSQL Database Adapter
 psycopg2-binary==2.9.9
 # ======================================================================
 # END: SYSTEM_DEPENDENCY_REGISTRY (PATCH 1 OF 1)
