@@ -1,12 +1,13 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 1 OF 1)
+// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 1 OF 3)
 // START: DECOUPLED_IDE_TREE_WORKSPACE_CONTROLLER
 // ======================================================================
 (function(window) {
     window.initAnamodWorkspaceTree = function() {
         console.log("[Anamod Workspace Tree] Mounting decoupled tree asset...");
         const $treeContainer = $('#anamod-file-tree');
-        const $contextMenu = $('#anamod-tree-context-menu');
+        const $fileContextMenu = $('#anamod-tree-context-menu');
+        const $folderContextMenu = $('#anamod-folder-context-menu');
         let selectedNodeId = null;
 
         if (!$treeContainer.length) return;
@@ -14,7 +15,7 @@
         window.refreshWorkspaceTree = function() {
             const treeInstance = $treeContainer.jstree(true);
             if (treeInstance) {
-                console.log("[Anamod Workspace Tree] Invalidating cache matrices, reloading tree layout...");
+                console.log("[Anamod Workspace Tree] Reloading tree layout...");
                 treeInstance.refresh();
             }
         };
@@ -69,53 +70,78 @@
                 }
             }
         });
+// ======================================================================
+// END: DECOUPLED_IDE_TREE_WORKSPACE_CONTROLLER (PATCH 1 OF 3)
+// ======================================================================
 
-        // 2. Intercept Context Menu Actions with Overflow Flip Calculation
-        $treeContainer.on('contextmenu', '.jstree-anchor', function(e) {
-            const $anchor = $(this);
-            if ($anchor.hasClass('anamod-tree-folder-text')) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const $li = $anchor.closest('.jstree-node');
-            selectedNodeId = $li.attr('id');
-
-            // Find the closest absolute relative container bounds to calculate position exactly
-            const $parentContainer = $contextMenu.parent();
+// ======================================================================
+// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 2 OF 3)
+// START: ANAMOD_TREE_CONTEXT_ROUTING_AND_BOUNDS
+// ======================================================================
+        // Helper calculation function to position any context menu while strictly avoiding screen bleed
+        function openContextMenu($menu, e) {
+            const $parentContainer = $menu.parent();
             const containerOffset = $parentContainer.offset();
             
             let posX = e.pageX - (containerOffset ? containerOffset.left : 0);
             let posY = e.pageY - (containerOffset ? containerOffset.top : 0);
 
-            // Temporarily unhide the popup element hidden offscreen to capture true rendered height boundaries
-            $contextMenu.css({ display: 'block', visibility: 'hidden' });
-            const menuHeight = $contextMenu.outerHeight() || 80;
+            $menu.css({ display: 'block', visibility: 'hidden' });
+            const menuHeight = $menu.outerHeight() || 80;
             const containerHeight = $parentContainer.innerHeight() || $(window).height();
-            $contextMenu.css({ visibility: 'visible' });
+            $menu.css({ visibility: 'visible' });
 
-            // Boundary Overflow Guard: Flip popups upwards if they would bleed past the bottom panel wall
             if (posY + menuHeight > containerHeight) {
                 posY = posY - menuHeight;
-                if (posY < 0) posY = 4; // Absolute safety cap to stop top bleed overflows
+                if (posY < 0) posY = 4;
             }
 
-            $contextMenu.css({
-                left: (posX + 2) + 'px', // Minor padding offset so the cursor sits comfortably outside the item row edges
+            $menu.css({
+                left: (posX + 2) + 'px',
                 top: posY + 'px'
             });
-        });
+        }
 
-        $(document).on('click contextmenu', function(e) {
-            if (!$(e.target).closest('#anamod-tree-context-menu').length) {
-                $contextMenu.hide();
+        // 2. Dual-Track Context Menu Routing Interception Loop
+        $treeContainer.on('contextmenu', '.jstree-anchor', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $fileContextMenu.hide();
+            $folderContextMenu.hide();
+
+            const $anchor = $(this);
+            const $li = $anchor.closest('.jstree-node');
+            selectedNodeId = $li.attr('id');
+
+            if ($anchor.hasClass('anamod-tree-folder-text')) {
+                // TRACK A: Right-clicked folder launches folder-scoped action matrix panel
+                openContextMenu($folderContextMenu, e);
+            } else {
+                // TRACK B: Right-clicked file surfaces asset rename and delete operations
+                openContextMenu($fileContextMenu, e);
             }
         });
 
+        // Globally hide context menus on mouse clicks outside the wrapper blocks
+        $(document).on('click contextmenu', function(e) {
+            if (!$(e.target).closest('#anamod-tree-context-menu, #anamod-folder-context-menu').length) {
+                $fileContextMenu.hide();
+                $folderContextMenu.hide();
+            }
+        });
+// ======================================================================
+// END: ANAMOD_TREE_CONTEXT_ROUTING_AND_BOUNDS (PATCH 2 OF 3)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 3 OF 3)
+// START: ANAMOD_TREE_ACTION_DELEGATIONS_AND_CREATION
+// ======================================================================
         // 3. Connect Desktop Context Item Trigger Elements
         $('#ctx-rename-btn').off('click').on('click', function(e) {
             e.stopPropagation();
-            $contextMenu.hide();
+            $fileContextMenu.hide();
             if (selectedNodeId) {
                 $treeContainer.jstree(true).edit(selectedNodeId);
             }
@@ -123,7 +149,7 @@
 
         $('#ctx-delete-btn').off('click').on('click', function(e) {
             e.stopPropagation();
-            $contextMenu.hide();
+            $fileContextMenu.hide();
             if (selectedNodeId) {
                 const nodeData = $treeContainer.jstree(true).get_node(selectedNodeId);
                 if (nodeData && nodeData.data && nodeData.data.path) {
@@ -134,7 +160,44 @@
             }
         });
 
-        // 4. Handle Inline Rename Commits
+        // 4. Folder Creation Execution Routing Pipeline Integration
+        $('#ctx-add-file-btn').off('click').on('click', function(e) {
+            e.stopPropagation();
+            $folderContextMenu.hide();
+            
+            if (!selectedNodeId) return;
+            const treeInstance = $treeContainer.jstree(true);
+            const nodeData = treeInstance.get_node(selectedNodeId);
+            
+            if (nodeData && nodeData.data && nodeData.data.path) {
+                let parentFolderPath = nodeData.data.path;
+                
+                const inputName = prompt(`Add New File Here\nDirectory Context: ${parentFolderPath}\nEnter file name (e.g., 'utils.py'):`);
+                if (!inputName || !inputName.trim()) return;
+                
+                let cleanParent = parentFolderPath.replace(/^\/app\/?/, '').trim();
+                let fullNewFilePath = cleanParent ? (cleanParent.replace(/\/$/, '') + '/' + inputName.trim()) : inputName.trim();
+                
+                window.updateAnamodTerminal(`[SYSTEM] Scaffolding new file node within directory tree folder matrix...\n`);
+                $.ajax({
+                    url: '/aurora/api/files/op/',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'X-CSRFToken': window.csrfToken || $('[name=csrfmiddlewaretoken]').val() || '' },
+                    data: JSON.stringify({ path: fullNewFilePath, content: "" }),
+                    success: function() {
+                        window.updateAnamodTerminal(`[SUCCESS] New file nested and created at target directory mount address.\n`);
+                        treeInstance.open_node(selectedNodeId);
+                        if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
+                    },
+                    error: function(xhr) {
+                        window.updateAnamodTerminal(`[ERROR] Folder relative allocation failure: ${xhr.statusText}\n`);
+                    }
+                });
+            }
+        });
+
+        // 5. Handle Inline Rename Commits
         $treeContainer.on('rename_node.jstree', function(e, data) {
             if (data.text === data.old) return;
             if (data.node.data && data.node.data.path) {
@@ -144,7 +207,7 @@
             }
         });
 
-        // 5. Handle Directory Tree Node Selection Lifecycle
+        // 6. Handle Directory Tree Node Selection Lifecycle
         $treeContainer.off("select_node.jstree").on("select_node.jstree", function (e, data) {
             const activeNode = data.node;
             if (!activeNode) return;
@@ -163,5 +226,5 @@
     };
 })(window);
 // ======================================================================
-// END: DECOUPLED_IDE_TREE_WORKSPACE_CONTROLLER (PATCH 1 OF 1)
+// END: ANAMOD_TREE_ACTION_DELEGATIONS_AND_CREATION (PATCH 3 OF 3)
 // ======================================================================
