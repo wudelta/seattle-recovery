@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from aurora.models import ComponentRegistry, StaticContent, DeltaDirectives, DeltaNotesEntry
 
+
 class StaticContentInline(admin.StackedInline):
     """Allows editing child HTML informational content directly inside the parent Component Profile."""
     model = StaticContent
@@ -20,10 +21,10 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'file_path', 'description')
     list_filter = ('persona', 'status', 'locked')
     inlines = [StaticContentInline]
-    
+
     # Register our custom display fields as read-only admin elements
     readonly_fields = ('display_developer_docs', 'display_stakeholder_docs')
-    
+
     fieldsets = (
         ('System Identity Parity Anchors', {
             'fields': ('name', 'file_path', 'persona')
@@ -70,7 +71,7 @@ class DeltaDirectivesAdmin(admin.ModelAdmin):
     list_display = ('directive_name', 'is_active', 'created_at', 'updated_at')
     search_fields = ('directive_name', 'instructions')
     list_filter = ('is_active', 'created_at')
-    
+
     fieldsets = (
         ('Minion Core Identity', {
             'fields': ('directive_name', 'is_active')
@@ -90,7 +91,7 @@ class DeltaNotesEntryAdmin(admin.ModelAdmin):
     list_display = ('user', 'short_text', 'processed', 'display_focus_time', 'created_at')
     search_fields = ('text', 'user__username')
     list_filter = ('processed', 'created_at', 'user')
-    
+
     fieldsets = (
         ('Developer Context Anchor', {
             'fields': ('user', 'processed')

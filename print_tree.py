@@ -1,5 +1,6 @@
 import os
 
+
 def print_tree(startpath, max_depth=3):
     exclude = {'.git', '__pycache__', '.venv', '.env', 'node_modules'}
     for root, dirs, files in os.walk(startpath):
@@ -13,6 +14,7 @@ def print_tree(startpath, max_depth=3):
         for f in files:
             if not f.endswith(('.pyc', '.pyo', '.DS_Store')):
                 print(f'{subindent}📄 {f}')
+
 
 # Run this in your project root directory
 print_tree(os.getcwd(), max_depth=3)

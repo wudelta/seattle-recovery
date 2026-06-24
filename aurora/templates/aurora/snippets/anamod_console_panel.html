@@ -61,11 +61,16 @@
         <pre id="anamod-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Initialize session trace matrix...</pre>
     </div>
 
-    <!-- DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE -->
+    <!-- DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FILES -->
     <div id="anamod-tree-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 130px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
         <button id="ctx-rename-btn" class="dropdown-item px-2 py-1 text-light bg-transparent border-0 text-start w-100" style="cursor: pointer;">✏️ Rename File</button>
         <div class="dropdown-divider my-1 border-secondary"></div>
         <button id="ctx-delete-btn" class="dropdown-item px-2 py-1 text-danger bg-transparent border-0 text-start w-100" style="cursor: pointer;">🗑️ Delete File</button>
+    </div>
+
+    <!-- NEW DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FOLDERS -->
+    <div id="anamod-folder-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 160px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
+        <button id="ctx-add-file-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">➕ Add New File Here</button>
     </div>
 </div>
 <!-- ====================================================================== -->

@@ -9,12 +9,11 @@
     window.initAnamodConsole = function(csrfToken) {
         console.log("[Anamod Workspace] Spawning control channels...");
 
-        // Refactored logging hook: Uses prepend to force the most recent log entries to the top
         window.updateAnamodTerminal = function(message) {
             const $term = $('#anamod-terminal-stream');
             if ($term.length) {
                 $term.prepend(message);
-                $term.scrollTop(0); // Instantly snap scroll back to top boundary for visibility
+                $term.scrollTop(0);
             }
         };
 
@@ -100,7 +99,9 @@
                         mountEditorInstance();
                     }
                     
-                    $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath).removeClass('text-warning');
+                    // Core modification: strip away absolute /app container mappings to display clear relative paths (e.g. 'aurora/urls.py')
+                    let displayPath = filePath.replace(/^\/app\//, '').replace(/^app\//, '');
+                    $('#active-file-indicator').text(displayPath).attr('title', filePath).removeClass('text-warning');
                     
                     if (ext === 'py') {
                         $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', false);
