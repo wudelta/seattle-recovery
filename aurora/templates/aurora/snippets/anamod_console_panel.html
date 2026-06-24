@@ -17,11 +17,9 @@
     <!-- COLUMN 2: CENTER EDITOR CODE VIEWPORT -->
     <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
         <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
-            <!-- Removed fixed max-width restriction to allow relative layout paths to expand fully across the header footprint -->
             <div id="active-file-indicator" class="text-warning small text-truncate flex-grow-1">
                 No file active
             </div>
-            <!-- Removed the redundant 'Monaco Workspace Ready' text node element to maximize layout real estate -->
         </div>
         <!-- FIXED ENFORCEMENT WRAPPER: Absolute constraints stop Monaco from pushing past the screen footprint -->
         <div class="position-relative w-100 flex-grow-1" style="min-height: 0; background-color: #1e1e1e;">
@@ -38,9 +36,7 @@
             <button id="anamod-run-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase" disabled>
                 ⚡ Execute Sandbox Run
             </button>
-            <button id="anamod-lint-btn" class="btn btn-outline-info btn-sm font-monospace text-uppercase" disabled>
-                🔍 Lint Active Code
-            </button>
+            <!-- PURGED: Manual Lint button removed to clean up interface real estate -->
             <div class="row g-1">
                 <div class="col-6">
                     <button id="anamod-save-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100" disabled>

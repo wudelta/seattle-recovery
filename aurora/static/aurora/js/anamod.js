@@ -254,25 +254,6 @@
 // START: ANAMOD_ACTION_TRIGGERS_AND_FILE_LOADER
 // ======================================================================
         // 4. Manual Core API Trigger Controls
-        $('#anamod-lint-btn').off('click').on('click', function() {
-            if (!currentFilePath || !window.editorInstance) return;
-            window.updateAnamodTerminal(`[SYSTEM] Piping file syntax to analysis checker...\n`);
-            $.ajax({
-                url: '/aurora/api/sandbox/lint/',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: { 'X-CSRFToken': csrfToken },
-                data: JSON.stringify({ code: window.editorInstance.getValue() }),
-                success: function(response) {
-                    const logPayload = response.errors || "[SUCCESS] Code scan completed cleanly.";
-                    window.updateAnamodTerminal(`[LINTER ENGINE RESULTS]\n${logPayload}\n`);
-                },
-                error: function(xhr) {
-                    window.updateAnamodTerminal(`[ERROR] Validation channel dropped: ${xhr.statusText}\n`);
-                }
-            });
-        });
-
         $('#anamod-run-btn').off('click').on('click', function() {
             if (!currentFilePath || !window.editorInstance) return;
             window.updateAnamodTerminal(`[SYSTEM] Deploying micro-worker runtime inside sandboxed engine...\n`);
@@ -311,6 +292,15 @@
                         else if (ext === 'json') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'json');
                         else if (ext === 'md') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'markdown');
                         
+                        // Enforce real-time hotkey intercepts directly upon a clean file mount sequence
+                        window.editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() {
+                            $('#anamod-save-btn').click();
+                        });
+
+                        window.editorInstance.addCommand(monaco.KeyCode.F5, function() {
+                            if (ext === 'py') $('#anamod-run-btn').click();
+                        });
+
                         setTimeout(function() { window.editorInstance.layout(); }, 50);
                         window.updateAnamodTerminal(`[SYSTEM] File loaded successfully into viewport.\n`);
                     } else {
@@ -322,9 +312,9 @@
                     $('#active-file-indicator').text(displayPath).attr('title', filePath).removeClass('text-warning');
                     
                     if (ext === 'py') {
-                        $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', false);
+                        $('#anamod-run-btn').prop('disabled', false);
                     } else {
-                        $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', true);
+                        $('#anamod-run-btn').prop('disabled', true);
                     }
                     
                     $('#anamod-save-btn').prop('disabled', true).removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
