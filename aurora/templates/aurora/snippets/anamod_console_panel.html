@@ -5,8 +5,11 @@
 <div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden;">
     <!-- COLUMN 1: LEFT FILE SYSTEM DIRECTORY TREE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
-        <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
-            📁 Project Hierarchy
+        <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+            <span>📁 Project Hierarchy</span>
+            <button id="anamod-new-file-btn" class="btn btn-link p-0 text-success text-decoration-none" title="Create New File" style="font-size: 1.1rem; line-height: 1;">
+                ➕
+            </button>
         </div>
         <div id="anamod-file-tree" class="flex-grow-1" style="overflow-y: auto; font-size: 0.85rem;"></div>
     </div>

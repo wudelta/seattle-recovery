@@ -9,11 +9,12 @@
     window.initAnamodConsole = function(csrfToken) {
         console.log("[Anamod Workspace] Spawning control channels...");
 
+        // Refactored logging hook: Uses prepend to force the most recent log entries to the top
         window.updateAnamodTerminal = function(message) {
             const $term = $('#anamod-terminal-stream');
             if ($term.length) {
-                $term.append(message);
-                $term.scrollTop($term.scrollHeight);
+                $term.prepend(message);
+                $term.scrollTop(0); // Instantly snap scroll back to top boundary for visibility
             }
         };
 
@@ -58,7 +59,6 @@
                     readOnly: false
                 });
 
-                // Bind Monaco's native content mutation loopback directly to the tracker hook
                 window.editorInstance.onDidChangeModelContent(function() {
                     if (typeof window.triggerAnamodDirtyState === 'function') {
                         window.triggerAnamodDirtyState();
@@ -82,14 +82,16 @@
                 data: { path: filePath },
                 success: function(response) {
                     currentFilePath = filePath;
+                    const ext = filePath.split('.').pop().toLowerCase();
+                    
                     if (window.editorInstance !== null && typeof window.editorInstance.setValue === 'function') {
                         window.editorInstance.setValue(response.content);
-                        const ext = filePath.split('.').pop().toLowerCase();
                         if (ext === 'py') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'python');
                         else if (ext === 'css') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'css');
                         else if (ext === 'html') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'html');
                         else if (ext === 'js') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'javascript');
                         else if (ext === 'json') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'json');
+                        else if (ext === 'md') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'markdown');
                         
                         setTimeout(function() { window.editorInstance.layout(); }, 50);
                         window.updateAnamodTerminal(`[SYSTEM] File loaded successfully into viewport.\n`);
@@ -99,7 +101,13 @@
                     }
                     
                     $('#active-file-indicator').text(filePath.split('/').pop()).attr('title', filePath).removeClass('text-warning');
-                    $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', false);
+                    
+                    if (ext === 'py') {
+                        $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', false);
+                    } else {
+                        $('#anamod-run-btn, #anamod-lint-btn').prop('disabled', true);
+                    }
+                    
                     $('#anamod-save-btn').prop('disabled', true).removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
                     $('#anamod-discard-btn').prop('disabled', true).removeClass('btn-danger text-dark font-weight-bold').addClass('btn-outline-danger');
                 },
@@ -153,6 +161,35 @@
                 },
                 error: function(xhr) {
                     window.updateAnamodTerminal(`[ERROR] Reversion routine failure: ${xhr.statusText}\n`);
+                }
+            });
+        });
+
+        // New File Button Handler: Prompts for name and commits empty buffer to host disk
+        $('#anamod-new-file-btn').off('click').on('click', function() {
+            const fileName = prompt("Enter new file path (relative to workspace root, e.g., 'src/main.py'):");
+            if (!fileName || !fileName.trim()) return;
+
+            window.updateAnamodTerminal(`[SYSTEM] Initializing clean workspace storage node: ${fileName}...\n`);
+            $.ajax({
+                url: '/aurora/api/files/op/',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrfToken },
+                data: JSON.stringify({ path: fileName.trim(), content: "" }),
+                success: function() {
+                    window.updateAnamodTerminal(`[SUCCESS] New storage file successfully committed to disk layout.\n`);
+                    
+                    // Re-render or hot-reload your tree hierarchy if your global function is exposed
+                    if (typeof window.refreshWorkspaceTree === 'function') {
+                        window.refreshWorkspaceTree();
+                    } else if (typeof window.loadWorkspaceFile === 'function') {
+                        // Directly shift view into the freshly created empty file buffer context
+                        window.loadWorkspaceFile(fileName.trim());
+                    }
+                },
+                error: function(xhr) {
+                    window.updateAnamodTerminal(`[ERROR] File allocation failure: ${xhr.statusText}\n`);
                 }
             });
         });
