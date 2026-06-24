@@ -186,7 +186,6 @@ def run_code_api(request):
     client = docker.from_env()
     container = None
     try:
-        # Pipe raw text through python -c to eliminate host-to-container volume mount constraints
         container = client.containers.create(
             image="python:3.11-slim",
             command=["python", "-c", code],
@@ -196,7 +195,6 @@ def run_code_api(request):
         )
         container.start()
         
-        # Enforce execution time ceiling limit block
         result = container.wait(timeout=5)
         output = container.logs(stdout=True, stderr=True).decode('utf-8')
         
@@ -220,7 +218,7 @@ def run_code_api(request):
 
 @csrf_exempt
 def lint_code_api(request):
-    """Runs flake8 validation rules against the code text bundle."""
+    """Aggregates syntax checks and runs a strictly filtered flake8 pass targeting logical errors."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
         
@@ -232,29 +230,63 @@ def lint_code_api(request):
         temp_file_path = temp_file.name
         
     try:
-        result = subprocess.run(
-            ['flake8', temp_file_path],
+        # LAYER 1: Immediate compilation pass to find crash-inducing syntax issues
+        compile_result = subprocess.run(
+            ['python', '-m', 'py_compile', temp_file_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            timeout=5
+            timeout=2
         )
         
-        if result.returncode == 127 or "No such file or directory" in result.stderr:
-            clean_errors = "[CRITICAL LINTER ERROR] flake8 is missing inside the active backend container.\nRun 'pip install flake8' in the container to resolve."
-        elif result.stderr:
-            clean_errors = f"[LINTER DESCRIPTOR FAILURE]\n{result.stderr}"
+        syntax_errors = ""
+        if compile_result.returncode != 0:
+            raw_err = compile_result.stderr or compile_result.stdout
+            cleaned_err = raw_err.replace(temp_file_path, "current_file.py").strip()
+            syntax_errors = f"❌ [FATAL SYNTAX ERROR / CRASH RISK]\n{cleaned_err}\n"
+
+        # LAYER 2: Filtered Flake8 analysis ignoring cosmetic layout or length conventions
+        style_warnings = ""
+        try:
+            flake_result = subprocess.run(
+                [
+                    'flake8', 
+                    '--ignore=E301,E302,E303,E304,E305,E306,E501,W291,W292,W293,E111,E114,E121,E122,E123,E124,E125,E126,E127,E128', 
+                    temp_file_path
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=3
+            )
+            
+            if flake_result.returncode != 0:
+                style_warnings = flake_result.stdout.replace(temp_file_path, "current_file.py").strip()
+        except FileNotFoundError:
+            style_warnings = "⚠️ [ENVIRONMENT WARNING] 'flake8' command was not found inside the active container. Install it with 'pip install flake8' to see critical reference warnings."
+        except Exception as e:
+            style_warnings = f"⚠️ [LINTER EXECUTION ERROR] Failed running flake8 analysis: {str(e)}"
+
+        # Build clean structural report
+        output_buffer = []
+        if syntax_errors:
+            output_buffer.append(syntax_errors)
         else:
-            clean_errors = result.stdout.replace(temp_file_path, "current_file.py")
+            output_buffer.append("✅ [SYNTAX CHECK] Python file compiles cleanly.")
+            
+        if style_warnings:
+            output_buffer.append(f"\n🎨 [LOGICAL FLAWS & WARNINGS]\n{style_warnings}")
+
+        final_report = "\n".join(output_buffer)
     except subprocess.TimeoutExpired:
-        clean_errors = "[ERROR] Linter execution timed out."
+        final_report = "[ERROR] Code validation pipeline processing timeout."
     except Exception as e:
-        clean_errors = f"[CRITICAL EXCEPTION] Linter subsystem failure: {str(e)}"
+        final_report = f"[CRITICAL EXCEPTION] Verification engine failure: {str(e)}"
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
             
-    return JsonResponse({'errors': clean_errors if clean_errors.strip() else "✅ No linting issues found!"})
+    return JsonResponse({'errors': final_report})
 # ======================================================================
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART3 (PATCH 3 OF 3)
 # ======================================================================
