@@ -176,7 +176,7 @@ def file_operation_api(request):
 # ======================================================================
 @csrf_exempt
 def run_code_api(request):
-    """Executes code safely inside a restricted Docker sandbox."""
+    """Executes code safely inside a restricted Docker sandbox using direct string execution."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
@@ -184,39 +184,37 @@ def run_code_api(request):
     code = data.get('code', '')
     
     client = docker.from_env()
-    with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:
-        temp_file.write(code.encode('utf-8'))
-        temp_file_path = temp_file.name
-
+    container = None
     try:
-        # Create container first to properly manage execution limits and split execution timeouts
+        # Pipe raw text through python -c to eliminate host-to-container volume mount constraints
         container = client.containers.create(
             image="python:3.11-slim",
-            command="python /app/script.py",
-            volumes={temp_file_path: {'bind': '/app/script.py', 'mode': 'ro'}},
+            command=["python", "-c", code],
             network_disabled=True,
             mem_limit="128m",
             nano_cpus=500000000
         )
         container.start()
         
-        # Safely wait with an explicit execution time limit ceiling block
+        # Enforce execution time ceiling limit block
         result = container.wait(timeout=5)
         output = container.logs(stdout=True, stderr=True).decode('utf-8')
+        
+        if not output.strip() and result.get('StatusCode') == 0:
+            output = "✅ Execution completed successfully with no output returns."
     except Exception as e:
         output = f"Execution timed out or failed: {str(e)}"
-        # Force cleanup of stalled runtimes if they run past the threshold
-        try:
-            container.kill()
-        except Exception:
-            pass
+        if container:
+            try:
+                container.kill()
+            except Exception:
+                pass
     finally:
-        try:
-            container.remove(force=True)
-        except Exception:
-            pass
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
+        if container:
+            try:
+                container.remove(force=True)
+            except Exception:
+                pass
             
     return JsonResponse({'output': output})
 

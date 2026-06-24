@@ -1,7 +1,7 @@
-# ====================================================================== #
-# FILE: docker-compose.yml (PATCH 1 OF 1)                                #
-# START: DOCKER_COMPOSE_CORE_BLUEPRINT                                   #
-# ====================================================================== #
+# ======================================================================
+# FILE: docker-compose.yml (PATCH 1 OF 1)
+# START: DOCKER_COMPOSE_CORE_BLUEPRINT
+# ======================================================================
 services:
   postgres:
     image: postgres:16-alpine
@@ -29,8 +29,8 @@ services:
     image: neo4j:5.12-community
     container_name: seattle_neo4j
     ports:
-      - "7474:7474" # Dashboard UI
-      - "7687:7687" # Bolt Driver Connection
+      - "7474:7474"
+      - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
       - NEO4J_server_memory_heap_initial__size=256m
@@ -45,7 +45,7 @@ services:
           memory: 256M
         limits:
           cpus: '0.50'
-          memory: 1024M # Strict 1GB memory boundary wall
+          memory: 1024M
     networks:
       - recovery_net
 
@@ -63,7 +63,7 @@ services:
   django_app:
     build: .
     container_name: seattle_django
-    user: "root" # Required to access the mounted docker socket
+    user: "root"
     ports:
       - "8000:8000"
     env_file:
@@ -71,11 +71,12 @@ services:
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
-      - /var/run/docker.sock:/var/run/docker.sock # Allows Django to spawn sandbox containers
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - postgres
       - neo4j
       - redis_broker
+      - python_sandbox_cache # Force image verification right as the container stacks boot up
     networks:
       - recovery_net
 
@@ -91,6 +92,14 @@ services:
     networks:
       - recovery_net
 
+  # Companion container image cache enforcement layer
+  python_sandbox_cache:
+    image: python:3.11-slim
+    restart: "no"
+    entrypoint: ["echo", "[SYSTEM_CACHE] python:3.11-slim worker base initialized successfully"]
+    networks:
+      - recovery_net
+
 volumes:
   postgres_data:
   neo4j_data:
@@ -100,6 +109,6 @@ volumes:
 networks:
   recovery_net:
     driver: bridge
-# ====================================================================== #
-# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)                     #
-# ====================================================================== #
+# ======================================================================
+# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)
+# ======================================================================
