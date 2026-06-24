@@ -1,6 +1,6 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 1 OF 1)      -->
-<!-- START: TEMPLATE_LEVEL_BUFFER_TRACKER                                  -->
+<!-- START: MASTER_WORKSPACE_CONSOLE_ORCHESTRATOR                           -->
 <!-- ====================================================================== -->
 {% extends "aurora/aurora_base.html" %}
 {% load static %}
@@ -82,6 +82,7 @@
     <!-- Decoupled Functional IDE Assets Loaded Separately -->
     <script src="{% static 'aurora/js/anamod.js' %}"></script>
     <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
+    <script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
     
     <script>
         $(document).ready(function() {
@@ -113,30 +114,6 @@
 
             $(document).on('aurora:view_changed', function(e, viewMode) {
                 if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
-            });
-
-            // SELF-CONTAINED UN-SAVED CHANGES INDICATOR TRACKER
-            // Listens directly to keyboard text modification inputs inside Monaco's workspace viewport frame
-            $(document).on('keydown', '#anamod-monaco-viewport .monaco-editor textarea', function() {
-                const $indicator = $('#active-file-indicator');
-                const titleText = $indicator.text().trim();
-                
-                if (titleText && !titleText.endsWith('*')) {
-                    $indicator.text(titleText + ' *').addClass('text-warning');
-                    $('#anamod-save-btn').removeClass('btn-outline-warning').addClass('btn-warning text-dark font-weight-bold');
-                }
-            });
-
-            // Resets the state look when the save action button transaction finishes successfully
-            $(document).on('click', '#anamod-save-btn', function() {
-                const $btn = $(this);
-                // Delay evaluation slightly to allow the core script's AJAX transaction loop to finish committing to disk
-                setTimeout(function() {
-                    const $indicator = $('#active-file-indicator');
-                    const titleText = $indicator.text().replace(' *', '').trim();
-                    $indicator.text(titleText).removeClass('text-warning');
-                    $btn.removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
-                }, 400);
             });
         });
     </script>
