@@ -79,20 +79,27 @@ def file_operation_api(request):
     """API Endpoint handling reading and writing files safely to the host mount."""
     if request.method == 'GET':
         file_path = request.GET.get('path')
-        if not file_path or not os.path.exists(file_path):
-            return JsonResponse({'error': 'File not found'}, status=404)
+        if not file_path:
+            return JsonResponse({'error': 'No file path provided'}, status=400)
             
+        # Secure baseline anchoring: force path evaluation inside the workspace container root folder
+        if not file_path.startswith('/app/'):
+            file_path = os.path.join('/app', file_path.lstrip('/'))
+
+        if not os.path.exists(file_path):
+            return JsonResponse({'error': f'File not found: {file_path}'}, status=404)
+
         # Guard clause: Prevent reading non-text/binary formats that crash string parsers
         binary_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.pyc', '.pdf', '.zip', '.tar', '.gz'}
         if any(file_path.lower().endswith(ext) for ext in binary_extensions):
             return JsonResponse({'content': '# Binary Asset detected. Contents hidden inside text viewport.'})
-            
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 return JsonResponse({'content': f.read()})
         except Exception as e:
             return JsonResponse({'error': f'Could not decode file: {str(e)}'}, status=500)
-            
+
     elif request.method == 'POST':
         data = json.loads(request.body)
         file_path = data.get('path')
@@ -100,8 +107,17 @@ def file_operation_api(request):
         
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
-            
+
+        # Secure baseline anchoring: force newly initialized paths to save directly into the project root directory
+        if not file_path.startswith('/app/'):
+            file_path = os.path.join('/app', file_path.lstrip('/'))
+
         try:
+            # Ensure target parent subdirectory tree exists before committing new file allocations to disk
+            parent_dir = os.path.dirname(file_path)
+            if parent_dir and not os.path.exists(parent_dir):
+                os.makedirs(parent_dir, exist_ok=True)
+
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             return JsonResponse({'status': 'success'})
@@ -120,32 +136,42 @@ def run_code_api(request):
     """Executes code safely inside a restricted Docker sandbox."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-        
+    
     data = json.loads(request.body)
     code = data.get('code', '')
-    client = docker.from_env()
     
+    client = docker.from_env()
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:
         temp_file.write(code.encode('utf-8'))
         temp_file_path = temp_file.name
-        
+
     try:
-        container_output = client.containers.run(
+        # Create container first to properly manage execution limits and split execution timeouts
+        container = client.containers.create(
             image="python:3.11-slim",
             command="python /app/script.py",
             volumes={temp_file_path: {'bind': '/app/script.py', 'mode': 'ro'}},
             network_disabled=True,
             mem_limit="128m",
-            nano_cpus=500000000,
-            timeout=5,
-            remove=True
+            nano_cpus=500000000
         )
-        output = container_output.decode('utf-8')
-    except docker.errors.ContainerError as e:
-        output = e.stderr.decode('utf-8')
+        container.start()
+        
+        # Safely wait with an explicit execution time limit ceiling block
+        result = container.wait(timeout=5)
+        output = container.logs(stdout=True, stderr=True).decode('utf-8')
     except Exception as e:
         output = f"Execution timed out or failed: {str(e)}"
+        # Force cleanup of stalled runtimes if they run past the threshold
+        try:
+            container.kill()
+        except Exception:
+            pass
     finally:
+        try:
+            container.remove(force=True)
+        except Exception:
+            pass
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
             
@@ -164,18 +190,30 @@ def lint_code_api(request):
         temp_file.write(code.encode('utf-8'))
         temp_file_path = temp_file.name
         
-    result = subprocess.run(
-        ['flake8', temp_file_path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    
-    if os.path.exists(temp_file_path):
-        os.remove(temp_file_path)
+    try:
+        result = subprocess.run(
+            ['flake8', temp_file_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=5
+        )
         
-    clean_errors = result.stdout.replace(temp_file_path, "current_file.py")
-    return JsonResponse({'errors': clean_errors if clean_errors else "✅ No linting issues found!"})
+        if result.returncode == 127 or "No such file or directory" in result.stderr:
+            clean_errors = "[CRITICAL LINTER ERROR] flake8 is missing inside the active backend container.\nRun 'pip install flake8' in the container to resolve."
+        elif result.stderr:
+            clean_errors = f"[LINTER DESCRIPTOR FAILURE]\n{result.stderr}"
+        else:
+            clean_errors = result.stdout.replace(temp_file_path, "current_file.py")
+    except subprocess.TimeoutExpired:
+        clean_errors = "[ERROR] Linter execution timed out."
+    except Exception as e:
+        clean_errors = f"[CRITICAL EXCEPTION] Linter subsystem failure: {str(e)}"
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+            
+    return JsonResponse({'errors': clean_errors if clean_errors.strip() else "✅ No linting issues found!"})
 # ======================================================================
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART3 (PATCH 3 OF 3)
 # ======================================================================
