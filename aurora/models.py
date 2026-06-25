@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 4)
+# FILE: aurora/models.py (PATCH 1 OF 5)
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,11 +7,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 4)
+# FILE: aurora/models.py (PATCH 2 OF 5)
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
@@ -85,16 +85,29 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 4)
+# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 4)
-# START: CLEAN_STATIC_CONTENT_AND_STANDALONE_DIRECTIVES_SCHEMAS
+# FILE: aurora/models.py (PATCH 3 OF 5)
+# START: STATIC_CONTENT_SCHEMA
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
+    
+    class ApplicationChoices(models.TextChoices):
+        AURORA = 'aurora', 'Aurora'
+        HOPEHUB = 'hopehub', 'HopeHub'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # New application restriction field
+    application = models.CharField(
+        max_length=10,
+        choices=ApplicationChoices.choices,
+        default=ApplicationChoices.AURORA
+    )
+    
     title = models.CharField(max_length=255)
     html_content = models.TextField()
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -102,9 +115,15 @@ class StaticContent(models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"StaticContent: {self.title} (ID: {self.id})"
+        return f"StaticContent: {self.title} [{self.application}] (ID: {self.id})"
+# ======================================================================
+# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 5)
+# ======================================================================
 
-
+# ======================================================================
+# FILE: aurora/models.py (PATCH 4 OF 5)
+# START: DIRECTIVES_SCHEMA
+# ======================================================================
 class DeltaDirectives(models.Model):
     """
     Standalone configuration engine storing system instructions, prompts,
@@ -178,12 +197,12 @@ class DeltaDirectives(models.Model):
     def __str__(self):
         return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: CLEAN_STATIC_CONTENT_AND_STANDALONE_DIRECTIVES_SCHEMAS (PATCH 3 OF 4)
+# END: DIRECTIVES_SCHEMA (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 4 OF 4)
-# START: DELTA_NOTES_TIMER_SCHEMA
+# FILE: aurora/models.py (PATCH 5 OF 5)
+# START: DELTA_NOTES_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
@@ -219,5 +238,5 @@ class DeltaNotesEntry(models.Model):
     def __str__(self):
         return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
 # ======================================================================
-# END: DELTA_NOTES_TIMER_SCHEMA (PATCH 4 OF 4)
+# END: DELTA_NOTES_SCHEMA (PATCH 5 OF 5)
 # ======================================================================

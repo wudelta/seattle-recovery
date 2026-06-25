@@ -38,6 +38,7 @@ urlpatterns = [
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
     path('api/delta_notes/', api_commands.delta_notes_endpoint, name='delta_notes_endpoint'),
+    path('api/content/', api_commands.content_endpoint, name='content_endpoint'),
 ]
 # ======================================================================
 # END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES (PATCH 1 OF 1)

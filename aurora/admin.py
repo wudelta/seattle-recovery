@@ -52,11 +52,9 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
 @admin.register(StaticContent)
 class StaticContentAdmin(admin.ModelAdmin):
     """Dedicated management grid for standalone informational content modifications."""
-    list_display = ('title', 'created_by', 'date_created', 'date_modified')
+    list_display = ('title', 'application', 'created_by', 'date_created', 'date_modified')
     search_fields = ('title', 'html_content')
-    list_filter = ('date_created', 'date_modified', 'created_by')
-    
-    # FORCE OVERRIDE: Tells Django to look at date_created instead of any legacy constraints
+    list_filter = ('application', 'date_created', 'date_modified', 'created_by')
     ordering = ('-date_created',)
 
 

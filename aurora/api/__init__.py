@@ -1,3 +1,4 @@
+from .content_api import content_endpoint
 # ======================================================================
 # FILE: aurora/api/__init__.py (PATCH 1 OF 1)
 # START: MODULE_ROUTING_REGISTRATION_FOOTPRINT
@@ -11,7 +12,8 @@ __all__ = [
     'execute_blueprint_api',
     'unlocked_components_endpoint',
     'trigger_pipeline',
-    'run_development_pipeline'
+    'run_development_pipeline',
+    'content_endpoint',
 ]
 # ======================================================================
 # END: MODULE_ROUTING_REGISTRATION_FOOTPRINT (PATCH 1 OF 1)

@@ -46,6 +46,10 @@ $(document).ready(function() {
         } else if (viewMode === 'anamod') {
             $('#anamod-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['anamod']);
+        } else if (viewMode === 'content_panel') {
+            // ADDED: Strip d-none visibility clamp when the matching content panel is selected
+            $('#content_panel-workspace-container').removeClass('d-none').addClass('active-pane');
+            $(document).trigger('aurora:view_changed', ['content_panel']);
         }
     });
 // ======================================================================

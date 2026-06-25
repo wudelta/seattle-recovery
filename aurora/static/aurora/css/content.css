@@ -1,0 +1,49 @@
+/* ====================================================================== */
+/* FILE: aurora/static/aurora/css/content.css (PATCH 1 OF 1)             */
+/* START: CONTENT_COCKPIT_TERMINAL_THEME                                 */
+/* ====================================================================== */
+#content-module-wrapper input,
+#content-module-wrapper select,
+#content-module-wrapper textarea {
+    background-color: #000000 !important;
+    color: #f1f1f1 !important;
+    border: 1px solid #444444 !important;
+    border-radius: 3px !important;
+}
+
+#content-module-wrapper input:focus,
+#content-module-wrapper select:focus,
+#content-module-wrapper textarea:focus {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 4px rgba(255, 193, 7, 0.25) !important;
+    outline: none !important;
+}
+
+#cc-inventory-list [data-id]:hover {
+    background-color: #1a1a1a !important;
+    border-color: #666666 !important;
+}
+
+#cc-terminal-stream {
+    background-color: #000000 !important;
+    border: 1px solid #222222 !important;
+    color: #198754 !important;
+    scrollbar-width: thin;
+    scrollbar-color: #333333 #000000;
+}
+
+#cc-terminal-stream::-webkit-scrollbar {
+    width: 6px;
+}
+
+#cc-terminal-stream::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+#cc-terminal-stream::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 3px;
+}
+/* ====================================================================== */
+/* END: CONTENT_COCKPIT_TERMINAL_THEME (PATCH 1 OF 1)                   */
+/* ====================================================================== */

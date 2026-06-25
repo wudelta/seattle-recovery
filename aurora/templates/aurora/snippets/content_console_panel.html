@@ -1,0 +1,94 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/content_console_panel.html (PATCH 1 OF 1) -->
+<!-- START: CONTENT_VIEWPORT_SCALING_CLAMP -->
+<!-- ====================================================================== -->
+<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; position: relative;" id="content-module-wrapper">
+    
+    <!-- COLUMN 1: LEFT SIDE CONTENT INVENTORY DIRECTORY -->
+    <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 220px; background-color: #121212;">
+        <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+            <span>📑 Content Registry</span>
+            <button id="cc-new-page-btn" class="btn btn-link p-0 text-success text-decoration-none" title="Create New Page Asset" style="font-size: 1.1rem; line-height: 1;">
+                ➕
+            </button>
+        </div>
+        
+        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+            <input type="radio" class="btn-check" name="cc-app-filter" id="cc-filter-all" value="all" checked>
+            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="cc-filter-all">ALL</label>
+            
+            <input type="radio" class="btn-check" name="cc-app-filter" id="cc-filter-aurora" value="aurora">
+            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="cc-filter-aurora">AURORA</label>
+            
+            <input type="radio" class="btn-check" name="cc-app-filter" id="cc-filter-hopehub" value="hopehub">
+            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="cc-filter-hopehub">HOPEHUB</label>
+        </div>
+
+        <div id="cc-inventory-list" class="flex-grow-1 d-flex flex-column gap-1" style="overflow-y: auto; font-size: 0.85rem;">
+            <div class="text-muted text-center p-3 small italic">No pages indexed.</div>
+        </div>
+    </div>
+
+    <!-- COLUMN 2: CENTER WORKSPACE EDITING COMPOSER FORM -->
+    <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
+        <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
+            <div id="cc-active-asset-indicator" class="text-warning small text-truncate flex-grow-1 text-uppercase" style="letter-spacing: 0.5px;">
+                🆕 COMPOSING NEW STANDALONE STATIC ASSET
+            </div>
+        </div>
+        
+        <div class="flex-grow-1 p-3" style="overflow-y: auto;">
+            <form id="cc-composer-form" autocomplete="off" onsubmit="return false;">
+                <input type="hidden" id="cc-field-id" value="">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label text-muted small text-uppercase font-weight-bold">Page Title</label>
+                        <input type="text" id="cc-field-title" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" placeholder="e.g. system_architecture_overview" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small text-uppercase font-weight-bold">Target Application</label>
+                        <select id="cc-field-application" class="form-select form-select-sm bg-black text-warning border-secondary font-monospace">
+                            <option value="aurora">aurora</option>
+                            <option value="hopehub">hopehub</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex flex-column" style="height: calc(100vh - 290px); min-height: 250px;">
+                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Raw HTML Document Payload</label>
+                        <textarea id="cc-field-html" class="form-control flex-grow-1 bg-black text-info border-secondary font-monospace p-2" style="resize: none; font-size: 0.85rem; line-height: 1.4; white-space: pre;" placeholder="<!-- Write raw HTML content here -->"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- COLUMN 3: RIGHT SIDE ACTION CONTROL MATRIX AND TRACE TERMINAL -->
+    <div class="p-2 d-flex flex-column border-start border-secondary" style="width: 28%; min-width: 250px; background-color: #121212;">
+        <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+            🛠️ Operational Matrix
+        </div>
+        <div class="d-grid gap-2 mb-3">
+            <button id="cc-save-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase">
+                💾 Save Asset Structure
+            </button>
+            <div class="row g-1">
+                <div class="col-6">
+                    <button id="cc-clear-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100">
+                        ✨ Clear Form
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button id="cc-delete-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled>
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="text-uppercase small font-weight-bold text-muted mb-1" style="letter-spacing: 1px; font-size: 0.75rem;">
+            🖥️ Operational Pipeline Log Feed
+        </div>
+        <pre id="cc-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Static Content Asset Engine Initialized...</pre>
+    </div>
+</div>
+<!-- ====================================================================== -->
+<!-- END: CONTENT_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1) -->
+<!-- ====================================================================== -->
