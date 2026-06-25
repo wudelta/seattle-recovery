@@ -18,7 +18,7 @@ function initContentConsole(endpoints, csrfToken) {
         const $stream = $('#cc-terminal-stream');
         $stream.append($('<span>').addClass(colorClass).text(rawLine));
         if ($stream.length) {
-            $stream.scrollTop($stream[0].scrollHeight);
+            $stream.scrollTop($stream.scrollHeight);
         }
     }
 
@@ -65,7 +65,8 @@ function initContentConsole(endpoints, csrfToken) {
         $('#cc-field-id').val('');
         $('#cc-field-title').val('');
         $('#cc-field-application').val('aurora');
-        $('#cc-field-html').val('');
+        // UPDATED: Clear contenteditable html footprint safely
+        $('#cc-rich-editor').html('');
         $('#cc-active-asset-indicator').text('🆕 COMPOSING NEW STANDALONE STATIC ASSET').addClass('text-warning').removeClass('text-info');
         $('#cc-delete-btn').prop('disabled', true);
         fetchInventory();
@@ -84,7 +85,8 @@ function initContentConsole(endpoints, csrfToken) {
                     $('#cc-field-id').val(asset.id);
                     $('#cc-field-title').val(asset.title);
                     $('#cc-field-application').val(asset.application);
-                    $('#cc-field-html').val(asset.html_content);
+                    // UPDATED: Populate rich content target container
+                    $('#cc-rich-editor').html(asset.html_content);
                     $('#cc-active-asset-indicator').text(`📑 ASSET LOADED: ${asset.id}`).addClass('text-info').removeClass('text-warning');
                     $('#cc-delete-btn').prop('disabled', false);
                     logToStream(`Loaded document asset structure: "${asset.title}" [Author: ${asset.author}].`);
@@ -102,7 +104,8 @@ function initContentConsole(endpoints, csrfToken) {
             id: $('#cc-field-id').val() || null,
             title: $('#cc-field-title').val().trim(),
             application: $('#cc-field-application').val(),
-            html_content: $('#cc-field-html').val()
+            // UPDATED: Capture inner rich layout DOM text/html tree structures
+            html_content: $('#cc-rich-editor').html()
         };
         if (!payload.title || !payload.html_content) {
             logToStream("Validation blocked: Title and HTML fields are required.", true);

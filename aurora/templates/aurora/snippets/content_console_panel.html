@@ -53,8 +53,9 @@
                         </select>
                     </div>
                     <div class="col-12 d-flex flex-column" style="height: calc(100vh - 290px); min-height: 250px;">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Raw HTML Document Payload</label>
-                        <textarea id="cc-field-html" class="form-control flex-grow-1 bg-black text-info border-secondary font-monospace p-2" style="resize: none; font-size: 0.85rem; line-height: 1.4; white-space: pre;" placeholder="<!-- Write raw HTML content here -->"></textarea>
+                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Rich Document Payload Editor</label>
+                        <!-- REPLACED: Simple textarea swapped for an editable, spell-checked structural content block -->
+                        <div id="cc-rich-editor" class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace" contenteditable="true" spellcheck="true" style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5; min-height: 200px;"></div>
                     </div>
                 </div>
             </form>

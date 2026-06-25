@@ -44,6 +44,17 @@
     background: #333333;
     border-radius: 3px;
 }
+
+/* FIXED COLUMN LOCKS: Enforces absolute structural sizing against scroll layout expansion */
+#content-module-wrapper > div:first-child {
+    width: 22% !important;
+    flex-shrink: 0 !important;
+}
+
+#content-module-wrapper > div:last-child {
+    width: 28% !important;
+    flex-shrink: 0 !important;
+}
 /* ====================================================================== */
 /* END: CONTENT_COCKPIT_TERMINAL_THEME (PATCH 1 OF 1)                   */
 /* ====================================================================== */
