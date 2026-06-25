@@ -7,24 +7,16 @@ from django.utils.safestring import mark_safe
 from aurora.models import ComponentRegistry, StaticContent, DeltaDirectives, DeltaNotesEntry
 
 
-class StaticContentInline(admin.StackedInline):
-    """Allows editing child HTML informational content directly inside the parent Component Profile."""
-    model = StaticContent
-    extra = 1
-    fields = ('title', 'html_content')
-
-
 @admin.register(ComponentRegistry)
 class ComponentRegistryAdmin(admin.ModelAdmin):
     """Exposes the tracked system assets visually for manual documentation."""
     list_display = ('name', 'file_path', 'persona', 'status', 'locked', 'date_modified')
     search_fields = ('name', 'file_path', 'description')
     list_filter = ('persona', 'status', 'locked')
-    inlines = [StaticContentInline]
+    inlines = []  # REMOVED: StaticContentInline completely
 
     # Register our custom display fields as read-only admin elements
     readonly_fields = ('display_developer_docs', 'display_stakeholder_docs')
-
     fieldsets = (
         ('System Identity Parity Anchors', {
             'fields': ('name', 'file_path', 'persona')
@@ -60,9 +52,12 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
 @admin.register(StaticContent)
 class StaticContentAdmin(admin.ModelAdmin):
     """Dedicated management grid for standalone informational content modifications."""
-    list_display = ('title', 'component_registry', 'created_at', 'updated_at')
-    search_fields = ('title', 'html_content', 'component_registry__name')
-    list_filter = ('created_at', 'updated_at')
+    list_display = ('title', 'created_by', 'date_created', 'date_modified')
+    search_fields = ('title', 'html_content')
+    list_filter = ('date_created', 'date_modified', 'created_by')
+    
+    # FORCE OVERRIDE: Tells Django to look at date_created instead of any legacy constraints
+    ordering = ('-date_created',)
 
 
 @admin.register(DeltaDirectives)
@@ -71,7 +66,6 @@ class DeltaDirectivesAdmin(admin.ModelAdmin):
     list_display = ('directive_name', 'is_active', 'created_at', 'updated_at')
     search_fields = ('directive_name', 'instructions')
     list_filter = ('is_active', 'created_at')
-
     fieldsets = (
         ('Minion Core Identity', {
             'fields': ('directive_name', 'is_active')
@@ -91,7 +85,6 @@ class DeltaNotesEntryAdmin(admin.ModelAdmin):
     list_display = ('user', 'short_text', 'processed', 'display_focus_time', 'created_at')
     search_fields = ('text', 'user__username')
     list_filter = ('processed', 'created_at', 'user')
-
     fieldsets = (
         ('Developer Context Anchor', {
             'fields': ('user', 'processed')
@@ -117,6 +110,7 @@ class DeltaNotesEntryAdmin(admin.ModelAdmin):
         seconds = total_seconds % 60
         return f"⏱️ {hours:02d}h {minutes:02d}m {seconds:02d}s"
     display_focus_time.short_description = "Total Accumulated Focus Time"
+
 # ======================================================================
 # END: READABLE_ADMIN_DOCUMENTATION_VIEWS (PATCH 1 OF 1)
 # ======================================================================

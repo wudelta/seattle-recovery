@@ -36,3 +36,4 @@ We will intentionally feed broken Python syntax (such as missing colons or unclo
 
 ### Step 2: Debugging of the `⚡ Execute Sandbox Run` API
 We will address the `docker-py` container limits inside `run_code_api`. We will verify that splitting the worker workflow down into a separate creation sequence (`client.containers.create`) and container wait threshold ceiling block (`container.wait(timeout=5)`) fully resolves the unexpected keyword parameter crash. We will test running valid Python print routines and capture raw stream outputs in the top of the panel window.
+

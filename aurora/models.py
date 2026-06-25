@@ -94,19 +94,15 @@ class ComponentRegistry(models.Model):
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
-    component_registry = models.ForeignKey(
-        'ComponentRegistry',
-        on_delete=models.CASCADE,
-        related_name='static_contents',
-        help_text="The parent component registry for this static content."
-    )
-    title = models.CharField(max_length=255, help_text="Title of the informational page.")
-    html_content = models.TextField(help_text="Raw HTML content for the page.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255)
+    html_content = models.TextField()
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"StaticContent: {self.title} (Parent: {self.component_registry_id})"
+        return f"StaticContent: {self.title} (ID: {self.id})"
 
 
 class DeltaDirectives(models.Model):
