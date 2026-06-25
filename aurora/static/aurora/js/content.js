@@ -1,6 +1,6 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/content.js (PATCH 1 OF 1)
-// START: CONTENT_PANEL_ORCHESTRATOR_LOGIC
+// FILE: aurora/static/aurora/js/content.js (PATCH 1 OF 2)
+// START: CONTENT_PANEL_CORE_INITIALIZATION_AND_INVENTORY_PIPES
 // ======================================================================
 function initContentConsole(endpoints, csrfToken) {
     const $wrapper = $('#content-module-wrapper');
@@ -21,6 +21,15 @@ function initContentConsole(endpoints, csrfToken) {
             $stream.scrollTop($stream.scrollHeight);
         }
     }
+
+    // Intercept toolbar formatting interactions safely without breaking content selection focus
+    $('#cc-editor-toolbar').on('click', 'button', function(e) {
+        e.preventDefault();
+        const command = $(this).data('cmd');
+        const value = $(this).data('val') || null;
+        document.execCommand(command, false, value);
+        $('#cc-rich-editor').focus();
+    });
 
     function fetchInventory() {
         const currentScope = $('input[name="cc-app-filter"]:checked').val();
@@ -59,13 +68,19 @@ function initContentConsole(endpoints, csrfToken) {
             }
         });
     }
+// ======================================================================
+// END: CONTENT_PANEL_CORE_INITIALIZATION_AND_INVENTORY_PIPES (PATCH 1 OF 2)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/content.js (PATCH 2 OF 2)
+// START: CONTENT_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS
+// ======================================================================
     function clearWorkspaceForm() {
         activeAssetId = null;
         $('#cc-field-id').val('');
         $('#cc-field-title').val('');
         $('#cc-field-application').val('aurora');
-        // UPDATED: Clear contenteditable html footprint safely
         $('#cc-rich-editor').html('');
         $('#cc-active-asset-indicator').text('🆕 COMPOSING NEW STANDALONE STATIC ASSET').addClass('text-warning').removeClass('text-info');
         $('#cc-delete-btn').prop('disabled', true);
@@ -85,7 +100,6 @@ function initContentConsole(endpoints, csrfToken) {
                     $('#cc-field-id').val(asset.id);
                     $('#cc-field-title').val(asset.title);
                     $('#cc-field-application').val(asset.application);
-                    // UPDATED: Populate rich content target container
                     $('#cc-rich-editor').html(asset.html_content);
                     $('#cc-active-asset-indicator').text(`📑 ASSET LOADED: ${asset.id}`).addClass('text-info').removeClass('text-warning');
                     $('#cc-delete-btn').prop('disabled', false);
@@ -104,7 +118,6 @@ function initContentConsole(endpoints, csrfToken) {
             id: $('#cc-field-id').val() || null,
             title: $('#cc-field-title').val().trim(),
             application: $('#cc-field-application').val(),
-            // UPDATED: Capture inner rich layout DOM text/html tree structures
             html_content: $('#cc-rich-editor').html()
         };
         if (!payload.title || !payload.html_content) {
@@ -157,5 +170,5 @@ function initContentConsole(endpoints, csrfToken) {
     fetchInventory();
 }
 // ======================================================================
-// END: CONTENT_PANEL_ORCHESTRATOR_LOGIC
+// END: CONTENT_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS (PATCH 2 OF 2)
 // ======================================================================

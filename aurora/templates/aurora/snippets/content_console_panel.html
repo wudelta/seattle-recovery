@@ -54,7 +54,21 @@
                     </div>
                     <div class="col-12 d-flex flex-column" style="height: calc(100vh - 290px); min-height: 250px;">
                         <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Rich Document Payload Editor</label>
-                        <!-- REPLACED: Simple textarea swapped for an editable, spell-checked structural content block -->
+                        
+                        <!-- ADDED: Lightweight Rich Text Command Format Action Toolbar Bar -->
+                        <div class="d-flex align-items-center gap-1 bg-black p-1 mb-1 rounded border border-secondary" id="cc-editor-toolbar">
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="bold" title="Bold"><b>B</b></button>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="italic" title="Italic"><i>I</i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="underline" title="Underline"><u>U</u></button>
+                            <div class="border-start border-secondary h-75 mx-1" style="width:1px; height:16px;"></div>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="h1" title="Heading 1">H1</button>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="h2" title="Heading 2">H2</button>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="p" title="Paragraph">P</button>
+                            <div class="border-start border-secondary h-75 mx-1" style="width:1px; height:16px;"></div>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-info" style="font-size:0.75rem;" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
+                            <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-danger" style="font-size:0.75rem;" data-cmd="removeFormat" title="Clear Styling">❌ Clear</button>
+                        </div>
+
                         <div id="cc-rich-editor" class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace" contenteditable="true" spellcheck="true" style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5; min-height: 200px;"></div>
                     </div>
                 </div>
