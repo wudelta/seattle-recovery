@@ -34,7 +34,8 @@ def content_endpoint(request):
             except StaticContent.DoesNotExist:
                 return JsonResponse({'status': 'ERROR', 'message': 'Requested resource missing.'}, status=404)
         
-        queryset = StaticContent.objects.all().order_by('-date_modified')
+        # UPDATED: Sorting structure altered from date to application then title fields
+        queryset = StaticContent.objects.all().order_by('application', 'title')
         if app_scope != 'all':
             queryset = queryset.filter(application=app_scope)
             
