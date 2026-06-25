@@ -126,32 +126,28 @@ class StaticContent(models.Model):
 # ======================================================================
 class DeltaDirectives(models.Model):
     """
-    Standalone configuration engine storing system instructions, prompts,
-    and model processing boundaries for your AI minion fleet.
+    Standalone configuration engine storing system instructions, prompts, and 
+    model processing boundaries for your AI minion fleet.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    directive_name = models.CharField(
-        max_length=255, 
-        unique=True, 
-        db_index=True,
-        help_text="The system lookup name identifying this minion (e.g., 'minion_AI_writer')."
-    )
-    instructions = models.TextField(help_text="The absolute master system prompt directive for this model.")
-    constraints = models.JSONField(
-        default=dict, 
-        blank=True, 
-        help_text="Stores engine controls like {'model': 'llama-3.1-8b-instant', 'temperature': 0.3}"
-    )
-    is_active = models.BooleanField(default=True, help_text="Toggle to enable or disable this minion profile.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    directive_name = models.CharField(max_length=255, unique=True, db_index=True)
+    instructions = models.TextField()
+    constraints = models.JSONField(default=dict, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    # HARDENED: Made field strictly non-nullable now that data is backfilled
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    
+    # HARDENED: Formally renamed tracking fields to match standalone schemas
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Delta Directive Profile"
         verbose_name_plural = "Delta Directive Profiles"
 
     @classmethod
-    def provision_standard_minions(cls) -> int:
+    def provision_standard_minions(cls, author_user) -> int:
         """Programmatically seeds the database with default settings for the core minion fleet."""
         minion_fleet = {
             "minion_wu": {
@@ -179,7 +175,6 @@ class DeltaDirectives(models.Model):
                 "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6}
             }
         }
-
         seeded_count = 0
         for name, data in minion_fleet.items():
             obj, created = cls.objects.get_or_create(
@@ -187,7 +182,8 @@ class DeltaDirectives(models.Model):
                 defaults={
                     "instructions": data["instructions"],
                     "constraints": data["constraints"],
-                    "is_active": True
+                    "is_active": True,
+                    "created_by": author_user
                 }
             )
             if created:

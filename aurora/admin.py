@@ -1,11 +1,10 @@
 # ======================================================================
-# FILE: aurora/admin.py (PATCH 1 OF 1)
+# FILE: aurora/admin.py (PATCH 1 OF 2)
 # START: READABLE_ADMIN_DOCUMENTATION_VIEWS
 # ======================================================================
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from aurora.models import ComponentRegistry, StaticContent, DeltaDirectives, DeltaNotesEntry
-
 
 @admin.register(ComponentRegistry)
 class ComponentRegistryAdmin(admin.ModelAdmin):
@@ -13,9 +12,8 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
     list_display = ('name', 'file_path', 'persona', 'status', 'locked', 'date_modified')
     search_fields = ('name', 'file_path', 'description')
     list_filter = ('persona', 'status', 'locked')
-    inlines = []  # REMOVED: StaticContentInline completely
+    inlines = []
 
-    # Register our custom display fields as read-only admin elements
     readonly_fields = ('display_developer_docs', 'display_stakeholder_docs')
     fieldsets = (
         ('System Identity Parity Anchors', {
@@ -48,7 +46,6 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
         return mark_safe(f'<div style="background:#f8f9fa; padding:15px; border-left:4px solid #28a745; border-radius:4px; max-width:800px; font-family:sans-serif; line-height:1.5;">{formatted_text}</div>')
     display_stakeholder_docs.short_description = "Stakeholder Business Translation"
 
-
 @admin.register(StaticContent)
 class StaticContentAdmin(admin.ModelAdmin):
     """Dedicated management grid for standalone informational content modifications."""
@@ -56,14 +53,23 @@ class StaticContentAdmin(admin.ModelAdmin):
     search_fields = ('title', 'html_content')
     list_filter = ('application', 'date_created', 'date_modified', 'created_by')
     ordering = ('-date_created',)
+# ======================================================================
+# END: READABLE_ADMIN_DOCUMENTATION_VIEWS (PATCH 1 OF 2)
+# ======================================================================
 
-
+# ======================================================================
+# FILE: aurora/admin.py (PATCH 2 OF 2)
+# START: DELTA_DIRECTIVES_AND_NOTES_ADMIN_SHELL
+# ======================================================================
 @admin.register(DeltaDirectives)
 class DeltaDirectivesAdmin(admin.ModelAdmin):
     """Dedicated management grid for standalone AI constraint rule modifications."""
-    list_display = ('directive_name', 'is_active', 'created_at', 'updated_at')
+    # UPDATED: Swapped 'created_at' and 'updated_at' for 'date_created' and 'date_modified'
+    list_display = ('directive_name', 'is_active', 'date_created', 'date_modified')
     search_fields = ('directive_name', 'instructions')
-    list_filter = ('is_active', 'created_at')
+    
+    # UPDATED: Synchronized filter criteria with the new date field
+    list_filter = ('is_active', 'date_created')
     fieldsets = (
         ('Minion Core Identity', {
             'fields': ('directive_name', 'is_active')
@@ -75,7 +81,6 @@ class DeltaDirectivesAdmin(admin.ModelAdmin):
             'fields': ('constraints',)
         }),
     )
-
 
 @admin.register(DeltaNotesEntry)
 class DeltaNotesEntryAdmin(admin.ModelAdmin):
@@ -108,7 +113,6 @@ class DeltaNotesEntryAdmin(admin.ModelAdmin):
         seconds = total_seconds % 60
         return f"⏱️ {hours:02d}h {minutes:02d}m {seconds:02d}s"
     display_focus_time.short_description = "Total Accumulated Focus Time"
-
 # ======================================================================
-# END: READABLE_ADMIN_DOCUMENTATION_VIEWS (PATCH 1 OF 1)
+# END: DELTA_DIRECTIVES_AND_NOTES_ADMIN_SHELL (PATCH 2 OF 2)
 # ======================================================================
