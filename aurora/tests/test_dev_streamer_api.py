@@ -23,7 +23,7 @@ async def test_websocket_consumer_and_broadcaster():
 
     # 2. Bind the test communicator directly onto our routing path
     communicator = WebsocketCommunicator(application, "/ws/console/")
-    
+
     # 3. Trigger the network connection handshake loop
     connected, _ = await communicator.connect()
     assert connected is True, "WebSocket connection handshake rejected by Daphne engine."
@@ -35,14 +35,12 @@ async def test_websocket_consumer_and_broadcaster():
     assert "pipeline" in response["message"].lower()
 
     # 5. TEST CONSUMER STRAP CONTRACT:
-    # Instead of screaming down a disconnected global get_channel_layer() wire, 
-    # we dispatch the event dictionary payload directly to the active communicator 
-    # queue to verify that the consumer formats and sends JSON packets cleanly.
+    # We dispatch the event dictionary payload directly to the active communicator
+    # queue using the channels-native dot separator mapping to target task_update
     test_message = "[TDD-PULSE] Pytest Verification Run - Direct Contract Validation"
     
-    # WebsocketCommunicator intercepts standard group_send payloads using send_input
     await communicator.send_input({
-        "type": "task.update",  # Maps directly onto the task_update method inside ConsoleConsumer
+        "type": "task.update",  # Channels translates 'task.update' to look for 'task_update'
         "message": test_message
     })
 
@@ -54,5 +52,5 @@ async def test_websocket_consumer_and_broadcaster():
     # 7. Disconnect and kill the socket wire cleanly
     await communicator.disconnect()
 # ======================================================================
-# END: DEV_STREAMER_API_COMPONENT_TESTS
+# END: DEV_STREAMER_API_COMPONENT_TESTS (PATCH 1 OF 1)
 # ======================================================================
