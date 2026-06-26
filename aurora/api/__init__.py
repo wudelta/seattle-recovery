@@ -1,3 +1,4 @@
+from .directives_api import directives_endpoint
 from .content_api import content_endpoint
 # ======================================================================
 # FILE: aurora/api/__init__.py (PATCH 1 OF 1)
@@ -14,6 +15,7 @@ __all__ = [
     'trigger_pipeline',
     'run_development_pipeline',
     'content_endpoint',
+    'directives_endpoint',
 ]
 # ======================================================================
 # END: MODULE_ROUTING_REGISTRATION_FOOTPRINT (PATCH 1 OF 1)

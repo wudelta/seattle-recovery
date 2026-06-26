@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/directives.css' %}">
 <!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
 <link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
 {% endblock %}
@@ -30,6 +31,7 @@
                     <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
                     <option value="anamod">ANAMOD_CONSOLE_PANEL</option>
                     <option value="content_panel">CONTENT_CONSOLE_PANEL</option>
+                    <option value="directives_panel">DIRECTIVES_CONSOLE_PANEL</option>
                 </select>
             </div>
             <div class="d-flex align-items-center">
@@ -65,6 +67,9 @@
         <div class="workspace-section d-none h-100 w-100" id="content_panel-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/content_console_panel.html" %}
         </div>
+        <div class="workspace-section d-none h-100 w-100" id="directives_panel-workspace-container" style="min-height: 0; overflow: hidden;">
+            {% include "aurora/snippets/directives_console_panel.html" %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -90,14 +95,17 @@
 <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
 <script src="{% static 'aurora/js/content.js' %}"></script>
+<script src="{% static 'aurora/js/directives.js' %}"></script>
 <script>
 $(document).ready(function() {
     const systemEndpoints = {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
-        content_endpoint: "{% url 'aurora:content_endpoint' %}"
+        content_endpoint: "{% url 'aurora:content_endpoint' %}",
+        directives_endpoint: "{% url 'aurora:directives_endpoint' %}"
     };
     let anamodInitialized = false;
     let contentPanelInitialized = false;
+    let directivesPanelInitialized = false;
 
     if (typeof initDeltaNotesConsole === "function") {
         initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
@@ -124,15 +132,25 @@ $(document).ready(function() {
         }
     }
 
+    function triggerDirectivesPanelLoad() {
+        if (!directivesPanelInitialized && window.initDirectivesConsole) {
+            console.log("[DirectivesPanel Orchestrator] Panel active. Loading workspace elements...");
+            window.initDirectivesConsole(systemEndpoints, '{{ csrf_token }}');
+            directivesPanelInitialized = true;
+        }
+    }
+
     $(document).on('aurora:session_started', function() {
         const currentView = $('#console-view-selector').val();
         if (currentView === 'anamod') { triggerAnamodLoad(); }
         if (currentView === 'content_panel') { triggerContentPanelLoad(); }
+        if (currentView === 'directives_panel') { triggerDirectivesPanelLoad(); }
     });
 
     $(document).on('aurora:view_changed', function(e, viewMode) {
         if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
         if (viewMode === 'content_panel') { setTimeout(triggerContentPanelLoad, 80); }
+        if (viewMode === 'directives_panel') { setTimeout(triggerDirectivesPanelLoad, 80); }
     });
 });
 </script>
