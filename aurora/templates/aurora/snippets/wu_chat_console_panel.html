@@ -1,0 +1,32 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/wu_chat_console_panel.html (PATCH 1 OF 1) -->
+<!-- START: WU_ORCHESTRATOR_CHAT_AND_TELEMETRY_SPLIT_GRID                   -->
+<!-- ====================================================================== -->
+<div class="d-flex h-100 w-100 gap-2" style="box-sizing: border-box; min-height: 0; background-color: #000000;">
+    
+    <!-- LEFT PANEL: Real-Time Stream Telemetry Console -->
+    <div class="d-flex flex-column h-100" style="width: 55%; min-width: 0;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-uppercase font-weight-bold font-monospace text-muted small" style="letter-spacing: 1px; color: #888888;">📡 Fleet Telemetry Output Stream</span>
+            <button id="clear-wu-telemetry-btn" class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace" style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;">Flush Logs</button>
+        </div>
+        <div id="wu-telemetry-screen-output" class="flex-grow-1 p-2 rounded" style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;">
+            <div class="text-info font-monospace small">[SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...</div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Chat Input Deck for Commander Wu -->
+    <div class="d-flex flex-column h-100" style="width: 45%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-uppercase font-weight-bold font-monospace text-warning small" style="letter-spacing: 1px;">💬 Command Input Deck: Wu (70B Orchestrator)</span>
+        </div>
+        <div class="flex-grow-1 d-flex flex-column gap-2">
+            <textarea id="wu-human-delta-notes-input" class="form-control flex-grow-1 p-2 font-monospace" style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5; font-size: 0.85rem; resize: none;" placeholder="Input human design intentions (Delta Notes) to request an orchestral strategy break-down...&#10;&#10;Example: Add a user profile page."></textarea>
+            <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2" style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;">Transmit to Commander Wu</button>
+        </div>
+    </div>
+
+</div>
+<!-- ====================================================================== -->
+<!-- END: WU_CHAT_CONSOLE_PANEL_INTERFACE (PATCH 1 OF 1)                    -->
+<!-- ====================================================================== -->

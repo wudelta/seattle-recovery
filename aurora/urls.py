@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/delta_notes/', api_commands.delta_notes_endpoint, name='delta_notes_endpoint'),
     path('api/content/', api_commands.content_endpoint, name='content_endpoint'),
     path('api/directives/', api_commands.directives_endpoint, name='directives_endpoint'),
+    path('api/wu_chat/', api_commands.wu_chat_endpoint, name='wu_chat_endpoint'),
 ]
 # ======================================================================
 # END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES (PATCH 1 OF 1)

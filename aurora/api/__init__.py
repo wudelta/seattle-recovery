@@ -1,3 +1,4 @@
+from .wu_chat_api import wu_chat_endpoint
 # ======================================================================
 # FILE: aurora/api/__init__.py (PATCH 1 OF 1)
 # START: MODULE_ROUTING_REGISTRATION_FOOTPRINT
@@ -18,6 +19,7 @@ __all__ = [
     'run_development_pipeline_async',  # FIXED: Target the async reference here
     'content_endpoint',
     'directives_endpoint',
+    'wu_chat_endpoint',
 ]
 # ======================================================================
 # END: MODULE_ROUTING_REGISTRATION_FOOTPRINT (PATCH 1 OF 1)
