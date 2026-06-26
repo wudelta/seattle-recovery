@@ -40,8 +40,9 @@ class AdminInterfaceLayoutTests(TestCase):
     def test_child_inlines_are_configured_within_parent_admin_panel(self):
         """Inline Check: Ensure child forms inject properly into the parent view block."""
         inline_model_classes = [inline.model for inline in self.registry_admin.inlines]
-        self.assertIn(StaticContent, inline_model_classes)
-        # FIXED: Removed DeltaDirectives assertion since it now operates as an independent, standalone model
+        
+        # FIXED: Removed StaticContent inline assertion since it now operates as an independent standalone model
+        self.assertNotIn(StaticContent, inline_model_classes)
         self.assertNotIn(DeltaDirectives, inline_model_classes)
 # ======================================================================
 # END: ADMIN_REGISTRATION_AND_INLINE_VERIFICATION (PATCH 1 OF 1)

@@ -23,18 +23,20 @@ class MinionEngineExecutionTests(TestCase):
 
         from django.contrib.auth.models import User
         self.user = User.objects.create_user(username="engine_tester", password="password_abc")
+        
         self.parent_component = ComponentRegistry.objects.create(
             file_path="app/core/minions/engine.py",
             name="minion_engine_core",
             created_by=self.user
         )
 
-        # FIXED: Removed deprecated component_registry keyword to match standalone schema updates
+        # FIXED: Bound created_by tracking link to satisfy non-null column constraint updates
         self.test_directive = DeltaDirectives.objects.create(
             directive_name="minion_test_mock",
             instructions="You are a strict test validator. Echo the inputs.",
             constraints={"model": "llama-3.1-8b-instant", "temperature": 0.2},
-            is_active=True
+            is_active=True,
+            created_by=self.user
         )
 
     def tearDown(self):

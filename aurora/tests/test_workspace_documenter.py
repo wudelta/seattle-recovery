@@ -36,14 +36,16 @@ class WorkspaceDocumenterTests(TestCase):
             created_by=self.user,
             description_audiences={}
         )
-        
+
+        # FIXED: Injected tracking reference link to fulfill non-null foreign key requirements
         self.writer_directive = DeltaDirectives.objects.create(
             directive_name="minion_AI_writer",
             instructions="Rewrite text professionally.",
             constraints={"model": "llama-3.1-8b-instant", "temperature": 0.2},
-            is_active=True
+            is_active=True,
+            created_by=self.user
         )
-        
+
         self.env_patcher = patch.dict('os.environ', {'MINION_CLOUD_API_KEY': 'gsk_mock_crawler_key'})
         self.env_patcher.start()
         self.documenter = WorkspaceDocumenter()
@@ -74,7 +76,6 @@ class WorkspaceDocumenterTests(TestCase):
             "Mocked clean stakeholder business translation overview."
         ]
         report = self.documenter.execute_documentation_sweep()
-        
         self.assertIn("aurora/core_logic.py", report["processed_files"])
         self.assertEqual(len(report["failures"]), 0)
         
@@ -99,7 +100,7 @@ class WorkspaceDocumenterTests(TestCase):
             "stakeholder_docs": "Populated"
         }
         self.component.save()
-        
+
         # Force the model instance check to evaluate skip logic condition flags cleanly
         with patch.object(WorkspaceDocumenter, 'execute_documentation_sweep') as mock_sweep:
             mock_sweep.return_value = {"processed_files": [], "failures": [], "skipped_files": ["aurora/core_logic.py"]}

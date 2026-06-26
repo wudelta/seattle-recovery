@@ -22,7 +22,6 @@ class ComponentRegistryModelTests(TestCase):
             )
         except Exception:
             pass
-
         self.user = User.objects.create_user(username="db_architect", password="password_xyz")
         self.valid_params = {
             "file_path": "app/hopehub/pages/medical_logs.py",
@@ -125,24 +124,25 @@ class ChildModelsRelationshipTests(TestCase):
 # START: CHILD_SCHEMA_ASSERTIONS_AND_MIGRATED_SCHEMA_FIX
 # ======================================================================
     def test_static_content_instantiates_and_cascades_properly(self):
-        """Relational Check: Verify StaticContent lifecycle binds tightly to parent component."""
+        """Standalone Check: Verify StaticContent instantiates with standalone fields and user relationship."""
+        # FIXED: Removed legacy component_registry field and bound valid created_by tracking user
         content = StaticContent.objects.create(
-            component_registry=self.parent_component,
             title="Privacy Policy",
-            html_content="<h1>Privacy Information</h1>"
+            html_content="<h1>Privacy Information</h1>",
+            application=StaticContent.ApplicationChoices.AURORA,
+            created_by=self.user
         )
-        self.assertEqual(content.component_registry.name, "ai_minion_orchestrator")
+        self.assertEqual(content.application, "aurora")
         self.assertIn("Privacy Policy", str(content))
-        self.parent_component.delete()
-        self.assertEqual(StaticContent.objects.count(), 0)
 
     def test_delta_directives_stores_json_constraints_and_cascades(self):
         """Relational Check: Verify DeltaDirectives handles payload constraints and sweeps clean."""
-        # FIXED: Removed broken component_registry keyword to match standalone schema model updates
+        # FIXED: Bound valid created_by tracking link to satisfy non-null constraints
         directive = DeltaDirectives.objects.create(
             directive_name="Token Throttle Limit",
             instructions="Maintain clear bounding thresholds on generation lengths.",
-            constraints={"max_tokens_per_call": 200, "allowed_models": ["gpt-4o"]}
+            constraints={"max_tokens_per_call": 200, "allowed_models": ["gpt-4o"]},
+            created_by=self.user
         )
         self.assertEqual(directive.constraints["max_tokens_per_call"], 200)
         self.assertTrue(directive.is_active)
@@ -150,8 +150,8 @@ class ChildModelsRelationshipTests(TestCase):
 
     def test_provision_standard_minions_seeds_entire_fleet(self):
         """Factory Check: Verify programmatic minion creation populates all 6 core rows."""
-        # FIXED: Adjusted assertion to handle integer response signature from bulk operations
-        created_count = DeltaDirectives.provision_standard_minions()
+        # FIXED: Passed the required 'author_user' positional argument to handle new schema requirements
+        created_count = DeltaDirectives.provision_standard_minions(author_user=self.user)
         self.assertEqual(created_count, 6)
         
         # Verify specific records persist in the active dataset matrix
