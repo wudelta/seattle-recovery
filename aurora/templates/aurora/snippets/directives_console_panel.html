@@ -13,7 +13,6 @@
             </button>
         </div>
         
-        <!-- Interactive Active Filter Controls -->
         <div class="btn-group btn-group-sm w-100 mb-2" role="group">
             <input type="radio" class="btn-check" name="dc-status-filter" id="dc-filter-all" value="all" checked>
             <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="dc-filter-all">ALL</label>
@@ -52,13 +51,17 @@
                             <label class="form-check-label text-muted small text-uppercase font-weight-bold" for="dc-field-active">Profile Active</label>
                         </div>
                     </div>
+                    
+                    <!-- MOVED UP: Main payload instruction area shifted higher in the form block -->
+                    <div class="col-12 d-flex flex-column" style="height: calc(100vh - 460px); min-height: 200px;">
+                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Master Prompt Directive Payload Instructions</label>
+                        <div id="dc-rich-editor" class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small" contenteditable="true" spellcheck="true" style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5;"></div>
+                    </div>
+
+                    <!-- MOVED DOWN: Placed the JSON parameters editor down below the raw workspace text editor -->
                     <div class="col-12">
                         <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Engine Configurations & Parameter Constraints (JSON)</label>
-                        <input type="text" id="dc-field-constraints" class="form-control form-control-sm bg-black text-warning border-secondary font-monospace p-2" placeholder='{"model": "llama-3.1-8b-instant", "temperature": 0.3}'>
-                    </div>
-                    <div class="col-12 d-flex flex-column" style="height: calc(100vh - 340px); min-height: 250px;">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Master Prompt Directive Payload Instructions</label>
-                        <div id="dc-rich-editor" class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace" contenteditable="true" spellcheck="true" style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5; min-height: 200px;"></div>
+                        <textarea id="dc-field-constraints" class="form-control bg-black text-warning border-secondary font-monospace p-2 small" rows="4" style="resize: vertical; font-size: 0.85rem; line-height: 1.4;" placeholder="{\n  &quot;model&quot;: &quot;llama-3.1-8b-instant&quot;,\n  &quot;temperature&quot;: 0.3\n}"></textarea>
                     </div>
                 </div>
             </form>

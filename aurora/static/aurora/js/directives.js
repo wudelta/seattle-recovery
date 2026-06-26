@@ -72,7 +72,8 @@ function initDirectivesConsole(endpoints, csrfToken) {
         activeAssetId = null;
         $('#dc-field-id').val('');
         $('#dc-field-name').val('');
-        $('#dc-field-constraints').val('{"model": "llama-3.1-8b-instant", "temperature": 0.3}');
+        // UPDATED: Standard template placeholder formatting switched to multi-line clean blocks
+        $('#dc-field-constraints').val('{\n  "model": "llama-3.1-8b-instant",\n  "temperature": 0.3\n}');
         $('#dc-field-active').prop('checked', true);
         $('#dc-rich-editor').html('');
         $('#dc-active-asset-indicator').text('🆕 COMPOSING NEW MASTER MINION PROMPT DIRECTIVE').addClass('text-warning').removeClass('text-info');
@@ -92,7 +93,8 @@ function initDirectivesConsole(endpoints, csrfToken) {
                     activeAssetId = asset.id;
                     $('#dc-field-id').val(asset.id);
                     $('#dc-field-name').val(asset.directive_name);
-                    $('#dc-field-constraints').val(JSON.stringify(asset.constraints));
+                    // UPDATED: Formats and breaks the giant data line out using a 2-space layout rule
+                    $('#dc-field-constraints').val(JSON.stringify(asset.constraints, null, 2));
                     $('#dc-field-active').prop('checked', asset.is_active);
                     $('#dc-rich-editor').html(asset.instructions);
                     $('#dc-active-asset-indicator').text(`📑 DIRECTIVE LOADED: ${asset.id}`).addClass('text-info').removeClass('text-warning');
