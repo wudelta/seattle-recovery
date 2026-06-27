@@ -3,20 +3,24 @@
 # START: DIRECTIVES_COCKPIT_BACKEND_CONTROLLER_GET
 # ======================================================================
 import json
+import asyncio
+import traceback
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from asgiref.sync import sync_to_async
 from aurora.models import DeltaDirectives
+from aurora.minions.engine import MinionRunner
+from .dev_streamer_api import async_send_to_console
 
 @login_required
 def directives_endpoint(request):
     """
-    Unified JSON API router handling secure AJAX operations 
-    for the standalone DeltaDirectives prompt configuration panel.
+    Unified JSON API router handling secure AJAX operations for the standalone 
+    DeltaDirectives prompt configuration panel with streaming refinement optimization.
     """
     if request.method == 'GET':
         status_scope = request.GET.get('status', 'all')
         id_query = request.GET.get('id', None)
-        
         if id_query:
             try:
                 asset = DeltaDirectives.objects.get(id=id_query)
@@ -34,7 +38,7 @@ def directives_endpoint(request):
                 })
             except DeltaDirectives.DoesNotExist:
                 return JsonResponse({'status': 'ERROR', 'message': 'Requested prompt configuration missing.'}, status=404)
-        
+
         # Pull records cleanly sorted alphabetically by minion name
         queryset = DeltaDirectives.objects.all().order_by('directive_name')
         if status_scope == 'active':
@@ -60,15 +64,59 @@ def directives_endpoint(request):
     elif request.method == 'POST':
         try:
             raw_data = json.loads(request.body)
+            action = raw_data.get('action', 'save').strip().lower()
+            
+            # --- NEW INTERACTIVE SUB-ROUTE: minion_AI_writer REFINE MATRIX ---
+            if action == 'optimize_prompt':
+                user_rambling = raw_data.get('instructions', '').strip()
+                minion_target = raw_data.get('directive_name', 'unknown_minion')
+                
+                if not user_rambling:
+                    return JsonResponse({'status': 'ERROR', 'message': 'No prompt instructions provided to optimize.'}, status=400)
+                
+                runner = MinionRunner()
+                writer_prompt = (
+                    f"You are the minion_AI_writer. Your task is to analyze this conversational, rambling "
+                    f"explanation for the agent profile '{minion_target}' and distill it into a set of dense, "
+                    f"well-structured system instructions that an 8B execution minion can perfectly follow.\n\n"
+                    f"RAW HUMAN INPUT:\n{user_rambling}\n\n"
+                    f"CRITICAL CONSTRAINT:\n"
+                    f"Output ONLY the final optimized instruction set. Do NOT provide preamble notes, conversational "
+                    f"filler, explanations, or wrap your code in triple markdown backticks."
+                )
+                
+                async def run_optimization_stream():
+                    await async_send_to_console(f"📝 [WRITER] Distilling conversational directives for: {minion_target}...")
+                    await async_send_to_console("\n✨ [OPTIMIZED DENSE INSTRUCTIONS]:\n")
+                    
+                    async for token in runner.run_minion_task_stream("minion_AI_writer", writer_prompt):
+                        await async_send_to_console(token)
+                        
+                    await async_send_to_console("\n[SYSTEM] Prompt optimization finalized.\n")
+
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = None
+
+                if loop and loop.is_running():
+                    loop.create_task(run_optimization_stream())
+                else:
+                    from asgiref.sync import async_to_sync
+                    async_to_sync(run_optimization_stream)()
+                    
+                return JsonResponse({'status': 'SUCCESS', 'message': 'Optimization stream dispatched to telemetry channel.'})
+
+            # --- PRESERVED BASE SYSTEM ACTIONS ---
             asset_id = raw_data.get('id', None)
             name = raw_data.get('directive_name', '').strip()
             constraints = raw_data.get('constraints', {})
             is_active = raw_data.get('is_active', True)
             instructions = raw_data.get('instructions', '')
-            
+
             if not name or not instructions:
                 return JsonResponse({'status': 'ERROR', 'message': 'Missing validation parameters.'}, status=400)
-                
+
             if asset_id:
                 asset = DeltaDirectives.objects.get(id=asset_id)
                 asset.directive_name = name
@@ -86,7 +134,7 @@ def directives_endpoint(request):
                     created_by=request.user
                 )
                 log_action = "INSTANTIATED"
-                
+
             return JsonResponse({
                 'status': 'SUCCESS',
                 'action': log_action,
