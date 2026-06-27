@@ -7,18 +7,15 @@ import asyncio
 import traceback
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from asgiref.sync import sync_to_async
 from aurora.models import DeltaDirectives
 from aurora.minions.engine import MinionRunner
 from .dev_streamer_api import async_send_to_console
 
 async def interact_with_wu_async(user_delta_notes: str, user):
-    """
-    Seeds Wu with his operational architecture rules dynamically and asks him 
-    to outline his execution strategy plan in natural human-like language.
-    """
+    """Seeds Wu rules and streams tokens via Daphne without ever blocking."""
     try:
         runner = MinionRunner()
-        
         wu_instructions = (
             "You are Wu, the 70B Orchestrator Fleet Commander. You are the only minion allowed to "
             "speak to the developer in natural human language. Your job is to read 'delta_notes' and "
@@ -47,30 +44,36 @@ async def interact_with_wu_async(user_delta_notes: str, user):
             )
             return wu_row
 
-        from asgiref.sync import sync_to_async
         await sync_to_async(sync_wu_record)()
-
         await async_send_to_console("⚡ [ORCHESTRATOR] Initializing connection to Fleet Commander Wu...")
-        
-        # Invoke Wu using his target system instructions
-        wu_response = runner.run_minion_task("minion_wu", user_delta_notes)
-        
-        # Stream Wu's human plan directly to the chat dashboard box in real-time
-        await async_send_to_console(f"\n🔮 [WU ORCHESTRATION PLAN]:\n{wu_response}\n")
+        await async_send_to_console("\n🔮 [WU ORCHESTRATION PLAN]: ")
+
+        async for token in runner.run_minion_task_stream("minion_wu", user_delta_notes):
+            await async_send_to_console(token)
+            
+        await async_send_to_console("\n")
 
     except Exception as e:
-        await async_send_to_console(f"💥 [ORCHESTRATOR ERROR]:\n{traceback.format_exc()}")
+        await async_send_to_console(f"\n💥 [ORCHESTRATOR ERROR]:\n{traceback.format_exc()}")
 
 @login_required
 def wu_chat_endpoint(request):
-    """FIXED: Replaced dummy payload with active asynchronous orchestration trigger loop."""
+    """Fires off background processing tasks within the active loop context safely across all thread states."""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            delta_notes = data.get("delta_notes", "")
+            delta_notes = data.get("delta_notes", "").strip()
             
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
+            if not delta_notes:
+                return JsonResponse({"error": "Empty delta notes provided"}, status=400)
+                
+            # FIX: Safely discover or build an event loop independent of thread executor origin
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
                 loop.create_task(interact_with_wu_async(delta_notes, request.user))
             else:
                 from asgiref.sync import async_to_sync
@@ -79,6 +82,7 @@ def wu_chat_endpoint(request):
             return JsonResponse({"status": "wu_is_processing"})
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
+            
     return JsonResponse({"error": "POST required"}, status=405)
 # ======================================================================
 # END: API_ENDPOINT_LOGIC (PATCH 1 OF 1)
