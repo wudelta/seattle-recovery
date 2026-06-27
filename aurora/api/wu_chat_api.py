@@ -6,6 +6,7 @@ import json
 import asyncio
 import traceback
 import re
+import sys
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from asgiref.sync import sync_to_async
@@ -17,58 +18,74 @@ from aurora.minions.data_engine import DataEngineCoordinator
 from aurora.minions.graph_binder import WorkspaceGraphBinder
 from .dev_streamer_api import async_send_to_console
 
-async def interact_with_wu_async(user_delta_notes: str, user):
-    """
-    Seeds Wu rules and streams tokens via Daphne without blocking.
-    Wu analyzes the human intention, streams his plan, and triggers
-    the automation sub-fleet using macro parsing strategies.
-    """
+def process_wu_logic_synchronous(user_delta_notes, user):
+    """Executes the full Groq query and macro execution sequence reading strictly from database directives."""
     try:
         runner = MinionRunner()
-        wu_instructions = (
-            "You are Wu, the 70B Orchestrator Fleet Commander. You speak to the developer in natural human language.\n"
-            "Your job is to read 'delta_notes' and explain exactly how you will solve it by assigning sub-tasks.\n\n"
-            "YOUR FLEET DIRECTORY & COMMAND SHELL MAPS:\n"
-            "- `/page [name]`: Triggers a new blank view structure file layout context.\n"
-            "- `/api [name]`: Generates an empty asynchronous Django backend API view schema.\n"
-            "- `/bind [app] [func] [api]`: Compiles relational dependencies across your directory structure into Neo4j.\n\n"
-            "CRITICAL RESPONSE FORMAT:\n"
-            "Outline your multi-step routing plan step-by-step. At the very end of your response, "
-            "you must append the exact command shell scripts you want the automation runner to execute. "
-            "Put each execution string on its own new line using brackets, like: [COMMAND: /page profile_view]"
-        )
-
-        def sync_wu_record():
-            wu_row, _ = DeltaDirectives.objects.update_or_create(
-                directive_name="minion_wu",
-                defaults={
-                    "instructions": wu_instructions,
-                    "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.4, "max_tokens": 1000},
-                    "is_active": True,
-                    "created_by": user
-                }
+        
+        # FIX: Completely removed the hardcoded instructions string payload overwrite loop.
+        # Dynamically pull the active master prompt configuration straight out of the PostgreSQL ledger.
+        try:
+            wu_config = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
+        except DeltaDirectives.DoesNotExist:
+            # Safe initial fallback seed ONLY if the registry is completely empty
+            baseline_instructions = (
+                "You are Wu, the 70B Orchestrator Fleet Commander. You speak to the developer in natural human language.\n"
+                "Your job is to read 'delta_notes' and explain exactly how you will solve it by assigning sub-tasks.\n\n"
+                "YOUR FLEET DIRECTORY & COMMAND SHELL MAPS:\n"
+                "- `/page [name]`: Triggers a new blank view structure file layout context.\n"
+                "- `/api [name]`: Generates an empty asynchronous Django backend API view schema.\n"
+                "- `/bind [app] [func] [api]`: Compiles relational dependencies across your directory structure into Neo4j.\n\n"
+                "CRITICAL RESPONSE FORMAT:\n"
+                "Outline your multi-step routing plan step-by-step. At the very end of your response, "
+                "you must append the exact command shell scripts you want the automation runner to execute. "
+                "Put each execution string on its own new line using brackets, like: [COMMAND: /page profile_view]"
             )
-            return wu_row
+            wu_config = DeltaDirectives.objects.create(
+                directive_name="minion_wu",
+                instructions=baseline_instructions,
+                constraints={"model": "llama-3.3-70b-versatile", "temperature": 0.4, "max_tokens": 1000},
+                is_active=True,
+                created_by=user
+            )
 
-        await sync_to_async(sync_wu_record)()
-        await async_send_to_console("⚡ [ORCHESTRATOR] Routing execution strings to Fleet Commander Wu...")
-        await async_send_to_console("\n🔮 [WU ORCHESTRATION PLAN]: ")
-
-        # 1. Stream Wu's high-level human orchestration breakdown plan live to the dashboard
+        from asgiref.sync import async_to_sync
         complete_response_text = ""
-        async for token in runner.run_minion_task_stream("minion_wu", user_delta_notes):
-            complete_response_text += token
-            await async_send_to_console(token)
+        
+        # Drive the streaming token channel directly using the database record instance
+        stream_generator = runner.run_minion_task_stream("minion_wu", user_delta_notes)
+        
+        async def consume_stream():
+            nonlocal complete_response_text
+            token_buffer = ""
             
-        await async_send_to_console("\n")
+            async for token in stream_generator:
+                complete_response_text += token
+                token_buffer += token
+                
+                sys.stdout.write(token)
+                sys.stdout.flush()
+                
+                if len(token_buffer) >= 20 or ' ' in token or '\n' in token:
+                    try:
+                        await async_send_to_console(token_buffer)
+                    except Exception:
+                        pass
+                    token_buffer = ""
+            
+            if token_buffer:
+                try:
+                    await async_send_to_console(token_buffer)
+                except Exception:
+                    pass
 
-        # 2. Extract and parse programmatic execution scripts from Wu's response stream
+        async_to_sync(consume_stream)()
+        sys.stdout.write("\n[GROQ RESPONSE FINALIZED]\n")
+        sys.stdout.flush()
+
         command_blocks = re.findall(r"\[COMMAND:\s*(.*?)\]", complete_response_text)
         
         if command_blocks:
-            await async_send_to_console("⚙️ [ORCHESTRATOR] Commencing execution track for sub-minion command macros...")
-            
-            # Instantiating our verified step automation runners
             auto_runner = WorkspaceAutomationRunner(user=user)
             coupler = FleetPipelineCoupler(user=user)
             data_coordinator = DataEngineCoordinator(user=user)
@@ -80,63 +97,57 @@ async def interact_with_wu_async(user_delta_notes: str, user):
                     continue
                 
                 macro = parts[0].lower().strip()
-                
-                # Dynamic Branch A: Physical Layout Page Canvas Creation
                 if macro == "/page" and len(parts) >= 2:
                     page_target = parts[1]
-                    await auto_runner.execute_page_command(page_target)
-                    # Pipeline Hand-off: Feed layout instructions directly down to 8B UI specialization minions
-                    await coupler.run_ui_assembly_pipeline(
+                    async_to_sync(auto_runner.execute_page_command)(page_target)
+                    async_to_sync(coupler.run_ui_assembly_pipeline)(
                         target_app="aurora", 
                         page_name=page_target, 
-                        layout_instructions=f"Build layout canvas following user delta goals: {user_delta_notes}"
+                        layout_instructions=f"Build layout canvas: {user_delta_notes}"
                     )
                 
-                # Dynamic Branch B: Backend Asynchronous API Query Hook Generation
                 elif macro == "/api" and len(parts) >= 2:
                     api_target = parts[1]
-                    await data_coordinator.assemble_async_data_endpoint(
+                    async_to_sync(data_coordinator.assemble_async_data_endpoint)(
                         target_app="aurora",
                         endpoint_name=api_target,
-                        query_instructions=f"Synthesize async backend handler query inside anchors following: {user_delta_notes}"
+                        query_instructions=f"Synthesize async backend query following: {user_delta_notes}"
                     )
 
-                # Dynamic Branch C: Neo4j Relational Dependency Graph Matrix Compilation
                 elif macro == "/bind" and len(parts) >= 4:
-                    await graph_binder.execute_workspace_binding(
+                    async_to_sync(graph_binder.execute_workspace_binding)(
                         app_name=parts[1],
                         function_name=parts[2],
                         api_name=parts[3]
                     )
-        else:
-            await async_send_to_console("ℹ️ [ORCHESTRATOR] Conversational execution resolved. No command scripts intercepted.")
 
-    except Exception as e:
-        await async_send_to_console(f"\n💥 [ORCHESTRATOR ERROR]:\n{traceback.format_exc()}")
+        try:
+            async_to_sync(async_send_to_console)("\n🏁 [STREAM_COMPLETE]\n")
+        except Exception:
+            pass
+
+        return {"status": "SUCCESS", "wu_response": complete_response_text, "commands_found": len(command_blocks)}
+    except Exception as err:
+        error_trace = traceback.format_exc()
+        sys.stderr.write(f"\n💥 [CRITICAL RUNTIME ERROR]:\n{error_trace}\n")
+        sys.stderr.flush()
+        return {"status": "ERROR", "message": str(err), "trace": error_trace}
 
 @login_required
 def wu_chat_endpoint(request):
-    """Fires off background processing tasks within the active loop context safely across all thread states."""
+    """Processes requests synchronously during diagnostic test runs to force error output directly back to the UI."""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             delta_notes = data.get("delta_notes", "").strip()
-            
             if not delta_notes:
                 return JsonResponse({"error": "Empty delta notes provided"}, status=400)
                 
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                loop.create_task(interact_with_wu_async(delta_notes, request.user))
-            else:
-                from asgiref.sync import async_to_sync
-                async_to_sync(interact_with_wu_async)(delta_notes, request.user)
+            result = process_wu_logic_synchronous(delta_notes, request.user)
+            if result["status"] == "ERROR":
+                return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
                 
-            return JsonResponse({"status": "wu_is_processing"})
+            return JsonResponse({"status": "wu_is_processing", "direct_text_output": result["wu_response"]})
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
             

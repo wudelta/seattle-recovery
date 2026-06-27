@@ -170,25 +170,26 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
-# ==============================================================================
-# UNIFIED CENTRALIZED ASYNC BROKER LAYER (REDIS SYSTEM INTEGRATION)
-# ==============================================================================
-# Links HTTP worker view threads, async background loops, and automated test environments
-# into a single, highly performant native local database port wire.
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis_broker", 6379)],
+            "hosts": [{
+                "address": "redis://seattle_redis:6379/0",
+                "socket_timeout": 15,          # Generous timeout for 2-core systems
+                "socket_connect_timeout": 15,  
+            }],
         },
     },
 }
 
-# ==============================================================================
-# UNIFIED API ENDPOINT INFERENCE KEYS (GROQ HARDWARE BRIDGE)
-# ==============================================================================
 GROQ_API_KEY = env("GROQ_API_KEY", default="")
+
 # ====================================================================== #
 # END: DATA STORES, NEO4J LOOPBACK, COOKIE & STATIC PATH PARAMS (PATCH 3 OF 3) #
 # ====================================================================== #

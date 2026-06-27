@@ -73,7 +73,6 @@ $(document).ready(function() {
     $timerToggleBtn.on('click', function(e) {
         e.preventDefault();
         sessionActive = !sessionActive;
-
         if (sessionActive) {
             // Activate session layout states
             $viewSelector.prop('disabled', false);
@@ -91,23 +90,21 @@ $(document).ready(function() {
             // FIXED: Mount live asynchronous telemetry stream channels over Daphne ASGI
             let wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
             telemetrySocket = new WebSocket(`${wsScheme}://${window.location.host}/ws/console/`);
-            
+
             telemetrySocket.onmessage = function(event) {
                 let payload = JSON.parse(event.data);
                 let msg = payload.message;
-                
+
                 // Broadly updates any active terminal container mounted across snippet blocks
                 let $screens = $('#telemetry-screen-output, #wu-telemetry-screen-output');
                 $screens.each(function() {
                     let $screen = $(this);
                     let $lineNode = $('<div style="margin-bottom: 4px; white-space: pre-wrap;"></div>').text(msg);
-                    
                     if (msg.includes('[WU ORCHESTRATION PLAN]')) {
                         $lineNode.css({ 'color': '#a78bfa', 'font-weight': 'bold' });
                     } else if (msg.includes('[SYSTEM]') || msg.includes('[INFO]')) {
                         $lineNode.css('color', '#38bdf8');
                     }
-                    
                     $screen.append($lineNode);
                     $screen.scrollTop($screen[0].scrollHeight);
                 });
@@ -120,9 +117,8 @@ $(document).ready(function() {
             $viewSelector.prop('disabled', true);
             $gateOverlay.removeClass('d-none');
             $timerToggleBtn.removeClass('btn-outline-danger').addClass('btn-outline-success').text('Start Session');
-            
             clearInterval(timerInterval);
-            
+
             if (telemetrySocket) {
                 telemetrySocket.close();
                 telemetrySocket = null;
@@ -142,36 +138,8 @@ $(document).ready(function() {
         $('#telemetry-screen-output, #wu-telemetry-screen-output').html('');
     });
 
-    // FIXED: AJAX Transmission Pipeline to Fleet Commander Wu
-    $(document).on('click', '#transmit-to-wu-btn', function() {
-        let $textInput = $('#wu-human-delta-notes-input');
-        let notes = $textInput.val().trim();
-        if (!notes) return alert("Please input your design intentions first.");
-
-        let $sendBtn = $(this);
-        $sendBtn.attr('disabled', 'disabled').text('PROCESSING STRATEGY LOOP...');
-
-        fetch('/api/chat-to-wu/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCleanCSRFToken()
-            },
-            body: JSON.stringify({ delta_notes: notes })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'wu_is_processing') {
-                $textInput.val(''); // Clear input box on successful handoff
-            } else {
-                alert(`Error from fleet controller: ${data.error}`);
-            }
-        })
-        .catch(err => console.error("Pipeline transmission error:", err))
-        .finally(() => {
-            $sendBtn.removeAttr('disabled').text('TRANSMIT TO COMMANDER WU');
-        });
-    });
+    // FIX: Removed the duplicate, hardcoded legacy AJAX transmission block from console.js
+    // to allow the dynamic endpoints loop inside wu_chat.js to cleanly execute payloads.
 });
 // ======================================================================
 // END: HOOK_2_SESSION_LIFE_CYCLE_GATEKEEPER (PATCH 2 OF 2)

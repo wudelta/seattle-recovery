@@ -86,9 +86,13 @@
 <!-- Standalone Decoupled Feature Modules -->
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+<!-- FIX: Explicitly injected the missing asset layer script file tag onto disk -->
+<script src="{% static 'aurora/js/wu_chat.js' %}"></script>
+
 <!-- Flattened Offline App Static UI Dependencies Bound to Verified Local Paths -->
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
+
 <!-- Decoupled Functional IDE Assets Loaded Separately -->
 <script src="{% static 'aurora/js/anamod.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
@@ -100,14 +104,22 @@ $(document).ready(function() {
     const systemEndpoints = {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
         content_endpoint: "{% url 'aurora:content_endpoint' %}",
-        directives_endpoint: "{% url 'aurora:directives_endpoint' %}"
+        directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
+        // FIX: Bound the active orchestration route token dynamically inside your selector matrix
+        wu_chat_endpoint: "{% url 'aurora:wu_chat_endpoint' %}"
     };
+
     let anamodInitialized = false;
     let contentPanelInitialized = false;
     let directivesPanelInitialized = false;
 
     if (typeof initDeltaNotesConsole === "function") {
         initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+    }
+
+    // FIX: Core initialization sweep trigger for Commander Wu's interface handlers
+    if (typeof initWuChatConsole === "function") {
+        initWuChatConsole(systemEndpoints, '{{ csrf_token }}');
     }
 
     function triggerAnamodLoad() {
@@ -141,15 +153,27 @@ $(document).ready(function() {
 
     $(document).on('aurora:session_started', function() {
         const currentView = $('#console-view-selector').val();
-        if (currentView === 'anamod') { triggerAnamodLoad(); }
-        if (currentView === 'content_panel') { triggerContentPanelLoad(); }
-        if (currentView === 'directives_panel') { triggerDirectivesPanelLoad(); }
+        if (currentView === 'anamod') {
+            triggerAnamodLoad();
+        }
+        if (currentView === 'content_panel') {
+            triggerContentPanelLoad();
+        }
+        if (currentView === 'directives_panel') {
+            triggerDirectivesPanelLoad();
+        }
     });
 
     $(document).on('aurora:view_changed', function(e, viewMode) {
-        if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
-        if (viewMode === 'content_panel') { setTimeout(triggerContentPanelLoad, 80); }
-        if (viewMode === 'directives_panel') { setTimeout(triggerDirectivesPanelLoad, 80); }
+        if (viewMode === 'anamod') {
+            setTimeout(triggerAnamodLoad, 80);
+        }
+        if (viewMode === 'content_panel') {
+            setTimeout(triggerContentPanelLoad, 80);
+        }
+        if (viewMode === 'directives_panel') {
+            setTimeout(triggerDirectivesPanelLoad, 80);
+        }
     });
 });
 </script>

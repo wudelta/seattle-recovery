@@ -52,13 +52,22 @@ services:
   redis_broker:
     image: redis:7-alpine
     container_name: seattle_redis
+    # FIX: Explicitly bind to 0.0.0.0 and disable protected-mode 
+    # to force Redis to accept cross-container traffic inside the recovery_net mesh
+    command: redis-server --bind 0.0.0.0 --protected-mode no
+    ports:
+      - "6379:6379" 
     deploy:
       resources:
         limits:
           cpus: '0.25'
           memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
     networks:
       - recovery_net
+    restart: always
 
   django_app:
     build: .
@@ -86,11 +95,13 @@ services:
     ports:
       - "3000:3000"
     volumes:
+      # Mount the static files volume shared directly with the django_app container
       - static_volume:/app/staticfiles:ro
     depends_on:
       - django_app
     networks:
       - recovery_net
+    restart: always
 
   # Companion container image cache enforcement layer
   python_sandbox_cache:

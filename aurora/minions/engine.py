@@ -1,95 +1,82 @@
 # ======================================================================
 # FILE: aurora/minions/engine.py (PATCH 1 OF 1)
-# START: RATE_LIMIT_AWARE_GROQ_FLEET_ENGINE
+# START: ASYNC_STREAMING_GROQ_FLEET_ENGINE
 # ======================================================================
 import os
 import sys
-import time
-import requests
+import asyncio
 from django.conf import settings
+from groq import AsyncGroq, GroqError
 from aurora.models import DeltaDirectives
 
 class MinionRunner:
-    """Universal Cloud-Driven AI Execution Engine with Rate-Limit Backoff handling."""
+    """Universal Cloud-Driven AI Execution Engine built on the official Groq SDK."""
+    
     def __init__(self):
-        self.cloud_api_url = "https://api.groq.com/openai/v1/chat/completions"
-
-        self.api_key = getattr(settings, "GROQ_API_KEY", "")
-        if not self.api_key:
-            self.api_key = os.environ.get("GROQ_API_KEY", "")
-        if not self.api_key:
-            self.api_key = os.environ.get("MINION_CLOUD_API_KEY", "")
-
-    def query_groq_llm(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3) -> str:
-        """Sends a request to Groq with an automatic 9-second backoff for 429 errors."""
-        if not self.api_key:
-            sys.stderr.write("[WARNING] Groq API Key (settings.GROQ_API_KEY) is missing.\n")
-            return "Error: Groq API Key unassigned."
-
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        # Extract token from Django settings or fallback straight to host environment maps
+        self.api_key = getattr(settings, "GROQ_API_KEY", "") or os.environ.get("GROQ_API_KEY", "")
         
-        payload = {
-            "model": model_tag,
-            "messages": [
-                {"role": "system", "content": system_directive},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": temperature,
-            "stream": False
-        }
-        
-        max_retries = 3
-        current_attempt = 0
-        
-        while current_attempt < max_retries:
-            try:
-                response = requests.post(self.cloud_api_url, json=payload, headers=headers, timeout=45)
-                
-                # Check for rate limit status codes cleanly
-                if response.status_code == 429:
-                    current_attempt += 1
-                    sys.stderr.write(f"⏳ [RATE LIMIT REACHED] Hit TPM ceiling. Sleeping 9 seconds before retry {current_attempt}/{max_retries}...\n")
-                    time.sleep(9)
-                    continue
-                
-                if response.status_code == 200:
-                    choices = response.json().get("choices", [])
-                    if choices and isinstance(choices, list):
-                        first_choice = choices[0]
-                        return first_choice.get("message", {}).get("content", "").strip()
-                    return "Error: Received empty choices array from Groq endpoint response structure."
-                
-                error_msg = f"Error: [GROQ API FAULT] Status {response.status_code}: {response.text}"
-                sys.stderr.write(f"{error_msg}\n")
-                return error_msg
-                
-            except requests.exceptions.RequestException as err:
-                error_catch = f"Error: [CONNECTION ERROR] Groq connection failed: {str(err)}"
-                sys.stderr.write(f"{error_catch}\n")
-                return error_catch
-                
-        return "Error: Exceeded maximum rate limit retry attempts on Groq API gateway."
+        # Initialize the official SDK client asynchronously
+        if self.api_key:
+            self.client = AsyncGroq(api_key=self.api_key)
+        else:
+            # Fallback will let the SDK look for the environment variable automatically
+            self.client = AsyncGroq()
 
-    def run_minion_task(self, minion_name: str, task_input: str) -> str:
-        """Loads minion settings out of DeltaDirectives and processes the work."""
+    async def query_groq_llm_stream(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3):
+        """
+        Asynchronously streams completion tokens natively from the Groq SDK engine.
+        Guarantees that any server rejections or validation faults bubble straight up to the UI.
+        """
+        sys.stdout.write(f"📡 [ENGINE] Initializing official AsyncGroq transaction stream using: {model_tag}\n")
+        sys.stdout.flush()
+
         try:
-            directive = DeltaDirectives.objects.get(directive_name=minion_name, is_active=True)
-        except DeltaDirectives.DoesNotExist:
-            return f"Error: Minion configuration row '{minion_name}' is missing or inactive."
+            # Native SDK async stream completion loop configuration
+            stream = await self.client.chat.completions.create(
+                model=model_tag,
+                messages=[
+                    {"role": "system", "content": system_directive},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=temperature,
+                stream=True
+            )
 
-        model_tag = directive.constraints.get("model", "llama-3.1-8b-instant")
+            # Consuming tokens natively using the SDK's built-in async generator
+            async for chunk in stream:
+                token = chunk.choices[0].delta.content
+                if token:
+                    yield token
+
+        except GroqError as groq_err:
+            # Surgically catch and print exact cloud API parameter or endpoint authentication faults
+            yield f"\n🛑 [GROQ GATEWAY REJECTION] The SDK caught an operational error!\nDETAILS: {str(groq_err)}\n"
+            return
+        except Exception as system_err:
+            yield f"\n💥 [ENGINE FAULT] Unexpected local exception caught during execution: {str(system_err)}\n"
+            return
+
+    async def run_minion_task_stream(self, minion_name: str, task_input: str):
+        """Loads operational presets asynchronously out of database rows and yields the SDK stream."""
+        from asgiref.sync import sync_to_async
+        try:
+            directive = await sync_to_async(DeltaDirectives.objects.get)(directive_name=minion_name, is_active=True)
+        except DeltaDirectives.DoesNotExist:
+            yield f"💥 [REGISTRY ERROR]: Minion configuration '{minion_name}' is missing or inactive in your database!"
+            return
+
+        model_tag = directive.constraints.get("model", "llama-3.3-70b-versatile")
         temperature = directive.constraints.get("temperature", 0.3)
         system_instructions = directive.instructions
 
-        return self.query_groq_llm(
+        async for token in self.query_groq_llm_stream(
             model_tag=model_tag,
             system_directive=system_instructions,
             user_prompt=task_input,
             temperature=temperature
-        )
+        ):
+            yield token
 # ======================================================================
-# END: RATE_LIMIT_AWARE_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
+# END: ASYNC_STREAMING_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
 # ======================================================================
