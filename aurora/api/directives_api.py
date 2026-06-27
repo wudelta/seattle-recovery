@@ -1,6 +1,6 @@
 # ======================================================================
-# FILE: aurora/api/directives_api.py (PATCH 1 OF 2)
-# START: DIRECTIVES_COCKPIT_BACKEND_CONTROLLER_GET
+# FILE: aurora/api/directives_api.py (PATCH 1 OF 1)
+# START: API_ENDPOINT_LOGIC
 # ======================================================================
 import json
 import asyncio
@@ -53,43 +53,54 @@ def directives_endpoint(request):
             'date_modified': item.date_modified.strftime('%m/%d %H:%M')
         } for item in queryset]
         return JsonResponse({'status': 'SUCCESS', 'inventory': payload})
-# ======================================================================
-# END: DIRECTIVES_COCKPIT_BACKEND_CONTROLLER_GET (PATCH 1 OF 2)
-# ======================================================================
 
-# ======================================================================
-# FILE: aurora/api/directives_api.py (PATCH 2 OF 2)
-# START: DIRECTIVES_COCKPIT_BACKEND_CONTROLLER_MUTATIONS
-# ======================================================================
     elif request.method == 'POST':
         try:
             raw_data = json.loads(request.body)
             action = raw_data.get('action', 'save').strip().lower()
             
-            # --- NEW INTERACTIVE SUB-ROUTE: minion_AI_writer REFINE MATRIX ---
+            # --- ATOMIC REWRITE MATRIX: DISPATCHED TO DATABASE MINION_AI_WRITER ---
             if action == 'optimize_prompt':
                 user_rambling = raw_data.get('instructions', '').strip()
                 minion_target = raw_data.get('directive_name', 'unknown_minion')
+                record_id = raw_data.get('id', None)
                 
                 if not user_rambling:
                     return JsonResponse({'status': 'ERROR', 'message': 'No prompt instructions provided to optimize.'}, status=400)
                 
-                runner = MinionRunner()
-                writer_prompt = (
-                    f"You are the minion_AI_writer. Your task is to analyze this conversational, rambling "
-                    f"explanation for the agent profile '{minion_target}' and distill it into a set of dense, "
-                    f"well-structured system instructions that an 8B execution minion can perfectly follow.\n\n"
-                    f"RAW HUMAN INPUT:\n{user_rambling}\n\n"
-                    f"CRITICAL CONSTRAINT:\n"
-                    f"Output ONLY the final optimized instruction set. Do NOT provide preamble notes, conversational "
+                # Dynamic Database Lookup: Fetch existing text if editing a record to prevent obliteration
+                existing_instructions = ""
+                if record_id:
+                    try:
+                        target_row = DeltaDirectives.objects.get(id=record_id)
+                        existing_instructions = target_row.instructions
+                    except DeltaDirectives.DoesNotExist:
+                        pass
+
+                # Formulate structural task payload containing instructions history blocks
+                composite_prompt = (
+                    f"You are the minion_AI_writer. Your task is to analyze a conversational modification request "
+                    f"and update the instruction profile for the fleet minion: '{minion_target}'.\n\n"
+                    f"CURRENT INSTRUCTIONS IN DATABASE:\n"
+                    f"{existing_instructions if existing_instructions else '[None - Fresh Creation]'}\n\n"
+                    f"DEVELOPER MODIFICATION REQUEST:\n"
+                    f"{user_rambling}\n\n"
+                    f"CRITICAL EXECUTION CONSTRAINTS:\n"
+                    f"1. Analyze the current instructions against the developer modification request.\n"
+                    f"2. If the request adds guidelines or parameters, surgically integrate them cleanly.\n"
+                    f"3. If it requests to delete or modify rules, strip them out without altering the remaining text.\n"
+                    f"4. Retain all other existing unedited prompt rules completely intact.\n"
+                    f"5. Output ONLY the final optimized instruction set. Do NOT provide preamble notes, conversational "
                     f"filler, explanations, or wrap your code in triple markdown backticks."
                 )
                 
+                runner = MinionRunner()
+                
                 async def run_optimization_stream():
-                    await async_send_to_console(f"📝 [WRITER] Distilling conversational directives for: {minion_target}...")
-                    await async_send_to_console("\n✨ [OPTIMIZED DENSE INSTRUCTIONS]:\n")
+                    await async_send_to_console(f"📝 [WRITER] Executing atomic merge for minion: {minion_target}...")
+                    await async_send_to_console("\n✨ [DISTILLED LIVE PROMPT UPDATE]:\n")
                     
-                    async for token in runner.run_minion_task_stream("minion_AI_writer", writer_prompt):
+                    async for token in runner.run_minion_task_stream("minion_AI_writer", composite_prompt):
                         await async_send_to_console(token)
                         
                     await async_send_to_console("\n[SYSTEM] Prompt optimization finalized.\n")
@@ -156,5 +167,5 @@ def directives_endpoint(request):
 
     return JsonResponse({'status': 'ERROR', 'message': 'Method not allowed.'}, status=405)
 # ======================================================================
-# END: DIRECTIVES_COCKPIT_BACKEND_CONTROLLER_MUTATIONS (PATCH 2 OF 2)
+# END: API_ENDPOINT_LOGIC (PATCH 1 OF 1)
 # ======================================================================
