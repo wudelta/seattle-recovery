@@ -10,18 +10,16 @@ import sys
 import os
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from asgiref.sync import sync_to_async
+from django.conf import settings  # FIX: Added missing settings import for absolute file path resolution
+from asgiref.sync import sync_to_async, async_to_sync
 from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
 from aurora.minions.engine import MinionRunner
 from .dev_streamer_api import async_send_to_console
 
 def process_wu_logic_synchronous(user_delta_notes, user):
     """Generates the full Groq execution plan and records pending tracking blocks."""
-    from asgiref.sync import async_to_sync
     try:
         runner = MinionRunner()
-        # FIX: Removed the automatic fallback seeding block completely.
-        # Deliver a descriptive message straight to the telemetry connection if configuration is absent.
         try:
             wu_config = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
         except DeltaDirectives.DoesNotExist:
@@ -53,7 +51,6 @@ def process_wu_logic_synchronous(user_delta_notes, user):
 
         async_to_sync(consume_stream)()
 
-        # Stage transaction footprint record in a PENDING state
         transaction = WorkspaceTransaction.objects.create(
             user=user,
             prompt_context=user_delta_notes,
@@ -66,10 +63,9 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             if not parts:
                 continue
             
-            macro = parts[0].lower().strip()
-            # Predict downstream file paths to show the developer before confirmation
+            macro = parts.lower().strip()
             predicted_files = []
-            clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+            clean_arg = parts.strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
@@ -114,37 +110,56 @@ def process_transaction_action(request, tx_id):
     """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
+        
+    def _execute_sync_action_logic():
+        try:
+            tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
+            action = json.loads(request.body).get("action", "").upper()
+
+            if action == "APPROVE":
+                from aurora.minions.automation_utilities import WorkspaceAutomationRunner
+                runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
+                for cmd in tx.commands.all():
+                    if cmd.macro == "/page" and cmd.arguments:
+                        async_to_sync(runner.execute_page_command)(cmd.arguments)
+                    elif cmd.macro == "/api" and cmd.arguments:
+                        async_to_sync(runner.execute_api_command)(cmd.arguments)
+                tx.status = 'EXECUTED'
+                tx.save()
+                return {"status": "SUCCESS", "message": "Transaction executed and files written."}
+
+            elif action == "DESTROY":
+                for cmd in tx.commands.all():
+                    for file_path in cmd.affected_files:
+                        full_path = os.path.join(getattr(settings, "BASE_DIR", os.getcwd()), file_path)
+                        if os.path.exists(full_path):
+                            os.remove(full_path)
+                tx.status = 'ROLLED_BACK'
+                tx.save()
+                return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
+
+            return {"error": "Invalid action context", "status_code": 400}
+        except WorkspaceTransaction.DoesNotExist:
+            return {"error": "Transaction context lookup failure.", "status_code": 404}
+        except Exception as err:
+            return {"error": str(err), "status_code": 500}
+
     try:
-        tx = WorkspaceTransaction.objects.get(id=tx_id, user=request.user)
-        action = json.loads(request.body).get("action", "").upper()
+        loop = asyncio.get_running_loop()
+        is_async_context = True
+    except RuntimeError:
+        is_async_context = False
 
-        if action == "APPROVE":
-            from aurora.minions.automation_utilities import WorkspaceAutomationRunner
-            # Initialize with dry_run=False since the human has clicked approve
-            runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
-            for cmd in tx.commands.all():
-                if cmd.macro == "/page" and cmd.arguments:
-                    async_to_sync(runner.execute_page_command)(cmd.arguments[0])
-                elif cmd.macro == "/api" and cmd.arguments:
-                    async_to_sync(runner.execute_api_command)(cmd.arguments[0])
-            tx.status = 'EXECUTED'
-            tx.save()
-            return JsonResponse({"status": "SUCCESS", "message": "Transaction executed and files written."})
-
-        elif action == "DESTROY":
-            # Direct rollback algorithm: surgically strip tracked files from the directory
-            for cmd in tx.commands.all():
-                for file_path in cmd.affected_files:
-                    full_path = os.path.join(getattr(settings, "BASE_DIR", os.getcwd()), file_path)
-                    if os.path.exists(full_path):
-                        os.remove(full_path)
-            tx.status = 'ROLLED_BACK'
-            tx.save()
-            return JsonResponse({"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."})
-
-        return JsonResponse({"error": "Invalid action context"}, status=400)
-    except Exception as err:
-        return JsonResponse({"error": str(err)}, status=500)
+    if is_async_context:
+        async def run_in_thread():
+            return await sync_to_async(_execute_sync_action_logic, thread_sensitive=False)()
+        result = async_to_sync(run_in_thread)()
+    else:
+        result = _execute_sync_action_logic()
+    
+    if "error" in result:
+        return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
+    return JsonResponse(result)
 # ======================================================================
 # END: API_ENDPOINT_LOGIC (PATCH 1 OF 1)
 # ======================================================================
