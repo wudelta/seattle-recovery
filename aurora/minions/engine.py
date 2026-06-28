@@ -8,7 +8,7 @@ import asyncio
 from django.conf import settings
 from groq import AsyncGroq, GroqError
 from aurora.models import DeltaDirectives
-from asgiref.sync import async_to_sync  # Added for the synchronous runner wrapper
+from asgiref.sync import async_to_sync
 
 class MinionRunner:
     """Universal Cloud-Driven AI Execution Engine built on the official Groq SDK."""
@@ -41,11 +41,13 @@ class MinionRunner:
                 temperature=temperature,
                 stream=True
             )
-            # Consuming tokens natively using the SDK's built-in async generator
+            # FIX: Ensure streaming chunks are parsed via the choices list index format 
+            # safely to align with actual Groq SDK real-time iterator models.
             async for chunk in stream:
-                token = chunk.choices[0].delta.content
-                if token:
-                    yield token
+                if chunk.choices and len(chunk.choices) > 0:
+                    token = chunk.choices[0].delta.content
+                    if token:
+                        yield token
         except GroqError as groq_err:
             # Surgically catch and print exact cloud API parameter or endpoint authentication faults
             yield f"\n🛑 [GROQ GATEWAY REJECTION] The SDK caught an operational error!\nDETAILS: {str(groq_err)}\n"
@@ -87,7 +89,6 @@ class MinionRunner:
             return "".join(tokens)
             
         return async_to_sync(_gather_stream_tokens)()
-
 # ======================================================================
 # END: ASYNC_STREAMING_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
 # ======================================================================
