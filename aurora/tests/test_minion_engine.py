@@ -3,7 +3,7 @@
 # START: MINION_ENGINE_INTEGRATION_AND_FALLBACK_TESTS
 # ======================================================================
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from neomodel import db as neomodel_db
 from aurora.models import ComponentRegistry, DeltaDirectives
 from aurora.minions.engine import MinionRunner
@@ -23,13 +23,11 @@ class MinionEngineExecutionTests(TestCase):
 
         from django.contrib.auth.models import User
         self.user = User.objects.create_user(username="engine_tester", password="password_abc")
-        
         self.parent_component = ComponentRegistry.objects.create(
             file_path="app/core/minions/engine.py",
             name="minion_engine_core",
             created_by=self.user
         )
-
         # FIXED: Bound created_by tracking link to satisfy non-null column constraint updates
         self.test_directive = DeltaDirectives.objects.create(
             directive_name="minion_test_mock",
@@ -52,35 +50,37 @@ class MinionEngineExecutionTests(TestCase):
         """Error Check: Querying an unconfigured row token must return an explicit error string."""
         runner = MinionRunner()
         result = runner.run_minion_task("non_existent_minion", "Hello Engine")
-        self.assertIn("Error: Minion configuration row", result)
+        # FIX: Updated substring assertion to match the actual exception prefix formatting in engine.py
+        self.assertIn("[REGISTRY ERROR]: Minion configuration", result)
 
-    @patch('requests.post')
-    def test_run_minion_task_extracts_db_rules_and_queries_groq_successfully(self, mock_post):
-        """Execution Check: Verify database constraints and prompts parse down to the API request."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [
-                {
-                    "message": {
-                        "content": "Mocked validation output response string."
-                    }
-                }
-            ]
-        }
-        mock_post.return_value = mock_response
+    @patch('groq.resources.chat.completions.AsyncCompletions.create')
+    def test_run_minion_task_extracts_db_rules_and_queries_groq_successfully(self, mock_create):
+        """Execution Check: Verify database constraints and prompts parse down to the SDK request."""
+        
+        # Build an async generator mock to simulate the official SDK stream chunks
+        async def mock_stream_generator(*args, **kwargs):
+            # Create a mock chunk simulating the Groq SDK's chunk topology
+            mock_chunk = MagicMock()
+            mock_chunk.choices = [MagicMock()]
+            mock_chunk.choices[0].delta.content = "Mocked validation output response string."
+            yield mock_chunk
 
-        with patch.dict('os.environ', {'MINION_CLOUD_API_KEY': 'gsk_mock_validation_key'}):
+        mock_create.side_effect = mock_stream_generator
+
+        with patch.dict('os.environ', {'GROQ_API_KEY': 'gsk_mock_validation_key'}):
             runner = MinionRunner()
             output = runner.run_minion_task("minion_test_mock", "Execute validation track alpha")
+            
+            # Assert stitched string response matches mock expectation
             self.assertEqual(output, "Mocked validation output response string.")
 
-        called_args, called_kwargs = mock_post.call_args
-        payload_data = called_kwargs["json"]
-        self.assertEqual(payload_data["model"], "llama-3.1-8b-instant")
-        self.assertEqual(payload_data["temperature"], 0.2)
-        self.assertEqual(payload_data["messages"][0]["content"], "You are a strict test validator. Echo the inputs.")
-        self.assertEqual(payload_data["messages"][1]["content"], "Execute validation track alpha")
+        # Extract arguments passed directly to the client SDK create method
+        called_kwargs = mock_create.call_args.kwargs
+        self.assertEqual(called_kwargs["model"], "llama-3.1-8b-instant")
+        self.assertEqual(called_kwargs["temperature"], 0.2)
+        self.assertEqual(called_kwargs["messages"][0]["content"], "You are a strict test validator. Echo the inputs.")
+        self.assertEqual(called_kwargs["messages"][1]["content"], "Execute validation track alpha")
+
 # ======================================================================
 # END: MINION_ENGINE_INTEGRATION_AND_FALLBACK_TESTS (PATCH 1 OF 1)
 # ======================================================================
