@@ -38,15 +38,23 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         complete_response_text = ""
         stream_generator = runner.run_minion_task_stream("minion_wu", user_delta_notes)
 
+        # Thread-safe async worker strategy to read tokens without latching onto or blocking Daphne's main event loop
         async def consume_stream():
             nonlocal complete_response_text
             async for token in stream_generator:
                 complete_response_text += token
-                # FIX: Completely removed sys.stdout.write and sys.stdout.flush loops 
-                # to prevent the global container logger from intercepting text pieces 
-                # as raw logs and causing channel capacity flooding crashes.
 
-        async_to_sync(consume_stream)()
+        def run_async_in_thread():
+            new_loop = asyncio.new_event_loop()
+            try:
+                return new_loop.run_until_complete(consume_stream())
+            finally:
+                new_loop.close()
+
+        import threading
+        thread = threading.Thread(target=run_async_in_thread)
+        thread.start()
+        thread.join()
 
         transaction = WorkspaceTransaction.objects.create(
             user=user,
@@ -54,15 +62,20 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             status='PENDING'
         )
 
-        command_blocks = re.findall(r"\[COMMAND:\s*(.*?)\]", complete_response_text)
+        # Casing-flexible regex processing block handling varied layout margins
+        command_blocks = re.findall(r"\[[Cc][Oo][Mm][Mm][Aa][Nn][Dd]:\s*(.*?)\]", complete_response_text)
         for index, command_string in enumerate(command_blocks):
             parts = command_string.strip().split()
             if not parts:
                 continue
-            
+                
             macro = parts[0].lower().strip()
             predicted_files = []
             clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+            
+            if not clean_arg:
+                continue
+
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
@@ -116,11 +129,13 @@ def process_transaction_action(request, tx_id):
     """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
-        
+
     def _execute_sync_action_logic():
         try:
             tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
             action = json.loads(request.body).get("action", "").upper()
+            
+            base_dir = os.path.abspath(getattr(settings, "BASE_DIR", os.getcwd()))
 
             if action == "APPROVE":
                 from aurora.minions.automation_utilities import WorkspaceAutomationRunner
@@ -137,9 +152,18 @@ def process_transaction_action(request, tx_id):
             elif action == "DESTROY":
                 for cmd in tx.commands.all():
                     for file_path in cmd.affected_files:
-                        full_path = os.path.join(getattr(settings, "BASE_DIR", os.getcwd()), file_path)
-                        if os.path.exists(full_path):
+                        if not file_path or not isinstance(file_path, str):
+                            continue
+                        
+                        # Strict path evaluation guarding to prevent directory traversal out of project workspace
+                        full_path = os.path.abspath(os.path.join(base_dir, file_path))
+                        if not full_path.startswith(base_dir) or full_path == base_dir:
+                            sys.stderr.write(f"⚠️ [SECURITY ALERT]: Blocked destructive outside directory sweep path: {file_path}\n")
+                            continue
+
+                        if os.path.exists(full_path) and os.path.isfile(full_path):
                             os.remove(full_path)
+                            
                 tx.status = 'ROLLED_BACK'
                 tx.save()
                 return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
@@ -162,7 +186,7 @@ def process_transaction_action(request, tx_id):
         result = async_to_sync(run_in_thread)()
     else:
         result = _execute_sync_action_logic()
-    
+
     if "error" in result:
         return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
     return JsonResponse(result)
