@@ -1,6 +1,6 @@
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 1)
-# START: API_ENDPOINT_LOGIC
+# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 4)
+# START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import json
 import asyncio
@@ -10,12 +10,19 @@ import sys
 import os
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.conf import settings  # FIX: Added missing settings import for absolute file path resolution
+from django.conf import settings
 from asgiref.sync import sync_to_async, async_to_sync
 from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
 from aurora.minions.engine import MinionRunner
 from .dev_streamer_api import async_send_to_console
+# ======================================================================
+# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 4)
+# START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
+# ======================================================================
 def process_wu_logic_synchronous(user_delta_notes, user):
     """Generates the full Groq execution plan and records pending tracking blocks."""
     try:
@@ -26,13 +33,6 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             error_msg = "💥 [REGISTRY CRITICAL]: Master directive configuration 'minion_wu' is missing or inactive in your database ledger!"
             sys.stderr.write(f"{error_msg}\n")
             sys.stderr.flush()
-            try:
-                async_to_sync(async_send_to_console)(json.dumps({
-                    "event": "wu_chat_token", 
-                    "text": error_msg
-                }))
-            except Exception:
-                pass
             return {"status": "ERROR", "message": "Master orchestrator directive is missing in database registry.", "trace": error_msg}
 
         complete_response_text = ""
@@ -42,12 +42,9 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             nonlocal complete_response_text
             async for token in stream_generator:
                 complete_response_text += token
-                sys.stdout.write(token)
-                sys.stdout.flush()
-                try:
-                    await async_send_to_console(json.dumps({"event": "wu_chat_token", "text": token}))
-                except Exception:
-                    pass
+                # FIX: Completely removed sys.stdout.write and sys.stdout.flush loops 
+                # to prevent the global container logger from intercepting text pieces 
+                # as raw logs and causing channel capacity flooding crashes.
 
         async_to_sync(consume_stream)()
 
@@ -63,9 +60,9 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             if not parts:
                 continue
             
-            macro = parts.lower().strip()
+            macro = parts[0].lower().strip()
             predicted_files = []
-            clean_arg = parts.strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+            clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
@@ -79,15 +76,17 @@ def process_wu_logic_synchronous(user_delta_notes, user):
                 execution_order=index
             )
 
-        try:
-            async_to_sync(async_send_to_console)(json.dumps({"event": "wu_chat_complete"}))
-        except Exception:
-            pass
-
         return {"status": "SUCCESS", "wu_response": complete_response_text, "transaction_id": str(transaction.id)}
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
+# ======================================================================
+# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 4)
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 4)
+# START: CHAT_REQUEST_ENDPOINT_VIEW
+# ======================================================================
 @login_required
 def wu_chat_endpoint(request):
     """Processes requests, returning text alongside a unique transaction review token ID."""
@@ -104,7 +103,14 @@ def wu_chat_endpoint(request):
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
     return JsonResponse({"error": "POST required"}, status=405)
+# ======================================================================
+# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 4)
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 4)
+# START: TRANSACTION_ACTION_CONTROLLER_VIEW
+# ======================================================================
 @login_required
 def process_transaction_action(request, tx_id):
     """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
@@ -121,9 +127,9 @@ def process_transaction_action(request, tx_id):
                 runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
                 for cmd in tx.commands.all():
                     if cmd.macro == "/page" and cmd.arguments:
-                        async_to_sync(runner.execute_page_command)(cmd.arguments)
+                        async_to_sync(runner.execute_page_command)(cmd.arguments[0])
                     elif cmd.macro == "/api" and cmd.arguments:
-                        async_to_sync(runner.execute_api_command)(cmd.arguments)
+                        async_to_sync(runner.execute_api_command)(cmd.arguments[0])
                 tx.status = 'EXECUTED'
                 tx.save()
                 return {"status": "SUCCESS", "message": "Transaction executed and files written."}
@@ -161,5 +167,5 @@ def process_transaction_action(request, tx_id):
         return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
     return JsonResponse(result)
 # ======================================================================
-# END: API_ENDPOINT_LOGIC (PATCH 1 OF 1)
+# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 4 OF 4)
 # ======================================================================

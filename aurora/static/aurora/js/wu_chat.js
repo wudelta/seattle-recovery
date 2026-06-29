@@ -1,20 +1,89 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 1 OF 1)
-// START: WU_CHAT_CONSOLE_PANEL_STREAMING_CONTROLLER
+// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 1 OF 3)
+// START: WU_CHAT_STREAM_PROCESSOR_AND_SELECTORS
 // ======================================================================
 function initWuChatConsole(endpoints, csrfToken) {
   const $inputField = $('#wu-human-delta-notes-input');
   const $transmitBtn = $('#transmit-to-wu-btn');
   const $telemetryLog = $('#wu-telemetry-screen-output');
+  const $chatHistory = $('#wu-chat-history-log');
   
-  // Staging elements for safety drawer workflow
   const $approvalDrawer = $('#wu-pending-transaction-drawer');
   const $approveBtn = $('#wu-action-approve-btn');
   const $destroyBtn = $('#wu-action-destroy-btn');
+  
   let activeTransactionId = null;
+  let $currentWuBubble = null;
 
   if (!$transmitBtn.length) return;
 
+  function handleIncomingStreamData(rawData) {
+    let payload = null;
+    let isJsonPacket = false;
+    let rawStringContent = "";
+
+    try {
+      // FIX: Hardened validation layer to safely intercept pre-parsed object 
+      // dictionaries as well as raw strings without falling through to the catch block.
+      if (typeof rawData === 'object' && rawData !== null) {
+        payload = rawData;
+        isJsonPacket = (payload.event !== undefined);
+        rawStringContent = JSON.stringify(rawData);
+      } else if (typeof rawData === 'string') {
+        rawStringContent = rawData.trim();
+        if (rawStringContent.startsWith('{') || rawStringContent.startsWith('[')) {
+          payload = JSON.parse(rawStringContent);
+          isJsonPacket = (payload && payload.event !== undefined);
+        }
+      }
+
+      // Route tokens straight to the chat view logs
+      if (isJsonPacket && payload.event === 'wu_chat_token' && payload.text) {
+        if (!$currentWuBubble) {
+          $currentWuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
+          $chatHistory.append($currentWuBubble);
+        }
+        $currentWuBubble.append(document.createTextNode(payload.text));
+        $chatHistory.scrollTop($chatHistory[0].scrollHeight);
+        return; // Handled, block fallback logs
+      } 
+      // FIX: Cleanly catch the pre-parsed object termination event, reset bubbles, 
+      // and invoke the unfreeze controllers instantly.
+      else if (isJsonPacket && payload.event === 'wu_chat_complete') {
+        appendSystemAlert('📡 [SYSTEM]: Orchestrator response transaction complete.');
+        $currentWuBubble = null;
+        resetInputControls();
+        return;
+      }
+    } catch (parseError) {
+      isJsonPacket = false;
+    }
+
+    // Filter out any JSON structures from leaking into the terminal log view
+    if (rawStringContent.trim() && !rawStringContent.includes('"event":')) {
+      const $lineNode = $('<div style="margin-bottom: 2px; color: #a3a3a3;"></div>').text(rawStringContent);
+      $telemetryLog.append($lineNode);
+      $telemetryLog.scrollTop($telemetryLog[0].scrollHeight);
+    }
+  }
+
+  $(document).on('aurora:telemetry_stream_received', function(event, data) {
+    handleIncomingStreamData(data);
+  });
+
+  if (window.telemetrySocket) {
+    window.telemetrySocket.onmessage = function(e) {
+      handleIncomingStreamData(e.data);
+    };
+  }
+// ======================================================================
+// END: WU_CHAT_STREAM_PROCESSOR_AND_SELECTORS (PATCH 1 OF 3)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
+// START: WU_CHAT_TRANSMIT_ACTION_HANDLER
+// ======================================================================
   $transmitBtn.on('click', function(e) {
     e.preventDefault();
     const deltaNotesText = $inputField.val().trim();
@@ -23,12 +92,17 @@ function initWuChatConsole(endpoints, csrfToken) {
       return;
     }
 
-    // Hide drawer from previous attempts during a new round of orchestration
     $approvalDrawer.addClass('d-none');
     activeTransactionId = null;
 
+    // Append your prompt message clean and isolated to the left chat log view pane
+    const $userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
+    $chatHistory.append($userBubble);
+    $chatHistory.scrollTop($chatHistory[0].scrollHeight);
+
+    // Freeze input controls and update state indicators during transaction runs
+    $inputField.val('').prop('disabled', true);
     $transmitBtn.prop('disabled', true).text('PROCESSING STRATEGY LOOP...');
-    $inputField.prop('disabled', true);
     appendSystemAlert('🚀 [SYSTEM] Transmitting design intentions to Commander Wu...');
 
     $.ajax({
@@ -39,21 +113,24 @@ function initWuChatConsole(endpoints, csrfToken) {
       headers: { 'X-CSRFToken': csrfToken },
       success: function(response) {
         if (response.status === 'wu_is_processing') {
-          // Display the response content in the prompt box for readability
-          $inputField.val(response.direct_text_output);
+          // FIX: Bypassed volatile websocket timing constraints. Render the full completed
+          // orchestrator text response bubble directly into the chat history pane layout
+          // upon successful HTTP callback return.
+          const finalOutputText = response.direct_text_output || "No explicit response text returned.";
+          const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
+          $wuBubble.append(document.createTextNode(finalOutputText));
+          $chatHistory.append($wuBubble);
+          $chatHistory.scrollTop($chatHistory[0].scrollHeight);
           
-          // Capture and stage transaction monitoring token references
           if (response.transaction_id) {
             activeTransactionId = response.transaction_id;
             $approvalDrawer.removeClass('d-none');
             appendSystemAlert('⚠️ [SAFETY GATE] Orchestration completed. Awaiting file modification permissions...');
-          } else {
-            resetInputControls();
           }
         } else {
           appendSystemAlert(`💥 [SYSTEM ERROR] Unexpected response status: ${response.status}`);
-          resetInputControls();
         }
+        resetInputControls(); // FIX: Instantly release lockout state to let the user type infinite replies
       },
       error: function(xhr) {
         let errorText = 'Unknown API Fault.';
@@ -66,9 +143,14 @@ function initWuChatConsole(endpoints, csrfToken) {
       }
     });
   });
+// ======================================================================
+// END: WU_CHAT_TRANSMIT_ACTION_HANDLER (PATCH 2 OF 3)
+// ======================================================================
 
-  // --- Interactive Verification Actions Routing Mappings ---
-  
+// ======================================================================
+// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 3 OF 3)
+// START: WU_CHAT_APPROVAL_BUTTONS_AND_UTILITIES
+// ======================================================================
   $approveBtn.on('click', function() {
     executeTransactionAction('APPROVE', '🛠️ [SYSTEM] Authorizing file creation scripts...');
   });
@@ -83,7 +165,6 @@ function initWuChatConsole(endpoints, csrfToken) {
     appendSystemAlert(systemLogMessage);
     $approvalDrawer.addClass('d-none');
 
-    // Build the action endpoint path pattern dynamically
     const actionUrl = `/aurora/api/transaction/${activeTransactionId}/action/`;
 
     $.ajax({
@@ -95,9 +176,6 @@ function initWuChatConsole(endpoints, csrfToken) {
       success: function(response) {
         if (response.status === 'SUCCESS') {
           appendSystemAlert(`✅ [ACTION SUCCESS]: ${response.message}`);
-          if (actionName === 'DESTROY') {
-            $inputField.val(''); // Wipe layout space if rolled back
-          }
         } else {
           appendSystemAlert(`💥 [ACTION FAULT]: Request failed context response.`);
         }
@@ -112,7 +190,7 @@ function initWuChatConsole(endpoints, csrfToken) {
 
   function resetInputControls() {
     $transmitBtn.prop('disabled', false).text('Transmit to Commander Wu');
-    $inputField.prop('disabled', false).focus();
+    $inputField.prop('disabled', false).val('').focus();
   }
 
   function appendSystemAlert(message) {
@@ -126,5 +204,5 @@ function initWuChatConsole(endpoints, csrfToken) {
   });
 }
 // ======================================================================
-// END: WU_CHAT_CONSOLE_PANEL_STREAMING_CONTROLLER (PATCH 1 OF 1)
+// END: WU_CHAT_APPROVAL_BUTTONS_AND_UTILITIES (PATCH 3 OF 3)
 // ======================================================================
