@@ -70,60 +70,75 @@ function initWuChatConsole(endpoints, csrfToken) {
 // FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
 // START: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
-    transmitBtn.on('click', function(e) {
-        e.preventDefault();
-        const deltaNotesText = inputField.val().trim();
-        if (!deltaNotesText) {
-            appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
-            return;
-        }
+transmitBtn.on('click', function(e) {
+    e.preventDefault();
+    const deltaNotesText = inputField.val().trim();
+    if (!deltaNotesText) {
+        appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
+        return;
+    }
+    approvalDrawer.addClass('d-none');
+    activeTransactionId = null;
 
-        approvalDrawer.addClass('d-none');
-        activeTransactionId = null;
+    const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
+    chatHistory.append(userBubble);
+    chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
-        const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
-        chatHistory.append(userBubble);
-        chatHistory.scrollTop(chatHistory[0].scrollHeight);
+    inputField.val('').prop('disabled', true);
+    transmitBtn.prop('disabled', true).text('PROCESSING STRATEGY LOOP...');
+    appendSystemAlert('🚀 [SYSTEM] Transmitting design intentions to Commander Wu...');
 
-        inputField.val('').prop('disabled', true);
-        transmitBtn.prop('disabled', true).text('PROCESSING STRATEGY LOOP...');
-        appendSystemAlert('🚀 [SYSTEM] Transmitting design intentions to Commander Wu...');
+    // FIX: Natively pull the live security token string directly from the page layout input box
+    const activeToken = csrfToken || $('[name=csrfmiddlewaretoken]').val();
 
-        $.ajax({
-            url: endpoints.wu_chat_endpoint,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ delta_notes: deltaNotesText }),
-            headers: { 'X-CSRFToken': csrfToken },
-            success: function(response) {
-                if (response.status === 'wu_is_processing') {
-                    const finalOutputText = response.direct_text_output || "No explicit response text returned.";
-                    const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-                    $wuBubble.append(document.createTextNode(finalOutputText));
-                    chatHistory.append($wuBubble);
-                    chatHistory.scrollTop(chatHistory[0].scrollHeight);
+    $.ajax({
+        url: endpoints.wu_chat_endpoint,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ delta_notes: deltaNotesText }),
+        headers: { 'X-CSRFToken': activeToken },
+        success: function(response) {
+            if (response.status === 'wu_is_processing') {
+                const finalOutputText = response.direct_text_output || "No explicit response text returned.";
+                const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
+                $wuBubble.append(document.createTextNode(finalOutputText));
+                chatHistory.append($wuBubble);
+                chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
-                    if (response.transaction_id) {
-                        activeTransactionId = response.transaction_id;
-                        approvalDrawer.removeClass('d-none');
-                        appendSystemAlert('⚠️ [SAFETY GATE] Orchestration completed. Awaiting file modification permissions...');
-                    }
-                } else {
-                    appendSystemAlert(`💥 [SYSTEM ERROR] Unexpected response status: ${response.status}`);
+                // FIX: Force rendering evaluations directly onto your progress indicator gauges
+                if (response.fuel_gauge) {
+                    const fg = response.fuel_gauge;
+                    const tpmRemainingPct = (100 - fg.tokens_used_pct).toFixed(1);
+                    const rpdRemainingPct = (100 - fg.requests_used_pct).toFixed(1);
+
+                    $('#fuel-tpm-bar').css('width', fg.tokens_used_pct + '%').attr('aria-valuenow', fg.tokens_used_pct);
+                    $('#fuel-tpm-readout').text(`${tpmRemainingPct}% (${fg.tokens_remaining.toLocaleString()} Rem)`);
+                    
+                    $('#fuel-rpd-bar').css('width', fg.requests_used_pct + '%').attr('aria-valuenow', fg.requests_used_pct);
+                    $('#fuel-rpd-readout').text(`${rpdRemainingPct}% (${fg.requests_remaining.toLocaleString()} Rem)`);
                 }
-                resetInputControls();
-            },
-            error: function(xhr) {
-                let errorText = 'Unknown API Fault.';
-                try {
-                    const parsed = JSON.parse(xhr.responseText);
-                    errorText = parsed.error || errorText;
-                } catch(e) {}
-                appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
-                resetInputControls();
+
+                if (response.transaction_id) {
+                    activeTransactionId = response.transaction_id;
+                    approvalDrawer.removeClass('d-none');
+                    appendSystemAlert('⚠️ [SAFETY GATE] Orchestration completed. Awaiting file modification permissions...');
+                }
+            } else {
+                appendSystemAlert(`💥 [SYSTEM ERROR] Unexpected response status: ${response.status}`);
             }
-        });
+            resetInputControls();
+        },
+        error: function(xhr) {
+            let errorText = 'Unknown API Fault.';
+            try {
+                const parsed = JSON.parse(xhr.responseText);
+                errorText = parsed.error || errorText;
+            } catch(e) {}
+            appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
+            resetInputControls();
+        }
     });
+});
 // ======================================================================
 // END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE (PATCH 2 OF 3)
 // ======================================================================

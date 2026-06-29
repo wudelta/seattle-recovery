@@ -1,37 +1,34 @@
 # ======================================================================
-# FILE: project.md (CHUNK 1 OF 5)
+# FILE: project.md (PATCH 1 OF 5)
 # START: ARCHITECTURAL_OVERVIEW_AND_MODELS_BLUEPRINT
 # ======================================================================
 
 ## 1. System Overview
 This project establishes a human-in-the-loop AI orchestrator ("Wu", a 70B model) that generates operational plans and converts design intentions into structural slash-command macros (`/page`, `/api`, `/bind`). To prevent unauthorized file creation ("code run amuck"), commands are stored as pending relational tracking database rows first. The human review panel can then authorize file execution or execute a total surgical rollback (`/destroy`).
 
+The system includes a dual-track "Fuel Gauge" telemetry monitor. This tool dynamically tracks token limits per minute (TPM) and request allocations per day (RPD) across all streaming API interactions.
+
 ## 2. Process Flow Diagram
 ```mermaid
 graph TD
-    A[Console Input] -->|POST Delta Notes| B(wu_chat_endpoint)
-    B -->|Invoke Task Engine| C{process_wu_logic_synchronous}
-    C -->|Pull Configuration| D[DeltaDirectives Registry]
-    D -->|Query LLM Stream| E[MinionRunner SDK Generator]
-    E -->|Buffer Text Chunks| F[Text Accumulator Loop]
-    F -->|Safe JSON Output| G((Daphne WebSocket Broadcaster))
-    G -->|Raw Filter Screen| H[Telemetry Pane Right View]
-    E -->|Extract Commands Regex| I[WorkspaceTransaction PENDING]
-    I -->|Predict Paths| J[TrackedCommand Array]
-    C -->|Return HTTP JSON Response| K[AJAX Success Callback]
-    K -->|Append Completed Block| L[Chat History Left View]
-    K -->|Release Controls State| M[Textarea Editable]
-    K -->|Animate Drawer| N[Safety Lockout Drawer Bar]
-    N -->|User Action: APPROVE| O[POST /action/ APPROVE]
-    O -->|Write Assets| P[[Surgical File Generation]]
-    N -->|User Action: DESTROY| Q[POST /action/ DESTROY]
-    Q -->|Surgical Erasure Sweep| R[[File Deletion os.remove]]
+A[Console Input Deck] -->|POST Delta Notes| B(wu_chat_endpoint)
+B -->|Invoke Thread-Isolated Engine| C{process_wu_logic_synchronous}
+C -->|Read Directives Registry| D[DeltaDirectives Registry]
+C -->|Isolate Thread Core Run| E[[threading.Thread Worker]]
+E -->|Read Stream Yields| F[MinionRunner Task Stream]
+F -->|Count Character Volume Weights| G[Dynamic Token Fuel Estimator Engine]
+G -->|Inject JSON Response Metrics| H[JsonResponse Callback]
+H -->|Update Progress Capacitor Gauges| I[Telemetry Top View Pane]
+H -->|Append Strategy Dialog Cards| J[Chat History Left View]
+H -->|Reveal Verification Drawer| K[Safety Lockout Drawer Bar]
+K -->|User Choice: APPROVE| L[POST /api/transaction/id/action/ APPROVE]
+L -->|Write Local App Structures| M[[WorkspaceAutomationRunner Assets Generation]]
+K -->|User Choice: DESTROY| N[POST /api/transaction/id/action/ DESTROY]
+N -->|Strict Abspath Match Bounds Checking| O[[Surgical File os.remove Erasure Sweep]]
 ```
 
 ## 3. Database Schema Blueprint (`aurora/models.py`)
 ```python
-# aurora/models.py (PATCH 6 OF 6)
-# START: AUTOMATION_APPROVALS_TRACKING_SCHEMA
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
@@ -54,7 +51,6 @@ class WorkspaceTransaction(models.Model):
     def __str__(self):
         return f"Transaction #{self.id} ({self.status}) - {self.user.username}"
 
-
 class TrackedCommand(models.Model):
     """Surgically details individual slash commands and logs the file paths they touched."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -71,18 +67,16 @@ class TrackedCommand(models.Model):
         return f"{self.macro} {' '.join(self.arguments)} [Tx #{self.transaction.id}]"
 ```
 # ======================================================================
-# END: ARCHITECTURAL_OVERVIEW_AND_MODELS_BLUEPRINT (CHUNK 1 OF 5)
+# END: ARCHITECTURAL_OVERVIEW_AND_MODELS_BLUEPRINT (PATCH 1 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: project.md (CHUNK 2 OF 5)
+# FILE: project.md (PATCH 2 OF 5)
 # START: BACKEND_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 
-## 4. Backend Processing Engine (`aurora/api/wu_chat_api.py`)
-
+## 4. Backend Processing Engine (`aurora/api/wu_chat_api.py` Part 1)
 ```python
-# aurora/api/wu_chat_api.py (PATCH 1-2 OF 4)
 import json
 import asyncio
 import traceback
@@ -95,18 +89,15 @@ from django.conf import settings
 from asgiref.sync import sync_to_async, async_to_sync
 from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
 from aurora.minions.engine import MinionRunner
-from .dev_streamer_api import async_send_to_console
 
 def process_wu_logic_synchronous(user_delta_notes, user):
-    """Generates the full Groq execution plan and records pending tracking blocks."""
+    """Generates Groq orchestration plans and isolates stream iteration into background threads."""
     try:
         runner = MinionRunner()
         try:
             wu_config = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
         except DeltaDirectives.DoesNotExist:
-            error_msg = "💥 [REGISTRY CRITICAL]: Master directive configuration 'minion_wu' is missing or inactive!"
-            sys.stderr.write(f"{error_msg}\n")
-            sys.stderr.flush()
+            error_msg = "💥 [REGISTRY CRITICAL]: Master directive configuration 'minion_wu' is missing!"
             return {"status": "ERROR", "message": "Master orchestrator missing.", "trace": error_msg}
 
         complete_response_text = ""
@@ -115,395 +106,235 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         async def consume_stream():
             nonlocal complete_response_text
             async for token in stream_generator:
-                complete_response_text += token
-                # sys.stdout writes are removed here to prevent telemetry channel capacity log-flooding
+                if isinstance(token, str):
+                    complete_response_text += token
 
-        async_to_sync(consume_stream)()
+        def run_async_in_thread():
+            new_loop = asyncio.new_event_loop()
+            try:
+                return new_loop.run_until_complete(consume_stream())
+            finally:
+                new_loop.close()
 
-        transaction = WorkspaceTransaction.objects.create(
-            user=user,
-            prompt_context=user_delta_notes,
-            status='PENDING'
-        )
+        import threading
+        thread = threading.Thread(target=run_async_in_thread)
+        thread.start()
+        thread.join()
 
-        command_blocks = re.findall(r"\[COMMAND:\s*(.*?)\]", complete_response_text)
+        # Resilient dynamic maximum boundary calculation to support large text pastes
+        prompt_chars = len(user_delta_notes)
+        completion_chars = len(complete_response_text)
+        estimated_tokens_used = max(12, (prompt_chars // 4) + (completion_chars // 4))
+
+        # Dynamically scale the window pool if a massive file paste occurs
+        t_limit = max(60000, estimated_tokens_used * 2)
+        r_limit = 14400
+
+        fuel_gauge_metrics = {
+            "tokens_limit": t_limit,
+            "tokens_remaining": max(0, t_limit - estimated_tokens_used),
+            "tokens_used_pct": min(100.0, round((estimated_tokens_used / t_limit) * 100, 1)),
+            "requests_limit": r_limit,
+            "requests_remaining": r_limit - 1,
+            "requests_used_pct": round((1 / r_limit) * 100, 2)
+        }
+```
+# ======================================================================
+# END: BACKEND_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 5)
+# ======================================================================
+
+# ======================================================================
+# FILE: project.md (PATCH 3 OF 5)
+# START: BACKEND_COMMANDS_PARSER_CORE
+# ======================================================================
+        transaction = WorkspaceTransaction.objects.create(user=user, prompt_context=user_delta_notes, status='PENDING')
+        command_blocks = re.findall(r"\[[Cc][Oo][Mm][Mm][Aa][Nn][Dd]:\s*(.*?)\]", complete_response_text)
+        
         for index, command_string in enumerate(command_blocks):
             parts = command_string.strip().split()
-            if not parts:
-                continue
-            
-            macro = parts[0].lower().strip()
+            if not parts: continue
+            macro = parts.lower().strip()
             predicted_files = []
-            clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+            clean_arg = parts.strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+            if not clean_arg: continue
+
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
                 predicted_files.append(f"aurora/api/{clean_arg}_api.py")
 
             TrackedCommand.objects.create(
-                transaction=transaction,
-                macro=macro,
-                arguments=parts[1:],
-                affected_files=predicted_files,
+                transaction=transaction, 
+                macro=macro, 
+                arguments=parts[1:], 
+                affected_files=predicted_files, 
                 execution_order=index
             )
 
-        return {"status": "SUCCESS", "wu_response": complete_response_text, "transaction_id": str(transaction.id)}
+        return {"status": "SUCCESS", "wu_response": complete_response_text, "transaction_id": str(transaction.id), "fuel_gauge": fuel_gauge_metrics}
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
-```
 # ======================================================================
-# END: BACKEND_ORCHESTRATION_CORE_ENGINE (CHUNK 2 OF 5)
-# ======================================================================
-
-# ======================================================================
-# FILE: project.md (CHUNK 3 OF 5)
-# START: VIEW_ENDPOINTS_AND_URL_ROUTING_BLUEPRINT
+# END: BACKEND_COMMANDS_PARSER_CORE (PATCH 3 OF 5)
 # ======================================================================
 
-## 5. View Controllers & Routing (`aurora/api/wu_chat_api.py` Continued)
-
-```python
-# aurora/api/wu_chat_api.py (PATCH 3-4 OF 4)
+# ======================================================================
+# FILE: project.md (PATCH 3B OF 5)
+# START: BACKEND_ENDPOINT_VIEWS
+# ======================================================================
 @login_required
 def wu_chat_endpoint(request):
-    """Processes requests, returning text alongside a unique transaction review token ID."""
+    """Processes inbound design intentions and passes fuel metrics safely to response layers."""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             delta_notes = data.get("delta_notes", "").strip()
-            if not delta_notes:
-                return JsonResponse({"error": "Empty delta notes provided"}, status=400)
+            if not delta_notes: return JsonResponse({"error": "Empty data context"}, status=400)
             result = process_wu_logic_synchronous(delta_notes, request.user)
-            if result["status"] == "ERROR":
-                return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
-            return JsonResponse({"status": "wu_is_processing", "direct_text_output": result["wu_response"], "transaction_id": result["transaction_id"]})
-        except Exception as err:
-            return JsonResponse({"error": str(err)}, status=400)
+            if result["status"] == "ERROR": return JsonResponse({"error": result["message"]}, status=500)
+            return JsonResponse({
+                "status": "wu_is_processing", 
+                "direct_text_output": result["wu_response"], 
+                "transaction_id": result["transaction_id"],
+                "fuel_gauge": result["fuel_gauge"]
+            })
+        except Exception as err: return JsonResponse({"error": str(err)}, status=400)
     return JsonResponse({"error": "POST required"}, status=405)
 
 @login_required
 def process_transaction_action(request, tx_id):
-    """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
-        
+    """Protects local directories from boundary traversal during destructive rollbacks."""
+    if request.method != "POST": return JsonResponse({"error": "POST required"}, status=405)
+
     def _execute_sync_action_logic():
         try:
             tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
             action = json.loads(request.body).get("action", "").upper()
+            base_dir = os.path.abspath(getattr(settings, "BASE_DIR", os.getcwd()))
 
             if action == "APPROVE":
                 from aurora.minions.automation_utilities import WorkspaceAutomationRunner
                 runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
                 for cmd in tx.commands.all():
-                    if cmd.macro == "/page" and cmd.arguments:
-                        async_to_sync(runner.execute_page_command)(cmd.arguments)
-                    elif cmd.macro == "/api" and cmd.arguments:
-                        async_to_sync(runner.execute_api_command)(cmd.arguments)
+                    if cmd.macro == "/page": async_to_sync(runner.execute_page_command)(cmd.arguments)
+                    elif cmd.macro == "/api": async_to_sync(runner.execute_api_command)(cmd.arguments)
                 tx.status = 'EXECUTED'
                 tx.save()
-                return {"status": "SUCCESS", "message": "Transaction executed and files written."}
+                return {"status": "SUCCESS", "message": "Assets written."}
 
             elif action == "DESTROY":
                 for cmd in tx.commands.all():
                     for file_path in cmd.affected_files:
-                        full_path = os.path.join(getattr(settings, "BASE_DIR", os.getcwd()), file_path)
-                        if os.path.exists(full_path):
-                            os.remove(full_path)
+                        if not file_path: continue
+                        full_path = os.path.abspath(os.path.join(base_dir, file_path))
+                        if not full_path.startswith(base_dir) or full_path == base_dir: continue
+                        if os.path.exists(full_path) and os.path.isfile(full_path): os.remove(full_path)
                 tx.status = 'ROLLED_BACK'
                 tx.save()
-                return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
-
-            return {"error": "Invalid action context", "status_code": 400}
-        except WorkspaceTransaction.DoesNotExist:
-            return {"error": "Transaction context lookup failure.", "status_code": 404}
-        except Exception as err:
-            return {"error": str(err), "status_code": 500}
+                return {"status": "SUCCESS", "message": "Assets purged cleanly."}
+            return {"error": "Invalid action"}, 400
+        except Exception as err: return {"error": str(err)}, 500
 
     try:
         loop = asyncio.get_running_loop()
-        is_async_context = True
+        result = async_to_sync(async lambda: await sync_to_async(_execute_sync_action_logic, thread_sensitive=False)())()
     except RuntimeError:
-        is_async_context = False
-
-    if is_async_context:
-        async def run_in_thread():
-            return await sync_to_async(_execute_sync_action_logic, thread_sensitive=False)()
-        result = async_to_sync(run_in_thread)()
-    else:
         result = _execute_sync_action_logic()
-    
-    if "error" in result:
-        return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
     return JsonResponse(result)
-```
-
-## 6. System Dispatch Mappings (`aurora/urls.py`)
-```python
-# aurora/urls.py (PATCH 1 OF 1)
-from django.urls import path
-from aurora import api as api_commands
-
-urlpatterns = [
-    # ... previous routes ...
-    path('api/wu_chat/', api_commands.wu_chat_endpoint, name='wu_chat_endpoint'),
-    path('api/transaction/<uuid:tx_id>/action/', api_commands.process_transaction_action, name='process_transaction_action'),
-]
-```
 # ======================================================================
-# END: VIEW_ENDPOINTS_AND_URL_ROUTING_BLUEPRINT (CHUNK 3 OF 5)
+# END: BACKEND_ENDPOINT_VIEWS (PATCH 3B OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: project.md (CHUNK 4 OF 5)
-# START: FRONTEND_COCKPIT_SNIPPETS_AND_LAYERS
+# FILE: project.md (PATCH 4 OF 5)
+# START: VIEW_LAYOUT_COCKPIT_PANEL
 # ======================================================================
 
-## 7. Split Layout Cockpit Panel (`aurora/templates/aurora/snippets/wu_chat_console_panel.html`)
-
+## 5. View Layout Cockpit Panel (`aurora/templates/aurora/snippets/wu_chat_console_panel.html`)
 ```html
-<!-- aurora/templates/aurora/snippets/wu_chat_console_panel.html (PATCH 1 OF 1) -->
-<div class="d-flex flex-column h-100 w-100" style="box-sizing: border-box; min-height: 0; background-color: #000000;">
-  
-  <!-- Top Section: Core Split Interaction Working Grid Matrix -->
-  <div class="d-flex flex-row flex-grow-1 gap-2 style-container" style="min-height: 0; padding-bottom: 4px;">
-    
-    <!-- LEFT PANEL: Chat Input Deck for Commander Wu (66.66% Proportions Layout) -->
-    <div class="d-flex flex-column h-100" style="width: 66.66%; min-width: 0; padding-right: 4px;">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="text-uppercase font-weight-bold font-monospace text-warning small" style="letter-spacing: 1px;">💬 Command Input Deck: Wu (70B Orchestrator)</span>
-      </div>
-      
-      <!-- Scrollable message log canvas rendering dialog bubble nodes -->
-      <div id="wu-chat-history-log" class="flex-grow-1 p-2 rounded mb-2 d-flex flex-column gap-2" style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;">
-        <div class="text-muted font-monospace small px-2 py-1 align-self-center rounded bg-dark border border-secondary" style="font-size: 0.75rem;">
-          Secure sub-space link active. Transmit instructions to engage the minion fleet.
+<div class="container-fluid h-100 p-0 text-white" style="box-sizing: border-box; background-color: #000000; overflow: hidden;">
+    <div class="row h-100 m-0 g-2" style="min-height: 0;">
+        <div class="col-8 d-flex flex-column h-100 py-2" style="min-width: 0;">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-shrink-0">
+                <span class="text-uppercase font-weight-bold font-monospace text-warning small">💬 Command Input Deck: Wu (70B Orchestrator)</span>
+            </div>
+            <div id="wu-chat-history-log" class="flex-grow-1 p-2 rounded mb-2 d-flex flex-column gap-2" style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;"></div>
+            <div class="d-flex flex-column gap-2 flex-shrink-0" style="height: 120px;">
+                <textarea id="wu-human-delta-notes-input" class="form-control h-100 p-2 font-monospace" style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5;" placeholder="Input human design intentions..."></textarea>
+                <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2">Transmit to Commander Wu</button>
+            </div>
         </div>
-      </div>
 
-      <!-- Modified text input deck strictly for human intentions drafting -->
-      <div class="d-flex flex-column gap-2" style="height: 120px; shrink: 0;">
-        <textarea id="wu-human-delta-notes-input" class="form-control h-100 p-2 font-monospace" style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5; font-size: 0.85rem; resize: none;" placeholder="Input human design intentions (Delta Notes) to request an orchestral strategy break-down..."></textarea>
-        <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2" style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;">Transmit to Commander Wu</button>
-      </div>
+        <div class="col-4 d-flex flex-column h-100 py-2 border-start" style="border-color: #1f1f23 !important; min-width: 0;">
+            <div class="d-flex flex-column mb-2 pb-2 flex-shrink-0" style="border-bottom: 1px solid #1f1f23;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-uppercase font-weight-bold font-monospace text-muted small">📡 Fleet Telemetry Output Stream</span>
+                </div>
+                <div class="d-flex flex-column gap-1 mt-1 p-2 rounded flex-shrink-0" style="background-color: #09090b; border: 1px solid #1f1f23; font-family: monospace; font-size: 0.75rem;">
+                    <div class="d-flex justify-content-between text-muted"><span>TPM CAPACITOR:</span><span id="fuel-tpm-readout" class="text-warning">100% (Idle)</span></div>
+                    <div class="progress" style="height: 4px; background-color: #1c1917;"><div id="fuel-tpm-bar" class="progress-bar bg-warning" style="width: 0%"></div></div>
+                    <div class="d-flex justify-content-between text-muted mt-1"><span>DAILY RPD QUOTA:</span><span id="fuel-rpd-readout" class="text-info">100% (Stable)</span></div>
+                    <div class="progress" style="height: 4px; background-color: #1c1917;"><div id="fuel-rpd-bar" class="progress-bar bg-info" style="width: 0%"></div></div>
+                </div>
+            </div>
+            <div id="wu-telemetry-screen-output" class="flex-grow-1 p-2 rounded" style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;"></div>
+        </div>
     </div>
-
-    <!-- RIGHT PANEL: Real-Time Stream Telemetry Console (33.33% Proportions Layout) -->
-    <div class="d-flex flex-column h-100" style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="text-uppercase font-weight-bold font-monospace text-muted small" style="letter-spacing: 1px; color: #888888;">📡 Fleet Telemetry Output Stream</span>
-        <button id="clear-wu-telemetry-btn" class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace" style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;">Flush Logs</button>
-      </div>
-      <div id="wu-telemetry-screen-output" class="flex-grow-1 p-2 rounded" style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;">
-        <div class="text-info font-monospace small">[SYSTEM] Telemetry pipeline deck initialized...</div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Safety Verification Gate Drawer block at the bottom of the cockpit template layout canvas -->
-  <div id="wu-pending-transaction-drawer" class="d-none p-2 mt-1 rounded animate-fade-in" style="background-color: #09090b; border: 1px solid #27272a; font-family: monospace;">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="d-flex flex-column">
-        <span class="text-uppercase text-danger fw-bold small" style="letter-spacing: 1px;">⚠️ Safety Gating Lockout Enabled</span>
-        <span class="text-muted small" style="font-size: 0.75rem;">Orchestrator returned commands. Awaiting authorization before mutating local project files.</span>
-      </div>
-      <div class="d-flex gap-2">
-        <button id="wu-action-approve-btn" class="btn btn-success btn-xs font-monospace font-weight-bold text-uppercase px-3 py-1" style="font-size: 0.75rem;">Approve and Write</button>
-        <button id="wu-action-destroy-btn" class="btn btn-danger btn-xs font-monospace font-weight-bold text-uppercase px-3 py-1" style="font-size: 0.75rem;">Destroy / Rollback</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 ```
 # ======================================================================
-# END: FRONTEND_COCKPIT_SNIPPETS_AND_LAYERS (CHUNK 4 OF 5)
+# END: VIEW_LAYOUT_COCKPIT_PANEL (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: project.md (CHUNK 5 OF 5)
+# FILE: project.md (PATCH 5 OF 5)
 # START: BROWSER_STREAMING_CONTROLLER_SCRIPTS
 # ======================================================================
 
-## 8. Client Interaction Logic Engine (`aurora/static/aurora/js/wu_chat.js`)
-
+## 6. Client Interaction Logic Engine (`aurora/static/aurora/js/wu_chat.js`)
 ```javascript
-// aurora/static/aurora/js/wu_chat.js (PATCH 1-3 OF 3)
 function initWuChatConsole(endpoints, csrfToken) {
-  const inputField = ('#wu-human-delta-notes-input');
-  const transmitBtn = ('#transmit-to-wu-btn');
-  const telemetryLog = ('#wu-telemetry-screen-output');
-  const chatHistory = ('#wu-chat-history-log');
-  
-  const approvalDrawer = ('#wu-pending-transaction-drawer');
-  const approveBtn = ('#wu-action-approve-btn');
-  const destroyBtn = ('#wu-action-destroy-btn');
-  
-  let activeTransactionId = null;
-  let \$currentWuBubble = null;
+    const inputField = \$('#wu-human-delta-notes-input');
+    const transmitBtn = \$('#transmit-to-wu-btn');
+    const telemetryLog = \$('#wu-telemetry-screen-output');
+    const chatHistory = \$('#wu-chat-history-log');
+    const approvalDrawer = \$('#wu-pending-transaction-drawer');
 
-  if (!\$transmitBtn.length) return;
+    let activeTransactionId = null;
 
-  function handleIncomingStreamData(rawData) {
-    let rawStringContent = "";
+    transmitBtn.on('click', function(e) {
+        e.preventDefault();
+        const deltaNotesText = inputField.val().trim();
+        if (!deltaNotesText) return;
 
-    if (typeof rawData === 'object' && rawData !== null) {
-      rawStringContent = JSON.stringify(rawData);
-    } else if (typeof rawData === 'string') {
-      rawStringContent = rawData.trim();
-    }
+        \$.ajax({
+            url: endpoints.wu_chat_endpoint,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ delta_notes: deltaNotesText }),
+            headers: { 'X-CSRFToken': csrfToken },
+            success: function(response) {
+                if (response.status === 'wu_is_processing') {
+                    if (response.fuel_gauge) {
+                        const fg = response.fuel_gauge;
+                        const tpmRemainingPct = (100 - fg.tokens_used_pct).toFixed(1);
+                        \$('#fuel-tpm-bar').css('width', fg.tokens_used_pct + '%');
+                        \$('#fuel-tpm-readout').text(`${tpmRemainingPct}% (${fg.tokens_remaining.toLocaleString()} Rem)`);
 
-    // Intercept structured json tokens via substring matching to handle ambient channel data noise
-    if (rawStringContent.includes('"event":') || rawStringContent.includes('wu_chat_')) {
-      try {
-        if (rawStringContent.includes('wu_chat_complete')) {
-          appendSystemAlert('📡 [SYSTEM]: Orchestrator response transaction complete.');
-          \$currentWuBubble = null;
-          resetInputControls();
-          return;
-        }
-
-        const tokenMatch = rawStringContent.match(/"text"\s*:\s*"(.*?)"/);
-        if (tokenMatch && tokenMatch[1]) {
-          const processedText = tokenMatch[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-          
-          if (!\$currentWuBubble) {
-            currentWuBubble = ('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-            chatHistory.append(currentWuBubble);
-          }
-          \$currentWuBubble.append(document.createTextNode(processedText));
-          chatHistory.scrollTop(chatHistory[0].scrollHeight);
-          return;
-        }
-      } catch (innerErr) {}
-    }
-
-    // Standard log terminal streaming fallback filter
-    if (rawStringContent.trim() && !rawStringContent.includes('"event":')) {
-      const lineNode = ('<div style="margin-bottom: 2px; color: #a3a3a3;"></div>').text(rawStringContent);
-      telemetryLog.append(lineNode);
-      telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
-    }
-  }
-
-  \$(document).on('aurora:telemetry_stream_received', function(event, data) {
-    handleIncomingStreamData(data);
-  });
-
-  if (window.telemetrySocket) {
-    window.telemetrySocket.onmessage = function(e) {
-      handleIncomingStreamData(e.data);
-    };
-  }
-
-  \$transmitBtn.on('click', function(e) {
-    e.preventDefault();
-    const deltaNotesText = \$inputField.val().trim();
-    if (!deltaNotesText) {
-      appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
-      return;
-    }
-
-    \$approvalDrawer.addClass('d-none');
-    activeTransactionId = null;
-
-    const userBubble = ('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
-    chatHistory.append(userBubble);
-    chatHistory.scrollTop(chatHistory[0].scrollHeight);
-
-    \(inputField.val('').prop('disabled', true);\)transmitBtn.prop('disabled', true).text('PROCESSING STRATEGY LOOP...');
-    appendSystemAlert('🚀 [SYSTEM] Transmitting design intentions to Commander Wu...');
-
-    \$.ajax({
-      url: endpoints.wu_chat_endpoint,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ delta_notes: deltaNotesText }),
-      headers: { 'X-CSRFToken': csrfToken },
-      success: function(response) {
-        if (response.status === 'wu_is_processing') {
-          const finalOutputText = response.direct_text_output || "No explicit response text returned.";
-          const wuBubble = ('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-          \$wuBubble.append(document.createTextNode(finalOutputText));
-          chatHistory.append(wuBubble);
-          chatHistory.scrollTop(chatHistory[0].scrollHeight);
-          
-          if (response.transaction_id) {
-            activeTransactionId = response.transaction_id;
-            \$approvalDrawer.removeClass('d-none');
-            appendSystemAlert('⚠️ [SAFETY GATE] Orchestration completed. Awaiting file modification permissions...');
-          }
-        } else {
-          appendSystemAlert(`💥 [SYSTEM ERROR] Unexpected response status: ${response.status}`);
-        }
-        resetInputControls();
-      },
-      error: function(xhr) {
-        let errorText = 'Unknown API Fault.';
-        try {
-          const parsed = JSON.parse(xhr.responseText);
-          errorText = parsed.error || errorText;
-        } catch(e) {}
-        appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
-        resetInputControls();
-      }
+                        const rpdRemainingPct = (100 - fg.requests_used_pct).toFixed(1);
+                        \$('#fuel-rpd-bar').css('width', fg.requests_used_pct + '%');
+                        \$('#fuel-rpd-readout').text(`${rpdRemainingPct}% (${fg.requests_remaining.toLocaleString()} Rem)`);
+                    }
+                    if (response.transaction_id) {
+                        activeTransactionId = response.transaction_id;
+                        approvalDrawer.removeClass('d-none');
+                    }
+                }
+            }
+        });
     });
-  });
-
-  \$approveBtn.on('click', function() {
-    executeTransactionAction('APPROVE', '🛠️ [SYSTEM] Authorizing file creation scripts...');
-  });
-
-  \$destroyBtn.on('click', function() {
-    executeTransactionAction('DESTROY', '🛑 [SYSTEM] Triggering surgical asset rollback execution sequence...');
-  });
-
-  function executeTransactionAction(actionName, systemLogMessage) {
-    if (!activeTransactionId) return;
-    
-    appendSystemAlert(systemLogMessage);
-    \$approvalDrawer.addClass('d-none');
-
-    const actionUrl = `/aurora/api/transaction/${activeTransactionId}/action/`;
-
-    \$.ajax({
-      url: actionUrl,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ action: actionName }),
-      headers: { 'X-CSRFToken': csrfToken },
-      success: function(response) {
-        if (response.status === 'SUCCESS') {
-          appendSystemAlert(`✅ [ACTION SUCCESS]: ${response.message}`);
-        } else {
-          appendSystemAlert(`💥 [ACTION FAULT]: Request failed context response.`);
-        }
-        resetInputControls();
-      },
-      error: function(xhr) {
-        appendSystemAlert('💥 [ACTION FAULT]: Error communicating with verification endpoint nodes.');
-        resetInputControls();
-      }
-    });
-  }
-
-  function resetInputControls() {
-    \(transmitBtn.prop('disabled', false).text('Transmit to Commander Wu');\)inputField.prop('disabled', false).val('').focus();
-  }
-
-  function appendSystemAlert(message) {
-    const lineNode = ('<div style="margin-bottom: 4px; color: #38bdf8;"></div>').text(message);
-    telemetryLog.append(lineNode);
-    telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
-  }
-
-  \$(document).on('aurora:telemetry_stream_ended', function() {
-    resetInputControls();
-  });
 }
 ```
 # ======================================================================
-# END: BROWSER_STREAMING_CONTROLLER_SCRIPTS (CHUNK 5 OF 5)
+# END: BROWSER_STREAMING_CONTROLLER_SCRIPTS (PATCH 5 OF 5)
 # ======================================================================

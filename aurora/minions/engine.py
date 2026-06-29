@@ -25,14 +25,14 @@ class MinionRunner:
 
     async def query_groq_llm_stream(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3):
         """
-        Asynchronously streams completion tokens natively from the Groq SDK engine.
-        Guarantees that any server rejections or validation faults bubble straight up to the UI.
+        Asynchronously streams completion tokens natively from the Groq SDK engine,
+        capturing real-time HTTP rate-limit response headers via context management.
         """
         sys.stdout.write(f"📡 [ENGINE] Initializing official AsyncGroq transaction stream using: {model_tag}\n")
         sys.stdout.flush()
         try:
-            # Native SDK async stream completion loop configuration
-            stream = await self.client.chat.completions.create(
+            # Native stream initialization via official with_streaming_response hook
+            async with self.client.chat.completions.with_streaming_response.create(
                 model=model_tag,
                 messages=[
                     {"role": "system", "content": system_directive},
@@ -40,16 +40,21 @@ class MinionRunner:
                 ],
                 temperature=temperature,
                 stream=True
-            )
-            # FIX: Ensure streaming chunks are parsed via the choices list index format 
-            # safely to align with actual Groq SDK real-time iterator models.
-            async for chunk in stream:
-                if chunk.choices and len(chunk.choices) > 0:
-                    token = chunk.choices[0].delta.content
-                    if token:
-                        yield token
+            ) as response:
+                
+                # Capture the live server HTTP response headers from the stream context wrapper
+                self.last_response_headers = dict(response.headers)
+                
+                # FIX: Await the response parsing coroutine to reveal the underlying chunk iterator
+                parsed_stream = await response.parse()
+                
+                async for chunk in parsed_stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        token = chunk.choices[0].delta.content
+                        if token:
+                            yield token
+                        
         except GroqError as groq_err:
-            # Surgically catch and print exact cloud API parameter or endpoint authentication faults
             yield f"\n🛑 [GROQ GATEWAY REJECTION] The SDK caught an operational error!\nDETAILS: {str(groq_err)}\n"
             return
         except Exception as system_err:
@@ -87,7 +92,6 @@ class MinionRunner:
             async for token in self.run_minion_task_stream(minion_name, task_input):
                 tokens.append(token)
             return "".join(tokens)
-            
         return async_to_sync(_gather_stream_tokens)()
 # ======================================================================
 # END: ASYNC_STREAMING_GROQ_FLEET_ENGINE (PATCH 1 OF 1)

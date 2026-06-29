@@ -24,7 +24,7 @@ from .dev_streamer_api import async_send_to_console
 # START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 def process_wu_logic_synchronous(user_delta_notes, user):
-    """Generates the full Groq execution plan and records pending tracking blocks."""
+    """Generates the full Groq execution plan and records pending tracking blocks with live metrics."""
     try:
         runner = MinionRunner()
         try:
@@ -56,6 +56,38 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         thread.start()
         thread.join()
 
+        # METRICS HARVESTER LAYER: Read the newly exposed live server response dictionary
+        groq_headers = getattr(runner, "last_response_headers", {})
+
+        def get_header_val(keys_list, default_val):
+            for k in keys_list:
+                if k in groq_headers:
+                    return int(groq_headers[k])
+                if k.lower() in groq_headers:
+                    return int(groq_headers[k.lower()])
+            return default_val
+
+        # FIX: Dynamically track account limits to calculate real consumption percentages
+        t_limit = get_header_val(["x-ratelimit-limit-tokens", "X-RateLimit-Limit-Tokens"], 60000)
+        t_rem = get_header_val(["x-ratelimit-remaining-tokens", "X-RateLimit-Remaining-Tokens"], t_limit)
+        
+        # Read the genuine tier ceiling sent by Groq instead of assuming 14,400
+        r_limit = get_header_val(["x-ratelimit-limit-requests", "X-RateLimit-Limit-Requests"], 1000)
+        r_rem = get_header_val(["x-ratelimit-remaining-requests", "X-RateLimit-Remaining-Requests"], r_limit - 1)
+
+        # Calculate exact percentage of allocation consumed to drive the progress bar width correctly
+        tokens_used_pct = round(((t_limit - t_rem) / t_limit) * 100, 1) if t_limit > 0 else 0.0
+        requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
+
+        fuel_gauge_metrics = {
+            "tokens_limit": t_limit,
+            "tokens_remaining": t_rem,
+            "tokens_used_pct": min(100.0, max(0.0, tokens_used_pct)),
+            "requests_limit": r_limit,
+            "requests_remaining": r_rem,
+            "requests_used_pct": min(100.0, max(0.0, requests_used_pct))
+        }
+
         transaction = WorkspaceTransaction.objects.create(
             user=user,
             prompt_context=user_delta_notes,
@@ -68,14 +100,11 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             parts = command_string.strip().split()
             if not parts:
                 continue
-                
             macro = parts[0].lower().strip()
             predicted_files = []
             clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
-            
             if not clean_arg:
                 continue
-
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
@@ -89,7 +118,12 @@ def process_wu_logic_synchronous(user_delta_notes, user):
                 execution_order=index
             )
 
-        return {"status": "SUCCESS", "wu_response": complete_response_text, "transaction_id": str(transaction.id)}
+        return {
+            "status": "SUCCESS", 
+            "wu_response": complete_response_text, 
+            "transaction_id": str(transaction.id),
+            "fuel_gauge": fuel_gauge_metrics
+        }
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
 # ======================================================================
@@ -109,12 +143,21 @@ def wu_chat_endpoint(request):
             delta_notes = data.get("delta_notes", "").strip()
             if not delta_notes:
                 return JsonResponse({"error": "Empty delta notes provided"}, status=400)
+                
             result = process_wu_logic_synchronous(delta_notes, request.user)
             if result["status"] == "ERROR":
                 return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
-            return JsonResponse({"status": "wu_is_processing", "direct_text_output": result["wu_response"], "transaction_id": result["transaction_id"]})
+                
+            # FIX: Forward the fuel_gauge nested metrics data out to the console interface
+            return JsonResponse({
+                "status": "wu_is_processing", 
+                "direct_text_output": result["wu_response"], 
+                "transaction_id": result["transaction_id"],
+                "fuel_gauge": result.get("fuel_gauge", {})
+            })
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
+            
     return JsonResponse({"error": "POST required"}, status=405)
 # ======================================================================
 # END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 4)
