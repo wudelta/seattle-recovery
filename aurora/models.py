@@ -4,7 +4,7 @@
 # ======================================================================
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 # ======================================================================
 # END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 6)
@@ -43,7 +43,6 @@ class ComponentRegistry(models.Model):
         ('PUBLIC', 'Public Access Node'),
         ('PRIVATE', 'Private Protected Node'),
     ]
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
     name = models.CharField(max_length=255)
@@ -51,23 +50,22 @@ class ComponentRegistry(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
+    
+    # Fix: Overwrite 'User' with 'settings.AUTH_USER_MODEL' to resolve the scope break
     created_by = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        related_name='forged_assets',
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name='forged_assets', 
         help_text="The authenticated developer who authorized the execution string."
     )
+    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     description = models.TextField(
-        blank=True,
-        help_text="Primary unified summary of what this component module executes."
+        blank=True, help_text="Primary unified summary of what this component module executes."
     )
-    # Structural Upgrade: Changed default from list to dict for dictionary key value maps
     description_audiences = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Stores segregated documentation data blocks: developer_docs, stakeholder_docs, end_user_docs."
+        default=dict, blank=True, help_text="Stores segregated documentation data blocks: developer_docs, stakeholder_docs, end_user_docs."
     )
 
     class Meta:
@@ -78,7 +76,6 @@ class ComponentRegistry(models.Model):
         """Helper loop to safely write or update a specific audience documentation block."""
         if not isinstance(self.description_audiences, dict):
             self.description_audiences = {}
-        # Available tracks: 'developer_docs', 'stakeholder_docs', 'end_user_docs'
         self.description_audiences[track] = content
         self.save()
 
@@ -94,23 +91,20 @@ class ComponentRegistry(models.Model):
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
-    
     class ApplicationChoices(models.TextChoices):
         AURORA = 'aurora', 'Aurora'
         HOPEHUB = 'hopehub', 'HopeHub'
-
+        
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
-    # New application restriction field
     application = models.CharField(
-        max_length=10,
-        choices=ApplicationChoices.choices,
-        default=ApplicationChoices.AURORA
+        max_length=10, choices=ApplicationChoices.choices, default=ApplicationChoices.AURORA
     )
-    
     title = models.CharField(max_length=255)
     html_content = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    
+    # Fix: Point relation to the active swapped settings model
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
@@ -126,8 +120,7 @@ class StaticContent(models.Model):
 # ======================================================================
 class DeltaDirectives(models.Model):
     """
-    Standalone configuration engine storing system instructions, prompts, and 
-    model processing boundaries for your AI minion fleet.
+    Standalone configuration engine storing system instructions, prompts, and model processing boundaries for your AI minion fleet.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     directive_name = models.CharField(max_length=255, unique=True, db_index=True)
@@ -135,10 +128,9 @@ class DeltaDirectives(models.Model):
     constraints = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
     
-    # HARDENED: Made field strictly non-nullable now that data is backfilled
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    # Fix: Point relation to the active swapped settings model
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     
-    # HARDENED: Formally renamed tracking fields to match standalone schemas
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
@@ -202,29 +194,24 @@ class DeltaDirectives(models.Model):
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
-    Tracks daily developer intentions, active task execution blocks, and
-    accumulated focus time per session window.
+    Tracks daily developer intentions, active task execution blocks, and accumulated focus time per session window.
     """
+    # Fix: Point relation to the active swapped settings model
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='delta_notes',
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='delta_notes', 
         help_text="The developer compiling this active workspace iteration note."
     )
     text = models.TextField(blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     processed = models.BooleanField(default=False)
-
-    # Timer Core Mechanics:
     total_seconds_logged = models.PositiveIntegerField(
-        default=0,
-        help_text="Total accumulated active focus time recorded in seconds."
+        default=0, help_text="Total accumulated active focus time recorded in seconds."
     )
     last_started_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Timestamp when the active session timer toggle was engaged."
+        null=True, blank=True, help_text="Timestamp when the active session timer toggle was engaged."
     )
 
     class Meta:
@@ -251,7 +238,14 @@ class WorkspaceTransaction(models.Model):
         ('REJECTED', 'Rejected by User')
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workspace_transactions')
+    
+    # Fix: Point relation to the active swapped settings model
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='workspace_transactions'
+    )
+    
     prompt_context = models.TextField(help_text="The original delta_notes that triggered this request.")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     date_created = models.DateTimeField(auto_now_add=True)
@@ -259,7 +253,6 @@ class WorkspaceTransaction(models.Model):
 
     def __str__(self):
         return f"Transaction #{self.id} ({self.status}) - {self.user.username}"
-
 
 class TrackedCommand(models.Model):
     """Surgically details individual slash commands and logs the file paths they touched."""

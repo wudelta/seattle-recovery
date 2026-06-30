@@ -18,17 +18,30 @@ django_asgi_app = get_asgi_application()
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
-import aurora.routing
+from django.conf import settings
 
 # 4. Wrap HTTP endpoints inside the development asset styling serve handler
 django_static_asgi_app = ASGIStaticFilesHandler(django_asgi_app)
 
-# 5. Lock in the unified protocol routing gateway table
+# 5. Dynamically isolate WebSocket routing tables based on active configurations
+websocket_routes = []
+
+if 'aurora' in settings.INSTALLED_APPS:
+    import aurora.routing
+    websocket_routes = aurora.routing.websocket_urlpatterns
+elif 'hopehub' in settings.INSTALLED_APPS:
+    try:
+        import hopehub.routing
+        websocket_routes = hopehub.routing.websocket_urlpatterns
+    except ImportError:
+        pass  # Gracefully fall back if Hopehub has no custom sockets yet
+
+# 6. Lock in the unified protocol routing gateway table
 application = ProtocolTypeRouter({
     "http": django_static_asgi_app,
     "websocket": AuthMiddlewareStack(
         URLRouter(
-            aurora.routing.websocket_urlpatterns
+            websocket_routes
         )
     ),
 })

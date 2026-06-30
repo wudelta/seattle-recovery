@@ -52,11 +52,9 @@ services:
   redis_broker:
     image: redis:7-alpine
     container_name: seattle_redis
-    # FIX: Explicitly bind to 0.0.0.0 and disable protected-mode 
-    # to force Redis to accept cross-container traffic inside the recovery_net mesh
     command: redis-server --bind 0.0.0.0 --protected-mode no
     ports:
-      - "6379:6379" 
+      - "6379:6379"
     deploy:
       resources:
         limits:
@@ -69,14 +67,18 @@ services:
       - recovery_net
     restart: always
 
-  django_app:
+  # Isolated Runtime Layer: Aurora App Builder
+  django_aurora:
     build: .
-    container_name: seattle_django
+    container_name: seattle_django_aurora
     user: "root"
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=core_logic.settings_aurora
+      - DB_NAME=aurora_db
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -85,7 +87,41 @@ services:
       - postgres
       - neo4j
       - redis_broker
-      - python_sandbox_cache # Force image verification right as the container stacks boot up
+      - python_sandbox_cache
+    deploy:
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 512M
+    networks:
+      - recovery_net
+
+  # Isolated Runtime Layer: Hopehub Application (Cloud Candidate)
+  django_hopehub:
+    build: .
+    container_name: seattle_django_hopehub
+    user: "root"
+    ports:
+      - "8001:8000"  # Exposed on local port 8001
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=core_logic.settings_hopehub
+      - DB_NAME=hopehub_db
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - postgres
+      - neo4j
+      - redis_broker
+      - python_sandbox_cache
+    deploy:
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 512M
     networks:
       - recovery_net
 
@@ -95,15 +131,14 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Mount the static files volume shared directly with the django_app container
       - static_volume:/app/staticfiles:ro
     depends_on:
-      - django_app
+      - django_aurora
+      - django_hopehub
     networks:
       - recovery_net
     restart: always
 
-  # Companion container image cache enforcement layer
   python_sandbox_cache:
     image: python:3.11-slim
     restart: "no"
