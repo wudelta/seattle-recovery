@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: core_logic/settings.py (PATCH 1 OF 3)
+# FILE: core_logic/settings.py (PATCH 1 OF 3 ALTERATION)
 # START: ENVIRONMENT INITIALIZATION & APP MANIFEST REGISTER
 # ======================================================================
 import environ
@@ -8,7 +8,6 @@ import os
 from neomodel import config as neomodel_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 env = environ.Env()
 
 env_file_path = os.path.join(BASE_DIR, '.env')
@@ -21,7 +20,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', default="django-insecure-fallback-key-toke
 DEBUG = env.bool('DEBUG', default=True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', 'django_app', '*'])
 
-# Application definition
+# Baseline system components
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
@@ -35,10 +34,19 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django_neomodel',
     'core_logic',
-    'users',  # Global Custom UUID Authentication Layer
-    'aurora',
-    'hopehub',
+    'users',
 ]
+
+# Structural Split Invariant: Only load the domain app relevant to this running node container
+CURRENT_CONTAINER_TARGET = os.getenv('DB_NAME')
+
+if CURRENT_CONTAINER_TARGET == 'hopehub_db':
+    INSTALLED_APPS.append('hopehub')
+elif CURRENT_CONTAINER_TARGET == 'aurora_db':
+    INSTALLED_APPS.append('aurora')
+else:
+    # Local fallback/management command environment catch
+    INSTALLED_APPS.extend(['aurora', 'hopehub'])
 # ======================================================================
 # END: ENVIRONMENT INITIALIZATION & APP MANIFEST REGISTER (PATCH 1 OF 3)
 # ======================================================================
