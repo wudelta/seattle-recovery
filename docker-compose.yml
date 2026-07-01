@@ -134,12 +134,13 @@ services:
       - "3000:3000"
     volumes:
       - static_volume:/app/staticfiles:ro
+      # Fix: Forcefully mount your updated config file directly over Nginx's internal fallback config
+      - ./webserver/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - django_aurora
       - django_hopehub
     networks:
       - recovery_net
-    restart: always
 
   python_sandbox_cache:
     image: python:3.11-slim
