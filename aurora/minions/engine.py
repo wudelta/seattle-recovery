@@ -48,12 +48,15 @@ class MinionRunner:
         )
 
         try:
-            # Native asynchronous streaming invocation via the official .aio gateway pipeline layer
-            async for response_chunk in self.client.aio.models.generate_content_stream(
+            # FIXED: Explicitly await the stream creation coroutine object before iterating chunks
+            response_stream = await self.client.aio.models.generate_content_stream(
                 model=model_tag,
                 contents=user_prompt,
                 config=config
-            ):
+            )
+
+            # Process the active, initialized stream iterator smoothly
+            async for response_chunk in response_stream:
                 # Update usage tracking records dynamically if returned within chunk objects
                 if hasattr(response_chunk, 'usage_metadata') and response_chunk.usage_metadata:
                     self.last_tokens_consumed = response_chunk.usage_metadata.total_token_count

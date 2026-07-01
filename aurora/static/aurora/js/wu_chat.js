@@ -10,7 +10,6 @@ function initWuChatConsole(endpoints, csrfToken) {
     const approvalDrawer = $('#wu-pending-transaction-drawer');
     const approveBtn = $('#wu-action-approve-btn');
     const destroyBtn = $('#wu-action-destroy-btn');
-    
     let activeTransactionId = null;
     let $currentWuBubble = null;
 
@@ -24,29 +23,9 @@ function initWuChatConsole(endpoints, csrfToken) {
             rawStringContent = rawData.trim();
         }
 
-        if (rawStringContent.includes('"event":') || rawStringContent.includes('wu_chat_')) {
-            try {
-                if (rawStringContent.includes('wu_chat_complete')) {
-                    appendSystemAlert('📡 [SYSTEM]: Orchestrator response transaction complete.');
-                    $currentWuBubble = null;
-                    resetInputControls();
-                    return;
-                }
-                const tokenMatch = rawStringContent.match(/"text"\s*:\s*"(.*?)"/);
-                if (tokenMatch && tokenMatch[1]) {
-                    const processedText = tokenMatch[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-                    if (!$currentWuBubble) {
-                        $currentWuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-                        chatHistory.append($currentWuBubble);
-                    }
-                    $currentWuBubble.append(document.createTextNode(processedText));
-                    chatHistory.scrollTop(chatHistory[0].scrollHeight);
-                    return;
-                }
-            } catch (innerErr) {}
-        }
-
-        if (rawStringContent.trim() && !rawStringContent.includes('"event":')) {
+        // REMOVED legacy Groq WebSocket text match conditionals.
+        // Pure text string operations fall cleanly directly to our telemetry view logs monitor.
+        if (rawStringContent.trim()) {
             const lineNode = $('<div style="margin-bottom: 2px; color: #a3a3a3;"></div>').text(rawStringContent);
             telemetryLog.append(lineNode);
             telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
@@ -70,75 +49,87 @@ function initWuChatConsole(endpoints, csrfToken) {
 // FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
 // START: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
-transmitBtn.on('click', function(e) {
-    e.preventDefault();
-    const deltaNotesText = inputField.val().trim();
-    if (!deltaNotesText) {
-        appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
-        return;
-    }
-    approvalDrawer.addClass('d-none');
-    activeTransactionId = null;
-
-    const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
-    chatHistory.append(userBubble);
-    chatHistory.scrollTop(chatHistory[0].scrollHeight);
-
-    inputField.val('').prop('disabled', true);
-    transmitBtn.prop('disabled', true).text('PROCESSING STRATEGY LOOP...');
-    appendSystemAlert('🚀 [SYSTEM] Transmitting design intentions to Commander Wu...');
-
-    // FIX: Natively pull the live security token string directly from the page layout input box
-    const activeToken = csrfToken || $('[name=csrfmiddlewaretoken]').val();
-
-    $.ajax({
-        url: endpoints.wu_chat_endpoint,
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ delta_notes: deltaNotesText }),
-        headers: { 'X-CSRFToken': activeToken },
-        success: function(response) {
-            if (response.status === 'wu_is_processing') {
-                const finalOutputText = response.direct_text_output || "No explicit response text returned.";
-                const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-                $wuBubble.append(document.createTextNode(finalOutputText));
-                chatHistory.append($wuBubble);
-                chatHistory.scrollTop(chatHistory[0].scrollHeight);
-
-                // FIX: Force rendering evaluations directly onto your progress indicator gauges
-                if (response.fuel_gauge) {
-                    const fg = response.fuel_gauge;
-                    const tpmRemainingPct = (100 - fg.tokens_used_pct).toFixed(1);
-                    const rpdRemainingPct = (100 - fg.requests_used_pct).toFixed(1);
-
-                    $('#fuel-tpm-bar').css('width', fg.tokens_used_pct + '%').attr('aria-valuenow', fg.tokens_used_pct);
-                    $('#fuel-tpm-readout').text(`${tpmRemainingPct}% (${fg.tokens_remaining.toLocaleString()} Rem)`);
-                    
-                    $('#fuel-rpd-bar').css('width', fg.requests_used_pct + '%').attr('aria-valuenow', fg.requests_used_pct);
-                    $('#fuel-rpd-readout').text(`${rpdRemainingPct}% (${fg.requests_remaining.toLocaleString()} Rem)`);
-                }
-
-                if (response.transaction_id) {
-                    activeTransactionId = response.transaction_id;
-                    approvalDrawer.removeClass('d-none');
-                    appendSystemAlert('⚠️ [SAFETY GATE] Orchestration completed. Awaiting file modification permissions...');
-                }
-            } else {
-                appendSystemAlert(`💥 [SYSTEM ERROR] Unexpected response status: ${response.status}`);
-            }
-            resetInputControls();
-        },
-        error: function(xhr) {
-            let errorText = 'Unknown API Fault.';
-            try {
-                const parsed = JSON.parse(xhr.responseText);
-                errorText = parsed.error || errorText;
-            } catch(e) {}
-            appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
-            resetInputControls();
+    transmitBtn.on('click', function(e) {
+        e.preventDefault();
+        const deltaNotesText = inputField.val().trim();
+        if (!deltaNotesText) {
+            appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
+            return;
         }
+
+        approvalDrawer.addClass('d-none');
+        activeTransactionId = null;
+
+        const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
+        chatHistory.append(userBubble);
+        // FIXED: Extract raw DOM reference index array pointer to capture genuine scroll height boundaries safely
+        chatHistory.scrollTop(chatHistory[0].scrollHeight);
+
+        inputField.val('').prop('disabled', true);
+        transmitBtn.prop('disabled', true).text('PROCESSING REASONING LOOP...');
+        appendSystemAlert('🚀 [SYSTEM] Transmitting context frames to Gemini 2.5 Flash Engine...');
+
+        const activeToken = csrfToken || $('[name=csrfmiddlewaretoken]').val();
+
+        $.ajax({
+            url: endpoints.gemini_chat_endpoint,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ 
+                prompt: deltaNotesText,
+                history: gatherLocalChatHistory()
+            }),
+            headers: { 'X-CSRFToken': activeToken },
+            success: function(response) {
+                if (response.status === 'success') {
+                    const finalOutputText = response.reply || "No response received.";
+                    const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
+                    $wuBubble.append(document.createTextNode(finalOutputText));
+                    chatHistory.append($wuBubble);
+                    chatHistory.scrollTop(chatHistory[0].scrollHeight);
+
+                    // Track automated file changes on telemetry logs screen
+                    if (response.mutations && response.mutations.length > 0) {
+                        response.mutations.forEach(function(m) {
+                            appendSystemAlert(`🛠️ [MUTATION]: ${m}`);
+                        });
+                    }
+
+                    // Re-mapped the capacitor fuel gauges to match the new backend token schema values
+                    if (response.fuel_gauge) {
+                        const fg = response.fuel_gauge;
+                        const tpmRemainingPct = (100 - fg.tokens_used_pct).toFixed(1);
+                        const rpdRemainingPct = (100 - fg.requests_used_pct).toFixed(1);
+
+                        $('#fuel-tpm-bar').css('width', fg.tokens_used_pct + '%').attr('aria-valuenow', fg.tokens_used_pct);
+                        $('#fuel-tpm-readout').text(`${tpmRemainingPct}% (${fg.tokens_remaining.toLocaleString()} Rem)`);
+
+                        $('#fuel-rpd-bar').css('width', fg.requests_used_pct + '%').attr('aria-valuenow', fg.requests_used_pct);
+                        $('#fuel-rpd-readout').text(`${rpdRemainingPct}% (${fg.requests_remaining.toLocaleString()} Rem)`);
+                    }
+
+                    if (response.transaction_id) {
+                        activeTransactionId = response.transaction_id;
+                        // FIXED: Swapped invalid removeAs() with standard class extractor hook
+                        approvalDrawer.removeClass('d-none');
+                        appendSystemAlert('⚠️ [SAFETY GATE] Actions queued. Awaiting permissions confirmation...');
+                    }
+                } else {
+                    appendSystemAlert(`💥 [SYSTEM ERROR] Query failure: ${response.message}`);
+                }
+                resetInputControls();
+            },
+            error: function(xhr) {
+                let errorText = 'Unknown API Fault.';
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    errorText = parsed.message || parsed.error || errorText;
+                } catch(e) {}
+                appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
+                resetInputControls();
+            }
+        });
     });
-});
 // ======================================================================
 // END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE (PATCH 2 OF 3)
 // ======================================================================
@@ -160,9 +151,9 @@ transmitBtn.on('click', function(e) {
         appendSystemAlert(systemLogMessage);
         approvalDrawer.addClass('d-none');
         
-        // Corrected path to align exactly with backend urls.py route pattern (no /aurora prefix)
-        const actionUrl = `/api/transaction/${activeTransactionId}/action/`;
-
+        // Aligned perfectly with Nginx proxy route patterns passing directly down to core_logic
+        const actionUrl = `/aurora/api/transaction/${activeTransactionId}/action/`;
+        
         $.ajax({
             url: actionUrl,
             method: 'POST',
@@ -184,6 +175,23 @@ transmitBtn.on('click', function(e) {
         });
     }
 
+    // NEW UTILITY: Scrapes the live DOM message list state to populate Gemini's persistent chat arrays
+    function gatherLocalChatHistory() {
+        const historyArray = [];
+        chatHistory.find('> div').each(function() {
+            const $node = $(this);
+            const textContent = $node.text().trim();
+            if ($node.css('background-color') === 'rgb(24, 24, 27)') {
+                historyArray.push({ role: 'user', text: textContent });
+            } else if ($node.css('background-color') === 'rgb(30, 27, 75)') {
+                // Stripping out the 'Wu: ' identifier prefix token string
+                const cleanedText = textContent.replace(/^Wu:\s*/i, '');
+                historyArray.push({ role: 'model', text: cleanedText });
+            }
+        });
+        return historyArray;
+    }
+
     function resetInputControls() {
         transmitBtn.prop('disabled', false).text('Transmit to Commander Wu');
         inputField.prop('disabled', false).val('').focus();
@@ -192,7 +200,7 @@ transmitBtn.on('click', function(e) {
     function appendSystemAlert(message) {
         const lineNode = $('<div style="margin-bottom: 4px; color: #38bdf8;"></div>').text(message);
         telemetryLog.append(lineNode);
-        telemetryLog.scrollTop(telemetryLog.scrollHeight);
+        telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
     }
 
     $(document).on('aurora:telemetry_stream_ended', function() {

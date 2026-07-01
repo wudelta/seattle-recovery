@@ -1,4 +1,3 @@
-from .new_page_view import NewPageView
 from .landing import hopehub_landing
 from .journal import JournalView
 from .journal import ProcessJournalEntryView
@@ -18,5 +17,4 @@ __all__ = [
     'JournalView',
     'ProcessJournalEntryView',
     'DeleteJournalEntryView',
-    'NewPageView',
 ]
