@@ -121,7 +121,6 @@ def bind_command_endpoint(request):
     """Console bridge endpoint routing raw /bind strings to the standalone handler."""
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
-    
     raw_cmd = request.POST.get("blueprint", "").strip()
     if not raw_cmd.startswith("/bind"):
         return JsonResponse({
@@ -129,11 +128,139 @@ def bind_command_endpoint(request):
             "minion_log": "Invalid console engine routing path. Expected /bind prefix.",
             "validation": {"valid": False, "errors": ["Invalid command format"], "warnings": []}
         })
-    
     parts = [p.strip() for p in raw_cmd.split(" ") if p.strip()]
     from aurora.api.handlers.bind import BindCommandHandler
     handler = BindCommandHandler()
     return handler.execute(request, parts, raw_cmd)
+
+@csrf_exempt
+@login_required
+def aurora_chat_stream(request):
+    """
+    Lightweight, stateless view orchestrating Gemini's 1-million token reasoning 
+    engine with direct automated file mutation loops inside Docker workspace volumes.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    import os
+    import json
+    from google import genai
+    from google.genai import types
+
+    # Setup explicit target paths inside the shared Docker volume
+    DOCKER_SRC_ROOT = "/app"
+
+    def read_workspace_file(filepath: str) -> str:
+        """Reads a target code file from inside the active container mount point."""
+        clean_path = filepath.lstrip("/")
+        absolute_path = os.path.normpath(os.path.join(DOCKER_SRC_ROOT, clean_path))
+        if not absolute_path.startswith(DOCKER_SRC_ROOT):
+            return "Error: Security constraint violation. Path traversal blocked."
+        try:
+            with open(absolute_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            return f"Error reading file {filepath}: {str(e)}"
+
+    def write_workspace_file(filepath: str, content: str) -> str:
+        """Overwrites or instantiates structural Django codebase updates autonomously."""
+        clean_path = filepath.lstrip("/")
+        absolute_path = os.path.normpath(os.path.join(DOCKER_SRC_ROOT, clean_path))
+        if not absolute_path.startswith(DOCKER_SRC_ROOT):
+            return "Error: Security constraint violation. Path traversal blocked."
+        try:
+            os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
+            with open(absolute_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return f"Successfully updated and saved {filepath} inside container storage."
+        except Exception as e:
+            return f"Error writing to file {filepath}: {str(e)}"
+
+    try:
+        # Load incoming payload vectors
+        body_data = json.loads(request.body)
+        user_prompt = body_data.get("prompt")
+        incoming_history = body_data.get("history", [])
+
+        if not user_prompt:
+            return JsonResponse({"status": "error", "message": "Prompt parameter is missing."}, status=400)
+
+        # Pull the gen-lang client secret from container execution parameters
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return JsonResponse({"status": "error", "message": "GEMINI_API_KEY environment variable is unmapped."}, status=500)
+
+        client = genai.Client(api_key=api_key)
+        workspace_tools = [read_workspace_file, write_workspace_file]
+
+        system_instruction = (
+            "You are Aurora, an expert autonomous Django engineering companion. "
+            "You possess strict tools to read and edit the local workspace. "
+            "When altering components, examine them via read_workspace_file first, "
+            "then rewrite them completely with precise syntax."
+        )
+
+        # Build clean execution history arrays mapping straight to Google Cloud models
+        gemini_history = []
+        for msg in incoming_history:
+            role = "user" if msg.get('role') == "user" else "model"
+            gemini_history.append(
+                types.Content(role=role, parts=[types.Part.from_text(text=msg.get('text', ''))])
+            )
+
+        # Initialize the persistent workspace session context tracking loop
+        chat = client.chats.create(
+            model="gemini-2.5-flash",
+            history=gemini_history,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=workspace_tools,
+                temperature=0.1
+            )
+        )
+
+        # Execute text reasoning query
+        response = chat.send_message(user_prompt)
+        mutations_performed = []
+
+        # Execute cascading agent function mutations on local storage
+        if response.function_calls:
+            for call in response.function_calls:
+                tool_output = ""
+                if call.name == "read_workspace_file":
+                    tool_output = read_workspace_file(**call.args)
+                    mutations_performed.append(f"Read {call.args.get('filepath')}")
+                elif call.name == "write_workspace_file":
+                    tool_output = write_workspace_file(**call.args)
+                    mutations_performed.append(f"Mutated {call.args.get('filepath')}")
+
+                # Pass operation outcomes straight back to complete explanations block
+                response = chat.send_message(
+                    types.Part.from_function_response(
+                        name=call.name,
+                        response={"result": tool_output}
+                    )
+                )
+
+        # Export unified state metrics back down to frontend terminal layouts
+        updated_history = []
+        for content in chat.get_history():
+            if content.parts and content.parts[0].text:
+                updated_history.append({
+                    "role": "user" if content.role == "user" else "assistant",
+                    "text": content.parts[0].text
+                })
+
+        return JsonResponse({
+            "status": "success",
+            "reply": response.text,
+            "mutations": mutations_performed,
+            "history": updated_history
+        })
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": f"Agent engine failure: {str(e)}"}, status=500)
 # ======================================================================
 # END: UNLOCKED_COMPONENTS_AND_BIND_COMMAND_ROUTING_VIEW (PATCH 3 OF 3)
 # ======================================================================

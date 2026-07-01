@@ -1,18 +1,19 @@
-# ======================================================================
-# FILE: aurora/agents.py (PATCH 1 OF 2)
-# START: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/agents.py (PATCH 1 OF 2)                                  #
+# START: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE      #
+# ====================================================================== #
 import os
-from groq import Groq
+from google import genai
+from google.genai import types
 
-# Initialize Groq client using environment variable safely
+# Initialize Gemini client using environment variable safely
 # (Bypasses network if only local routing is invoked)
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 AGENT_CONFIGS = {
     "Wu_Orchestrator": {
-        "model": "llama3-70b-8192",
+        "model": "gemini-2.5-flash",
         "temperature": 0.2,
         "system_prompt": (
             "You are Wu, the lead AI software architect for Aurora. "
@@ -20,7 +21,7 @@ AGENT_CONFIGS = {
         )
     },
     "HTML_Minion": {
-        "model": "llama3-8b-8192",
+        "model": "gemini-2.5-flash",
         "temperature": 0.1,
         "system_prompt": (
             "You are the HTML Minion. Generate structural Django templates using fluid Bootstrap 5. "
@@ -28,7 +29,7 @@ AGENT_CONFIGS = {
         )
     },
     "JS_Minion": {
-        "model": "llama3-8b-8192",
+        "model": "gemini-2.5-flash",
         "temperature": 0.1,
         "system_prompt": (
             "You are the JS Minion. Write isolated jQuery scripts inside static/aurora/js/. "
@@ -36,7 +37,7 @@ AGENT_CONFIGS = {
         )
     },
     "API_Minion": {
-        "model": "llama3-8b-8192",
+        "model": "gemini-2.5-flash",
         "temperature": 0.1,
         "system_prompt": (
             "You are the API Minion. Build back-end views inside views/. "
@@ -44,31 +45,38 @@ AGENT_CONFIGS = {
         )
     }
 }
-# ======================================================================
-# END: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE
-# ======================================================================
+# ====================================================================== #
+# END: MODEL ENGINE INITIALIZATION & SUB-AGENT PROMPT ARCHITECTURE      #
+# ====================================================================== #
 
-# ======================================================================
-# FILE: aurora/agents.py (PATCH 2 OF 2)
-# START: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/agents.py (PATCH 2 OF 2)                                  #
+# START: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE           #
+# ====================================================================== #
 def get_system_response(agent_role: str, user_command: str) -> str:
-    """Dispatches processing requests down to explicit Groq inference targets."""
+    """Dispatches processing requests down to explicit Gemini inference targets."""
     if not client:
-        raise ValueError("Groq Client API Key is missing from the environment configuration.")
-        
+        raise ValueError("Gemini Client API Key is missing from the environment configuration.")
+    
     config = AGENT_CONFIGS[agent_role]
-    response = client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": config["system_prompt"]},
-            {"role": "user", "content": user_command}
-        ],
-        model=config["model"],
+    
+    # Configure Gemini content logic attributes
+    gen_config = types.GenerateContentConfig(
+        system_instruction=config["system_prompt"],
         temperature=config["temperature"],
-        # Request native structured data directly when addressing Wu
-        response_format={"type": "json_object"} if agent_role == "Wu_Orchestrator" else None
     )
-    return response.choices.message.content
-# ======================================================================
-# END: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE
-# ======================================================================
+    
+    # Request native structured data directly when addressing Wu
+    if agent_role == "Wu_Orchestrator":
+        gen_config.response_mime_type = "application/json"
+
+    response = client.models.generate_content(
+        model=config["model"],
+        contents=user_command,
+        config=gen_config
+    )
+    
+    return response.text
+# ====================================================================== #
+# END: AGENT PAYLOAD DISPATCH & STRUCTURED COMPLETION ENGINE           #
+# ====================================================================== #

@@ -1,61 +1,72 @@
-# ======================================================================
-# FILE: aurora/minions/engine.py (PATCH 1 OF 1)
-# START: ASYNC_STREAMING_GROQ_FLEET_ENGINE
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/minions/engine.py (PATCH 1 OF 1)                          #
+# START: ASYNC_STREAMING_GEMINI_FLEET_ENGINE                             #
+# ====================================================================== #
 import os
 import sys
 import asyncio
 from django.conf import settings
-from groq import AsyncGroq, GroqError
+from google import genai
+from google.genai import types
+from google.genai.errors import APIError
 from aurora.models import DeltaDirectives
 from asgiref.sync import async_to_sync
 
 class MinionRunner:
-    """Universal Cloud-Driven AI Execution Engine built on the official Groq SDK."""
-
+    """Universal Cloud-Driven AI Execution Engine built on the official modern Google GenAI SDK."""
+    
     def __init__(self):
         # Extract token from Django settings or fallback straight to host environment maps
-        self.api_key = getattr(settings, "GROQ_API_KEY", "") or os.environ.get("GROQ_API_KEY", "")
-        # Initialize the official SDK client asynchronously
-        if self.api_key:
-            self.client = AsyncGroq(api_key=self.api_key)
-        else:
-            # Fallback will let the SDK look for the environment variable automatically
-            self.client = AsyncGroq()
+        self.api_key = getattr(settings, "GEMINI_API_KEY", "") or os.environ.get("GEMINI_API_KEY", "")
+        
+        # Initialize tracking variables to update web user interface metrics gauges
+        self.last_tokens_consumed = 0
+        self.last_rpm_remaining = 14
 
-    async def query_groq_llm_stream(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3):
+        # Initialize the official SDK client
+        if self.api_key:
+            self.client = genai.Client(api_key=self.api_key)
+        else:
+            self.client = genai.Client()
+
+    async def query_gemini_llm_stream(self, model_tag: str, system_directive: str, user_prompt: str, temperature: float = 0.3):
         """
-        Asynchronously streams completion tokens natively from the Groq SDK engine,
-        capturing real-time HTTP rate-limit response headers via context management.
+        Asynchronously streams completion tokens natively from the Google Cloud models, 
+        calculating metrics from chunks without overloading local system threads.
         """
-        sys.stdout.write(f"📡 [ENGINE] Initializing official AsyncGroq transaction stream using: {model_tag}\n")
+        # Remap legacy Groq models out to efficient, cloud-hosted Gemini equivalents
+        if "llama" in model_tag.lower():
+            model_tag = "gemini-2.5-flash"
+
+        sys.stdout.write(f"📡 [ENGINE] Initializing official Async Gemini transaction stream using: {model_tag}\n")
         sys.stdout.flush()
+
+        # Build clean configuration entities wrapping instructions to point to the cloud provider
+        config = types.GenerateContentConfig(
+            system_instruction=system_directive,
+            temperature=temperature,
+        )
+
         try:
-            # Native stream initialization via official with_streaming_response hook
-            async with self.client.chat.completions.with_streaming_response.create(
+            # Native asynchronous streaming invocation via the official .aio gateway pipeline layer
+            async for response_chunk in self.client.aio.models.generate_content_stream(
                 model=model_tag,
-                messages=[
-                    {"role": "system", "content": system_directive},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=temperature,
-                stream=True
-            ) as response:
-                
-                # Capture the live server HTTP response headers from the stream context wrapper
-                self.last_response_headers = dict(response.headers)
-                
-                # FIX: Await the response parsing coroutine to reveal the underlying chunk iterator
-                parsed_stream = await response.parse()
-                
-                async for chunk in parsed_stream:
-                    if chunk.choices and len(chunk.choices) > 0:
-                        token = chunk.choices[0].delta.content
-                        if token:
-                            yield token
-                        
-        except GroqError as groq_err:
-            yield f"\n🛑 [GROQ GATEWAY REJECTION] The SDK caught an operational error!\nDETAILS: {str(groq_err)}\n"
+                contents=user_prompt,
+                config=config
+            ):
+                # Update usage tracking records dynamically if returned within chunk objects
+                if hasattr(response_chunk, 'usage_metadata') and response_chunk.usage_metadata:
+                    self.last_tokens_consumed = response_chunk.usage_metadata.total_token_count
+
+                # Yield structural token chunks out to the calling async consumer stream loop
+                if response_chunk.text:
+                    yield response_chunk.text
+
+            # Decrement local tracking RPM meter down safely to drive frontend fuel meters
+            self.last_rpm_remaining = max(1, self.last_rpm_remaining - 1)
+
+        except APIError as api_err:
+            yield f"\n🛑 [GEMINI GATEWAY REJECTION] The Cloud SDK caught an operational API error!\nDETAILS: {str(api_err)}\n"
             return
         except Exception as system_err:
             yield f"\n💥 [ENGINE FAULT] Unexpected local exception caught during execution: {str(system_err)}\n"
@@ -70,11 +81,11 @@ class MinionRunner:
             yield f"💥 [REGISTRY ERROR]: Minion configuration '{minion_name}' is missing or inactive in your database!"
             return
 
-        model_tag = directive.constraints.get("model", "llama-3.3-70b-versatile")
+        model_tag = directive.constraints.get("model", "gemini-2.5-flash")
         temperature = directive.constraints.get("temperature", 0.3)
         system_instructions = directive.instructions
 
-        async for token in self.query_groq_llm_stream(
+        async for token in self.query_gemini_llm_stream(
             model_tag=model_tag,
             system_directive=system_instructions,
             user_prompt=task_input,
@@ -84,7 +95,7 @@ class MinionRunner:
 
     def run_minion_task(self, minion_name: str, task_input: str) -> str:
         """
-        Synchronous interface wrapper for pytest execution blocks and legacy code blocks.
+        Synchronous interface wrapper for pytest execution blocks and legacy code blocks. 
         Stitches tokens from the async stream into a completed output string.
         """
         async def _gather_stream_tokens():
@@ -93,6 +104,6 @@ class MinionRunner:
                 tokens.append(token)
             return "".join(tokens)
         return async_to_sync(_gather_stream_tokens)()
-# ======================================================================
-# END: ASYNC_STREAMING_GROQ_FLEET_ENGINE (PATCH 1 OF 1)
-# ======================================================================
+# ====================================================================== #
+# END: ASYNC_STREAMING_GEMINI_FLEET_ENGINE (PATCH 1 OF 1)               #
+# ====================================================================== #

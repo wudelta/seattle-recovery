@@ -1,7 +1,7 @@
-# ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 4)
-# START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 4)                         #
+# START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES                             #
+# ====================================================================== #
 import json
 import asyncio
 import traceback
@@ -15,16 +15,16 @@ from asgiref.sync import sync_to_async, async_to_sync
 from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
 from aurora.minions.engine import MinionRunner
 from .dev_streamer_api import async_send_to_console
-# ======================================================================
-# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)
-# ======================================================================
+# ====================================================================== #
+# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)               #
+# ====================================================================== #
 
-# ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 4)
-# START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 4)                         #
+# START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE                           #
+# ====================================================================== #
 def process_wu_logic_synchronous(user_delta_notes, user):
-    """Generates the full Groq execution plan and records pending tracking blocks with live metrics."""
+    """Generates the full Gemini execution plan and records pending tracking blocks with live metrics."""
     try:
         runner = MinionRunner()
         try:
@@ -56,27 +56,18 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         thread.start()
         thread.join()
 
-        # METRICS HARVESTER LAYER: Read the newly exposed live server response dictionary
-        groq_headers = getattr(runner, "last_response_headers", {})
-
-        def get_header_val(keys_list, default_val):
-            for k in keys_list:
-                if k in groq_headers:
-                    return int(groq_headers[k])
-                if k.lower() in groq_headers:
-                    return int(groq_headers[k.lower()])
-            return default_val
-
-        # FIX: Dynamically track account limits to calculate real consumption percentages
-        t_limit = get_header_val(["x-ratelimit-limit-tokens", "X-RateLimit-Limit-Tokens"], 60000)
-        t_rem = get_header_val(["x-ratelimit-remaining-tokens", "X-RateLimit-Remaining-Tokens"], t_limit)
+        # METRICS HARVESTER LAYER: Map to Gemini's highly stable free tier quota matrix bounds
+        # Google AI Studio caps free requests at 1,500 daily requests and 15 RPM
+        r_limit = 15
+        r_rem = getattr(runner, "last_rpm_remaining", 14)
         
-        # Read the genuine tier ceiling sent by Groq instead of assuming 14,400
-        r_limit = get_header_val(["x-ratelimit-limit-requests", "X-RateLimit-Limit-Requests"], 1000)
-        r_rem = get_header_val(["x-ratelimit-remaining-requests", "X-RateLimit-Remaining-Requests"], r_limit - 1)
+        # Calculate context consumption windows directly from token context tracking metrics
+        t_limit = 1000000  # Gemini Flash 1M Context Window Cap
+        t_used = getattr(runner, "last_tokens_consumed", len(user_delta_notes) // 4)
+        t_rem = max(0, t_limit - t_used)
 
         # Calculate exact percentage of allocation consumed to drive the progress bar width correctly
-        tokens_used_pct = round(((t_limit - t_rem) / t_limit) * 100, 1) if t_limit > 0 else 0.0
+        tokens_used_pct = round((t_used / t_limit) * 100, 3) if t_limit > 0 else 0.0
         requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
 
         fuel_gauge_metrics = {
@@ -105,6 +96,7 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
             if not clean_arg:
                 continue
+
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
@@ -119,21 +111,21 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             )
 
         return {
-            "status": "SUCCESS", 
-            "wu_response": complete_response_text, 
+            "status": "SUCCESS",
+            "wu_response": complete_response_text,
             "transaction_id": str(transaction.id),
             "fuel_gauge": fuel_gauge_metrics
         }
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
-# ======================================================================
-# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 4)
-# ======================================================================
+# ====================================================================== #
+# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 4)             #
+# ====================================================================== #
 
-# ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 4)
-# START: CHAT_REQUEST_ENDPOINT_VIEW
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 4)                         #
+# START: CHAT_REQUEST_ENDPOINT_VIEW                                      #
+# ====================================================================== #
 @login_required
 def wu_chat_endpoint(request):
     """Processes requests, returning text alongside a unique transaction review token ID."""
@@ -143,30 +135,29 @@ def wu_chat_endpoint(request):
             delta_notes = data.get("delta_notes", "").strip()
             if not delta_notes:
                 return JsonResponse({"error": "Empty delta notes provided"}, status=400)
-                
+
             result = process_wu_logic_synchronous(delta_notes, request.user)
             if result["status"] == "ERROR":
                 return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
-                
+
             # FIX: Forward the fuel_gauge nested metrics data out to the console interface
             return JsonResponse({
-                "status": "wu_is_processing", 
-                "direct_text_output": result["wu_response"], 
+                "status": "wu_is_processing",
+                "direct_text_output": result["wu_response"],
                 "transaction_id": result["transaction_id"],
                 "fuel_gauge": result.get("fuel_gauge", {})
             })
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
-            
     return JsonResponse({"error": "POST required"}, status=405)
-# ======================================================================
-# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 4)
-# ======================================================================
+# ====================================================================== #
+# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 4)                        #
+# ====================================================================== #
 
-# ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 4)
-# START: TRANSACTION_ACTION_CONTROLLER_VIEW
-# ======================================================================
+# ====================================================================== #
+# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 4)                         #
+# START: TRANSACTION_ACTION_CONTROLLER_VIEW                              #
+# ====================================================================== #
 @login_required
 def process_transaction_action(request, tx_id):
     """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
@@ -177,7 +168,6 @@ def process_transaction_action(request, tx_id):
         try:
             tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
             action = json.loads(request.body).get("action", "").upper()
-            
             base_dir = os.path.abspath(getattr(settings, "BASE_DIR", os.getcwd()))
 
             if action == "APPROVE":
@@ -197,16 +187,13 @@ def process_transaction_action(request, tx_id):
                     for file_path in cmd.affected_files:
                         if not file_path or not isinstance(file_path, str):
                             continue
-                        
                         # Strict path evaluation guarding to prevent directory traversal out of project workspace
                         full_path = os.path.abspath(os.path.join(base_dir, file_path))
                         if not full_path.startswith(base_dir) or full_path == base_dir:
                             sys.stderr.write(f"⚠️ [SECURITY ALERT]: Blocked destructive outside directory sweep path: {file_path}\n")
                             continue
-
                         if os.path.exists(full_path) and os.path.isfile(full_path):
                             os.remove(full_path)
-                            
                 tx.status = 'ROLLED_BACK'
                 tx.save()
                 return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
@@ -233,6 +220,6 @@ def process_transaction_action(request, tx_id):
     if "error" in result:
         return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
     return JsonResponse(result)
-# ======================================================================
-# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 4 OF 4)
-# ======================================================================
+# ====================================================================== #
+# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 4 OF 4)                 #
+# ====================================================================== #

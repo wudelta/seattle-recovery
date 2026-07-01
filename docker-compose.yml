@@ -1,7 +1,9 @@
-# ======================================================================
-# FILE: docker-compose.yml (PATCH 1 OF 1)
-# START: DOCKER_COMPOSE_CORE_BLUEPRINT
-# ======================================================================
+# ====================================================================== #
+# FILE: docker-compose.yml (PATCH 1 OF 1)                                #
+# START: DOCKER_COMPOSE_CORE_BLUEPRINT                                   #
+# ====================================================================== #
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -67,21 +69,24 @@ services:
       - recovery_net
     restart: always
 
-  # Isolated Runtime Layer: Aurora App Builder
+  # Isolated Runtime Layer: Aurora App Builder Workspace
   django_aurora:
     build: .
     container_name: seattle_django_aurora
     user: "root"
+    # FIXED: Added native command layout hook targeting the correct network endpoint
+    command: daphne -b 0.0.0.0 -p 9000 core_logic.asgi:application
     ports:
-      - "8000:8000"
+      - "9000:9000" # SWAPPED: Aurora now exposes port 9000 natively
     env_file:
       - .env
     environment:
-      # Fix: Point straight to your actual monolithic master settings file
       - DJANGO_SETTINGS_MODULE=core_logic.settings
       - DB_NAME=aurora_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY} # Explicitly map your gen-lang credential
+      - APP_MODE=AURORA
     volumes:
-      - .:/app
+      - .:/app:rw # READ-WRITE: Allows the Gemini Tool Loop to autonomously mutate files
       - static_volume:/app/staticfiles
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
@@ -97,21 +102,24 @@ services:
     networks:
       - recovery_net
 
-  # Isolated Runtime Layer: Hopehub Application (Cloud Candidate)
+  # Isolated Runtime Layer: Hopehub Application (HIPAA Sandbox Candidate)
   django_hopehub:
     build: .
     container_name: seattle_django_hopehub
     user: "root"
+    # FIXED: Added native command layout hook targeting the correct network endpoint
+    command: daphne -b 0.0.0.0 -p 8000 core_logic.asgi:application
     ports:
-      - "8001:8000"
+      - "8000:8000" # SWAPPED: HopeHub now exposes port 8000 natively
     env_file:
       - .env
     environment:
-      # Fix: Point straight to your actual monolithic master settings file
       - DJANGO_SETTINGS_MODULE=core_logic.settings
       - DB_NAME=hopehub_db
+      - AI_PROVIDER=MOCK # $0 Cost Sandbox: Fully protects patient PHI data during local development
+      - APP_MODE=HOPEHUB
     volumes:
-      - .:/app
+      - .:/app:ro # READ-ONLY PROTECTION: Safeguards code files from unauthorized container writes
       - static_volume:/app/staticfiles
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
@@ -126,7 +134,7 @@ services:
           memory: 512M
     networks:
       - recovery_net
-      
+
   web_server:
     build: ./webserver
     container_name: seattle_web
@@ -134,7 +142,6 @@ services:
       - "3000:3000"
     volumes:
       - static_volume:/app/staticfiles:ro
-      # Fix: Forcefully mount your updated config file directly over Nginx's internal fallback config
       - ./webserver/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - django_aurora
@@ -158,6 +165,6 @@ volumes:
 networks:
   recovery_net:
     driver: bridge
-# ======================================================================
-# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)
-# ======================================================================
+# ====================================================================== #
+# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)                      #
+# ====================================================================== #

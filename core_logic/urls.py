@@ -18,16 +18,20 @@ CURRENT_CONTAINER_TARGET = os.getenv('DB_NAME')
 
 if CURRENT_CONTAINER_TARGET == 'aurora_db':
     # Only load the builder url definitions on the Aurora container node
-    urlpatterns.append(path('aurora/', include('aurora.urls', namespace='aurora')))
-
+    urlpatterns += [
+        path('aurora/', include('aurora.urls', namespace='aurora')),
+    ]
 elif CURRENT_CONTAINER_TARGET == 'hopehub_db':
     # Only load the application url definitions on the Hopehub container node
-    urlpatterns.append(path('hopehub/', include('hopehub.urls', namespace='hopehub')))
-
+    urlpatterns += [
+        path('hopehub/', include('hopehub.urls', namespace='hopehub')),
+    ]
 else:
     # Fallback pathing safety matrix for local terminal shell calls
-    urlpatterns.append(path('hopehub/', include('hopehub.urls', namespace='hopehub')))
-    urlpatterns.append(path('aurora/', include('aurora.urls', namespace='aurora')))
+    urlpatterns += [
+        path('hopehub/', include('hopehub.urls', namespace='hopehub')),
+        path('aurora/', include('aurora.urls', namespace='aurora')),
+    ]
 
 # Append media tracking using inline addition. Linters love this syntax.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -123,6 +123,7 @@ NEO4J_USER = env('NEO4J_USER', default='neo4j')
 NEO4J_PASSWORD = env('NEO4J_PASSWORD')
 NEO4J_HOST = env('NEO4J_HOST', default='seattle_neo4j')
 NEO4J_PORT = env('NEO4J_PORT', default='7687')
+
 # REVERTED: Locked in the standard v5 uppercase string connection mapping variable
 neomodel_config.DATABASE_URL = f"{NEO4J_SCHEME}://{NEO4J_USER}:{NEO4J_PASSWORD}@{NEO4J_HOST}:{NEO4J_PORT}"
 
@@ -167,6 +168,10 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:9000",
+    "http://127.0.0.1:9000",
 ]
 
 CHANNEL_LAYERS = {
@@ -175,13 +180,14 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [{
                 "address": "redis://seattle_redis:6379/0",
-                "socket_timeout": 15,  # Generous timeout for 2-core systems
+                "socket_timeout": 15, # Generous timeout for 2-core systems
                 "socket_connect_timeout": 15,
             }],
         },
     },
 }
-GROQ_API_KEY = env("GROQ_API_KEY", default="")
+
+GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
 
 # Register the custom UUID user model globally across the monorepo
 AUTH_USER_MODEL = 'users.CustomUser'
