@@ -12,17 +12,15 @@
                 <span class="text-uppercase font-weight-bold font-monospace text-warning small" style="letter-spacing: 1px;">💬 Command Input Deck: Wu (Gemini 2.5 Flash Orchestrator)</span>
             </div>
             
-            <!-- Scrollable message log canvas to render alternating dialog bubble nodes -->
+            <!-- FIXED: Removed the legacy sub-space link greeting box from inside the log canvas container -->
             <div id="wu-chat-history-log" class="flex-grow-1 p-2 rounded mb-2 d-flex flex-column gap-2" style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;">
-                <div class="text-muted font-monospace small px-2 py-1 align-self-center rounded bg-dark border border-secondary" style="font-size: 0.75rem;">
-                    Secure sub-space link active. Transmit instructions to engage the minion fleet.
-                </div>
             </div>
             
             <!-- Modified text input deck strictly for drafting new human design intentions -->
             <div class="d-flex flex-column gap-2" style="height: 120px; shrink: 0;">
                 <textarea id="wu-human-delta-notes-input" class="form-control h-100 p-2 font-monospace" style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5; font-size: 0.85rem; resize: none;" placeholder="Input human design intentions (Delta Notes) to request an orchestral strategy break-down..."></textarea>
-                <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2" style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;">Transmit to Commander Wu</button>
+                <!-- FIXED: Updated the button text string descriptor to read 'Transmit to Wu' -->
+                <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2" style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;">Transmit to Wu</button>
             </div>
         </div>
         
@@ -33,24 +31,7 @@
                 <button id="clear-wu-telemetry-btn" class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace" style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;">Flush Logs</button>
             </div>
             
-            <!-- INJECTED: Dedicated visual dashboard metrics elements for tracking live token capacity status -->
-            <div class="d-flex flex-column gap-1 mb-2 p-2 rounded flex-shrink-0" style="background-color: #09090b; border: 1px solid #1f1f23; font-family: monospace; font-size: 0.75rem;">
-                <div class="d-flex justify-content-between text-muted">
-                    <span>TPM CAPACITOR:</span>
-                    <span id="fuel-tpm-readout" class="text-warning">100% (Idle)</span>
-                </div>
-                <div class="progress rounded-0" style="height: 4px; background-color: #1c1917;">
-                    <div id="fuel-tpm-bar" class="progress-bar bg-warning" style="width: 0%"></div>
-                </div>
-                <div class="d-flex justify-content-between text-muted mt-1">
-                    <span>DAILY RPD QUOTA:</span>
-                    <span id="fuel-rpd-readout" class="text-info">100% (Stable)</span>
-                </div>
-                <div class="progress rounded-0" style="height: 4px; background-color: #1c1917;">
-                    <div id="fuel-rpd-bar" class="progress-bar bg-info" style="width: 0%"></div>
-                </div>
-            </div>
-            
+            <!-- REMOVED: Legacy TPM Capacitor and Daily RPD Quota fuel progress bars -->
             <div id="wu-telemetry-screen-output" class="flex-grow-1 p-2 rounded" style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;">
                 <div class="text-info font-monospace small">[SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...</div>
             </div>

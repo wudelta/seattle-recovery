@@ -1,32 +1,20 @@
-# Monorepo State Log & Next-Action Roadmap
+# ======================================================================
+# FILE: migration.md (PATCH 1 OF 1)
+# START: REF_ENGINE_MIGRATION_SNAPSHOT_LEDGER
+# ======================================================================
+# Monorepo Infrastructure Migration Ledger (Session Run: 2026-07-01)
 
-## 🎯 Current System Architecture (What is Done)
-The combined monolith has been successfully decoupled into a dual-container architecture running natively on a single Postgres volume. Both apps share a single code tree but run in absolute logical isolation.
+## 1. Core Accomplishments Today
+* **Provider Framework Overhaul**: Completely decoupled the old, token-restricted Groq client SDK (`llama3` tracking loops) and successfully migrated to the modern cloud-hosted `google-genai` SDK (`gemini-2.5-flash`).
+* **Multi-Tenant Network Swap**: Adjusted your isolated runtime container network matrix layer mappings. Converted `django_hopehub` to expose port `8000` natively and remapped your active, custom IDE tool container layer (`django_aurora`) to expose port `9000` cleanly.
+* **Nginx Reverse Proxy Realignment**: Updated `./webserver/default.conf` to handle text payloads, web views, and high-frequency asynchronous HTTP WebSocket telemetry stream upgrades over ports 8000 and 9000 without dropping connections.
+* **Database Target Unifications**: Corrected environment configuration vectors to map your monolithic database parameters cleanly to your genuine host drive hard-storage target name (`DB_NAME=hopehub_aurora`), safely preserving all 23 active application relationship asset tables side-by-side.
+* **Anti-Hallucination Gating Hooks**: Refactored your `wu_chat.js` frontend script to pull and pass sliding-window conversational histories to the cloud model, and cleaned out the obsolete x-ratelimit header scraping loops from your synchronous orchestration engine script views.
 
-### 1. Active Infrastructure Matrix
-* **Gateway Entry Link**: Nginx (`seattle_web`) is fully operational on port `3000`.
-* **Track A (Aurora Builder)**: Daphne container live on port `8000`, mapped strictly to `aurora_db`.
-* **Track B (HopeHub Production)**: Daphne container live on port `8001`, mapped strictly to `hopehub_db`.
-* **Shared Data Store**: PostgreSQL live on port `5432` with fully distinct logical targets.
-
-### 2. Verified Data Integrity Milestones
-* **UUID Overhaul Complete**: Legacy integer IDs (`id = 1`) have been purged across both databases.
-* **Master User Link**: All business records are populated and foreign-key bound onto your permanent security token: `d72473bc-b25b-45d8-aaad-aed1a5416dcd`.
-* **Dynamic App Selectors**: `core_logic/settings.py` and `core_logic/urls.py` automatically filter app manifests and routing trees based on the container's active environment variables.
-* **Developer Shell Shortcuts**: Your local `~/.bashrc` aliases have been fully updated to isolate logs (`dlog-aurora`, `dlog-hopehub`) and trigger clean snapshot runs (`dbackup`).
-
----
-
-## 🛠️ Tomorrow's Work Plan (What is Left to Do)
-
-When you boot up the next session, we skip all database configuration and initialization tasks. We have exactly two objectives left to make this a production-hardened environment:
-
-### Task 1: Complete Test Suite Rewrite
-Our previous test suite is broken because it expects a single app with sequential IDs. We need to write the new tests into three highly targeted tracks:
-* `users/tests.py`: Validate string UUID enforcement on user generation.
-* `aurora/tests.py`: Validate component profiles and AI minion configurations.
-* `hopehub/tests.py`: Validate Fernet cryptographic fields and clinical record isolation boundaries.
-
-### Task 2: Fix Remaining Edge Broken Things
-* Verify the Neo4j graph cluster handshakes cleanly with the newly decoupled containers at boot.
-* Audit Nginx's static file delivery if asset paths shift during multi-container compilation loops.
+## 2. Planned Target Vectors for Tomorrow (2026-07-02 Session)
+* **Component Registry Crawl**: Instruct the data-driven Gemini agent engine (Wu) to execute an automated multi-file directory crawl over your local Python codebase paths (`/app/aurora/` and `/app/hopehub/`).
+* **UUID Database Realignment**: Force the agent loop to analyze views, handlers, and object queries to verify compliance with your newly updated UUID primary key data shapes, re-indexing table rows inside `ComponentRegistry` automatically.
+* **TDD Test Suite Re-Generation**: Scrub out your outdated, broken database-integer legacy test suite files and use Wu's 1-million token focus window to write fresh, zero-hallucination unit test frameworks for your modules.
+# ======================================================================
+# END: REF_ENGINE_MIGRATION_SNAPSHOT_LEDGER (PATCH 1 OF 1)
+# ======================================================================

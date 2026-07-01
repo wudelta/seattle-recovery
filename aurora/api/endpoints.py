@@ -138,7 +138,7 @@ def bind_command_endpoint(request):
 def aurora_chat_stream(request):
     """
     Lightweight, stateless view orchestrating Gemini's 1-million token reasoning 
-    engine with direct automated file mutation loops inside Docker workspace volumes.
+    engine with dynamic prompt parameters loaded straight from DeltaDirectives.
     """
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
@@ -147,6 +147,7 @@ def aurora_chat_stream(request):
     import json
     from google import genai
     from google.genai import types
+    from aurora.models import DeltaDirectives
 
     # Setup explicit target paths inside the shared Docker volume
     DOCKER_SRC_ROOT = "/app"
@@ -191,19 +192,22 @@ def aurora_chat_stream(request):
         if not api_key:
             return JsonResponse({"status": "error", "message": "GEMINI_API_KEY environment variable is unmapped."}, status=500)
 
+        # FIXED: Extract system rules directly out of your database records instead of hardcoding strings
+        try:
+            directive = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
+            system_instruction = directive.instructions
+            model_tag = directive.constraints.get("model", "gemini-2.5-flash")
+            temperature = float(directive.constraints.get("temperature", 0.1))
+        except DeltaDirectives.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Master system directive 'minion_wu' missing or inactive in database rows."}, status=500)
+
         client = genai.Client(api_key=api_key)
         workspace_tools = [read_workspace_file, write_workspace_file]
 
-        system_instruction = (
-            "You are Aurora, an expert autonomous Django engineering companion. "
-            "You possess strict tools to read and edit the local workspace. "
-            "When altering components, examine them via read_workspace_file first, "
-            "then rewrite them completely with precise syntax."
-        )
-
         # Build clean execution history arrays mapping straight to Google Cloud models
         gemini_history = []
-        for msg in incoming_history:
+        # ANTI-LOOP CONSTRAINT: Truncate context arrays down strictly to the last 6 message blocks
+        for msg in incoming_history[-6:]:
             role = "user" if msg.get('role') == "user" else "model"
             gemini_history.append(
                 types.Content(role=role, parts=[types.Part.from_text(text=msg.get('text', ''))])
@@ -211,12 +215,12 @@ def aurora_chat_stream(request):
 
         # Initialize the persistent workspace session context tracking loop
         chat = client.chats.create(
-            model="gemini-2.5-flash",
+            model=model_tag,
             history=gemini_history,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 tools=workspace_tools,
-                temperature=0.1
+                temperature=temperature
             )
         )
 

@@ -56,17 +56,15 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         thread.start()
         thread.join()
 
-        # METRICS HARVESTER LAYER: Map to Gemini's highly stable free tier quota matrix bounds
-        # Google AI Studio caps free requests at 1,500 daily requests and 15 RPM
+        # FIXED: Clean out old Groq header calculations. 
+        # Map to Gemini's high-capacity free tier limits (15 Requests Per Minute, 1M Context).
         r_limit = 15
         r_rem = getattr(runner, "last_rpm_remaining", 14)
         
-        # Calculate context consumption windows directly from token context tracking metrics
-        t_limit = 1000000  # Gemini Flash 1M Context Window Cap
+        t_limit = 1000000  
         t_used = getattr(runner, "last_tokens_consumed", len(user_delta_notes) // 4)
         t_rem = max(0, t_limit - t_used)
 
-        # Calculate exact percentage of allocation consumed to drive the progress bar width correctly
         tokens_used_pct = round((t_used / t_limit) * 100, 3) if t_limit > 0 else 0.0
         requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
 

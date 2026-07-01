@@ -49,6 +49,14 @@ function initWuChatConsole(endpoints, csrfToken) {
 // FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
 // START: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
+    // FIXED: Active keydown listener to trigger transmission loop on Enter, while allowing Shift+Enter for carriage returns
+    inputField.on('keydown', function(e) {
+        if (e.which === 13 && !e.shiftKey) {
+            e.preventDefault();
+            transmitBtn.click();
+        }
+    });
+
     transmitBtn.on('click', function(e) {
         e.preventDefault();
         const deltaNotesText = inputField.val().trim();
@@ -62,7 +70,6 @@ function initWuChatConsole(endpoints, csrfToken) {
 
         const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
         chatHistory.append(userBubble);
-        // FIXED: Extract raw DOM reference index array pointer to capture genuine scroll height boundaries safely
         chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
         inputField.val('').prop('disabled', true);
@@ -95,22 +102,9 @@ function initWuChatConsole(endpoints, csrfToken) {
                         });
                     }
 
-                    // Re-mapped the capacitor fuel gauges to match the new backend token schema values
-                    if (response.fuel_gauge) {
-                        const fg = response.fuel_gauge;
-                        const tpmRemainingPct = (100 - fg.tokens_used_pct).toFixed(1);
-                        const rpdRemainingPct = (100 - fg.requests_used_pct).toFixed(1);
-
-                        $('#fuel-tpm-bar').css('width', fg.tokens_used_pct + '%').attr('aria-valuenow', fg.tokens_used_pct);
-                        $('#fuel-tpm-readout').text(`${tpmRemainingPct}% (${fg.tokens_remaining.toLocaleString()} Rem)`);
-
-                        $('#fuel-rpd-bar').css('width', fg.requests_used_pct + '%').attr('aria-valuenow', fg.requests_used_pct);
-                        $('#fuel-rpd-readout').text(`${rpdRemainingPct}% (${fg.requests_remaining.toLocaleString()} Rem)`);
-                    }
-
+                    // REMOVED legacy fuel_gauge frontend progress bar mutators here to match layout deletions
                     if (response.transaction_id) {
                         activeTransactionId = response.transaction_id;
-                        // FIXED: Swapped invalid removeAs() with standard class extractor hook
                         approvalDrawer.removeClass('d-none');
                         appendSystemAlert('⚠️ [SAFETY GATE] Actions queued. Awaiting permissions confirmation...');
                     }
