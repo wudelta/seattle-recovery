@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 6)
+# FILE: aurora/models.py (PATCH 1 OF 7)
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,11 +7,11 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 6)
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 6)
+# FILE: aurora/models.py (PATCH 2 OF 7)
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
@@ -43,6 +43,7 @@ class ComponentRegistry(models.Model):
         ('PUBLIC', 'Public Access Node'),
         ('PRIVATE', 'Private Protected Node'),
     ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
     name = models.CharField(max_length=255)
@@ -51,14 +52,13 @@ class ComponentRegistry(models.Model):
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
     
-    # Fix: Overwrite 'User' with 'settings.AUTH_USER_MODEL' to resolve the scope break
+    # Fix: Overwrite 'User' with 'settings.AUTH_USER_MODEL' to resolve the scope break created_by = models.ForeignKey(
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.PROTECT, 
-        related_name='forged_assets', 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='forged_assets',
         help_text="The authenticated developer who authorized the execution string."
     )
-    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     description = models.TextField(
@@ -82,11 +82,11 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 6)
+# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 6)
+# FILE: aurora/models.py (PATCH 3 OF 7)
 # START: STATIC_CONTENT_SCHEMA
 # ======================================================================
 class StaticContent(models.Model):
@@ -94,7 +94,7 @@ class StaticContent(models.Model):
     class ApplicationChoices(models.TextChoices):
         AURORA = 'aurora', 'Aurora'
         HOPEHUB = 'hopehub', 'HopeHub'
-        
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.CharField(
         max_length=10, choices=ApplicationChoices.choices, default=ApplicationChoices.AURORA
@@ -104,23 +104,78 @@ class StaticContent(models.Model):
     
     # Fix: Point relation to the active swapped settings model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"StaticContent: {self.title} [{self.application}] (ID: {self.id})"
 # ======================================================================
-# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 6)
+# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 4 OF 6)
+# FILE: aurora/models.py (PATCH 4 OF 7)
+# START: PERSISTENT_CHAT_LEDGER_SCHEMA
+# ======================================================================
+class ChatLedgerEntry(models.Model):
+    """
+    Lightweight, index-optimized conversational transaction table.
+    Enforces a low-footprint sliding history window to prevent context bloat.
+    """
+    ROLE_CHOICES = (
+        ('user', 'User Input Prompt'),
+        ('model', 'Model Assistant Response'),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='chat_ledger_entries',
+        help_text="The authenticated user operating the active workspace session thread."
+    )
+    session_id = models.CharField(max_length=255, db_index=True, help_text="Unique workspace thread isolation tracker token.")
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, db_index=True)
+    text = models.TextField(help_text="Raw conversational data chunk payload.")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Chat Ledger Entry"
+        verbose_name_plural = "Chat Ledger Entries"
+        # FIXED: Upgraded legacy index_together syntax to modern Django 5.x indices array blocks
+        indexes = [
+            models.Index(fields=['session_id', 'created_at'], name='aurora_chat_ledger_idx')
+        ]
+
+    def __str__(self):
+        return f"[{self.session_id}] {self.role.upper()} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    def save(self, *args, **kwargs):
+        """
+        Database-level Self-Pruning Guard: Captures table mutations and
+        surgically deletes surplus old rows past the 20-row history limit.
+        """
+        super().save(*args, **kwargs)
+        
+        # Pull entry ID list past the rolling 20-message row buffer limit
+        excess_entries = ChatLedgerEntry.objects.filter(
+            session_id=self.session_id
+        ).order_by('-created_at')[20:]
+        
+        if excess_entries:
+            # Batch erase old records inside a single SQL deletion execution pass
+            ChatLedgerEntry.objects.filter(id__in=[entry.id for entry in excess_entries]).delete()
+# ======================================================================
+# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 7)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 5 OF 7)
 # START: DIRECTIVES_SCHEMA
 # ======================================================================
 class DeltaDirectives(models.Model):
     """
-    Standalone configuration engine storing system instructions, prompts, and model processing boundaries for your AI minion fleet.
+    Standalone configuration engine storing system instructions, prompts, and 
+    model processing boundaries for your AI minion fleet.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     directive_name = models.CharField(max_length=255, unique=True, db_index=True)
@@ -130,7 +185,6 @@ class DeltaDirectives(models.Model):
     
     # Fix: Point relation to the active swapped settings model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
@@ -185,22 +239,23 @@ class DeltaDirectives(models.Model):
     def __str__(self):
         return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: DIRECTIVES_SCHEMA (PATCH 4 OF 6)
+# END: DIRECTIVES_SCHEMA (PATCH 5 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 5 OF 6)
+# FILE: aurora/models.py (PATCH 6 OF 7)
 # START: DELTA_NOTES_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
-    Tracks daily developer intentions, active task execution blocks, and accumulated focus time per session window.
+    Tracks daily developer intentions, active task execution blocks, and 
+    accumulated focus time per session window.
     """
     # Fix: Point relation to the active swapped settings model
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='delta_notes', 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='delta_notes',
         help_text="The developer compiling this active workspace iteration note."
     )
     text = models.TextField(blank=False)
@@ -222,11 +277,11 @@ class DeltaNotesEntry(models.Model):
     def __str__(self):
         return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
 # ======================================================================
-# END: DELTA_NOTES_SCHEMA (PATCH 5 OF 6)
+# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 6 OF 6)
+# FILE: aurora/models.py (PATCH 7 OF 7)
 # START: AUTOMATION_APPROVALS_TRACKING_SCHEMA
 # ======================================================================
 class WorkspaceTransaction(models.Model):
@@ -238,14 +293,10 @@ class WorkspaceTransaction(models.Model):
         ('REJECTED', 'Rejected by User')
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
     # Fix: Point relation to the active swapped settings model
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='workspace_transactions'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workspace_transactions'
     )
-    
     prompt_context = models.TextField(help_text="The original delta_notes that triggered this request.")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     date_created = models.DateTimeField(auto_now_add=True)
@@ -269,5 +320,5 @@ class TrackedCommand(models.Model):
     def __str__(self):
         return f"{self.macro} {' '.join(self.arguments)} [Tx #{self.transaction.id}]"
 # ======================================================================
-# END: AUTOMATION_APPROVALS_TRACKING_SCHEMA (PATCH 6 OF 6)
+# END: AUTOMATION_APPROVALS_TRACKING_SCHEMA (PATCH 7 OF 7)
 # ======================================================================
