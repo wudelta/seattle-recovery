@@ -1,13 +1,16 @@
-# ====================================================================== #
-# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 4)                         #
-# START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES                             #
-# ====================================================================== #
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 5)
+# START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
+# ======================================================================
 import json
 import asyncio
 import traceback
 import re
 import sys
 import os
+import time
+from collections import deque
+from threading import Lock
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -15,14 +18,14 @@ from asgiref.sync import sync_to_async, async_to_sync
 from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
 from aurora.minions.engine import MinionRunner
 from .dev_streamer_api import async_send_to_console
-# ====================================================================== #
-# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 4)               #
-# ====================================================================== #
+# ======================================================================
+# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 5)
+# ======================================================================
 
-# ====================================================================== #
-# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 4)                         #
-# START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE                           #
-# ====================================================================== #
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 5)
+# START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
+# ======================================================================
 def process_wu_logic_synchronous(user_delta_notes, user):
     """Generates the full Gemini execution plan and records pending tracking blocks with live metrics."""
     try:
@@ -34,40 +37,38 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             sys.stderr.write(f"{error_msg}\n")
             sys.stderr.flush()
             return {"status": "ERROR", "message": "Master orchestrator directive is missing in database registry.", "trace": error_msg}
-
+            
         complete_response_text = ""
         stream_generator = runner.run_minion_task_stream("minion_wu", user_delta_notes)
-
+        
         # Thread-safe async worker strategy to read tokens without latching onto or blocking Daphne's main event loop
         async def consume_stream():
             nonlocal complete_response_text
             async for token in stream_generator:
                 complete_response_text += token
-
+                
         def run_async_in_thread():
             new_loop = asyncio.new_event_loop()
             try:
                 return new_loop.run_until_complete(consume_stream())
             finally:
                 new_loop.close()
-
+                
         import threading
         thread = threading.Thread(target=run_async_in_thread)
         thread.start()
         thread.join()
-
-        # FIXED: Clean out old Groq header calculations. 
+        
+        # FIXED: Clean out old Groq header calculations.
         # Map to Gemini's high-capacity free tier limits (15 Requests Per Minute, 1M Context).
         r_limit = 15
         r_rem = getattr(runner, "last_rpm_remaining", 14)
-        
-        t_limit = 1000000  
+        t_limit = 1000000
         t_used = getattr(runner, "last_tokens_consumed", len(user_delta_notes) // 4)
         t_rem = max(0, t_limit - t_used)
-
         tokens_used_pct = round((t_used / t_limit) * 100, 3) if t_limit > 0 else 0.0
         requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
-
+        
         fuel_gauge_metrics = {
             "tokens_limit": t_limit,
             "tokens_remaining": t_rem,
@@ -76,30 +77,28 @@ def process_wu_logic_synchronous(user_delta_notes, user):
             "requests_remaining": r_rem,
             "requests_used_pct": min(100.0, max(0.0, requests_used_pct))
         }
-
+        
         transaction = WorkspaceTransaction.objects.create(
             user=user,
             prompt_context=user_delta_notes,
             status='PENDING'
         )
-
+        
         # Casing-flexible regex processing block handling varied layout margins
         command_blocks = re.findall(r"\[[Cc][Oo][Mm][Mm][Aa][Nn][Dd]:\s*(.*?)\]", complete_response_text)
         for index, command_string in enumerate(command_blocks):
             parts = command_string.strip().split()
-            if not parts:
-                continue
+            if not parts: continue
             macro = parts[0].lower().strip()
             predicted_files = []
             clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
-            if not clean_arg:
-                continue
-
+            if not clean_arg: continue
+            
             if macro == "/page":
                 predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
             elif macro == "/api":
                 predicted_files.append(f"aurora/api/{clean_arg}_api.py")
-
+                
             TrackedCommand.objects.create(
                 transaction=transaction,
                 macro=macro,
@@ -107,7 +106,7 @@ def process_wu_logic_synchronous(user_delta_notes, user):
                 affected_files=predicted_files,
                 execution_order=index
             )
-
+            
         return {
             "status": "SUCCESS",
             "wu_response": complete_response_text,
@@ -116,14 +115,14 @@ def process_wu_logic_synchronous(user_delta_notes, user):
         }
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
-# ====================================================================== #
-# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 4)             #
-# ====================================================================== #
+# ======================================================================
+# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 5)
+# ======================================================================
 
-# ====================================================================== #
-# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 4)                         #
-# START: CHAT_REQUEST_ENDPOINT_VIEW                                      #
-# ====================================================================== #
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 5)
+# START: CHAT_REQUEST_ENDPOINT_VIEW
+# ======================================================================
 @login_required
 def wu_chat_endpoint(request):
     """Processes requests, returning text alongside a unique transaction review token ID."""
@@ -133,11 +132,18 @@ def wu_chat_endpoint(request):
             delta_notes = data.get("delta_notes", "").strip()
             if not delta_notes:
                 return JsonResponse({"error": "Empty delta notes provided"}, status=400)
-
-            result = process_wu_logic_synchronous(delta_notes, request.user)
+                
+            try:
+                # Evaluate payload against the global rolling 60-second token window
+                sanitized_notes = enforce_context_token_budget(delta_notes)
+            except ValueError as rate_err:
+                # Catch local rate limit interceptions cleanly and alert the UI
+                return JsonResponse({"error": f"🛡️ [GATEWAY SHIELD]: {str(rate_err)}"}, status=429)
+            
+            result = process_wu_logic_synchronous(sanitized_notes, request.user)
             if result["status"] == "ERROR":
                 return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
-
+                
             # FIX: Forward the fuel_gauge nested metrics data out to the console interface
             return JsonResponse({
                 "status": "wu_is_processing",
@@ -148,26 +154,103 @@ def wu_chat_endpoint(request):
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
     return JsonResponse({"error": "POST required"}, status=405)
-# ====================================================================== #
-# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 4)                        #
-# ====================================================================== #
+# ======================================================================
+# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 5)
+# ======================================================================
 
-# ====================================================================== #
-# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 4)                         #
-# START: TRANSACTION_ACTION_CONTROLLER_VIEW                              #
-# ====================================================================== #
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 5)
+# START: UTILITY_CONTEXT_TOKEN_BUDGETER
+# ======================================================================
+def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
+    """
+    Traps and analyzes outbound payloads before any API call is made.
+    Logs absolute metrics and strips out massive text blocks dynamically.
+    """
+    if not raw_text_payload:
+        sys.stderr.write("📊 [TRAFFIC ANALYZER]: Received empty or null payload text.\n")
+        sys.stderr.flush()
+        return ""
+
+    # Measure exact inbound metrics before modification
+    raw_char_count = len(raw_text_payload)
+    estimated_raw_tokens = raw_char_count // 4
+    
+    sys.stderr.write(
+        f"\n📊 [TRAFFIC ANALYZER PRE-SEND AUDIT]:\n"
+        f"  -> Total Character Volume: {raw_char_count}\n"
+        f"  -> Estimated Inbound Tokens: {estimated_raw_tokens}\n"
+        f"  -> Safety Budget Target Limit: {max_tokens} tokens (~{max_tokens * 4} chars)\n"
+    )
+    sys.stderr.flush()
+
+    # If the payload fits comfortably within our budget boundaries, pass it intact
+    max_chars = max_tokens * 4
+    if raw_char_count <= max_chars:
+        sys.stderr.write("📊 [TRAFFIC ANALYZER]: Payload is clean. Forwarding completely intact.\n")
+        sys.stderr.flush()
+        return raw_text_payload
+
+    sys.stderr.write("⚠️ [TRAFFIC ANALYZER]: Payload size boundary crossed! Executing surgical line-trimming...\n")
+    sys.stderr.flush()
+
+    # Split the payload into lines to find what is inflating the string footprint
+    lines = raw_text_payload.split('\n')
+    sanitized_lines = []
+    accumulated_chars = 0
+    stripped_lines_count = 0
+
+    for line in lines:
+        line_len = len(line)
+        
+        # Guard 1: Drop individual giant string lines (like serialized JSON or directory sweeps)
+        if line_len > 2000:
+            stripped_lines_count += 1
+            continue
+            
+        # Guard 2: Halt line collection if we are approaching our hard character ceiling
+        if accumulated_chars + line_len + 1 > max_chars:
+            stripped_lines_count += (len(lines) - len(sanitized_lines) - stripped_lines_count)
+            break
+            
+        sanitized_lines.append(line)
+        accumulated_chars += line_len + 1
+
+    sanitized_text = '\n'.join(sanitized_lines)
+    
+    # Append a clear system marker so you can see exactly where truncation took place
+    if stripped_lines_count > 0:
+        sanitized_text += f"\n\n... [🛡️ SECURITY INTERCEPT: {stripped_lines_count} OVERSIZED/SURPLUS LINES STRIPPED TO PREVENT 429 LOCKOUT] ..."
+
+    sys.stderr.write(
+        f"📊 [TRAFFIC ANALYZER POST-SANITIZATION SUMMARY]:\n"
+        f"  -> Cleaned Character Footprint: {len(sanitized_text)}\n"
+        f"  -> Cleaned Token Appx: {len(sanitized_text) // 4}\n"
+        f"  -> Total Structural Lines Evicted: {stripped_lines_count}\n\n"
+    )
+    sys.stderr.flush()
+
+    return sanitized_text
+# ======================================================================
+# END: UTILITY_CONTEXT_TOKEN_BUDGETER (PATCH 4 OF 5)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/wu_chat_api.py (PATCH 5 OF 5)
+# START: TRANSACTION_ACTION_CONTROLLER_VIEW
+# ======================================================================
 @login_required
 def process_transaction_action(request, tx_id):
     """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
-
+        
     def _execute_sync_action_logic():
         try:
             tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
             action = json.loads(request.body).get("action", "").upper()
             base_dir = os.path.abspath(getattr(settings, "BASE_DIR", os.getcwd()))
-
+            
             if action == "APPROVE":
                 from aurora.minions.automation_utilities import WorkspaceAutomationRunner
                 runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
@@ -179,7 +262,7 @@ def process_transaction_action(request, tx_id):
                 tx.status = 'EXECUTED'
                 tx.save()
                 return {"status": "SUCCESS", "message": "Transaction executed and files written."}
-
+                
             elif action == "DESTROY":
                 for cmd in tx.commands.all():
                     for file_path in cmd.affected_files:
@@ -195,29 +278,29 @@ def process_transaction_action(request, tx_id):
                 tx.status = 'ROLLED_BACK'
                 tx.save()
                 return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
-
+                
             return {"error": "Invalid action context", "status_code": 400}
         except WorkspaceTransaction.DoesNotExist:
             return {"error": "Transaction context lookup failure.", "status_code": 404}
         except Exception as err:
             return {"error": str(err), "status_code": 500}
-
+            
     try:
         loop = asyncio.get_running_loop()
         is_async_context = True
     except RuntimeError:
         is_async_context = False
-
+        
     if is_async_context:
         async def run_in_thread():
             return await sync_to_async(_execute_sync_action_logic, thread_sensitive=False)()
         result = async_to_sync(run_in_thread)()
     else:
         result = _execute_sync_action_logic()
-
+        
     if "error" in result:
         return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
     return JsonResponse(result)
-# ====================================================================== #
-# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 4 OF 4)                 #
-# ====================================================================== #
+# ======================================================================
+# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 5 OF 5)
+# ======================================================================

@@ -2,7 +2,7 @@ import os
 
 
 def print_tree(startpath, max_depth=3):
-    exclude = {'.git', '__pycache__', '.venv', '.env', 'node_modules'}
+    exclude = {'.git', '__pycache__', '.venv', 'venv', '.env', 'node_modules'}
     for root, dirs, files in os.walk(startpath):
         dirs[:] = [d for d in dirs if d not in exclude]
         level = root.replace(startpath, '').count(os.sep)

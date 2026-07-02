@@ -137,20 +137,21 @@ def bind_command_endpoint(request):
 @login_required
 def aurora_chat_stream(request):
     """
-    Lightweight, stateless view orchestrating Gemini's 1-million token reasoning 
-    engine with dynamic prompt parameters loaded straight from DeltaDirectives.
+    Lightweight, stateless view orchestrating Gemini's 1-million token reasoning engine 
+    with dynamic prompt parameters loaded straight from DeltaDirectives.
     """
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
-
+        
     import os
     import json
+    import sys
     from google import genai
     from google.genai import types
     from aurora.models import DeltaDirectives
 
-    # Setup explicit target paths inside the shared Docker volume
     DOCKER_SRC_ROOT = "/app"
+    MAX_PAYLOAD_CHARS = 160000  # Hard ceiling buffer (~40,000 tokens) to ensure immunity from 429 locks
 
     def read_workspace_file(filepath: str) -> str:
         """Reads a target code file from inside the active container mount point."""
@@ -160,7 +161,12 @@ def aurora_chat_stream(request):
             return "Error: Security constraint violation. Path traversal blocked."
         try:
             with open(absolute_path, 'r', encoding='utf-8') as f:
-                return f.read()
+                content = f.read()
+                if len(content) > MAX_PAYLOAD_CHARS:
+                    sys.stderr.write(f"⚠️ [GUARD GATEWAY]: Truncating heavy file read payload for: {filepath}\n")
+                    sys.stderr.flush()
+                    return content[:MAX_PAYLOAD_CHARS] + "\n\n... [TRUNCATED BY AURORA TRAFFIC SHIELD TO PREVENT 429 OVERLOAD] ..."
+                return content
         except Exception as e:
             return f"Error reading file {filepath}: {str(e)}"
 
@@ -179,20 +185,23 @@ def aurora_chat_stream(request):
             return f"Error writing to file {filepath}: {str(e)}"
 
     try:
-        # Load incoming payload vectors
         body_data = json.loads(request.body)
-        user_prompt = body_data.get("prompt")
+        user_prompt = body_data.get("prompt", "").strip()
         incoming_history = body_data.get("history", [])
-
+        
         if not user_prompt:
             return JsonResponse({"status": "error", "message": "Prompt parameter is missing."}, status=400)
+            
+        # Hard truncate prompt text inputs if they slip through the frontend console unscrubbed
+        if len(user_prompt) > MAX_PAYLOAD_CHARS:
+            sys.stderr.write("⚠️ [GUARD GATEWAY]: Prompt text crossed safe boundaries. Applying slice truncation.\n")
+            sys.stderr.flush()
+            user_prompt = user_prompt[:MAX_PAYLOAD_CHARS] + "\n... [TRUNCATED FOR THE 429 SAFETY CEILING] ..."
 
-        # Pull the gen-lang client secret from container execution parameters
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             return JsonResponse({"status": "error", "message": "GEMINI_API_KEY environment variable is unmapped."}, status=500)
 
-        # FIXED: Extract system rules directly out of your database records instead of hardcoding strings
         try:
             directive = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
             system_instruction = directive.instructions
@@ -204,16 +213,17 @@ def aurora_chat_stream(request):
         client = genai.Client(api_key=api_key)
         workspace_tools = [read_workspace_file, write_workspace_file]
 
-        # Build clean execution history arrays mapping straight to Google Cloud models
         gemini_history = []
         # ANTI-LOOP CONSTRAINT: Truncate context arrays down strictly to the last 6 message blocks
         for msg in incoming_history[-6:]:
             role = "user" if msg.get('role') == "user" else "model"
+            msg_text = msg.get('text', '')
+            if len(msg_text) > MAX_PAYLOAD_CHARS:
+                msg_text = msg_text[:MAX_PAYLOAD_CHARS] + "\n... [HISTORY ROW TRUNCATED] ..."
             gemini_history.append(
-                types.Content(role=role, parts=[types.Part.from_text(text=msg.get('text', ''))])
+                types.Content(role=role, parts=[types.Part.from_text(text=msg_text)])
             )
 
-        # Initialize the persistent workspace session context tracking loop
         chat = client.chats.create(
             model=model_tag,
             history=gemini_history,
@@ -224,11 +234,9 @@ def aurora_chat_stream(request):
             )
         )
 
-        # Execute text reasoning query
         response = chat.send_message(user_prompt)
         mutations_performed = []
 
-        # Execute cascading agent function mutations on local storage
         if response.function_calls:
             for call in response.function_calls:
                 tool_output = ""
@@ -239,7 +247,7 @@ def aurora_chat_stream(request):
                     tool_output = write_workspace_file(**call.args)
                     mutations_performed.append(f"Mutated {call.args.get('filepath')}")
 
-                # Pass operation outcomes straight back to complete explanations block
+                # Safely feed tool payload chunk back to Gemini
                 response = chat.send_message(
                     types.Part.from_function_response(
                         name=call.name,
@@ -247,7 +255,6 @@ def aurora_chat_stream(request):
                     )
                 )
 
-        # Export unified state metrics back down to frontend terminal layouts
         updated_history = []
         for content in chat.get_history():
             if content.parts and content.parts[0].text:
@@ -262,7 +269,7 @@ def aurora_chat_stream(request):
             "mutations": mutations_performed,
             "history": updated_history
         })
-
+        
     except Exception as e:
         return JsonResponse({"status": "error", "message": f"Agent engine failure: {str(e)}"}, status=500)
 # ======================================================================
