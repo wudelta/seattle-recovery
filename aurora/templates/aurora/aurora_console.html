@@ -8,36 +8,119 @@
 {% block title %}Aurora Control Center Cockpit{% endblock %}
 
 {% block extra_css %}
-    <!-- Unified CSS Assets across individual modules -->
-    <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
-    <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
-    <link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
-    <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
-    <link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
-    <link rel="stylesheet" href="{% static 'aurora/css/directives.css' %}">
-    <!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
-    <link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
+<!-- Unified CSS Assets across individual modules -->
+<link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/directives.css' %}">
+<!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
+<link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
+
+<style>
+    /* Full-size Matrix Selector button element styling rules */
+    .matrix-radio-pill {
+        display: none !important; /* Hide native input circles cleanly */
+    }
+    .matrix-pill-label {
+        flex: 1;
+        min-width: 130px;
+        margin-bottom: 0 !important;
+        cursor: pointer;
+    }
+    .matrix-btn-box {
+        padding: 0.4rem 0.75rem;
+        background-color: #10161a;
+        border: 1px solid #333333;
+        color: #8a9ba8;
+        font-family: var(--bs-font-monospace), monospace;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        border-radius: 4px;
+        transition: all 0.15s ease-in-out;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    /* Hover micro-interactions */
+    .matrix-pill-label:hover .matrix-btn-box {
+        background-color: #1a252c;
+        color: #f5f8fa;
+        border-color: #555555;
+    }
+    /* Checked active selection state remapping */
+    .matrix-radio-pill:checked + .matrix-btn-box {
+        background-color: #137cbd !important;
+        border-color: #106ba3 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 4px rgba(19, 124, 189, 0.4);
+    }
+    /* Offline state layout lock rules when session has not initiated */
+    .matrix-selector-disabled {
+        pointer-events: none !important;
+        opacity: 0.45;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column h-100 w-100 p-2" style="background-color: #000000; overflow: hidden; box-sizing: border-box;">
     {% csrf_token %}
-    
+
     <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
     <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
         <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
-            <div class="d-flex align-items-center gap-3">
-                <label for="console-view-selector" class="text-light text-uppercase font-weight-bold mb-0 small" style="letter-spacing: 1px;">Console Matrix Selector:</label>
-                <select id="console-view-selector" class="form-select form-select-sm bg-dark text-warning border-secondary font-monospace" style="width: auto; max-width: 320px;" disabled>
-                    <option value="delta_notes" selected>DELTA_NOTES_CONSOLE_PANEL</option>
-                    <option value="wu_chat">WU_CHAT_CONSOLE_PANEL</option>
-                    <option value="blueprint">BLUEPRINT_CONSOLE_PANEL</option>
-                    <option value="anamod">ANAMOD_CONSOLE_PANEL</option>
-                    <option value="content_panel">CONTENT_CONSOLE_PANEL</option>
-                    <option value="directives_panel">DIRECTIVES_CONSOLE_PANEL</option>
+            
+            <!-- FIXED: Transformed from legacydropdown selector into high-utility radio action pill row matrix -->
+            <div class="d-flex align-items-center gap-3 flex-grow-1 me-3">
+                <span class="text-light text-uppercase font-weight-bold mb-0 small text-nowrap" style="letter-spacing: 1px;">Console Matrix Selector:</span>
+                
+                <div id="console-view-selector-group" class="d-flex gap-1 flex-wrap flex-grow-1 matrix-selector-disabled" role="radiogroup">
+                    
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="delta_notes" class="matrix-radio-pill" checked>
+                        <div class="matrix-btn-box">Delta Notes</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="wu_chat" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Wu Chat</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="blueprint" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Blueprint</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="anamod" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Anamod</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="content_panel" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Content</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="directives_panel" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Directives</div>
+                    </label>
+
+                </div>
+                <!-- Hidden selector mock state to remain backwards-compatible with legacy console.js listener attachment routines -->
+                <select id="console-view-selector" class="d-none">
+                    <option value="delta_notes" selected>delta_notes</option>
+                    <option value="wu_chat">wu_chat</option>
+                    <option value="blueprint">blueprint</option>
+                    <option value="anamod">anamod</option>
+                    <option value="content_panel">content_panel</option>
+                    <option value="directives_panel">directives_panel</option>
                 </select>
             </div>
-            <div class="d-flex align-items-center">
+
+            <div class="d-flex align-items-center flex-shrink-0">
                 <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
                     <span class="text-info me-2 small">SESSION_TIME:</span>
                     <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
@@ -49,6 +132,7 @@
 
     <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
     <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+        
         <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
         <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999; pointer-events: auto;">
             <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
@@ -88,104 +172,106 @@
 <!-- START: MASTER_WORKSPACE_CONSOLE_SCRIPT_ORCHESTRATOR -->
 <!-- ====================================================================== -->
 {% block extra_js %}
-    <!-- Core Main Layout Panel Orchestrator -->
-    <script src="{% static 'aurora/js/console.js' %}"></script>
-    
-    <!-- Standalone Decoupled Feature Modules -->
-    <script src="{% static 'aurora/js/blueprint.js' %}"></script>
-    <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
-    <!-- FIX: Explicitly injected the missing asset layer script file tag onto disk -->
-    <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
-    
-    <!-- Flattened Offline App Static UI Dependencies Bound to Verified Local Paths -->
-    <script src="{% static 'js/jstree.min.js' %}"></script>
-    <script src="{% static 'js/vs/loader.js' %}"></script>
-    
-    <!-- Decoupled Functional IDE Assets Loaded Separately -->
-    <script src="{% static 'aurora/js/anamod.js' %}"></script>
-    <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
-    <script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
-    <script src="{% static 'aurora/js/content.js' %}"></script>
-    <script src="{% static 'aurora/js/directives.js' %}"></script>
-    
-    <script>
-        $(document).ready(function() {
-            const systemEndpoints = {
-                endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
-                content_endpoint: "{% url 'aurora:content_endpoint' %}",
-                directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
-                wu_chat_endpoint: "{% url 'aurora:wu_chat_endpoint' %}",
-                gemini_chat_endpoint: "{% url 'aurora:gemini_chat_stream' %}"
-            };
-            
-            let anamodInitialized = false;
-            let contentPanelInitialized = false;
-            let directivesPanelInitialized = false;
-            
-            if (typeof initDeltaNotesConsole === "function") {
-                initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+<!-- Core Main Layout Panel Orchestrator -->
+<script src="{% static 'aurora/js/console.js' %}"></script>
+<!-- Standalone Decoupled Feature Modules -->
+<script src="{% static 'aurora/js/blueprint.js' %}"></script>
+<script src="{% static 'aurora/js/delta_notes.js' %}"></script>
+<!-- FIX: Explicitly injected the missing asset layer script file tag onto disk -->
+<script src="{% static 'aurora/js/wu_chat.js' %}"></script>
+<!-- Flattened Offline App Static UI Dependencies Bound to Verified Local Paths -->
+<script src="{% static 'js/jstree.min.js' %}"></script>
+<script src="{% static 'js/vs/loader.js' %}"></script>
+<!-- Decoupled Functional IDE Assets Loaded Separately -->
+<script src="{% static 'aurora/js/anamod.js' %}"></script>
+<script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
+<script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
+<script src="{% static 'aurora/js/content.js' %}"></script> <script src="{% static 'aurora/js/directives.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    const systemEndpoints = {
+        endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
+        content_endpoint: "{% url 'aurora:content_endpoint' %}",
+        directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
+        wu_chat_endpoint: "{% url 'aurora:wu_chat_endpoint' %}",
+        gemini_chat_endpoint: "{% url 'aurora:gemini_chat_stream' %}"
+    };
+    let anamodInitialized = false;
+    let contentPanelInitialized = false;
+    let directivesPanelInitialized = false;
+
+    if (typeof initDeltaNotesConsole === "function") {
+        initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
+    }
+    if (typeof initWuChatConsole === "function") {
+        initWuChatConsole(systemEndpoints, '{{ csrf_token }}');
+    }
+
+    // INTERCEPT ENGINE: Sync full-size button selections to the hidden select dropdown matrix
+    $('input[name="console_pane_target"]').on('change', function() {
+        const targetedView = $(this).val();
+        const $hiddenSelect = $('#console-view-selector');
+        
+        if ($hiddenSelect.val() !== targetedView) {
+            $hiddenSelect.val(targetedView).trigger('change');
+            console.log("🎯 [CONSOLE MATRIX LINK]: Synchronized radio button toggle to legacy target: " + targetedView);
+        }
+    });
+
+    // REVERSE TRAP: If console.js changes the view internally, keep button styling matched
+    $('#console-view-selector').on('change', function() {
+        const correctView = $(this).val();
+        $(`input[name="console_pane_target"][value="${correctView}"]`).prop('checked', true);
+    });
+
+    // GATE RECOVERY HOOKS: Track session activations to unlock matrix layouts dynamically
+    $(document).on('aurora:session_started', function() {
+        // Strip out the offline lock style configuration layer
+        $('#console-view-selector-group').removeClass('matrix-selector-disabled');
+        
+        const currentView = $('#console-view-selector').val();
+        if (currentView === 'anamod') { triggerAnamodLoad(); }
+        if (currentView === 'content_panel') { triggerContentPanelLoad(); }
+        if (currentView === 'directives_panel') { triggerDirectivesPanelLoad(); }
+    });
+
+    function triggerAnamodLoad() {
+        if (!anamodInitialized && window.initAnamodConsole) {
+            console.log("[Anamod Orchestrator] View active. Loading editor components...");
+            window.initAnamodConsole('{{ csrf_token }}');
+            if (typeof window.initAnamodWorkspaceTree === 'function') {
+                window.initAnamodWorkspaceTree();
             }
-            
-            // FIXED: Fully cleaned out the Python comment token marker and replaced it with valid JS syntax
-            if (typeof initWuChatConsole === "function") {
-                initWuChatConsole(systemEndpoints, '{{ csrf_token }}');
-            }
-            
-            function triggerAnamodLoad() {
-                if (!anamodInitialized && window.initAnamodConsole) {
-                    console.log("[Anamod Orchestrator] View active. Loading editor components...");
-                    window.initAnamodConsole('{{ csrf_token }}');
-                    if (typeof window.initAnamodWorkspaceTree === 'function') {
-                        window.initAnamodWorkspaceTree();
-                    }
-                    anamodInitialized = true;
-                } else if (window.resizeAnamodEditor) {
-                    window.resizeAnamodEditor();
-                }
-            }
-            
-            function triggerContentPanelLoad() {
-                if (!contentPanelInitialized && window.initContentConsole) {
-                    console.log("[ContentPanel Orchestrator] Panel active. Loading workspace elements...");
-                    window.initContentConsole(systemEndpoints, '{{ csrf_token }}');
-                    contentPanelInitialized = true;
-                }
-            }
-            
-            function triggerDirectivesPanelLoad() {
-                if (!directivesPanelInitialized && window.initDirectivesConsole) {
-                    console.log("[DirectivesPanel Orchestrator] Panel active. Loading workspace elements...");
-                    window.initDirectivesConsole(systemEndpoints, '{{ csrf_token }}');
-                    directivesPanelInitialized = true;
-                }
-            }
-            
-            $(document).on('aurora:session_started', function() {
-                const currentView = $('#console-view-selector').val();
-                if (currentView === 'anamod') {
-                    triggerAnamodLoad();
-                }
-                if (currentView === 'content_panel') {
-                    triggerContentPanelLoad();
-                }
-                if (currentView === 'directives_panel') {
-                    triggerDirectivesPanelLoad();
-                }
-            });
-            
-            $(document).on('aurora:view_changed', function(e, viewMode) {
-                if (viewMode === 'anamod') {
-                    setTimeout(triggerAnamodLoad, 80);
-                }
-                if (viewMode === 'content_panel') {
-                    setTimeout(triggerContentPanelLoad, 80);
-                }
-                if (viewMode === 'directives_panel') {
-                    setTimeout(triggerDirectivesPanelLoad, 80);
-                }
-            });
-        });
-    </script>
+            anamodInitialized = true;
+        } else if (window.resizeAnamodEditor) {
+            window.resizeAnamodEditor();
+        }
+    }
+
+    function triggerContentPanelLoad() {
+        if (!contentPanelInitialized && window.initContentConsole) {
+            console.log("[ContentPanel Orchestrator] Panel active. Loading workspace elements...");
+            window.initContentConsole(systemEndpoints, '{{ csrf_token }}');
+            contentPanelInitialized = true;
+        }
+    }
+
+    function triggerDirectivesPanelLoad() {
+        if (!directivesPanelInitialized && window.initDirectivesConsole) {
+            console.log("[DirectivesPanel Orchestrator] Panel active. Loading workspace elements...");
+            window.initDirectivesConsole(systemEndpoints, '{{ csrf_token }}');
+            directivesPanelInitialized = true;
+        }
+    }
+
+    $(document).on('aurora:view_changed', function(e, viewMode) {
+        if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
+        if (viewMode === 'content_panel') { setTimeout(triggerContentPanelLoad, 80); }
+        if (viewMode === 'directives_panel') { setTimeout(triggerDirectivesPanelLoad, 80); }
+    });
+});
+</script>
 {% endblock %}
 <!-- ====================================================================== -->
 <!-- END: MASTER_WORKSPACE_CONSOLE_SCRIPT_ORCHESTRATOR (PATCH 2 OF 2) -->
