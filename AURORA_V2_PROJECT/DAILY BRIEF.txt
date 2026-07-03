@@ -1,120 +1,24 @@
 # ======================================================================
-# FILE: aurora/api/blueprint.py
+# FILE: migration.md (PATCH 1 OF 1)
+# START: REF_ENGINE_MIGRATION_SNAPSHOT_LEDGER
 # ======================================================================
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from aurora.utils.page_skeleton import PageSkeletonBuilder
-from aurora.api.handlers import (
-    PageCommandHandler,
-    ApiCommandHandler,
-    DestroyCommandHandler,
-    BindCommandHandler,
-)
+# Monorepo Infrastructure Migration Ledger (Session Run: 2026-07-01)
 
-# Structural Command Pattern Mapping Matrix
-COMMAND_MAP = {
-    "/page": PageCommandHandler(),
-    "/api": ApiCommandHandler(),
-    "/destroy": DestroyCommandHandler(),
-    "/bind": BindCommandHandler(),
-}
+## 1. Core Accomplishments Today
+* **Provider Framework Overhaul**: Completely decoupled the old, token-restricted Groq client SDK (`llama3` tracking loops) and successfully migrated to the modern cloud-hosted `google-genai` SDK (`gemini-2.5-flash`).
+* **Multi-Tenant Network Swap**: Adjusted your isolated runtime container network matrix layer mappings. Converted `django_hopehub` to expose port `8000` natively and remapped your active, custom IDE tool container layer (`django_aurora`) to expose port `9000` cleanly.
+* **Nginx Reverse Proxy Realignment**: Updated `./webserver/default.conf` to handle text payloads, web views, and high-frequency asynchronous HTTP WebSocket telemetry stream upgrades over ports 8000 and 9000 without dropping connections.
+* **Database Target Unifications**: Corrected environment configuration vectors to map your monolithic database parameters cleanly to your genuine host drive hard-storage target name (`DB_NAME=hopehub_aurora`), safely preserving all 23 active application relationship asset tables side-by-side.
+* **Anti-Hallucination Gating Hooks**: Refactored your `wu_chat.js` frontend script to pull and pass sliding-window conversational histories to the cloud model, and cleaned out the obsolete x-ratelimit header scraping loops from your synchronous orchestration engine script views.
+* **Streamlined UI Workspace**: Successfully stripped the legacy greeting layout box and obsolete fuel progress bars out of the `wu_chat_console_panel.html` dashboard, updated the transmission button label to "Transmit to Wu", and established an Enter-key submission hook.
 
+## 2. Planned Target Vectors for Tomorrow (2026-07-02 Session)
+* **Persistent Ledger Sessions**: Re-engineer the backend message loop to automatically fetch and save history entries inside the `aurora_workspacetransaction` PostgreSQL table. This completely decouples context retention from browser page refreshes or system resets.
+* **Dynamic Context Summarization**: Implement an automated memory condensation pipeline. When active transactional histories grow too large, the system will trigger a background summarization request to condense past exchanges into a high-density status snapshot, protecting focus windows from attention drift.
+* **Component Registry Crawl**: Instruct the data-driven Gemini agent engine (Wu) to execute an automated multi-file directory crawl over your local Python codebase paths (`/app/aurora/` and `/app/hopehub/`).
+* **UUID Database Realignment**: Force the agent loop to analyze views, handlers, and object queries to verify compliance with your newly updated UUID primary key data shapes, re-indexing table rows inside `ComponentRegistry` automatically.
+* **TDD Test Suite Re-Generation**: Scrub out your outdated, broken database-integer legacy test suite files and use Wu's 1-million token focus window to write fresh, zero-hallucination unit test frameworks for your modules.
 # ======================================================================
-# MASTER_BLUEPRINT_ROUTING_DISPATCHER_EXECUTION_LOOP
+# END: REF_ENGINE_MIGRATION_SNAPSHOT_LEDGER (PATCH 1 OF 1)
 # ======================================================================
-
-@csrf_exempt
-def execute_blueprint_api(request):
-    """
-    Centralized automation routing gateway. Parses incoming blueprint directives 
-    and hands them off to dedicated sub-command execution handlers.
-    """
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
-
-    try:
-        raw_cmd = _extract_raw_command(request)
-        if not raw_cmd:
-            return _handle_empty_command()
-
-        PageSkeletonBuilder.emit_log(f"[COMMAND] Intercepted automation route directive: '{raw_cmd}'\n")
-        
-        # Command Tokenization Pass
-        parts = raw_cmd.split()
-        trigger = parts[0].lower() if parts else ""
-        
-        # Check if the instruction looks like a slash command
-        if trigger.startswith("/"):
-            return _handle_slash_command(trigger, request, parts, raw_cmd)
-        
-        # TIER 2: AI INTELLECTUAL ORCHESTRATION GATEWAY (Plain English Fallback Mode)
-        return _handle_plain_english_command()
-    except Exception as e:
-        return _handle_exception(e)
-
-
-def _extract_raw_command(request):
-    """Extracts the raw command from the request."""
-    raw_cmd = request.POST.get("blueprint", "").strip()
-    if not raw_cmd:
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            raw_cmd = data.get("blueprint", "").strip()
-        except Exception:
-            pass
-    return raw_cmd
-
-
-def _handle_empty_command():
-    """Handles the case where no command is provided."""
-    return JsonResponse({
-        "status": "success",
-        "minion_log": "System standing ready...",
-        "generated_code": "",
-        "validation": {"valid": True, "errors": [], "warnings": []}
-    })
-
-
-def _handle_slash_command(trigger, request, parts, raw_cmd):
-    """Handles slash commands."""
-    if trigger in COMMAND_MAP:
-        # Delegate directly to the clean modular command object handler
-        return COMMAND_MAP[trigger].execute(request, parts, raw_cmd)
-    else:
-        # Explicitly intercept unknown slash commands to fulfill validation constraints
-        error_log = "Unknown automation instruction syntax path entered."
-        PageSkeletonBuilder.emit_log(f"[FAIL] {error_log}\n")
-        return JsonResponse({
-            "status": "success",
-            "minion_log": "Unknown automation instruction",
-            "generated_code": "",
-            "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
-            "validation": {"valid": False, "errors": [error_log], "warnings": []}
-        })
-
-
-def _handle_plain_english_command():
-    """Handles plain English commands."""
-    PageSkeletonBuilder.emit_log("[INFO] Routing command string to conversational pipeline processing layer...\n")
-    return JsonResponse({
-        "status": "success",
-        "minion_log": "Wu engine is ready. Cloud gateway waiting for plain English commands.",
-        "generated_code": "# Wu Active\n",
-        "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
-        "validation": {"valid": True, "errors": [], "warnings": []}
-    })
-
-
-def _handle_exception(e):
-    """Handles exceptions."""
-    error_msg = f"Forge process view fault: {str(e)}"
-    PageSkeletonBuilder.emit_log(f"[FAIL] Core architectural router exception intercepted: {error_msg}\n")
-    return JsonResponse({
-        "status": "success",
-        "minion_log": error_msg,
-        "generated_code": "",
-        "telemetry_stream": PageSkeletonBuilder.flush_telemetry(),
-        "validation": {"valid": False, "errors": [str(e)], "warnings": []}
-    })
 
