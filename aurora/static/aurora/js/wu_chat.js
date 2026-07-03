@@ -49,81 +49,86 @@ function initWuChatConsole(endpoints, csrfToken) {
 // FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
 // START: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
-    // FIXED: Active keydown listener to trigger transmission loop on Enter, while allowing Shift+Enter for carriage returns
-    inputField.on('keydown', function(e) {
-        if (e.which === 13 && !e.shiftKey) {
-            e.preventDefault();
-            transmitBtn.click();
-        }
-    });
-
-    transmitBtn.on('click', function(e) {
+// FIXED: Active keydown listener to trigger transmission loop on Enter, while allowing Shift+Enter for carriage returns
+inputField.on('keydown', function(e) {
+    if (e.which === 13 && !e.shiftKey) {
         e.preventDefault();
-        const deltaNotesText = inputField.val().trim();
-        if (!deltaNotesText) {
-            appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
-            return;
-        }
+        transmitBtn.click();
+    }
+});
 
-        approvalDrawer.addClass('d-none');
-        activeTransactionId = null;
+transmitBtn.on('click', function(e) {
+    e.preventDefault();
+    const deltaNotesText = inputField.val().trim();
+    if (!deltaNotesText) {
+        appendSystemAlert('[WARNING] Cannot transmit blank design intentions.');
+        return;
+    }
+    approvalDrawer.addClass('d-none');
+    activeTransactionId = null;
 
-        const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
-        chatHistory.append(userBubble);
-        chatHistory.scrollTop(chatHistory[0].scrollHeight);
+    const userBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #18181b; border: 1px solid #27272a; align-self: flex-end; max-width: 85%; white-space: pre-wrap;"></div>').text(deltaNotesText);
+    chatHistory.append(userBubble);
+    chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
-        inputField.val('').prop('disabled', true);
-        transmitBtn.prop('disabled', true).text('PROCESSING REASONING LOOP...');
-        appendSystemAlert('🚀 [SYSTEM] Transmitting context frames to Gemini 2.5 Flash Engine...');
+    inputField.val('').prop('disabled', true);
+    transmitBtn.prop('disabled', true).text('PROCESSING REASONING LOOP...');
+    appendSystemAlert('🚀 [SYSTEM] Transmitting context frames to Master Orchestration Core Engine...');
 
-        const activeToken = csrfToken || $('[name=csrfmiddlewaretoken]').val();
+    const activeToken = csrfToken || $('[name=csrfmiddlewaretoken]').val();
+    
+    // FIXED: Generate or retrieve a persistent browser thread identifier signature
+    if (!window.activeChatSessionToken) {
+        window.activeChatSessionToken = "session_" + Math.random().toString(36).substring(2, 11);
+    }
 
-        $.ajax({
-            url: endpoints.gemini_chat_endpoint,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ 
-                prompt: deltaNotesText,
-                history: gatherLocalChatHistory()
-            }),
-            headers: { 'X-CSRFToken': activeToken },
-            success: function(response) {
-                if (response.status === 'success') {
-                    const finalOutputText = response.reply || "No response received.";
-                    const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
-                    $wuBubble.append(document.createTextNode(finalOutputText));
-                    chatHistory.append($wuBubble);
-                    chatHistory.scrollTop(chatHistory[0].scrollHeight);
+    // FIXED: Re-routed from standalone gemini stream straight to our secure database ledger endpoint
+    $.ajax({
+        url: endpoints.wu_chat_endpoint,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ 
+            delta_notes: deltaNotesText,
+            session_id: window.activeChatSessionToken
+        }),
+        headers: { 'X-CSRFToken': activeToken },
+        success: function(response) {
+            // FIXED: Support both view response formats ('success' and 'wu_is_processing') safely
+            if (response.status === 'success' || response.status === 'wu_is_processing') {
+                const finalOutputText = response.direct_text_output || response.reply || "No response received.";
+                
+                const $wuBubble = $('<div class="p-2 rounded font-monospace small text-light" style="background-color: #1e1b4b; border: 1px solid #312e81; align-self: flex-start; max-width: 85%; white-space: pre-wrap;"><strong>Wu: </strong></div>');
+                $wuBubble.append(document.createTextNode(finalOutputText));
+                chatHistory.append($wuBubble);
+                chatHistory.scrollTop(chatHistory[0].scrollHeight);
 
-                    // Track automated file changes on telemetry logs screen
-                    if (response.mutations && response.mutations.length > 0) {
-                        response.mutations.forEach(function(m) {
-                            appendSystemAlert(`🛠️ [MUTATION]: ${m}`);
-                        });
-                    }
-
-                    // REMOVED legacy fuel_gauge frontend progress bar mutators here to match layout deletions
-                    if (response.transaction_id) {
-                        activeTransactionId = response.transaction_id;
-                        approvalDrawer.removeClass('d-none');
-                        appendSystemAlert('⚠️ [SAFETY GATE] Actions queued. Awaiting permissions confirmation...');
-                    }
-                } else {
-                    appendSystemAlert(`💥 [SYSTEM ERROR] Query failure: ${response.message}`);
+                if (response.mutations && response.mutations.length > 0) {
+                    response.mutations.forEach(function(m) {
+                        appendSystemAlert(`🛠️ [MUTATION]: ${m}`);
+                    });
                 }
-                resetInputControls();
-            },
-            error: function(xhr) {
-                let errorText = 'Unknown API Fault.';
-                try {
-                    const parsed = JSON.parse(xhr.responseText);
-                    errorText = parsed.message || parsed.error || errorText;
-                } catch(e) {}
-                appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
-                resetInputControls();
+
+                if (response.transaction_id) {
+                    activeTransactionId = response.transaction_id;
+                    approvalDrawer.removeClass('d-none');
+                    appendSystemAlert('⚠️ [SAFETY GATE] Actions queued. Awaiting permissions confirmation...');
+                }
+            } else {
+                appendSystemAlert(`💥 [SYSTEM ERROR] Query failure: ${response.message || 'Verification anomaly.'}`);
             }
-        });
+            resetInputControls();
+        },
+        error: function(xhr) {
+            let errorText = 'Unknown API Fault.';
+            try {
+                const parsed = JSON.parse(xhr.responseText);
+                errorText = parsed.message || parsed.error || errorText;
+            } catch(e) {}
+            appendSystemAlert(`💥 [SYSTEM ERROR] Fault response: ${errorText}`);
+            resetInputControls();
+        }
     });
+});
 // ======================================================================
 // END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE (PATCH 2 OF 3)
 // ======================================================================
