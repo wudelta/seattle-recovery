@@ -187,7 +187,17 @@ CHANNEL_LAYERS = {
     },
 }
 
+# ==============================================================================
+# AI PROVIDER CONFIGURATION
+# ==============================================================================
+
+AI_PROVIDER = env("AI_PROVIDER", default="openai")
+
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+OPENAI_MODEL = env("OPENAI_MODEL", default="gpt-5.5")
+
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
+GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-2.5-flash")
 
 # Register the custom UUID user model globally across the monorepo
 AUTH_USER_MODEL = 'users.CustomUser'

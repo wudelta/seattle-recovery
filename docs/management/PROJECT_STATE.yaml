@@ -1,0 +1,131 @@
+project:
+name: Aurora
+version: 2
+
+protocol:
+version: 3.1
+
+development:
+
+objective: >
+Implement the AI Execution Platform architecture,
+establishing a vendor-independent, resilient provider
+routing layer suitable for merge into main.
+
+current_phase: >
+AI Execution Platform Baseline
+
+current_branch: >
+feature/provider-abstraction
+
+status:
+
+architecture:
+
+```
+adr_001_ai_execution_architecture: complete
+
+adr_002_provider_routing_and_failover: complete
+
+adr_003_ai_directive_contract: complete
+
+architecture_overview: complete
+```
+
+provider_layer:
+
+```
+interface: complete
+
+registry: in_progress
+
+router: pending
+
+mock_provider: complete
+
+openai_provider: in_progress
+
+gemini_provider: pending
+```
+
+execution_engine:
+
+```
+provider_integration: in_progress
+
+direct_sdk_removal: pending
+```
+
+configuration:
+
+```
+provider_priority: pending
+
+model_mapping: pending
+
+directive_constraints_migration: pending
+```
+
+testing:
+
+```
+regression_testing: pending
+
+automated_test_rebuild: deferred
+
+green_build: pending
+```
+
+documentation:
+
+```
+architecture: complete
+
+continuity_system: in_progress
+```
+
+active_files:
+
+* core_logic/ai/base.py
+* core_logic/ai/providers.py
+* core_logic/ai/mock_provider.py
+* core_logic/ai/openai_provider.py
+* core_logic/ai/gemini_provider.py
+* aurora/minions/engine.py
+* docs/architecture/AI_EXECUTION_ARCHITECTURE.md
+* docs/architecture/adr/ADR-001-ai-execution-architecture.md
+* docs/architecture/adr/ADR-002-provider-routing-and-failover.md
+* docs/architecture/adr/ADR-003-ai-directive-contract.md
+
+active_adrs:
+
+* ADR-001
+* ADR-002
+* ADR-003
+
+known_issues:
+
+* Provider Router has not yet been implemented.
+* Model resolution policy has not yet been centralized.
+* DeltaDirective constraints still contain legacy provider-specific values.
+* Direct Gemini SDK usage still exists within the execution engine.
+* Automated tests require redesign following the architecture refactor.
+
+next_task: >
+Implement the Provider Router as defined by ADR-002,
+including centralized model resolution and provider
+selection. Refactor the execution engine to delegate
+all provider decisions to the router before completing
+provider implementations.
+
+notes:
+
+* ADR-001 through ADR-003 are now the architectural source of truth.
+* The execution engine must remain vendor-independent.
+* No direct SDK usage outside provider implementations.
+* Provider implementations must not contain routing or failover logic.
+* Routing policy belongs to the Provider Router.
+* Model names must not appear in application code.
+* Preserve anchor topology during all source modifications.
+* Green Build Rule remains in effect.
+* Automated test reconstruction is intentionally deferred until the implementation baseline is stable.
