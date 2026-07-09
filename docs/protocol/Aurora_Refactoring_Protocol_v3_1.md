@@ -114,6 +114,21 @@ If the current file has not been provided, request it before generating modifica
 
 ---
 
+## Rule D: File Identity Verification
+
+Before applying an anchored patch, verify that the patch target matches the actual file being edited.
+
+Never assume the current editor tab, terminal output, or copied patch context represents the intended target file.
+
+When multiple files are being modified in a migration:
+
+- confirm the filename before delivering contents;
+- keep each patch explicitly bound to its target file;
+- avoid copying one file's patch block into another file;
+- if file identity becomes uncertain, stop and request verification.
+
+---
+
 # 3. Incremental Refactoring Loop ("GO" Loop)
 
 Every refactor follows this workflow.
@@ -163,6 +178,16 @@ Never advance automatically.
 
 ---
 
+## Step 6: Implementation Confirmation
+
+When the user proceeds to the next file, assume the previous patch was implemented unless the user explicitly indicates otherwise.
+
+Questions, objections, or clarification requests indicate the user has paused implementation.
+
+Do not require a separate "go" confirmation after every successful implementation unless the user has requested strict confirmation mode.
+
+---
+
 # 4. Testing & Git Rules
 
 ## Rule A: Green Build Rule
@@ -198,6 +223,25 @@ it worked
 Immediately pause development.
 
 Provide Git staging and commit commands before continuing.
+
+---
+
+## Rule E: Checkpoint Discipline
+
+During large architectural migrations:
+
+Create Git checkpoints at stable milestones.
+
+Do not allow large numbers of unrelated file mutations to accumulate without commits.
+
+Preferred checkpoints:
+
+- architecture completion;
+- subsystem migration completion;
+- successful application startup;
+- green validation milestone.
+
+A clean recovery point is part of the refactoring process.
 
 ---
 
@@ -247,6 +291,20 @@ The final decision always belongs to the user.
 # 6. Aurora Project Brain
 
 The repository—not the conversation—is the authoritative source of project context.
+
+The Project Brain must describe both:
+
+- current implementation state;
+- intended future architecture.
+
+These states must not be confused.
+
+Documentation should clearly distinguish:
+
+- completed capabilities;
+- baseline implementation;
+- future roadmap items;
+- unresolved design decisions.
 
 All development sessions revolve around the Project Brain.
 
@@ -356,6 +414,13 @@ Generate an ADR whenever a decision:
 - changes architectural direction
 - is expected to remain relevant beyond six months
 - introduces a major abstraction or workflow
+
+Implementation completion alone does not require a new ADR.
+
+Create ADRs for architectural decisions, not milestones.
+
+A completed implementation of an existing ADR should update project state and 
+session history, not automatically create another ADR.
 
 Typical examples:
 
