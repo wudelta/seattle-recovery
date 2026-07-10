@@ -174,19 +174,16 @@
 {% block extra_js %}
 <!-- Core Main Layout Panel Orchestrator -->
 <script src="{% static 'aurora/js/console.js' %}"></script>
-<!-- Standalone Decoupled Feature Modules -->
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
-<!-- FIX: Explicitly injected the missing asset layer script file tag onto disk -->
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
-<!-- Flattened Offline App Static UI Dependencies Bound to Verified Local Paths -->
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
-<!-- Decoupled Functional IDE Assets Loaded Separately -->
 <script src="{% static 'aurora/js/anamod.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
-<script src="{% static 'aurora/js/content.js' %}"></script> <script src="{% static 'aurora/js/directives.js' %}"></script>
+<script src="{% static 'aurora/js/content.js' %}"></script> 
+<script src="{% static 'aurora/js/directives.js' %}"></script>
 
 <script>
 $(document).ready(function() {

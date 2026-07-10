@@ -15,6 +15,14 @@ from .dev_streamer_api import trigger_pipeline, run_development_pipeline_async
 # NEW CONNECTION: Import the new automated workspace view directly from endpoints
 from .endpoints import aurora_chat_stream
 
+# 2. Integrated Code Editor & Sandbox API Endpoints
+from .ide_operations import (
+    file_tree_api,
+    file_operation_api,
+    run_code_api,
+    lint_code_api
+)
+
 __all__ = [
     'delta_notes_endpoint',
     'execute_blueprint_api',
@@ -24,8 +32,12 @@ __all__ = [
     'content_endpoint',
     'directives_endpoint',
     'wu_chat_endpoint',
-    'process_transaction_action', # FIX: Formally registered the approval/rollback endpoint asset
-    'aurora_chat_stream',         # EXPOSED: Resolves the Daphne AttributeError immediately!
+    'process_transaction_action', 
+    'aurora_chat_stream',
+    'file_tree_api',
+    'file_operation_api',
+    'run_code_api',
+    'lint_code_api',
 ]
 # ====================================================================== #
 # END: MODULE_ROUTING_REGISTRATION_FOOTPRINT (PATCH 1 OF 1)              #

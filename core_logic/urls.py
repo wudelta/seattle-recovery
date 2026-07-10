@@ -14,14 +14,14 @@ urlpatterns = [
 ]
 
 # Identify which container network node is booting up
-CURRENT_CONTAINER_TARGET = os.getenv('DB_NAME')
+CURRENT_CONTAINER_TARGET = os.getenv('APP_MODE')
 
-if CURRENT_CONTAINER_TARGET == 'aurora_db':
+if CURRENT_CONTAINER_TARGET == 'AURORA':
     # Only load the builder url definitions on the Aurora container node
     urlpatterns += [
         path('aurora/', include('aurora.urls', namespace='aurora')),
     ]
-elif CURRENT_CONTAINER_TARGET == 'hopehub_db':
+elif CURRENT_CONTAINER_TARGET == 'HOPEHUB':
     # Only load the application url definitions on the Hopehub container node
     urlpatterns += [
         path('hopehub/', include('hopehub.urls', namespace='hopehub')),

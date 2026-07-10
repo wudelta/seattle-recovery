@@ -4,6 +4,7 @@
 # ======================================================================
 
 from core_logic.ai.registry import registry
+from core_logic.settings import AI_PROVIDER
 
 
 class ProviderRouter:
@@ -29,20 +30,19 @@ class ProviderRouter:
         """
         Resolve the requested provider.
 
-        For the baseline implementation this is a direct lookup in the
-        provider registry. Future revisions will centralize routing,
-        model resolution, retry, and failover here.
+        Explicit provider requests take precedence. Otherwise, use the
+        configured default provider. Future revisions will centralize
+        routing, model resolution, retry, and failover here.
         """
 
         provider_name = (
-            provider_name or "simulated"
+            provider_name or AI_PROVIDER
         ).lower()
 
         return registry.get(provider_name)
 
 
 provider_router = ProviderRouter()
-
 
 # ======================================================================
 # END: PROVIDER_ROUTER (PATCH 1 OF 1)

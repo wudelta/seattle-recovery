@@ -30,10 +30,10 @@ urlpatterns = [
     path('api/components/unlocked/', api_endpoints.unlocked_components_endpoint, name='unlocked_components_registry'),
 
     # 4. LIGHTWEIGHT EMBEDDED IDE & DOCKER SANDBOX ENDPOINTS
-    path('api/files/tree/', views.file_tree_api, name='ide_file_tree'),
-    path('api/files/op/', views.file_operation_api, name='ide_file_operations'),
-    path('api/sandbox/run/', views.run_code_api, name='ide_sandbox_run'),
-    path('api/sandbox/lint/', views.lint_code_api, name='ide_sandbox_lint'),
+    path('api/files/tree/', api_endpoints.file_tree_api, name='ide_file_tree'),
+    path('api/files/op/', api_endpoints.file_operation_api, name='ide_file_operations'),
+    path('api/sandbox/run/', api_endpoints.run_code_api, name='ide_sandbox_run'),
+    path('api/sandbox/lint/', api_endpoints.lint_code_api, name='ide_sandbox_lint'),
 
     # 6. DJANGO AUTH URLS
     path('login/', auth_views.LoginView.as_view(

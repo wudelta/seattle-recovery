@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 def get_file_tree(path="/app"):
     """Scans the local filesystem to generate a hierarchical JSON structure."""
     name = os.path.basename(path)
-    ignored = {'.git', '__pycache__', 'node_modules', '.pytest_cache', 'postgres_data', 'staticfiles', '.venv', 'venv'}
+    ignored = {'.git', '__pycache__', 'node_modules', '.pytest_cache', 'postgres_data', 'staticfiles', '.venv', 'venv', '.idea', '.spyproject'}
     
     if os.path.isdir(path):
         try:

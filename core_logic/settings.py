@@ -38,11 +38,11 @@ INSTALLED_APPS = [
 ]
 
 # Structural Split Invariant: Only load the domain app relevant to this running node container
-CURRENT_CONTAINER_TARGET = os.getenv('DB_NAME')
+CURRENT_CONTAINER_TARGET = os.getenv('APP_MODE')
 
-if CURRENT_CONTAINER_TARGET == 'hopehub_db':
+if CURRENT_CONTAINER_TARGET == 'HOPEHUB':
     INSTALLED_APPS.append('hopehub')
-elif CURRENT_CONTAINER_TARGET == 'aurora_db':
+elif CURRENT_CONTAINER_TARGET == 'AURORA':
     INSTALLED_APPS.append('aurora')
 else:
     # Local fallback/management command environment catch

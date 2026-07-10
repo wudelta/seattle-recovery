@@ -45,6 +45,36 @@ class OpenAIProvider(AIProvider):
             "total_tokens": getattr(usage, "total_tokens", 0),
         }
 
+    def _build_request(
+        self,
+        model: str,
+        prompt: str,
+        directive,
+    ) -> dict:
+        """
+        Build a Responses API request.
+
+        GPT-5.5 does not currently support the temperature parameter.
+        The provider owns vendor-specific request compatibility.
+        """
+
+        constraints = directive.constraints or {}
+
+        request = {
+            "model": model,
+            "instructions": directive.instructions,
+            "input": prompt,
+            "max_output_tokens": constraints.get(
+                "max_output_tokens",
+            ),
+        }
+
+        return {
+            key: value
+            for key, value in request.items()
+            if value is not None
+        }
+
     def chat(
         self,
         prompt: str,
@@ -59,16 +89,11 @@ class OpenAIProvider(AIProvider):
         )
 
         response = self.client.responses.create(
-            model=model,
-            instructions=directive.instructions,
-            input=prompt,
-            temperature=constraints.get(
-                "temperature",
-                0.2,
-            ),
-            max_output_tokens=constraints.get(
-                "max_output_tokens",
-            ),
+            **self._build_request(
+                model=model,
+                prompt=prompt,
+                directive=directive,
+            )
         )
 
         return AIResponse(
@@ -100,18 +125,15 @@ class OpenAIProvider(AIProvider):
             getattr(settings, "OPENAI_MODEL", "gpt-5.5"),
         )
 
-        stream = self.client.responses.create(
+        request = self._build_request(
             model=model,
-            instructions=directive.instructions,
-            input=prompt,
-            temperature=constraints.get(
-                "temperature",
-                0.2,
-            ),
-            max_output_tokens=constraints.get(
-                "max_output_tokens",
-            ),
-            stream=True,
+            prompt=prompt,
+            directive=directive,
+        )
+        request["stream"] = True
+
+        stream = self.client.responses.create(
+            **request,
         )
 
         accumulated = ""
@@ -141,7 +163,6 @@ class OpenAIProvider(AIProvider):
                 "directive": directive.directive_name,
             },
         )
-
 
 # ======================================================================
 # END: OPENAI_PROVIDER_IMPLEMENTATION (PATCH 1 OF 1)

@@ -86,14 +86,10 @@ class MinionRunner:
                         0,
                     )
 
-                text = getattr(
-                    response_chunk,
-                    "text",
-                    "",
-                )
-
-                if text:
-                    yield text
+                # The provider has already emitted the response text
+                # incrementally. The final AIResponse is consumed only
+                # for metadata (usage, provider, model, etc.) and must
+                # not re-emit the accumulated text.
 
             self.last_rpm_remaining = max(
                 1,
@@ -162,7 +158,6 @@ class MinionRunner:
         return async_to_sync(
             _gather_stream_tokens
         )()
-
 
 # ======================================================================
 # END: PROVIDER_ROUTED_MINION_EXECUTION_ENGINE (PATCH 1 OF 1)
