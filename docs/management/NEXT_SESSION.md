@@ -1,160 +1,371 @@
-# Aurora Development Resume Guide
+# Wu Assisted Refactoring — Clean Reconstruction Plan
 
-## Session Summary
+## Decision
 
-The AI Execution Platform architecture has reached baseline completion. The focus of development has shifted from building infrastructure to validating that infrastructure through real-world Wu Chat workflows.
+The former `feature/wu-monaco-diff-slider` implementation will be used only as a behavioral reference.
 
-This phase is intentionally conservative. The objective is to prove the existing architecture, eliminate integration defects, and prepare the provider abstraction branch for merge into `main`.
+It will not be merged, checked out over the current branch, or copied wholesale.
 
-Wu Chat now serves as the primary validation harness for the entire AI execution pipeline.
+The previous implementation coupled:
+
+* Wu response handling
+* transaction state
+* Monaco lifecycle
+* dynamic DOM replacement
+* approval controls
+
+That coupling caused repeated rendering failures, damaged review-panel markup, and risked interference with Anamod’s separate Monaco editor.
+
+The Wu-assisted refactoring workflow will therefore be reconstructed from small, isolated components.
 
 ---
 
-## Confirmed Execution Path
+## Required User Workflow
+
+The finished workflow should be:
 
 ```text
-Browser
+User:
+“Refactor aurora/api/content_api.py”
+
     ↓
-wu_chat.js
+
+Aurora identifies and validates the repository-relative file path
+
     ↓
-wu_chat_api.py
+
+Aurora reads the file locally and adds its contents to Wu’s prompt
+
     ↓
-MinionRunner
+
+Wu returns a structured patch wrapped in:
+
+[PATCH_START: aurora/api/content_api.py]
+...
+[PATCH_END]
+
     ↓
-ProviderRouter
+
+Aurora parses the response and creates a pending code-change transaction
+
     ↓
-Selected Provider
+
+The Wu-specific review slider opens
+
     ↓
-AI Response
+
+A dedicated Monaco diff editor displays:
+
+Current Code | Proposed Code
+
+    ↓
+
+User chooses:
+
+Approve & Write
+or
+Reject Change
 ```
 
-The execution path is understood end-to-end and should remain the primary reference when investigating integration issues.
+The user should not normally need to enter cryptic markers such as:
+
+```text
+[READ_FILE: ...]
+```
+
+Natural repository paths should be recognized from ordinary instructions.
 
 ---
 
-## Current Development Focus
+## Architectural Boundaries
 
-Development has transitioned from architectural implementation to integration validation.
+### 1. Workspace Context Resolver
 
-The remaining work centers on:
+Proposed module:
 
-* validating provider routing
-* validating telemetry collection
-* classifying conversational versus mutation requests
-* repairing the Monaco review workflow
-* removing obsolete UI behavior only after replacement functionality has been validated
+```text
+aurora/minions/workspace_context.py
+```
 
-No additional architectural expansion should occur during the Aurora baseline.
+Responsibilities:
 
----
+* recognize a repository-relative file path in the user request;
+* optionally retain internal compatibility with `[READ_FILE: ...]`;
+* resolve paths beneath `settings.BASE_DIR`;
+* reject path traversal;
+* reject directories;
+* reject missing or unreadable files;
+* read the current source locally;
+* create a clearly delimited hydrated prompt for Wu.
 
-## Major Discoveries
+It must not:
 
-* Provider abstraction successfully isolates UI code from provider implementations.
-* Provider implementations are responsible only for SDK communication.
-* Provider selection belongs exclusively to the Provider Router.
-* Wu currently behaves as a synchronous request/response system despite existing streaming infrastructure.
-* Console websocket infrastructure exists but currently carries mostly local UI events instead of execution telemetry.
-* Every Wu interaction currently creates a `WorkspaceTransaction`.
-* Because every interaction becomes a transaction, the approval drawer opens for ordinary conversations.
-* The missing architectural boundary is intent classification (conversation versus workspace mutation).
-* `ChatLedger` has replaced browser-side history reconstruction as the system of record.
-* `dev_streamer_api` appears to contain both production infrastructure and historical demonstration code that should be evaluated before cleanup.
-* The Monaco slideout remains the intended mutation review interface and should be validated before removing the legacy approval workflow.
+* call an AI provider;
+* modify files;
+* create transactions;
+* know anything about Monaco.
 
 ---
 
-## Next Development Sequence
+### 2. Patch Response Parser
 
-### Phase 1 — Wu Execution Trace
+Proposed module:
 
-Trace the complete browser-to-provider execution path.
+```text
+aurora/minions/patch_parser.py
+```
 
-Objectives:
+Responsibilities:
 
-* verify request flow
-* verify response flow
-* verify provider selection
-* verify model resolution
-* identify telemetry collection points
+* detect `[PATCH_START: path]`;
+* detect the matching `[PATCH_END]`;
+* extract the proposed replacement content;
+* validate that the returned path matches the hydrated source target;
+* reject incomplete or truncated patch responses;
+* produce a structured diff payload.
 
-This phase should prioritize observation over modification.
+Example payload:
 
----
+```text
+file_path
+original_content
+proposed_content
+language
+patch_complete
+```
 
-### Phase 2 — Telemetry Validation
+It must not:
 
-Validate the execution telemetry pipeline.
-
-Confirm availability of:
-
-* provider
-* resolved model
-* request timing
-* execution latency
-* token usage
-* request metrics
-
-Surface existing data before introducing new telemetry.
-
----
-
-### Phase 3 — Intent Classification
-
-Introduce explicit classification between:
-
-* conversational requests
-* workspace mutation requests
-
-Expected outcome:
-
-* ordinary conversations no longer create `WorkspaceTransaction` records
-* approval workflows execute only when workspace mutations are requested
-
-This is expected to resolve several downstream UI issues simultaneously.
+* manipulate browser state;
+* write to disk;
+* invoke Monaco;
+* contain provider-specific behavior.
 
 ---
 
-### Phase 4 — Workflow Cleanup
+### 3. Wu Diff Viewer
 
-After successful validation:
+Proposed file:
 
-* repair the Monaco slideout workflow
-* validate mutation review
-* remove redundant approval mechanisms
-* evaluate removal of obsolete browser-side history logic
-* review historical demonstration code for retirement
+```text
+aurora/static/aurora/js/wu_diff_viewer.js
+```
+
+Responsibilities:
+
+* own one Wu-specific Monaco diff editor;
+* use a permanent, dedicated viewport;
+* load original and proposed models;
+* open and close the review slider;
+* dispose replaced Monaco models safely;
+* expose a small public interface.
+
+Conceptual interface:
+
+```javascript
+window.WuDiffViewer.show(payload);
+window.WuDiffViewer.hide();
+```
+
+It must never:
+
+* replace parent containers with `innerHTML`;
+* manipulate Anamod’s viewport;
+* reuse Anamod’s editor instance;
+* parse AI output;
+* send chat requests.
 
 ---
 
-## Engineering Guidance
+### 4. Wu Chat Coordinator
 
-Continue following **The Delta Way**.
+Existing file:
 
-* Make small, surgical, production-safe changes.
-* Prefer understanding before modification.
-* Keep each checkpoint independently stable.
-* Remove obsolete code only after replacement behavior has been validated.
-* Avoid architectural expansion during the Aurora baseline.
-* If work cannot be completed safely within a short session, stop, commit, and resume later.
+```text
+aurora/static/aurora/js/wu_chat.js
+```
 
-The objective is not rapid feature accumulation.
+Responsibilities:
 
-The objective is a stable Aurora baseline suitable for merge into `main`.
+* submit chat requests;
+* display conversational responses;
+* pass structured diff payloads to `WuDiffViewer`;
+* submit approval or rejection actions;
+* maintain the active Wu transaction ID.
+
+It should not own Monaco initialization or construct editor models directly.
 
 ---
 
-## Current Milestone
+### 5. Backend Orchestration
 
-**Target:** Aurora Baseline Complete — **July 15, 2026**
+Existing file:
 
-Success criteria:
+```text
+aurora/api/wu_chat_api.py
+```
 
-* Wu Chat validates the complete AI execution platform.
-* Provider routing is verified.
-* Telemetry is validated.
-* Intent classification is functioning.
-* UI workflow is stable.
-* Branch is ready for merge into `main`.
+Responsibilities:
 
-Following completion of the Aurora baseline, development focus shifts to the HopeHub beta prototype targeting **August 15, 2026**.
+1. receive the user instruction;
+2. hydrate the instruction with safely loaded file contents;
+3. send the hydrated prompt through `MinionRunner`;
+4. parse a complete Wu patch response;
+5. create a pending code-change transaction;
+6. return structured review data to the browser.
+
+Conversational responses must continue without creating code-change transactions.
+
+---
+
+## Isolation from Anamod
+
+Anamod remains a standalone lightweight manual editor:
+
+```text
+File tree
+    ↓
+Select file
+    ↓
+Manual Monaco editor
+    ↓
+Save or discard
+```
+
+Wu’s diff viewer is a separate subsystem.
+
+The two may share the globally loaded Monaco library, but they must not share:
+
+* editor instances;
+* models;
+* DOM containers;
+* lifecycle controls;
+* save/discard state.
+
+No Wu code may replace, clear, or traverse through Anamod’s DOM.
+
+---
+
+## Reconstruction Sequence
+
+### Checkpoint 1 — Static Slider
+
+Restore only the Wu review-slider markup.
+
+Confirm:
+
+* Wu Chat still loads;
+* Anamod still loads;
+* the hidden slider does not affect layout;
+* the slider can be opened and closed manually.
+
+### Checkpoint 2 — Isolated Monaco Diff Viewer
+
+Create the dedicated Wu diff viewer.
+
+Feed it hard-coded original and proposed strings.
+
+Confirm:
+
+* the diff appears;
+* repeated open/close cycles work;
+* Monaco models are cleaned up;
+* Anamod remains operational.
+
+### Checkpoint 3 — Structured Backend Payload
+
+Implement patch parsing and return a hard-coded or manually supplied patch as structured JSON.
+
+Confirm that `wu_chat.js` opens the viewer using only the returned payload.
+
+### Checkpoint 4 — Workspace File Hydration
+
+Implement safe natural-language file loading.
+
+Confirm Wu receives the actual file contents and no longer requests a path that was already provided.
+
+### Checkpoint 5 — Approval and Write
+
+Create a code-change transaction containing:
+
+* validated path;
+* original content or checksum;
+* proposed content.
+
+On approval:
+
+* verify the file has not changed since review;
+* write the proposed content once;
+* mark the transaction executed.
+
+On rejection:
+
+* write nothing;
+* mark the transaction rejected or rolled back.
+
+### Checkpoint 6 — Protocol Alignment
+
+Update the `minion_wu` `DeltaDirectives` prompt to match the current refactoring protocol.
+
+Remove or revise stale instructions involving:
+
+* Gemini-only identity;
+* the previous external-only patch protocol;
+* obsolete TDD requirements;
+* complete-file rewriting where surgical anchored patches are required;
+* nonexistent automated file-fetch assumptions.
+
+---
+
+## Explicitly Rejected Techniques
+
+Do not restore these behaviors from the previous branch:
+
+```javascript
+container.innerHTML = ...
+```
+
+Do not reconstruct the Monaco viewport on every response.
+
+Do not put the complete slider, transaction, parser, and Monaco lifecycle inside `wu_chat.js`.
+
+Do not merge `feature/wu-monaco-diff-slider` into `feature/provider-abstraction`.
+
+Do not modify Anamod to support Wu-assisted refactoring.
+
+Do not attempt file writes until the review UI works reliably with hard-coded content.
+
+---
+
+## Immediate Next Task
+
+Begin with Checkpoint 1:
+
+> Restore a static, isolated Wu review slider without connecting it to Wu, transactions, or backend parsing.
+
+Required source inspection before modification:
+
+```text
+aurora/templates/aurora/snippets/wu_chat_console_panel.html
+aurora/templates/aurora/aurora_console.html
+```
+
+The old branch’s slider markup may be used as a visual reference, but it should be cleaned and reconstructed rather than copied blindly.
+
+Current branch:
+
+```text
+feature/provider-abstraction
+```
+
+Reference branch:
+
+```text
+origin/feature/wu-monaco-diff-slider
+```
+
+Stable provider-abstraction checkpoint:
+
+```text
+14ac790
+```

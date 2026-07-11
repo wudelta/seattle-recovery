@@ -6,12 +6,13 @@
 development:
 
   objective: >
-    Validate the AI Execution Platform through Wu Chat, stabilize the
-    provider abstraction, and prepare the architecture for merge into
-    main without expanding beyond the Aurora baseline.
+    Complete end-to-end validation of the Wu-assisted development
+    workflow by reconnecting repository context, AI-generated patch
+    review, and the Monaco verification interface while preserving
+    the provider abstraction architecture.
 
   current_phase: >
-    Wu Integration Validation & Production Hardening
+    Wu Refactoring Workflow Reconstruction
 
   current_branch: >
     feature/provider-abstraction
@@ -35,7 +36,9 @@ development:
     execution_engine:
       provider_integration: complete
       direct_sdk_removal: complete
-      wu_validation: in_progress
+      wu_validation: complete
+      workspace_context_resolution: pending
+      patch_response_parsing: pending
 
     configuration:
       default_provider_selection: complete
@@ -44,9 +47,9 @@ development:
       directive_constraints_migration: pending
 
     ui_validation:
-      wu_console: in_progress
+      wu_console: validated
       telemetry_pipeline: validation
-      slideout_workflow: pending
+      wu_diff_viewer: pending
       transaction_workflow: validation
 
     testing:
@@ -62,33 +65,35 @@ development:
 
   known_issues:
 
-    - Provider routing requires production validation using OpenAI and Gemini.
-    - Provider failover policy remains to be implemented.
-    - Model resolution policy has not yet been fully centralized.
-    - DeltaDirective constraints still contain legacy provider-specific values.
-    - Every Wu interaction currently generates a WorkspaceTransaction regardless of intent.
-    - Approval drawer is triggered for conversational responses because transaction intent is not yet classified.
-    - Monaco slideout workflow requires validation before legacy approval UI is removed.
-    - Console websocket infrastructure exists but is only partially utilized for telemetry.
-    - Legacy browser-side chat history collection appears obsolete following ChatLedger implementation.
+    - Provider routing is functioning through the ProviderRouter and requires only production validation.
+    - DeltaDirective constraints still contain legacy prompt instructions that predate Protocol v3.2.
+    - Wu can generate repository patches only when file contents are manually supplied.
+    - No runtime workspace context resolver currently hydrates repository files into Wu prompts.
+    - No active parser currently consumes Wu [PATCH_START]/[PATCH_END] responses.
+    - The Wu review slider implementation exists only on the historical feature/wu-monaco-diff-slider branch and was previously reverted due to instability.
+    - Existing transaction approval UI is command-oriented and not yet integrated with AI patch review.
+    - Console websocket infrastructure exists but is only partially utilized for execution telemetry.
     - Automated tests require reconstruction following the provider architecture refactor.
 
   next_task: >
-    Complete Wu Chat integration validation by tracing the browser
-    execution path end-to-end, verify provider routing, validate
-    telemetry behavior, classify conversational versus mutation
-    requests, repair the slideout workflow, remove redundant approval
-    mechanisms, and prepare the provider abstraction branch for merge.
+    Reconstruct the Wu-assisted refactoring workflow using small,
+    isolated components. Restore a stable Wu review slider, implement
+    safe workspace context hydration, parse AI patch responses into
+    structured review payloads, reconnect Monaco-based review, and
+    validate the complete approval workflow before enabling automatic
+    repository mutations.
 
   notes:
 
     - ADR-001 through ADR-003 remain the architectural source of truth.
-    - Wu Chat is now the primary validation harness for the AI Execution Platform.
+    - Provider abstraction has reached baseline implementation and is no longer the primary development focus.
+    - Wu Chat is now the validation harness for the complete AI-assisted development workflow.
     - Provider implementations remain responsible only for SDK integration.
-    - Routing policy belongs exclusively to the Provider Router.
+    - Repository context resolution is a separate architectural concern from provider execution.
+    - AI patch review must remain isolated from the standalone Anamod editor.
+    - The historical feature/wu-monaco-diff-slider branch is a behavioral reference only and must not be merged directly.
     - Repository documentation is the authoritative project memory.
     - Preserve anchor topology during all repository modifications.
-    - Green Build Rule remains in effect.
     - Apply The Delta Way: small, reversible, production-safe iterations.
     - Commit checkpoint established:
       14ac790 - refactor: introduce provider abstraction and routing layer
