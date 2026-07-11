@@ -1,6 +1,5 @@
 # ======================================================================
 # FILE: aurora/minions/engine.py (PATCH 1 OF 1)
-#
 # START: PROVIDER_ROUTED_MINION_EXECUTION_ENGINE
 # ======================================================================
 
@@ -47,9 +46,7 @@ class MinionRunner:
             or "simulated"
         )
 
-        return self._provider_router.get_provider(
-            provider_name
-        )
+        return self._provider_router.get_provider(provider_name)
 
     async def query_provider_stream(
         self,
@@ -60,12 +57,22 @@ class MinionRunner:
         Stream output from the selected AI provider.
         """
 
-        provider = self._resolve_provider(
-            directive
+        provider = self._resolve_provider(directive)
+
+        constraints = directive.constraints or {}
+
+        model = self._provider_router.resolve_model(
+            provider_name=provider.name,
+            constraints=constraints,
+            default_model=getattr(
+                settings,
+                f"{provider.name.upper()}_MODEL",
+            ),
         )
 
         try:
             async for response_chunk in provider.stream(
+                model=model,
                 prompt=user_prompt,
                 directive=directive,
             ):
@@ -87,9 +94,10 @@ class MinionRunner:
                     )
 
                 # The provider has already emitted the response text
-                # incrementally. The final AIResponse is consumed only
-                # for metadata (usage, provider, model, etc.) and must
-                # not re-emit the accumulated text.
+                # incrementally. The terminal AIResponse exists only
+                # to expose metadata (usage, provider, model, etc.).
+                # Re-emitting response_chunk.text here duplicates the
+                # assistant message in streaming consumers.
 
             self.last_rpm_remaining = max(
                 1,

@@ -1,114 +1,160 @@
-<!-- ====================================================================== -->
-<!-- FILE: docs/management/NEXT_SESSION.md (PATCH 1 OF 1) -->
-<!-- START: SESSION_RESUME -->
-<!-- ====================================================================== -->
+# Aurora Development Resume Guide
 
-# Next Development Session
+## Session Summary
 
-## Immediate Objective
+The AI Execution Platform architecture has reached baseline completion. The focus of development has shifted from building infrastructure to validating that infrastructure through real-world Wu Chat workflows.
 
-Complete and validate the AI Execution Platform baseline.
+This phase is intentionally conservative. The objective is to prove the existing architecture, eliminate integration defects, and prepare the provider abstraction branch for merge into `main`.
 
-The provider abstraction is architecturally complete. The remaining work is to
-verify production behavior, implement baseline failover, rebuild confidence
-through validation, and prepare the branch for merge into `main`.
-
-Avoid introducing new architectural features unless they are required to
-complete the baseline or directly support shared functionality needed by
-HopeHub.
+Wu Chat now serves as the primary validation harness for the entire AI execution pipeline.
 
 ---
 
-## Resume Order
+## Confirmed Execution Path
 
-1. Verify that `AI_PROVIDER` from configuration is honored by the Provider Router.
-2. Validate provider routing behavior across OpenAI and Gemini.
-3. Implement simple provider failover within the Provider Router.
-4. Centralize model resolution within the Provider Router.
-5. Migrate `DeltaDirectives.constraints` to a provider-independent schema.
-6. Perform manual validation:
-   - Provider selection
-   - Streaming responses
-   - Usage accounting
-   - Error handling
-   - Wu Chat
-   - Active minions
-   - Existing workflows
-7. Rebuild automated tests around the provider abstraction.
-8. Achieve a green build.
-9. Review documentation and prepare merge into `main`.
+```text
+Browser
+    ↓
+wu_chat.js
+    ↓
+wu_chat_api.py
+    ↓
+MinionRunner
+    ↓
+ProviderRouter
+    ↓
+Selected Provider
+    ↓
+AI Response
+```
 
-Future enhancements (not required for baseline):
-
-- Provider health tracking
-- Cooldown policies
-- Cost-aware routing
-- Advanced routing strategies
-- Additional provider integrations
+The execution path is understood end-to-end and should remain the primary reference when investigating integration issues.
 
 ---
 
-## Current Architecture State
+## Current Development Focus
 
-Completed:
+Development has transitioned from architectural implementation to integration validation.
 
-- AIProvider interface
-- AIResponse normalization contract
-- Provider Registry
-- Provider Router baseline
-- SimulatedProvider reference implementation
-- OpenAIProvider implementation
-- GeminiProvider implementation
-- Execution engine provider integration
-- Removal of direct SDK dependency from the execution engine
-- Environment-configurable default provider (`AI_PROVIDER`)
+The remaining work centers on:
 
-Current architectural boundaries:
+* validating provider routing
+* validating telemetry collection
+* classifying conversational versus mutation requests
+* repairing the Monaco review workflow
+* removing obsolete UI behavior only after replacement functionality has been validated
 
-- Provider Registry owns provider registration.
-- Provider Router owns routing and failover decisions.
-- Provider implementations own vendor SDK interaction only.
-- Application code remains vendor-independent.
-- SimulatedProvider is reserved for testing and should never be selected by
-  production failover.
+No additional architectural expansion should occur during the Aurora baseline.
 
 ---
 
-## Important Reminders
+## Major Discoveries
 
-- Verify existing behavior before implementing new features.
-- Keep runtime architecture explicit and simple.
-- Automate repetitive developer workflows through tooling rather than adding
-  runtime complexity.
-- Do not move routing logic back into provider implementations.
-- Do not allow application code to import vendor SDKs.
-- Preserve anchor topology during repository modifications.
-- Use the Green Build Rule before merge decisions.
-- Commit stable checkpoints before large migrations.
-
----
-
-## Known Risks
-
-- Legacy provider-specific configuration may still exist in directives.
-- Automated tests have not yet been rebuilt after the architecture migration.
-- Baseline failover has not yet been implemented.
-- Provider behavior needs validation against real workflows.
+* Provider abstraction successfully isolates UI code from provider implementations.
+* Provider implementations are responsible only for SDK communication.
+* Provider selection belongs exclusively to the Provider Router.
+* Wu currently behaves as a synchronous request/response system despite existing streaming infrastructure.
+* Console websocket infrastructure exists but currently carries mostly local UI events instead of execution telemetry.
+* Every Wu interaction currently creates a `WorkspaceTransaction`.
+* Because every interaction becomes a transaction, the approval drawer opens for ordinary conversations.
+* The missing architectural boundary is intent classification (conversation versus workspace mutation).
+* `ChatLedger` has replaced browser-side history reconstruction as the system of record.
+* `dev_streamer_api` appears to contain both production infrastructure and historical demonstration code that should be evaluated before cleanup.
+* The Monaco slideout remains the intended mutation review interface and should be validated before removing the legacy approval workflow.
 
 ---
 
-## Success Criteria
+## Next Development Sequence
 
-The next development session is successful when:
+### Phase 1 — Wu Execution Trace
 
-- `AI_PROVIDER` routing has been verified.
-- Baseline failover is operational.
-- Model resolution is centralized.
-- Directive configuration is provider-independent.
-- Automated tests cover the provider abstraction.
-- Aurora passes manual regression validation.
-- The provider abstraction branch is ready for review and merge into `main`.
+Trace the complete browser-to-provider execution path.
 
-<!-- ====================================================================== -->
-<!-- END: SESSION_RESUME (PATCH 1 OF 1) -->
-<!-- ====================================================================== -->
+Objectives:
+
+* verify request flow
+* verify response flow
+* verify provider selection
+* verify model resolution
+* identify telemetry collection points
+
+This phase should prioritize observation over modification.
+
+---
+
+### Phase 2 — Telemetry Validation
+
+Validate the execution telemetry pipeline.
+
+Confirm availability of:
+
+* provider
+* resolved model
+* request timing
+* execution latency
+* token usage
+* request metrics
+
+Surface existing data before introducing new telemetry.
+
+---
+
+### Phase 3 — Intent Classification
+
+Introduce explicit classification between:
+
+* conversational requests
+* workspace mutation requests
+
+Expected outcome:
+
+* ordinary conversations no longer create `WorkspaceTransaction` records
+* approval workflows execute only when workspace mutations are requested
+
+This is expected to resolve several downstream UI issues simultaneously.
+
+---
+
+### Phase 4 — Workflow Cleanup
+
+After successful validation:
+
+* repair the Monaco slideout workflow
+* validate mutation review
+* remove redundant approval mechanisms
+* evaluate removal of obsolete browser-side history logic
+* review historical demonstration code for retirement
+
+---
+
+## Engineering Guidance
+
+Continue following **The Delta Way**.
+
+* Make small, surgical, production-safe changes.
+* Prefer understanding before modification.
+* Keep each checkpoint independently stable.
+* Remove obsolete code only after replacement behavior has been validated.
+* Avoid architectural expansion during the Aurora baseline.
+* If work cannot be completed safely within a short session, stop, commit, and resume later.
+
+The objective is not rapid feature accumulation.
+
+The objective is a stable Aurora baseline suitable for merge into `main`.
+
+---
+
+## Current Milestone
+
+**Target:** Aurora Baseline Complete — **July 15, 2026**
+
+Success criteria:
+
+* Wu Chat validates the complete AI execution platform.
+* Provider routing is verified.
+* Telemetry is validated.
+* Intent classification is functioning.
+* UI workflow is stable.
+* Branch is ready for merge into `main`.
+
+Following completion of the Aurora baseline, development focus shifts to the HopeHub beta prototype targeting **August 15, 2026**.

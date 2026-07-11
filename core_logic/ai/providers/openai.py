@@ -4,7 +4,6 @@
 # ======================================================================
 
 from openai import OpenAI
-from django.conf import settings
 
 from core_logic.ai.base import AIProvider, AIResponse
 
@@ -22,6 +21,8 @@ class OpenAIProvider(AIProvider):
         return "openai"
 
     def __init__(self):
+        from django.conf import settings
+
         self.client = OpenAI(
             api_key=settings.OPENAI_API_KEY,
         )
@@ -54,7 +55,7 @@ class OpenAIProvider(AIProvider):
         """
         Build a Responses API request.
 
-        GPT-5.5 does not currently support the temperature parameter.
+        GPT-5.x currently does not support the temperature parameter.
         The provider owns vendor-specific request compatibility.
         """
 
@@ -77,16 +78,10 @@ class OpenAIProvider(AIProvider):
 
     def chat(
         self,
+        model: str,
         prompt: str,
         directive,
     ) -> AIResponse:
-
-        constraints = directive.constraints or {}
-
-        model = constraints.get(
-            "model",
-            getattr(settings, "OPENAI_MODEL", "gpt-5.5"),
-        )
 
         response = self.client.responses.create(
             **self._build_request(
@@ -110,6 +105,7 @@ class OpenAIProvider(AIProvider):
 
     async def stream(
         self,
+        model: str,
         prompt: str,
         directive,
     ):
@@ -117,13 +113,6 @@ class OpenAIProvider(AIProvider):
         Stream response fragments while preserving a normalized
         final AIResponse.
         """
-
-        constraints = directive.constraints or {}
-
-        model = constraints.get(
-            "model",
-            getattr(settings, "OPENAI_MODEL", "gpt-5.5"),
-        )
 
         request = self._build_request(
             model=model,

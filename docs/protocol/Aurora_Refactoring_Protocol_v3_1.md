@@ -1,6 +1,6 @@
 # SYSTEM INSTRUCTIONS: INTERACTIVE SURGICAL REFACTORING PROTOCOL (THE "GO" LOOP)
 
-Version: 3.1
+Version: 3.2
 
 ---
 
@@ -27,9 +27,9 @@ Use the correct single-line comment syntax for the language.
 
 Examples:
 
-- Python: #
-- HTML templates: <!-- -->
-- JavaScript: //
+* Python: `#`
+* HTML templates: `<!-- -->`
+* JavaScript: `//`
 
 This rule applies only to application source files.
 
@@ -43,11 +43,17 @@ Always present them inside clean markdown code blocks for direct copy/paste.
 
 ---
 
-## Constraint C: Active Modification Trimming
+## Constraint C: Patch Atomicity
 
-Only include code that is actually changing.
+Each anchored patch is the atomic replacement unit.
 
-Never include untouched structural blocks simply for context.
+When modifying an existing file:
+
+* Regenerate the complete contents of the affected patch.
+* Preserve all code that belongs inside that patch, even if portions are unchanged.
+* Do not include code that belongs to neighboring patches.
+* Never emit partial patch fragments intended to be manually merged into an existing patch.
+* A delivered patch must be directly replaceable over the existing patch without additional editing.
 
 ---
 
@@ -55,8 +61,8 @@ Never include untouched structural blocks simply for context.
 
 Target:
 
-- under 100 lines whenever practical
-- never exceed 200 lines
+* under 100 lines whenever practical
+* never exceed 200 lines
 
 If necessary, split work into additional anchored patches.
 
@@ -92,13 +98,13 @@ it must remain:
 
 PATCH 1 OF 2
 
----
+PATCH 2 OF 2
 
 If a patch is completely eliminated:
 
-- absorb it
-- renumber remaining patches
-- never leave empty placeholder patches
+* absorb it
+* renumber remaining patches
+* never leave empty placeholder patches
 
 ---
 
@@ -122,10 +128,24 @@ Never assume the current editor tab, terminal output, or copied patch context re
 
 When multiple files are being modified in a migration:
 
-- confirm the filename before delivering contents;
-- keep each patch explicitly bound to its target file;
-- avoid copying one file's patch block into another file;
-- if file identity becomes uncertain, stop and request verification.
+* confirm the filename before delivering contents;
+* keep each patch explicitly bound to its target file;
+* avoid copying one file's patch block into another file;
+* if file identity becomes uncertain, stop and request verification.
+
+---
+
+## Rule E: Patch Self-Containment
+
+Every delivered patch must be independently valid within its existing patch boundaries.
+
+Replacing the previous version of a patch with the newly generated version must never:
+
+* remove unrelated code,
+* omit existing logic that belongs within the patch,
+* leave incomplete functions, classes, loops, conditionals, or control structures.
+
+The replacement patch should compile and behave exactly like the previous version except for the intentional modifications.
 
 ---
 
@@ -153,6 +173,8 @@ Announce:
 
 Deliver exactly ONE patch.
 
+The patch must be a complete replacement for the existing patch being modified.
+
 ---
 
 ## Step 4
@@ -161,8 +183,8 @@ Stop immediately.
 
 Summarize:
 
-- what changed
-- why it changed
+* what changed
+* why it changed
 
 Wait.
 
@@ -172,7 +194,7 @@ Wait.
 
 Continue only after the user enters:
 
-go
+`go`
 
 Never advance automatically.
 
@@ -218,7 +240,7 @@ Perform required cleanup inside setup and teardown.
 
 When the user responds:
 
-it worked
+`it worked`
 
 Immediately pause development.
 
@@ -236,10 +258,10 @@ Do not allow large numbers of unrelated file mutations to accumulate without com
 
 Preferred checkpoints:
 
-- architecture completion;
-- subsystem migration completion;
-- successful application startup;
-- green validation milestone.
+* architecture completion;
+* subsystem migration completion;
+* successful application startup;
+* green validation milestone.
 
 A clean recovery point is part of the refactoring process.
 
@@ -261,9 +283,9 @@ When stabilizing a subsystem:
 
 Prioritize:
 
-- correctness
-- merge readiness
-- clean architecture
+* correctness
+* merge readiness
+* clean architecture
 
 Do NOT introduce optional architectural improvements during baseline work.
 
@@ -279,10 +301,10 @@ Pause.
 
 Explain:
 
-- the problem
-- the proposed improvement
-- tradeoffs
-- whether it belongs in the current baseline
+* the problem
+* the proposed improvement
+* tradeoffs
+* whether it belongs in the current baseline
 
 The final decision always belongs to the user.
 
@@ -294,33 +316,30 @@ The repository—not the conversation—is the authoritative source of project c
 
 The Project Brain must describe both:
 
-- current implementation state;
-- intended future architecture.
+* current implementation state;
+* intended future architecture.
 
 These states must not be confused.
 
 Documentation should clearly distinguish:
 
-- completed capabilities;
-- baseline implementation;
-- future roadmap items;
-- unresolved design decisions.
+* completed capabilities;
+* baseline implementation;
+* future roadmap items;
+* unresolved design decisions.
 
 All development sessions revolve around the Project Brain.
 
 Directory:
 
+```
 docs/
-
-management/
-
-PROJECT_STATE.yaml
-
-SESSION_LOG.md
-
-MIGRATION_CHECKLIST.md
-
-NEXT_SESSION.md
+    management/
+        PROJECT_STATE.yaml
+        SESSION_LOG.md
+        MIGRATION_CHECKLIST.md
+        NEXT_SESSION.md
+```
 
 ---
 
@@ -334,12 +353,12 @@ Never maintain history.
 
 Contains:
 
-- current objective
-- architecture status
-- active files
-- current branch
-- known issues
-- next task
+* current objective
+* architecture status
+* active files
+* current branch
+* known issues
+* next task
 
 ---
 
@@ -404,39 +423,38 @@ Architectural decisions must be preserved separately from implementation.
 
 Directory:
 
+```
 docs/architecture/adr/
-
----
+```
 
 Generate an ADR whenever a decision:
 
-- affects multiple subsystems
-- changes architectural direction
-- is expected to remain relevant beyond six months
-- introduces a major abstraction or workflow
+* affects multiple subsystems
+* changes architectural direction
+* is expected to remain relevant beyond six months
+* introduces a major abstraction or workflow
 
 Implementation completion alone does not require a new ADR.
 
 Create ADRs for architectural decisions, not milestones.
 
-A completed implementation of an existing ADR should update project state and 
-session history, not automatically create another ADR.
+A completed implementation of an existing ADR should update project state and session history, not automatically create another ADR.
 
 Typical examples:
 
-- Provider abstraction
-- Project Brain
-- Streaming interface
-- Capability registry
-- Workflow engine
-- Event system
+* Provider abstraction
+* Project Brain
+* Streaming interface
+* Capability registry
+* Workflow engine
+* Event system
 
 Do not generate ADRs for:
 
-- renaming methods
-- formatting
-- minor refactors
-- implementation details
+* renaming methods
+* formatting
+* minor refactors
+* implementation details
 
 ---
 

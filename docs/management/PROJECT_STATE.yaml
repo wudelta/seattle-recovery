@@ -6,88 +6,101 @@
 development:
 
   objective: >
-    Complete and validate the AI Execution Platform baseline,
-    preparing the provider abstraction for merge into main while
-    avoiding unnecessary architectural expansion.
+    Validate the AI Execution Platform through Wu Chat, stabilize the
+    provider abstraction, and prepare the architecture for merge into
+    main without expanding beyond the Aurora baseline.
 
   current_phase: >
-    AI Execution Platform Validation & Production Hardening
+    Wu Integration Validation & Production Hardening
 
   current_branch: >
     feature/provider-abstraction
 
-status:
+  status:
 
-  architecture:
-    adr_001_ai_execution_architecture: complete
-    adr_002_provider_routing_and_failover: complete
-    adr_003_ai_directive_contract: complete
-    architecture_overview: complete
+    architecture:
+      adr_001_ai_execution_architecture: complete
+      adr_002_provider_routing_and_failover: complete
+      adr_003_ai_directive_contract: complete
+      architecture_overview: complete
 
-  provider_layer:
-    interface: complete
-    registry: complete
-    router: complete
-    simulated_provider: complete
-    openai_provider: complete
-    gemini_provider: complete
+    provider_layer:
+      interface: complete
+      registry: complete
+      router: complete
+      simulated_provider: complete
+      openai_provider: complete
+      gemini_provider: complete
 
-  execution_engine:
-    provider_integration: complete
-    direct_sdk_removal: complete
+    execution_engine:
+      provider_integration: complete
+      direct_sdk_removal: complete
+      wu_validation: in_progress
 
-  configuration:
-    default_provider_selection: complete
-    provider_priority: pending
-    model_mapping: pending
-    directive_constraints_migration: pending
+    configuration:
+      default_provider_selection: complete
+      provider_priority: pending
+      model_mapping: pending
+      directive_constraints_migration: pending
 
-  testing:
-    provider_validation: pending
-    regression_testing: pending
-    automated_test_rebuild: deferred
-    green_build: pending
+    ui_validation:
+      wu_console: in_progress
+      telemetry_pipeline: validation
+      slideout_workflow: pending
+      transaction_workflow: validation
 
-  documentation:
-    architecture: complete
-    continuity_system: in_progress
+    testing:
+      provider_validation: in_progress
+      regression_testing: pending
+      automated_test_rebuild: deferred
+      green_build: pending
 
-known_issues:
+    documentation:
+      architecture: complete
+      continuity_system: complete
+      engineering_principles: complete
 
-  - Provider routing requires production validation using OpenAI and Gemini.
-  - Model resolution policy has not yet been centralized.
-  - DeltaDirective constraints still contain legacy provider-specific values.
-  - Retry and failover behavior remain to be implemented in the Provider Router.
-  - Automated tests require reconstruction following the architecture refactor.
+  known_issues:
 
-next_task: >
-  Verify that AI_PROVIDER configuration is honored by the Provider Router,
-  implement baseline provider failover, validate production workflows
-  (Wu Chat, streaming, usage accounting, and existing agents), rebuild
-  automated tests, achieve a green build, and prepare the provider
-  abstraction branch for merge into main.
+    - Provider routing requires production validation using OpenAI and Gemini.
+    - Provider failover policy remains to be implemented.
+    - Model resolution policy has not yet been fully centralized.
+    - DeltaDirective constraints still contain legacy provider-specific values.
+    - Every Wu interaction currently generates a WorkspaceTransaction regardless of intent.
+    - Approval drawer is triggered for conversational responses because transaction intent is not yet classified.
+    - Monaco slideout workflow requires validation before legacy approval UI is removed.
+    - Console websocket infrastructure exists but is only partially utilized for telemetry.
+    - Legacy browser-side chat history collection appears obsolete following ChatLedger implementation.
+    - Automated tests require reconstruction following the provider architecture refactor.
 
-notes:
+  next_task: >
+    Complete Wu Chat integration validation by tracing the browser
+    execution path end-to-end, verify provider routing, validate
+    telemetry behavior, classify conversational versus mutation
+    requests, repair the slideout workflow, remove redundant approval
+    mechanisms, and prepare the provider abstraction branch for merge.
 
-  - ADR-001 through ADR-003 remain the architectural source of truth.
-  - The execution engine must remain vendor-independent.
-  - Provider implementations must contain SDK integration only.
-  - Routing policy belongs exclusively to the Provider Router.
-  - Preserve anchor topology during all repository modifications.
-  - Green Build Rule remains in effect.
-  - Avoid expanding the platform beyond the baseline unless required by
-    HopeHub or shared core functionality.
-  - Commit checkpoint established:
-    14ac790 - refactor: introduce provider abstraction and routing layer
+  notes:
 
-current_objective: >
-  Complete the Aurora baseline by July 15, 2026. After merge into main,
-  development focus shifts to HopeHub with the objective of delivering a
-  cloud beta prototype by August 15, 2026.
+    - ADR-001 through ADR-003 remain the architectural source of truth.
+    - Wu Chat is now the primary validation harness for the AI Execution Platform.
+    - Provider implementations remain responsible only for SDK integration.
+    - Routing policy belongs exclusively to the Provider Router.
+    - Repository documentation is the authoritative project memory.
+    - Preserve anchor topology during all repository modifications.
+    - Green Build Rule remains in effect.
+    - Apply The Delta Way: small, reversible, production-safe iterations.
+    - Commit checkpoint established:
+      14ac790 - refactor: introduce provider abstraction and routing layer
 
-next_major_milestone: Aurora Baseline (2026-07-15)
+  current_objective: >
+    Complete the Aurora baseline by July 15, 2026. Following merge into
+    main, shift development effort toward HopeHub with a target beta
+    deployment by August 15, 2026.
 
-project_target: HopeHub Beta Prototype (2026-08-15)
+  next_major_milestone: Aurora Baseline (2026-07-15)
+
+  project_target: HopeHub Beta Prototype (2026-08-15)
 
 # ======================================================================
 # END: DEVELOPMENT_STATUS_AND_NEXT_TASK (PATCH 1 OF 1)

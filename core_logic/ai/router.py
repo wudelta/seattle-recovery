@@ -23,6 +23,19 @@ class ProviderRouter:
     between Aurora's provider interface and vendor SDKs.
     """
 
+    _MODEL_MAP = {
+        "openai": {
+            "small": "gpt-5.6-luna",
+            "medium": "gpt-5.6-terra",
+            "large": "gpt-5.6-sol",
+        },
+        "gemini": {
+            "small": "gemini-2.5-flash-lite",
+            "medium": "gemini-2.5-flash",
+            "large": "gemini-2.5-pro",
+        },
+    }
+
     def get_provider(
         self,
         provider_name: str | None,
@@ -31,8 +44,7 @@ class ProviderRouter:
         Resolve the requested provider.
 
         Explicit provider requests take precedence. Otherwise, use the
-        configured default provider. Future revisions will centralize
-        routing, model resolution, retry, and failover here.
+        configured default provider.
         """
 
         provider_name = (
@@ -40,6 +52,38 @@ class ProviderRouter:
         ).lower()
 
         return registry.get(provider_name)
+
+    def resolve_model(
+        self,
+        provider_name: str,
+        constraints: dict | None,
+        default_model: str,
+    ) -> str:
+        """
+        Resolve a provider-independent model profile into a concrete
+        provider model.
+
+        If no model_profile is supplied, preserve the existing baseline
+        behavior by honoring an explicit model value before falling back
+        to the provider default.
+        """
+
+        constraints = constraints or {}
+
+        profile = constraints.get("model_profile")
+        if profile:
+            return self._MODEL_MAP.get(
+                provider_name,
+                {},
+            ).get(
+                profile.lower(),
+                default_model,
+            )
+
+        return constraints.get(
+            "model",
+            default_model,
+        )
 
 
 provider_router = ProviderRouter()

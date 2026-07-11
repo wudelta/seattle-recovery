@@ -26,6 +26,7 @@ from .dev_streamer_api import async_send_to_console
 # FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 6)
 # START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
+
 def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_cockpit_thread"):
     """Generates the full Gemini execution plan, factoring in low-footprint ledger contexts."""
     try:
@@ -37,14 +38,14 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             sys.stderr.write(f"{error_msg}\n")
             sys.stderr.flush()
             return {"status": "ERROR", "message": "Master orchestrator directive is missing in database registry.", "trace": error_msg}
-            
+
         from aurora.models import ChatLedgerEntry
-        
+
         # 1. READ CONTEXT BACK OUT OF POSTGRESQL (Strict Limit to Last 6 Blocks to Prevent Bloat)
         db_history = ChatLedgerEntry.objects.filter(
             session_id=session_id
         ).order_by('-created_at')[:6]
-        
+
         # 2. COMPACT HISTORY ASYMMETRICALLY: Format into a lightweight instruction context block
         history_buffer_lines = []
         for entry in reversed(db_history):
@@ -53,10 +54,10 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
                 continue
             author_tag = "Developer Intention" if entry.role == 'user' else "Wu Response"
             history_buffer_lines.append(f"--- PRIOR CONVERSATION STEP ({author_tag}) ---\n{entry.text}")
-            
+
         # Unify history block text or remain fallback-clean if it is a fresh session thread
         history_context_block = "\n\n".join(history_buffer_lines) if history_buffer_lines else ""
-        
+
         # 3. CONSOLIDATE PAYLOAD: Graft compact history right ahead of your raw user notes
         compiled_task_notes = user_delta_notes
         if history_context_block:
@@ -64,25 +65,25 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
 
         complete_response_text = ""
         stream_generator = runner.run_minion_task_stream("minion_wu", compiled_task_notes)
-        
+
         # Thread-safe async worker strategy to read tokens without latching onto or blocking Daphne's main event loop
         async def consume_stream():
             nonlocal complete_response_text
             async for token in stream_generator:
                 complete_response_text += token
-                
+
         def run_async_in_thread():
             new_loop = asyncio.new_event_loop()
             try:
                 return new_loop.run_until_complete(consume_stream())
             finally:
                 new_loop.close()
-                
+
         import threading
         thread = threading.Thread(target=run_async_in_thread)
         thread.start()
         thread.join()
-        
+
         # Map to Gemini's high-capacity free tier limits (15 Requests Per Minute, 1M Context).
         r_limit = 15
         r_rem = getattr(runner, "last_rpm_remaining", 14)
@@ -91,7 +92,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
         t_rem = max(0, t_limit - t_used)
         tokens_used_pct = round((t_used / t_limit) * 100, 3) if t_limit > 0 else 0.0
         requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
-        
+
         fuel_gauge_metrics = {
             "tokens_limit": t_limit,
             "tokens_remaining": t_rem,
@@ -100,44 +101,54 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             "requests_remaining": r_rem,
             "requests_used_pct": min(100.0, max(0.0, requests_used_pct))
         }
-        
-        transaction = WorkspaceTransaction.objects.create(
-            user=user,
-            prompt_context=user_delta_notes,
-            status='PENDING'
-        )
-        
+
         # Casing-flexible regex processing block handling varied layout margins
         command_blocks = re.findall(r"\[[Cc][Oo][Mm][Mm][Aa][Nn][Dd]:\s*(.*?)\]", complete_response_text)
-        for index, command_string in enumerate(command_blocks):
-            parts = command_string.strip().split()
-            if not parts: continue
-            macro = parts[0].lower().strip()
-            predicted_files = []
-            clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
-            if not clean_arg: continue
-            
-            if macro == "/page":
-                predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
-            elif macro == "/api":
-                predicted_files.append(f"aurora/api/{clean_arg}_api.py")
-                
-            TrackedCommand.objects.create(
-                transaction=transaction,
-                macro=macro,
-                arguments=parts[1:],
-                affected_files=predicted_files,
-                execution_order=index
+
+        transaction = None
+
+        if command_blocks:
+            transaction = WorkspaceTransaction.objects.create(
+                user=user,
+                prompt_context=user_delta_notes,
+                status='PENDING'
             )
-            
+
+            for index, command_string in enumerate(command_blocks):
+                parts = command_string.strip().split()
+                if not parts:
+                    continue
+
+                macro = parts[0].lower().strip()
+                predicted_files = []
+                clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
+
+                if not clean_arg:
+                    continue
+
+                if macro == "/page":
+                    predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
+                elif macro == "/api":
+                    predicted_files.append(f"aurora/api/{clean_arg}_api.py")
+
+                TrackedCommand.objects.create(
+                    transaction=transaction,
+                    macro=macro,
+                    arguments=parts[1:],
+                    affected_files=predicted_files,
+                    execution_order=index
+                )
+
         return {
             "status": "SUCCESS",
             "wu_response": complete_response_text,
-            "transaction_id": str(transaction.id),
+            "transaction_id": str(transaction.id) if transaction else None,
             "fuel_gauge": fuel_gauge_metrics
         }
+
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
+
 # ======================================================================
 # END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 6)
 # ======================================================================
