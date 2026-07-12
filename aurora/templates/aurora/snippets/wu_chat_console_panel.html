@@ -1,57 +1,185 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/snippets/wu_chat_console_panel.html (PATCH 1 OF 1) -->
-<!-- START: WU_ORCHESTRATOR_CHAT_AND_TELEMETRY_SPLIT_GRID -->
+<!-- START: WU_ORCHESTRATOR_CHAT_AND_REVIEW_WORKSPACE -->
 <!-- ====================================================================== -->
-<div class="d-flex flex-column h-100 w-100" style="box-sizing: border-box; min-height: 0; background-color: #000000;">
-    <!-- Top Section: Core Split Interaction Working Grid Matrix -->
+<div
+    class="d-flex flex-column h-100 w-100 position-relative"
+    style="box-sizing: border-box; min-height: 0; overflow: hidden; background-color: #000000;"
+>
+    <!-- Primary Wu Chat and Telemetry Workspace -->
     <div class="d-flex flex-row flex-grow-1 gap-2 style-container" style="min-height: 0; padding-bottom: 4px;">
-        
+
         <!-- LEFT PANEL: Interactive Message Log and Command Input Deck -->
         <div class="d-flex flex-column h-100" style="width: 66.66%; min-width: 0; padding-right: 4px;">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-uppercase font-weight-bold font-monospace text-warning small" style="letter-spacing: 1px;">💬 Command Input Deck: Wu (Gemini 2.5 Flash Orchestrator)</span>
+                <span
+                    class="text-uppercase font-weight-bold font-monospace text-warning small"
+                    style="letter-spacing: 1px;"
+                >
+                    💬 Command Input Deck: Wu
+                </span>
             </div>
-            
-            <!-- FIXED: Removed the legacy sub-space link greeting box from inside the log canvas container -->
-            <div id="wu-chat-history-log" class="flex-grow-1 p-2 rounded mb-2 d-flex flex-column gap-2" style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;">
-            </div>
-            
-            <!-- Modified text input deck strictly for drafting new human design intentions -->
-            <div class="d-flex flex-column gap-2" style="height: 120px; shrink: 0;">
-                <textarea id="wu-human-delta-notes-input" class="form-control h-100 p-2 font-monospace" style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5; font-size: 0.85rem; resize: none;" placeholder="Input human design intentions (Delta Notes) to request an orchestral strategy break-down..."></textarea>
-                <!-- FIXED: Updated the button text string descriptor to read 'Transmit to Wu' -->
-                <button id="transmit-to-wu-btn" class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2" style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;">Transmit to Wu</button>
+
+            <div
+                id="wu-chat-history-log"
+                class="flex-grow-1 p-2 rounded mb-2 d-flex flex-column gap-2"
+                style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;"
+            ></div>
+
+            <div class="d-flex flex-column gap-2" style="height: 120px; flex-shrink: 0;">
+                <textarea
+                    id="wu-human-delta-notes-input"
+                    class="form-control h-100 p-2 font-monospace"
+                    style="background-color: #070708; border: 1px solid #1f1f23; color: #f4f4f5; font-size: 0.85rem; resize: none;"
+                    placeholder="Describe the repository change you want Wu to review..."
+                ></textarea>
+
+                <button
+                    id="transmit-to-wu-btn"
+                    class="btn btn-primary btn-sm font-monospace fw-bold text-uppercase w-100 py-2"
+                    style="background-color: #1e3a8a; border: 1px solid #2563eb; color: #f8fafc; font-size: 0.8rem; letter-spacing: 1px;"
+                >
+                    Transmit to Wu
+                </button>
             </div>
         </div>
-        
+
         <!-- RIGHT PANEL: Real-Time Stream Telemetry Console -->
-        <div class="d-flex flex-column h-100" style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;">
+        <div
+            class="d-flex flex-column h-100"
+            style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;"
+        >
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-uppercase font-weight-bold font-monospace text-muted small" style="letter-spacing: 1px; color: #888888;">📡 Fleet Telemetry Output Stream</span>
-                <button id="clear-wu-telemetry-btn" class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace" style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;">Flush Logs</button>
+                <span
+                    class="text-uppercase font-weight-bold font-monospace text-muted small"
+                    style="letter-spacing: 1px; color: #888888;"
+                >
+                    📡 Fleet Telemetry Output Stream
+                </span>
+
+                <button
+                    id="clear-wu-telemetry-btn"
+                    class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace"
+                    style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;"
+                >
+                    Flush Logs
+                </button>
             </div>
-            
-            <!-- REMOVED: Legacy TPM Capacitor and Daily RPD Quota fuel progress bars -->
-            <div id="wu-telemetry-screen-output" class="flex-grow-1 p-2 rounded" style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;">
-                <div class="text-info font-monospace small">[SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...</div>
+
+            <div
+                id="wu-telemetry-screen-output"
+                class="flex-grow-1 p-2 rounded"
+                style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;"
+            >
+                <div class="text-info font-monospace small">
+                    [SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Dynamic Safety Verification Gate Drawer block at the bottom of the canvas -->
-    <div id="wu-pending-transaction-drawer" class="d-none p-2 mt-1 rounded animate-fade-in" style="background-color: #09090b; border: 1px solid #27272a; font-family: monospace;">
-        <div class="d-flex justify-content-between align-items-center">
+
+    <!-- Wu-Specific Code Review Slider: Hidden beyond the right edge by default -->
+    <section
+        id="wu-code-review-slider"
+        class="position-absolute top-0 h-100 d-flex flex-column"
+        aria-hidden="true"
+        style="
+            left: 100%;
+            width: 100%;
+            z-index: 50;
+            background-color: #050506;
+            border-left: 1px solid #3f3f46;
+            box-shadow: -12px 0 30px rgba(0, 0, 0, 0.75);
+            transition: transform 220ms ease-in-out;
+        "
+    >
+        <header
+            class="d-flex justify-content-between align-items-center px-3 py-2 flex-shrink-0"
+            style="background-color: #09090b; border-bottom: 1px solid #27272a;"
+        >
             <div class="d-flex flex-column">
-                <span class="text-uppercase text-danger fw-bold small" style="letter-spacing: 1px;">⚠️ Safety Gating Lockout Enabled</span>
-                <span class="text-muted small" style="font-size: 0.75rem;">Orchestrator returned commands. Awaiting authorization before mutating local project files.</span>
+                <span
+                    class="text-uppercase text-warning fw-bold font-monospace small"
+                    style="letter-spacing: 1px;"
+                >
+                    Wu Code Change Review
+                </span>
+
+                <span
+                    id="wu-review-file-path"
+                    class="text-muted font-monospace"
+                    style="font-size: 0.75rem;"
+                >
+                    No pending file selected
+                </span>
             </div>
-            <div class="d-flex gap-2">
-                <button id="wu-action-approve-btn" class="btn btn-success btn-xs font-monospace font-weight-bold text-uppercase px-3 py-1" style="font-size: 0.75rem;">Approve and Write</button>
-                <button id="wu-action-destroy-btn" class="btn btn-danger btn-xs font-monospace font-weight-bold text-uppercase px-3 py-1" style="font-size: 0.75rem;">Destroy / Rollback</button>
+
+            <button
+                id="wu-review-close-btn"
+                type="button"
+                class="btn btn-outline-secondary btn-sm font-monospace"
+                aria-label="Close Wu code review"
+            >
+                Close
+            </button>
+        </header>
+
+        <div class="d-flex flex-grow-1 gap-2 p-2" style="min-height: 0;">
+            <!-- LEFT: Proposed replacement -->
+            <div class="d-flex flex-column h-100" style="width: 50%; min-width: 0;">
+                <div
+                    class="px-2 py-1 text-uppercase text-success fw-bold font-monospace"
+                    style="background-color: #09090b; border: 1px solid #27272a; font-size: 0.75rem; letter-spacing: 1px;"
+                >
+                    Proposed Change
+                </div>
+
+                <div
+                    id="wu-proposed-code-viewport"
+                    class="flex-grow-1"
+                    style="min-height: 0; background-color: #070708; border: 1px solid #27272a; border-top: 0;"
+                ></div>
+            </div>
+
+            <!-- RIGHT: Existing repository source -->
+            <div class="d-flex flex-column h-100" style="width: 50%; min-width: 0;">
+                <div
+                    class="px-2 py-1 text-uppercase text-info fw-bold font-monospace"
+                    style="background-color: #09090b; border: 1px solid #27272a; font-size: 0.75rem; letter-spacing: 1px;"
+                >
+                    Current Code
+                </div>
+
+                <div
+                    id="wu-current-code-viewport"
+                    class="flex-grow-1"
+                    style="min-height: 0; background-color: #070708; border: 1px solid #27272a; border-top: 0;"
+                ></div>
             </div>
         </div>
-    </div>
+
+        <footer
+            class="d-flex justify-content-end gap-2 px-3 py-2 flex-shrink-0"
+            style="background-color: #09090b; border-top: 1px solid #27272a;"
+        >
+            <button
+                id="wu-review-reject-btn"
+                type="button"
+                class="btn btn-danger btn-sm font-monospace fw-bold text-uppercase px-4"
+            >
+                Reject Change
+            </button>
+
+            <button
+                id="wu-review-approve-btn"
+                type="button"
+                class="btn btn-success btn-sm font-monospace fw-bold text-uppercase px-4"
+            >
+                Approve &amp; Write
+            </button>
+        </footer>
+    </section>
 </div>
 <!-- ====================================================================== -->
-<!-- END: WU_CHAT_CONSOLE_PANEL_INTERFACE (PATCH 1 OF 1) -->
+<!-- END: WU_ORCHESTRATOR_CHAT_AND_REVIEW_WORKSPACE (PATCH 1 OF 1) -->
 <!-- ====================================================================== -->

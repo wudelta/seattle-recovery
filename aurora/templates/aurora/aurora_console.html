@@ -179,10 +179,11 @@
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
+<script src="{% static 'aurora/js/wu_diff_viewer.js' %}"></script>
 <script src="{% static 'aurora/js/anamod.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_tracker.js' %}"></script>
-<script src="{% static 'aurora/js/content.js' %}"></script> 
+<script src="{% static 'aurora/js/content.js' %}"></script>
 <script src="{% static 'aurora/js/directives.js' %}"></script>
 
 <script>
@@ -209,7 +210,7 @@ $(document).ready(function() {
     $('input[name="console_pane_target"]').on('change', function() {
         const targetedView = $(this).val();
         const $hiddenSelect = $('#console-view-selector');
-        
+
         if ($hiddenSelect.val() !== targetedView) {
             $hiddenSelect.val(targetedView).trigger('change');
             console.log("🎯 [CONSOLE MATRIX LINK]: Synchronized radio button toggle to legacy target: " + targetedView);
@@ -226,7 +227,7 @@ $(document).ready(function() {
     $(document).on('aurora:session_started', function() {
         // Strip out the offline lock style configuration layer
         $('#console-view-selector-group').removeClass('matrix-selector-disabled');
-        
+
         const currentView = $('#console-view-selector').val();
         if (currentView === 'anamod') { triggerAnamodLoad(); }
         if (currentView === 'content_panel') { triggerContentPanelLoad(); }
