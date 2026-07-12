@@ -6,27 +6,27 @@
     "use strict";
 
     let diffEditor = null;
-    let originalModel = null;
     let proposedModel = null;
+    let currentModel = null;
 
     function getSlider() {
         return document.getElementById("wu-code-review-slider");
     }
 
     function disposeModels() {
-        if (originalModel) {
-            originalModel.dispose();
-            originalModel = null;
-        }
-
         if (proposedModel) {
             proposedModel.dispose();
             proposedModel = null;
         }
+
+        if (currentModel) {
+            currentModel.dispose();
+            currentModel = null;
+        }
     }
 
     function ensureEditor() {
-        const viewport = document.getElementById("wu-proposed-code-viewport");
+        const viewport = document.getElementById("wu-code-diff-viewport");
 
         if (!viewport || diffEditor || typeof monaco === "undefined") {
             return;
@@ -54,19 +54,19 @@
 
         const language = payload.language || "plaintext";
 
-        originalModel = monaco.editor.createModel(
-            payload.original_content || "",
-            language
-        );
-
         proposedModel = monaco.editor.createModel(
             payload.proposed_content || "",
             language
         );
 
+        currentModel = monaco.editor.createModel(
+            payload.original_content || "",
+            language
+        );
+
         diffEditor.setModel({
-            original: originalModel,
-            modified: proposedModel
+            original: proposedModel,
+            modified: currentModel
         });
     }
 

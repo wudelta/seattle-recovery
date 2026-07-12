@@ -124,38 +124,36 @@
             </button>
         </header>
 
-        <div class="d-flex flex-grow-1 gap-2 p-2" style="min-height: 0;">
-            <!-- LEFT: Proposed replacement -->
-            <div class="d-flex flex-column h-100" style="width: 50%; min-width: 0;">
+        <div class="d-flex flex-column flex-grow-1 p-2" style="min-height: 0;">
+            <div
+                class="d-flex flex-shrink-0"
+                style="background-color: #09090b; border: 1px solid #27272a;"
+            >
                 <div
                     class="px-2 py-1 text-uppercase text-success fw-bold font-monospace"
-                    style="background-color: #09090b; border: 1px solid #27272a; font-size: 0.75rem; letter-spacing: 1px;"
+                    style="width: 50%; font-size: 0.75rem; letter-spacing: 1px;"
                 >
                     Proposed Change
                 </div>
 
                 <div
-                    id="wu-proposed-code-viewport"
-                    class="flex-grow-1"
-                    style="min-height: 0; background-color: #070708; border: 1px solid #27272a; border-top: 0;"
-                ></div>
-            </div>
-
-            <!-- RIGHT: Existing repository source -->
-            <div class="d-flex flex-column h-100" style="width: 50%; min-width: 0;">
-                <div
                     class="px-2 py-1 text-uppercase text-info fw-bold font-monospace"
-                    style="background-color: #09090b; border: 1px solid #27272a; font-size: 0.75rem; letter-spacing: 1px;"
+                    style="width: 50%; border-left: 1px solid #27272a; font-size: 0.75rem; letter-spacing: 1px;"
                 >
                     Current Code
                 </div>
-
-                <div
-                    id="wu-current-code-viewport"
-                    class="flex-grow-1"
-                    style="min-height: 0; background-color: #070708; border: 1px solid #27272a; border-top: 0;"
-                ></div>
             </div>
+
+            <div
+                id="wu-code-diff-viewport"
+                class="flex-grow-1"
+                style="
+                    min-height: 0;
+                    background-color: #070708;
+                    border: 1px solid #27272a;
+                    border-top: 0;
+                "
+            ></div>
         </div>
 
         <footer
