@@ -59,6 +59,18 @@ urlpatterns = [
     path('api/content/', api_endpoints.content_endpoint, name='content_endpoint'),
     path('api/directives/', api_endpoints.directives_endpoint, name='directives_endpoint'),
     path('api/wu_chat/', api_endpoints.wu_chat_endpoint, name='wu_chat_endpoint'),
+
+    # Wu structured review workflow
+    path(
+        'api/wu_chat/approve/',
+        api_endpoints.approve_pending_code_change,
+        name='approve_pending_code_change',
+    ),
+    path(
+        'api/wu_chat/reject/',
+        api_endpoints.reject_pending_code_change,
+        name='reject_pending_code_change',
+    ),
 ]
 # ====================================================================== #
 # END: SYSTEM_DISPATCH_ROUTING_MATRIX_AND_LOGIN_ENTRIES (PATCH 1 OF 1)   #

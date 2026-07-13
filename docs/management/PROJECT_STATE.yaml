@@ -1,204 +1,189 @@
-# ======================================================================
-
-# FILE: docs/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
-
-# START: DEVELOPMENT_STATUS_AND_SESSION_RESUME
-
-# ======================================================================
-
+```yaml
 project:
-name: Aurora
-branch: feature/provider-abstraction
+  name: Aurora
+  branch: feature/provider-abstraction
 
 targets:
-aurora_baseline: 2026-07-15
-hopehub_beta_prototype: 2026-08-15
+  aurora_baseline: 2026-07-15
+  hopehub_beta_prototype: 2026-08-15
 
 current:
-phase: pending_code_change_approval
-objective: >
-Complete the Aurora baseline by adding explicit, source-verified
-approval to the validated Wu structured patch review workflow.
-next_task: >
-Inspect PendingCodeChange and design the smallest approval endpoint
-that verifies the original source before performing one repository
-write. Rejection must perform no mutation.
+  phase: pending_code_change_approval
+  objective: >
+    Complete the Aurora baseline by adding explicit, source-verified
+    approval to the validated Wu structured patch review workflow.
+  next_task: >
+    Inspect PendingCodeChange and design the smallest approval endpoint
+    that verifies the original source before performing one repository
+    write. Rejection must perform no mutation.
 
 last_verified:
-date: 2026-07-13
-commit:
-message: "feat: reconnect Wu structured patch review workflow"
-workflow:
-provider_abstraction: complete
-workspace_context_resolution: complete
-repository_file_hydration: complete
-structured_patch_generation: complete
-structured_patch_parsing: complete
-malformed_patch_rejection: validated
-frontend_patch_payload_routing: complete
-wu_review_slider: validated
-monaco_diff_viewer: validated
-current_proposed_orientation: validated
-repeated_slider_open_close: validated
-anamod_isolation: validated
-repository_mutation: disabled
+  date: 2026-07-13
+  commit:
+    message: "feat: reconnect Wu structured patch review workflow"
+  workflow:
+    provider_abstraction: complete
+    workspace_context_resolution: complete
+    repository_file_hydration: complete
+    structured_patch_generation: complete
+    structured_patch_parsing: complete
+    malformed_patch_rejection: validated
+    frontend_patch_payload_routing: complete
+    wu_review_slider: validated
+    monaco_diff_viewer: validated
+    current_proposed_orientation: validated
+    repeated_slider_open_close: validated
+    anamod_isolation: validated
+    repository_mutation: disabled
 
 baseline_sequence:
-
-* id: provider_abstraction
-  status: complete
-* id: workspace_context
-  status: complete
-* id: structured_patch_parser
-  status: complete
-* id: wu_review_slider
-  status: complete
-* id: monaco_diff_viewer
-  status: complete
-* id: frontend_patch_integration
-  status: complete
-* id: pending_code_change_approval
-  status: next
-* id: delta_directive_cleanup
-  status: pending
-* id: telemetry_visibility
-  status: pending
-* id: regression_smoke_test
-  status: pending
-* id: merge_to_main
-  status: pending
+  - id: provider_abstraction
+    status: complete
+  - id: workspace_context
+    status: complete
+  - id: structured_patch_parser
+    status: complete
+  - id: wu_review_slider
+    status: complete
+  - id: monaco_diff_viewer
+    status: complete
+  - id: frontend_patch_integration
+    status: complete
+  - id: pending_code_change_approval
+    status: next
+  - id: delta_directive_cleanup
+    status: pending
+  - id: telemetry_visibility
+    status: pending
+  - id: regression_smoke_test
+    status: pending
+  - id: merge_to_main
+    status: pending
 
 approval_contract:
-approve:
-- receive validated pending review
-- verify target remains inside repository boundary
-- verify current source matches reviewed original content
-- perform exactly one write
-- record completion status
-reject:
-- discard pending review
-- perform no repository mutation
+  approve:
+    - receive validated pending review
+    - verify target remains inside repository boundary
+    - verify current source matches reviewed original content
+    - perform exactly one write
+    - record completion status
+  reject:
+    - discard pending review
+    - perform no repository mutation
 
 architectural_boundaries:
-provider:
-owns:
-- sdk integration
-must_not:
-- read repository files
-- parse patches
-- mutate files
+  provider:
+    owns:
+      - sdk integration
+    must_not:
+      - read repository files
+      - parse patches
+      - mutate files
 
-workspace_context:
-module: aurora/minions/workspace_context.py
-owns:
-- repository path recognition
-- boundary validation
-- source reading
-- prompt hydration
-must_not:
-- invoke providers
-- create reviews
-- mutate files
+  workspace_context:
+    module: aurora/minions/workspace_context.py
+    owns:
+      - repository path recognition
+      - boundary validation
+      - source reading
+      - prompt hydration
+    must_not:
+      - invoke providers
+      - create reviews
+      - mutate files
 
-patch_parser:
-module: aurora/minions/patch_parser.py
-owns:
-- structured marker validation
-- malformed and truncated response rejection
-- review payload creation
-must_not:
-- manipulate browser state
-- mutate files
+  patch_parser:
+    module: aurora/minions/patch_parser.py
+    owns:
+      - structured marker validation
+      - malformed and truncated response rejection
+      - review payload creation
+    must_not:
+      - manipulate browser state
+      - mutate files
 
-wu_chat:
-module: aurora/static/aurora/js/wu_chat.js
-owns:
-- chat submission
-- conversation display
-- patch payload routing
-- approval and rejection requests
-must_not:
-- create Monaco editors
-- parse AI output
-- write repository files
+  wu_chat:
+    module: aurora/static/aurora/js/wu_chat.js
+    owns:
+      - chat submission
+      - conversation display
+      - patch payload routing
+      - approval and rejection requests
+    must_not:
+      - create Monaco editors
+      - parse AI output
+      - write repository files
 
-wu_diff_viewer:
-module: aurora/static/aurora/js/wu_diff_viewer.js
-owns:
-- Wu review slider lifecycle
-- isolated Monaco diff editor
-- isolated Monaco models
-must_not:
-- reuse Anamod editor state
-- submit chat requests
-- mutate repository files
+  wu_diff_viewer:
+    module: aurora/static/aurora/js/wu_diff_viewer.js
+    owns:
+      - Wu review slider lifecycle
+      - isolated Monaco diff editor
+      - isolated Monaco models
+    must_not:
+      - reuse Anamod editor state
+      - submit chat requests
+      - mutate repository files
 
-pending_code_change:
-owns:
-- validated review persistence
-- source consistency verification
-- one approved repository write
-- approval status
-status: partially_implemented
+  pending_code_change:
+    owns:
+      - validated review persistence
+      - source consistency verification
+      - one approved repository write
+      - approval status
+    status: partially_implemented
 
 known_issues:
-
-* PendingCodeChange approval is not connected.
-* Approve currently performs no repository write.
-* DeltaDirective minion_wu contains legacy wording predating Protocol v3.2.
-* Provider and model telemetry are not shown in the Wu telemetry pane.
-* AI responses can occasionally be truncated; the parser rejects them safely.
-* Automated tests remain deferred until the baseline is stable.
-* Temporary patch diagnostics remain in wu_chat_api.py and should be removed after approval validation.
+  - PendingCodeChange approval is not connected.
+  - Approve currently performs no repository write.
+  - DeltaDirective minion_wu contains legacy wording predating Protocol v3.2.
+  - Provider and model telemetry are not shown in the Wu telemetry pane.
+  - AI responses can occasionally be truncated; the parser rejects them safely.
+  - Automated tests remain deferred until the baseline is stable.
+  - Temporary patch diagnostics remain in wu_chat_api.py and should be removed after approval validation.
 
 session_resume:
-read_first:
-- docs/protocol/Aurora_Refactoring_Protocol_v3_2.md
-- docs/management/PROJECT_STATE.yaml
+  read_first:
+    - docs/protocol/Aurora_Refactoring_Protocol_v3_2.md
+    - docs/management/PROJECT_STATE.yaml
 
-inspect_next:
-- aurora/models.py
-- aurora/api/wu_chat_api.py
-- aurora/static/aurora/js/wu_chat.js
+  inspect_next:
+    - aurora/models.py
+    - aurora/api/wu_chat_api.py
+    - aurora/static/aurora/js/wu_chat.js
 
-do_not_repeat:
-- Rebuild the Wu slider.
-- Rebuild the Monaco viewer.
-- Reconfigure the Monaco static path.
-- Reconnect response.patch to WuDiffViewer.
-- Restore WorkspaceTransaction or TrackedCommand.
-- Merge feature/wu-monaco-diff-slider.
+  do_not_repeat:
+    - Rebuild the Wu slider.
+    - Rebuild the Monaco viewer.
+    - Reconfigure the Monaco static path.
+    - Reconnect response.patch to WuDiffViewer.
+    - Restore WorkspaceTransaction or TrackedCommand.
+    - Merge feature/wu-monaco-diff-slider.
 
 reference_only:
-branch: origin/feature/wu-monaco-diff-slider
-rule: behavioral_reference_only
+  branch: origin/feature/wu-monaco-diff-slider
+  rule: behavioral_reference_only
 
 project_brain:
-startup_required:
-- protocol
-- project_state
-- current_source_file
+  startup_required:
+    - protocol
+    - project_state
+    - current_source_file
 
-load_only_when_needed:
-migration_checklist: milestone_or_merge_review
-session_log: historical_investigation
-architecture_decisions: relevant_architectural_change
+  load_only_when_needed:
+    migration_checklist: milestone_or_merge_review
+    session_log: historical_investigation
+    architecture_decisions: relevant_architectural_change
 
 planned_cleanup:
-next_session_file: absorb_into_project_state_then_delete
-migration_checklist: convert_to_compact_definition_of_done
-session_log: retain_append_only_and_do_not_autoload
+  next_session_file: absorb_into_project_state_then_delete
+  migration_checklist: convert_to_compact_definition_of_done
+  session_log: retain_append_only_and_do_not_autoload
 
 principles:
-
-* Repository documentation is authoritative.
-* Preserve anchor topology.
-* Keep behavioral directives separate from current project facts.
-* Use compact operational context to control AI cost.
-* Apply The Delta Way: small, reversible, production-safe iterations.
-
-# ======================================================================
-
-# END: DEVELOPMENT_STATUS_AND_SESSION_RESUME (PATCH 1 OF 1)
-
-# ======================================================================
+  - Repository documentation is authoritative.
+  - Preserve anchor topology.
+  - Keep behavioral directives separate from current project facts.
+  - Use compact operational context to control AI cost.
+  - Apply The Delta Way: small, reversible, production-safe iterations.
+```

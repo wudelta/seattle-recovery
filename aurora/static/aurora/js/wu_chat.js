@@ -7,11 +7,9 @@ function initWuChatConsole(endpoints, csrfToken) {
     const transmitBtn = $('#transmit-to-wu-btn');
     const telemetryLog = $('#wu-telemetry-screen-output');
     const chatHistory = $('#wu-chat-history-log');
-    const approvalDrawer = $('#wu-pending-transaction-drawer');
-    const approveBtn = $('#wu-action-approve-btn');
-    const destroyBtn = $('#wu-action-destroy-btn');
+    const approveBtn = $('#wu-review-approve-btn');
+    const rejectBtn = $('#wu-review-reject-btn');
 
-    let activeTransactionId = null;
     let pendingPatch = null;
 
     if (!transmitBtn.length) return;
@@ -205,27 +203,113 @@ function initWuChatConsole(endpoints, csrfToken) {
 // START: VERIFICATION_ACTIONS_AND_UI_HELPERS
 // ======================================================================
     approveBtn.on('click', function() {
-        if (!pendingPatch) {
+        if (!pendingPatch || !pendingPatch.pending_change_id) {
             appendSystemAlert(
-                '💥 [PATCH ERROR] No structured patch is available for approval.'
+                '💥 [PATCH ERROR] No persisted code change is available for approval.'
             );
             return;
         }
 
-        appendSystemAlert(
-            '⚠️ [SAFETY GATE] Patch approval is not yet connected to repository mutation.'
-        );
+        approveBtn.prop('disabled', true);
+        rejectBtn.prop('disabled', true);
+
+        $.ajax({
+            url: endpoints.wu_chat_approve_endpoint,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                pending_change_id: pendingPatch.pending_change_id
+            }),
+            headers: {
+                'X-CSRFToken':
+                    csrfToken || $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                appendSystemAlert(
+                    `✅ [PATCH APPLIED] Repository file updated: ${
+                        response.file_path || formatPatchTarget(pendingPatch)
+                    }`
+                );
+
+                pendingPatch = null;
+
+                if (window.WuDiffViewer) {
+                    window.WuDiffViewer.hide();
+                }
+            },
+            error: function(xhr) {
+                let errorText = 'The code change could not be applied.';
+
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    errorText = parsed.error || parsed.message || errorText;
+                } catch (e) {
+                    // Preserve the generic message for non-JSON responses.
+                }
+
+                appendSystemAlert(
+                    `💥 [PATCH APPROVAL ERROR] ${errorText}`
+                );
+            },
+            complete: function() {
+                approveBtn.prop('disabled', false);
+                rejectBtn.prop('disabled', false);
+            }
+        });
     });
 
-    destroyBtn.on('click', function() {
-        if (!pendingPatch) return;
+    rejectBtn.on('click', function() {
+        if (!pendingPatch || !pendingPatch.pending_change_id) {
+            appendSystemAlert(
+                '💥 [PATCH ERROR] No persisted code change is available for rejection.'
+            );
+            return;
+        }
 
-        pendingPatch = null;
-        approvalDrawer.addClass('d-none');
+        approveBtn.prop('disabled', true);
+        rejectBtn.prop('disabled', true);
 
-        appendSystemAlert(
-            '🗑️ [PATCH DISCARDED] The pending structured patch was removed from review.'
-        );
+        $.ajax({
+            url: endpoints.wu_chat_reject_endpoint,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                pending_change_id: pendingPatch.pending_change_id
+            }),
+            headers: {
+                'X-CSRFToken':
+                    csrfToken || $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function() {
+                pendingPatch = null;
+
+                if (window.WuDiffViewer) {
+                    window.WuDiffViewer.hide();
+                }
+
+                appendSystemAlert(
+                    '🗑️ [PATCH REJECTED] The pending change was discarded without modifying the repository.'
+                );
+            },
+            error: function(xhr) {
+                let errorText = 'The code change could not be rejected.';
+
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    errorText = parsed.error || parsed.message || errorText;
+                } catch (e) {
+                    // Preserve the generic message for non-JSON responses.
+                }
+
+                appendSystemAlert(
+                    `💥 [PATCH REJECTION ERROR] ${errorText}`
+                );
+            },
+            complete: function() {
+                approveBtn.prop('disabled', false);
+                rejectBtn.prop('disabled', false);
+            }
+        });
     });
 
     function appendWuMessage(message) {

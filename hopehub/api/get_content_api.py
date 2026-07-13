@@ -1,24 +1,16 @@
-# ======================================================================
-# FILE: hopehub/api/get_content_api.py
-# START: PACKAGED_IMPORTS_AND_DEPENDENCIES
-# ======================================================================
-from django.http import JsonResponse
-# ======================================================================
-# END: PACKAGED_IMPORTS_AND_DEPENDENCIES
-# ======================================================================
+# this is a test of diff slider
 
-# ======================================================================
-# START: API_ENDPOINT_LOGIC
-# ======================================================================
+from django.http import JsonResponse
+
+
+PUBLIC_CONTENT_PAYLOAD = {
+    "status": "success",
+    "visibility": "public",
+    "endpoint": "get_content",
+    "app": "hopehub",
+}
+
+
 def get_content_endpoint(request):
-    """Automated JSON payload endpoint forged by Aurora Forge Engine."""
-    payload = {
-        "status": "success",
-        "visibility": "public",
-        "endpoint": "get_content",
-        "app": "hopehub"
-    }
-    return JsonResponse(payload)
-# ======================================================================
-# END: API_ENDPOINT_LOGIC
-# ======================================================================
+    """Return the public HopeHub content endpoint payload."""
+    return JsonResponse(dict(PUBLIC_CONTENT_PAYLOAD))

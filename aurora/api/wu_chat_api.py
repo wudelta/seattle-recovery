@@ -2,16 +2,21 @@
 # FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 5)
 # START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
-import json
 import asyncio
-import traceback
+import hashlib
+import json
 import sys
 import time
+import traceback
 from collections import deque
 from threading import Lock
-from django.http import JsonResponse
+
 from django.contrib.auth.decorators import login_required
-from aurora.models import DeltaDirectives
+from django.db import transaction
+from django.http import JsonResponse
+from django.utils import timezone
+
+from aurora.models import DeltaDirectives, PendingCodeChange
 from aurora.minions.engine import MinionRunner
 from aurora.minions.patch_parser import (
     PatchParseError,
@@ -21,6 +26,7 @@ from aurora.minions.workspace_context import (
     WorkspaceContextError,
     resolve_workspace_context,
 )
+
 from .dev_streamer_api import async_send_to_console
 # ======================================================================
 # END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 5)
@@ -135,6 +141,18 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
                     original_content=workspace_context.original_content,
                 )
                 patch_payload = parsed_patch.as_payload()
+
+                pending_change = PendingCodeChange.objects.create(
+                    user=user,
+                    file_path=workspace_context.file_path,
+                    original_content=workspace_context.original_content,
+                    proposed_content=patch_payload["proposed_content"],
+                    original_sha256=hashlib.sha256(
+                        workspace_context.original_content.encode("utf-8")
+                    ).hexdigest(),
+                )
+                patch_payload["pending_change_id"] = str(pending_change.id)
+
             except PatchParseError as err:
                 patch_error = str(err)
                 sys.stderr.write(
@@ -214,70 +232,246 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
 
 # ======================================================================
 # FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 5)
-# START: CHAT_REQUEST_ENDPOINT_VIEW
+# START: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS
 # ======================================================================
 @login_required
 def wu_chat_endpoint(request):
     """
-    Processes requests, hooks up sliding history windows via ChatLedgerEntry,
-    and returns response payloads with execution telemetry and optional
-    structured patch review data.
+    Processes requests, stores compact conversation history, and returns
+    execution telemetry with optional structured patch review data.
     """
     from aurora.models import ChatLedgerEntry
 
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            delta_notes = data.get("delta_notes", "").strip()
-            
-            # Enforce tracking thread isolation from the frontend payload or a fallback token
-            session_id = data.get("session_id", "default_cockpit_thread")
-            
-            if not delta_notes:
-                return JsonResponse({"error": "Empty delta notes provided"}, status=400)
-                
-            try:
-                # Evaluate payload against the global rolling 60-second token window
-                sanitized_notes = enforce_context_token_budget(delta_notes)
-            except ValueError as rate_err:
-                return JsonResponse({"error": f"🛡️ [GATEWAY SHIELD]: {str(rate_err)}"}, status=429)
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
 
-            # 1. COMMIT USER INPUT INTENTION INTO POSTGRESQL LEDGER
+    try:
+        data = json.loads(request.body)
+        delta_notes = data.get("delta_notes", "").strip()
+        session_id = data.get(
+            "session_id",
+            "default_cockpit_thread",
+        )
+
+        if not delta_notes:
+            return JsonResponse(
+                {"error": "Empty delta notes provided"},
+                status=400,
+            )
+
+        try:
+            sanitized_notes = enforce_context_token_budget(delta_notes)
+        except ValueError as rate_err:
+            return JsonResponse(
+                {
+                    "error": (
+                        "🛡️ [GATEWAY SHIELD]: "
+                        f"{str(rate_err)}"
+                    )
+                },
+                status=429,
+            )
+
+        ChatLedgerEntry.objects.create(
+            user=request.user,
+            session_id=session_id,
+            role="user",
+            text=sanitized_notes,
+        )
+
+        result = process_wu_logic_synchronous(
+            sanitized_notes,
+            request.user,
+            session_id=session_id,
+        )
+
+        if result["status"] == "ERROR":
+            return JsonResponse(
+                {
+                    "error": result["message"],
+                    "traceback": result["trace"],
+                },
+                status=500,
+            )
+
+        model_reply = result.get("wu_response", "").strip()
+        if model_reply:
             ChatLedgerEntry.objects.create(
                 user=request.user,
                 session_id=session_id,
-                role='user',
-                text=sanitized_notes
+                role="model",
+                text=model_reply,
             )
 
-            # 2. RUN MINION CHAINS WITH AUTOMATED SESSION THREAD TRACKING
-            result = process_wu_logic_synchronous(sanitized_notes, request.user, session_id=session_id)
-            
-            if result["status"] == "ERROR":
-                return JsonResponse({"error": result["message"], "traceback": result["trace"]}, status=500)
-                
-            # 3. COMMIT MINION CORE RESPONSE PAYLOAD INTO THE DATABASE LEDGER
-            model_reply = result.get("wu_response", "").strip()
-            if model_reply:
-                ChatLedgerEntry.objects.create(
-                    user=request.user,
-                    session_id=session_id,
-                    role='model',
-                    text=model_reply
-                )
-                
-            return JsonResponse({
+        return JsonResponse(
+            {
                 "status": "wu_is_processing",
                 "direct_text_output": result["wu_response"],
                 "patch": result.get("patch"),
                 "patch_error": result.get("patch_error"),
-                "fuel_gauge": result.get("fuel_gauge", {})
-            })
-        except Exception as err:
-            return JsonResponse({"error": str(err)}, status=400)
-    return JsonResponse({"error": "POST required"}, status=405)
+                "fuel_gauge": result.get("fuel_gauge", {}),
+            }
+        )
+
+    except Exception as err:
+        return JsonResponse({"error": str(err)}, status=400)
+
+
+@login_required
+def approve_pending_code_change(request):
+    """Apply one pending proposal after verifying the reviewed source."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        pending_change_id = data.get("pending_change_id")
+
+        if not pending_change_id:
+            return JsonResponse(
+                {"error": "pending_change_id is required"},
+                status=400,
+            )
+
+        with transaction.atomic():
+            pending_change = (
+                PendingCodeChange.objects.select_for_update()
+                .get(
+                    id=pending_change_id,
+                    user=request.user,
+                )
+            )
+
+            if pending_change.status != "PENDING":
+                return JsonResponse(
+                    {
+                        "error": (
+                            "This code change has already been reviewed."
+                        ),
+                        "status": pending_change.status,
+                    },
+                    status=409,
+                )
+
+            workspace_context = resolve_workspace_context(
+                f"[READ_FILE: {pending_change.file_path}]"
+            )
+
+            if workspace_context is None:
+                raise WorkspaceContextError(
+                    "The pending repository path could not be resolved."
+                )
+
+            current_sha256 = hashlib.sha256(
+                workspace_context.original_content.encode("utf-8")
+            ).hexdigest()
+
+            if (
+                current_sha256 != pending_change.original_sha256
+                or workspace_context.original_content
+                != pending_change.original_content
+            ):
+                pending_change.status = "CONFLICT"
+                pending_change.date_reviewed = timezone.now()
+                pending_change.save(
+                    update_fields=[
+                        "status",
+                        "date_reviewed",
+                    ]
+                )
+                return JsonResponse(
+                    {
+                        "error": (
+                            "The source file changed after review. "
+                            "No repository write was performed."
+                        ),
+                        "status": "CONFLICT",
+                    },
+                    status=409,
+                )
+
+            workspace_context.absolute_path.write_text(
+                pending_change.proposed_content,
+                encoding="utf-8",
+            )
+
+            reviewed_at = timezone.now()
+            pending_change.status = "APPLIED"
+            pending_change.date_reviewed = reviewed_at
+            pending_change.date_applied = reviewed_at
+            pending_change.save(
+                update_fields=[
+                    "status",
+                    "date_reviewed",
+                    "date_applied",
+                ]
+            )
+
+        return JsonResponse(
+            {
+                "status": "APPLIED",
+                "file_path": pending_change.file_path,
+            }
+        )
+
+    except PendingCodeChange.DoesNotExist:
+        return JsonResponse(
+            {"error": "Pending code change was not found."},
+            status=404,
+        )
+    except WorkspaceContextError as err:
+        return JsonResponse({"error": str(err)}, status=400)
+    except (json.JSONDecodeError, ValueError) as err:
+        return JsonResponse({"error": str(err)}, status=400)
+    except OSError:
+        return JsonResponse(
+            {"error": "The repository file could not be written."},
+            status=500,
+        )
+
+
+@login_required
+def reject_pending_code_change(request):
+    """Reject one pending proposal without mutating the repository."""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        pending_change_id = data.get("pending_change_id")
+
+        if not pending_change_id:
+            return JsonResponse(
+                {"error": "pending_change_id is required"},
+                status=400,
+            )
+
+        updated_rows = PendingCodeChange.objects.filter(
+            id=pending_change_id,
+            user=request.user,
+            status="PENDING",
+        ).update(
+            status="REJECTED",
+            date_reviewed=timezone.now(),
+        )
+
+        if updated_rows == 0:
+            return JsonResponse(
+                {
+                    "error": (
+                        "Pending code change was not found or "
+                        "has already been reviewed."
+                    )
+                },
+                status=409,
+            )
+
+        return JsonResponse({"status": "REJECTED"})
+
+    except (json.JSONDecodeError, ValueError) as err:
+        return JsonResponse({"error": str(err)}, status=400)
 # ======================================================================
-# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 5)
+# END: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS (PATCH 3 OF 5)
 # ======================================================================
 
 # ======================================================================
@@ -301,65 +495,83 @@ def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
     Logs absolute metrics and strips out massive text blocks dynamically.
     """
     if not raw_text_payload:
-        sys.stderr.write("📊 [TRAFFIC ANALYZER]: Received empty or null payload text.\n")
+        sys.stderr.write(
+            "📊 [TRAFFIC ANALYZER]: Received empty or null payload text.\n"
+        )
         sys.stderr.flush()
         return ""
 
     # Measure exact inbound metrics before modification
     raw_char_count = len(raw_text_payload)
     estimated_raw_tokens = raw_char_count // 4
-    
+
     sys.stderr.write(
         f"\n📊 [TRAFFIC ANALYZER PRE-SEND AUDIT]:\n"
         f"  -> Total Character Volume: {raw_char_count}\n"
         f"  -> Estimated Inbound Tokens: {estimated_raw_tokens}\n"
-        f"  -> Safety Budget Target Limit: {max_tokens} tokens (~{max_tokens * 4} chars)\n"
+        f"  -> Safety Budget Target Limit: {max_tokens} tokens "
+        f"(~{max_tokens * 4} chars)\n"
     )
     sys.stderr.flush()
 
     # If the payload fits comfortably within our budget boundaries, pass it intact
     max_chars = max_tokens * 4
     if raw_char_count <= max_chars:
-        sys.stderr.write("📊 [TRAFFIC ANALYZER]: Payload is clean. Forwarding completely intact.\n")
+        sys.stderr.write(
+            "📊 [TRAFFIC ANALYZER]: "
+            "Payload is clean. Forwarding completely intact.\n"
+        )
         sys.stderr.flush()
         return raw_text_payload
 
-    sys.stderr.write("⚠️ [TRAFFIC ANALYZER]: Payload size boundary crossed! Executing surgical line-trimming...\n")
+    sys.stderr.write(
+        "⚠️ [TRAFFIC ANALYZER]: Payload size boundary crossed! "
+        "Executing surgical line-trimming...\n"
+    )
     sys.stderr.flush()
 
     # Split the payload into lines to find what is inflating the string footprint
-    lines = raw_text_payload.split('\n')
+    lines = raw_text_payload.split("\n")
     sanitized_lines = []
     accumulated_chars = 0
     stripped_lines_count = 0
 
     for line in lines:
         line_len = len(line)
-        
-        # Guard 1: Drop individual giant string lines (like serialized JSON or directory sweeps)
+
+        # Guard 1: Drop individual giant string lines
         if line_len > 2000:
             stripped_lines_count += 1
             continue
-            
-        # Guard 2: Halt line collection if we are approaching our hard character ceiling
+
+        # Guard 2: Halt collection near the hard character ceiling
         if accumulated_chars + line_len + 1 > max_chars:
-            stripped_lines_count += (len(lines) - len(sanitized_lines) - stripped_lines_count)
+            stripped_lines_count += (
+                len(lines)
+                - len(sanitized_lines)
+                - stripped_lines_count
+            )
             break
-            
+
         sanitized_lines.append(line)
         accumulated_chars += line_len + 1
 
-    sanitized_text = '\n'.join(sanitized_lines)
-    
-    # Append a clear system marker so you can see exactly where truncation took place
+    sanitized_text = "\n".join(sanitized_lines)
+
+    # Append a clear system marker when truncation occurred
     if stripped_lines_count > 0:
-        sanitized_text += f"\n\n... [🛡️ SECURITY INTERCEPT: {stripped_lines_count} OVERSIZED/SURPLUS LINES STRIPPED TO PREVENT 429 LOCKOUT] ..."
+        sanitized_text += (
+            "\n\n... [🛡️ SECURITY INTERCEPT: "
+            f"{stripped_lines_count} OVERSIZED/SURPLUS LINES STRIPPED "
+            "TO PREVENT 429 LOCKOUT] ..."
+        )
 
     sys.stderr.write(
         f"📊 [TRAFFIC ANALYZER POST-SANITIZATION SUMMARY]:\n"
         f"  -> Cleaned Character Footprint: {len(sanitized_text)}\n"
         f"  -> Cleaned Token Appx: {len(sanitized_text) // 4}\n"
-        f"  -> Total Structural Lines Evicted: {stripped_lines_count}\n\n"
+        f"  -> Total Structural Lines Evicted: "
+        f"{stripped_lines_count}\n\n"
     )
     sys.stderr.flush()
 

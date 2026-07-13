@@ -6,21 +6,32 @@ from .directives_api import directives_endpoint
 from .content_api import content_endpoint
 
 # Consolidated imports from the unified api_commands.py file layer
-from .api_commands import delta_notes_endpoint, execute_blueprint_api, unlocked_components_endpoint
+from .api_commands import (
+    delta_notes_endpoint,
+    execute_blueprint_api,
+    unlocked_components_endpoint,
+)
 
 # FIXED: Updated reference to track our new native asynchronous coroutine engine
-from .dev_streamer_api import trigger_pipeline, run_development_pipeline_async
+from .dev_streamer_api import (
+    trigger_pipeline,
+    run_development_pipeline_async,
+)
 
 # NEW CONNECTION: Import the new automated workspace view directly from endpoints
 from .endpoints import aurora_chat_stream
-from .wu_chat_api import wu_chat_endpoint
+from .wu_chat_api import (
+    approve_pending_code_change,
+    reject_pending_code_change,
+    wu_chat_endpoint,
+)
 
 # 2. Integrated Code Editor & Sandbox API Endpoints
 from .ide_operations import (
     file_tree_api,
     file_operation_api,
     run_code_api,
-    lint_code_api
+    lint_code_api,
 )
 
 __all__ = [
@@ -33,6 +44,8 @@ __all__ = [
     'directives_endpoint',
     'aurora_chat_stream',
     'wu_chat_endpoint',
+    'approve_pending_code_change',
+    'reject_pending_code_change',
     'file_tree_api',
     'file_operation_api',
     'run_code_api',

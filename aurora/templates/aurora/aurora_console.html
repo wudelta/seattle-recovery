@@ -202,6 +202,8 @@ $(document).ready(function() {
         content_endpoint: "{% url 'aurora:content_endpoint' %}",
         directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
         wu_chat_endpoint: "{% url 'aurora:wu_chat_endpoint' %}",
+        wu_chat_approve_endpoint: "{% url 'aurora:approve_pending_code_change' %}",
+        wu_chat_reject_endpoint: "{% url 'aurora:reject_pending_code_change' %}",
         gemini_chat_endpoint: "{% url 'aurora:gemini_chat_stream' %}"
     };
     let anamodInitialized = false;
