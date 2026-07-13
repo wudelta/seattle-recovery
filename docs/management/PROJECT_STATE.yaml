@@ -37,8 +37,9 @@ development:
       provider_integration: complete
       direct_sdk_removal: complete
       wu_validation: complete
-      workspace_context_resolution: pending
-      patch_response_parsing: pending
+      workspace_context_resolution: complete
+      patch_response_parsing: complete
+      structured_patch_pipeline: validation
 
     configuration:
       default_provider_selection: complete
@@ -50,13 +51,14 @@ development:
       wu_console: validated
       telemetry_pipeline: validation
       wu_diff_viewer: pending
-      transaction_workflow: validation
+      patch_review_workflow: in_progress
 
     testing:
-      provider_validation: in_progress
+      provider_validation: complete
+      workspace_patch_validation: in_progress
       regression_testing: pending
       automated_test_rebuild: deferred
-      green_build: pending
+      green_build: complete
 
     documentation:
       architecture: complete
@@ -65,23 +67,23 @@ development:
 
   known_issues:
 
-    - Provider routing is functioning through the ProviderRouter and requires only production validation.
+    - Provider routing is functioning through the ProviderRouter and has passed baseline validation.
     - DeltaDirective constraints still contain legacy prompt instructions that predate Protocol v3.2.
-    - Wu can generate repository patches only when file contents are manually supplied.
-    - No runtime workspace context resolver currently hydrates repository files into Wu prompts.
-    - No active parser currently consumes Wu [PATCH_START]/[PATCH_END] responses.
-    - The Wu review slider implementation exists only on the historical feature/wu-monaco-diff-slider branch and was previously reverted due to instability.
-    - Existing transaction approval UI is command-oriented and not yet integrated with AI patch review.
+    - Workspace context hydration is operational but requires additional functional validation with live Wu prompts.
+    - Structured [PATCH_START]/[PATCH_END] parsing is integrated but requires additional validation against malformed and truncated AI responses.
+    - Patch parsing currently returns review metadata only and intentionally performs no automatic file mutations.
+    - The historical transaction approval workflow has been removed and replaced by the new structured patch architecture.
+    - Wu Chat frontend has not yet been updated to consume the new patch and patch_error response payloads.
+    - Monaco-based patch review UI has not yet been reconnected to the structured review pipeline.
     - Console websocket infrastructure exists but is only partially utilized for execution telemetry.
     - Automated tests require reconstruction following the provider architecture refactor.
 
   next_task: >
-    Reconstruct the Wu-assisted refactoring workflow using small,
-    isolated components. Restore a stable Wu review slider, implement
-    safe workspace context hydration, parse AI patch responses into
-    structured review payloads, reconnect Monaco-based review, and
-    validate the complete approval workflow before enabling automatic
-    repository mutations.
+    Complete the frontend integration of the structured patch review
+    workflow. Connect Wu Chat to the new patch payload, restore the
+    Monaco review interface, validate successful and malformed patch
+    responses, and complete the human approval workflow before enabling
+    any automated repository mutations.
 
   notes:
 
@@ -89,12 +91,14 @@ development:
     - Provider abstraction has reached baseline implementation and is no longer the primary development focus.
     - Wu Chat is now the validation harness for the complete AI-assisted development workflow.
     - Provider implementations remain responsible only for SDK integration.
-    - Repository context resolution is a separate architectural concern from provider execution.
+    - Repository context resolution is architecturally isolated from provider execution.
+    - Structured patch parsing is architecturally isolated from repository mutation.
     - AI patch review must remain isolated from the standalone Anamod editor.
     - The historical feature/wu-monaco-diff-slider branch is a behavioral reference only and must not be merged directly.
     - Repository documentation is the authoritative project memory.
     - Preserve anchor topology during all repository modifications.
     - Apply The Delta Way: small, reversible, production-safe iterations.
+    - Today's refactor removed the legacy WorkspaceTransaction / TrackedCommand approval architecture in favor of structured patch review.
     - Commit checkpoint established:
       14ac790 - refactor: introduce provider abstraction and routing layer
 

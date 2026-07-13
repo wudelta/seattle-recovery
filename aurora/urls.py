@@ -1,10 +1,11 @@
 # ====================================================================== #
 # FILE: aurora/urls.py (PATCH 1 OF 1)                                    #
-# START: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES                  #
+# START: SYSTEM_DISPATCH_ROUTING_MATRIX_AND_LOGIN_ENTRIES                #
 # ====================================================================== #
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+
 # FIXED: Pull directly from the consolidated initialization package layer
 from aurora import api as api_endpoints
 
@@ -27,7 +28,11 @@ urlpatterns = [
     path('api/gemini_chat/', api_endpoints.aurora_chat_stream, name='gemini_chat_stream'),
 
     # FIXED: Direct standalone path for the unlocked components tracking matrix registry endpoint
-    path('api/components/unlocked/', api_endpoints.unlocked_components_endpoint, name='unlocked_components_registry'),
+    path(
+        'api/components/unlocked/',
+        api_endpoints.unlocked_components_endpoint,
+        name='unlocked_components_registry'
+    ),
 
     # 4. LIGHTWEIGHT EMBEDDED IDE & DOCKER SANDBOX ENDPOINTS
     path('api/files/tree/', api_endpoints.file_tree_api, name='ide_file_tree'),
@@ -35,26 +40,26 @@ urlpatterns = [
     path('api/sandbox/run/', api_endpoints.run_code_api, name='ide_sandbox_run'),
     path('api/sandbox/lint/', api_endpoints.lint_code_api, name='ide_sandbox_lint'),
 
-    # 6. DJANGO AUTH URLS
-    path('login/', auth_views.LoginView.as_view(
-        template_name='aurora/login.html',
-        success_url='/aurora/'
-    ), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='aurora:landing'), name='logout'),
+    # 5. DJANGO AUTH URLS
+    path(
+        'login/',
+        auth_views.LoginView.as_view(
+            template_name='aurora/login.html',
+            success_url='/aurora/'
+        ),
+        name='login'
+    ),
+    path(
+        'logout/',
+        auth_views.LogoutView.as_view(next_page='aurora:landing'),
+        name='logout'
+    ),
 
     path('api/delta_notes/', api_endpoints.delta_notes_endpoint, name='delta_notes_endpoint'),
     path('api/content/', api_endpoints.content_endpoint, name='content_endpoint'),
     path('api/directives/', api_endpoints.directives_endpoint, name='directives_endpoint'),
     path('api/wu_chat/', api_endpoints.wu_chat_endpoint, name='wu_chat_endpoint'),
-
-    # FIX: Expose the interactive transaction control action routing hook 
-    # to handle granular developer approvals and automated file /destroy rollbacks.
-    path(
-        'api/transaction/<uuid:tx_id>/action/',
-        api_endpoints.process_transaction_action,
-        name='process_transaction_action'
-    ),
 ]
 # ====================================================================== #
-# END: SYSTEM DISPATCH ROUTING MATRIX & LOGIN ENTRIES (PATCH 1 OF 1)     #
+# END: SYSTEM_DISPATCH_ROUTING_MATRIX_AND_LOGIN_ENTRIES (PATCH 1 OF 1)   #
 # ====================================================================== #

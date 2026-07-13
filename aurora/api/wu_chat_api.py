@@ -1,29 +1,33 @@
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 6)
+# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 5)
 # START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import json
 import asyncio
 import traceback
-import re
 import sys
-import os
 import time
 from collections import deque
 from threading import Lock
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
-from asgiref.sync import sync_to_async, async_to_sync
-from aurora.models import DeltaDirectives, WorkspaceTransaction, TrackedCommand
+from aurora.models import DeltaDirectives
 from aurora.minions.engine import MinionRunner
+from aurora.minions.patch_parser import (
+    PatchParseError,
+    parse_patch_response,
+)
+from aurora.minions.workspace_context import (
+    WorkspaceContextError,
+    resolve_workspace_context,
+)
 from .dev_streamer_api import async_send_to_console
 # ======================================================================
-# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 6)
+# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 6)
+# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 5)
 # START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 
@@ -58,10 +62,22 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
         # Unify history block text or remain fallback-clean if it is a fresh session thread
         history_context_block = "\n\n".join(history_buffer_lines) if history_buffer_lines else ""
 
-        # 3. CONSOLIDATE PAYLOAD: Graft compact history right ahead of your raw user notes
-        compiled_task_notes = user_delta_notes
+        # 3. RESOLVE ONLY THE CURRENT INSTRUCTION AGAINST THE SAFE WORKSPACE BOUNDARY
+        workspace_context = resolve_workspace_context(user_delta_notes)
+        current_task_input = (
+            workspace_context.hydrated_prompt
+            if workspace_context
+            else user_delta_notes
+        )
+
+        # 4. CONSOLIDATE PAYLOAD: Graft compact history ahead of the active task input
+        compiled_task_notes = current_task_input
         if history_context_block:
-            compiled_task_notes = f"{history_context_block}\n\n=== CURRENT LIVE WORKSPACE TASK INSTRUCTION ===\n{user_delta_notes}"
+            compiled_task_notes = (
+                f"{history_context_block}\n\n"
+                "=== CURRENT LIVE WORKSPACE TASK INSTRUCTION ===\n"
+                f"{current_task_input}"
+            )
 
         complete_response_text = ""
         stream_generator = runner.run_minion_task_stream("minion_wu", compiled_task_notes)
@@ -84,6 +100,24 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
         thread.start()
         thread.join()
 
+        patch_payload = None
+        patch_error = None
+
+        if workspace_context:
+            try:
+                parsed_patch = parse_patch_response(
+                    response_text=complete_response_text,
+                    expected_file_path=workspace_context.file_path,
+                    original_content=workspace_context.original_content,
+                )
+                patch_payload = parsed_patch.as_payload()
+            except PatchParseError as err:
+                patch_error = str(err)
+                sys.stderr.write(
+                    f"⚠️ [WU PATCH REVIEW ERROR]: {patch_error}\n"
+                )
+                sys.stderr.flush()
+
         # Map to Gemini's high-capacity free tier limits (15 Requests Per Minute, 1M Context).
         r_limit = 15
         r_rem = getattr(runner, "last_rpm_remaining", 14)
@@ -102,66 +136,37 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             "requests_used_pct": min(100.0, max(0.0, requests_used_pct))
         }
 
-        # Casing-flexible regex processing block handling varied layout margins
-        command_blocks = re.findall(r"\[[Cc][Oo][Mm][Mm][Aa][Nn][Dd]:\s*(.*?)\]", complete_response_text)
-
-        transaction = None
-
-        if command_blocks:
-            transaction = WorkspaceTransaction.objects.create(
-                user=user,
-                prompt_context=user_delta_notes,
-                status='PENDING'
-            )
-
-            for index, command_string in enumerate(command_blocks):
-                parts = command_string.strip().split()
-                if not parts:
-                    continue
-
-                macro = parts[0].lower().strip()
-                predicted_files = []
-                clean_arg = parts[1].strip().lower().replace(" ", "_") if len(parts) >= 2 else ""
-
-                if not clean_arg:
-                    continue
-
-                if macro == "/page":
-                    predicted_files.append(f"aurora/templates/aurora/pages/{clean_arg}.html")
-                elif macro == "/api":
-                    predicted_files.append(f"aurora/api/{clean_arg}_api.py")
-
-                TrackedCommand.objects.create(
-                    transaction=transaction,
-                    macro=macro,
-                    arguments=parts[1:],
-                    affected_files=predicted_files,
-                    execution_order=index
-                )
-
         return {
             "status": "SUCCESS",
             "wu_response": complete_response_text,
-            "transaction_id": str(transaction.id) if transaction else None,
+            "patch": patch_payload,
+            "patch_error": patch_error,
             "fuel_gauge": fuel_gauge_metrics
         }
 
+    except WorkspaceContextError as err:
+        return {
+            "status": "ERROR",
+            "message": str(err),
+            "trace": traceback.format_exc(),
+        }
     except Exception as err:
         return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
 
 # ======================================================================
-# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 6)
+# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 6)
+# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 5)
 # START: CHAT_REQUEST_ENDPOINT_VIEW
 # ======================================================================
 @login_required
 def wu_chat_endpoint(request):
     """
     Processes requests, hooks up sliding history windows via ChatLedgerEntry,
-    and returns response payloads along with transaction metadata.
+    and returns response payloads with execution telemetry and optional
+    structured patch review data.
     """
     from aurora.models import ChatLedgerEntry
 
@@ -209,29 +214,30 @@ def wu_chat_endpoint(request):
             return JsonResponse({
                 "status": "wu_is_processing",
                 "direct_text_output": result["wu_response"],
-                "transaction_id": result["transaction_id"],
+                "patch": result.get("patch"),
+                "patch_error": result.get("patch_error"),
                 "fuel_gauge": result.get("fuel_gauge", {})
             })
         except Exception as err:
             return JsonResponse({"error": str(err)}, status=400)
     return JsonResponse({"error": "POST required"}, status=405)
 # ======================================================================
-# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 6)
+# END: CHAT_REQUEST_ENDPOINT_VIEW (PATCH 3 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 6)
+# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 5)
 # START: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS
 # ======================================================================
 # Thread safety locks and allocation deques tracking network transaction states
 OUTBOUND_TRAFFIC_LOG = deque()
 TRAFFIC_LOCK = Lock()
 # ======================================================================
-# END: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS (PATCH 4 OF 6)
+# END: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 5 OF 6)
+# FILE: aurora/api/wu_chat_api.py (PATCH 5 OF 5)
 # START: UTILITY_CONTEXT_TOKEN_BUDGETER
 # ======================================================================
 def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
@@ -304,75 +310,5 @@ def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
 
     return sanitized_text
 # ======================================================================
-# END: UTILITY_CONTEXT_TOKEN_BUDGETER (PATCH 5 OF 6)
-# ======================================================================
-
-# ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 6 OF 6)
-# START: TRANSACTION_ACTION_CONTROLLER_VIEW
-# ======================================================================
-@login_required
-def process_transaction_action(request, tx_id):
-    """Approve or surgically Rollback (/destroy) workspace changes by transaction tracking ID."""
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
-
-    def _execute_sync_action_logic():
-        try:
-            tx = WorkspaceTransaction.objects.prefetch_related('commands').get(id=tx_id, user=request.user)
-            action = json.loads(request.body).get("action", "").upper()
-            base_dir = os.path.abspath(getattr(settings, "BASE_DIR", os.getcwd()))
-
-            if action == "APPROVE":
-                from aurora.minions.automation_utilities import WorkspaceAutomationRunner
-                runner = WorkspaceAutomationRunner(user=request.user, dry_run=False)
-                for cmd in tx.commands.all():
-                    if cmd.macro == "/page" and cmd.arguments:
-                        async_to_sync(runner.execute_page_command)(cmd.arguments[0])
-                    elif cmd.macro == "/api" and cmd.arguments:
-                        async_to_sync(runner.execute_api_command)(cmd.arguments[0])
-                tx.status = 'EXECUTED'
-                tx.save()
-                return {"status": "SUCCESS", "message": "Transaction executed and files written."}
-
-            elif action == "DESTROY":
-                for cmd in tx.commands.all():
-                    for file_path in cmd.affected_files:
-                        if not file_path or not isinstance(file_path, str):
-                            continue
-                        # Strict path evaluation guarding to prevent directory traversal
-                        full_path = os.path.abspath(os.path.join(base_dir, file_path))
-                        if not full_path.startswith(base_dir) or full_path == base_dir:
-                            sys.stderr.write(f"⚠️ [SECURITY ALERT]: Blocked destructive outside directory sweep path: {file_path}\n")
-                            continue
-                        if os.path.exists(full_path) and os.path.isfile(full_path):
-                            os.remove(full_path)
-                tx.status = 'ROLLED_BACK'
-                tx.save()
-                return {"status": "SUCCESS", "message": "Transaction files destroyed and configuration rolled back."}
-
-            return {"error": "Invalid action context", "status_code": 400}
-        except WorkspaceTransaction.DoesNotExist:
-            return {"error": "Transaction context lookup failure.", "status_code": 404}
-        except Exception as err:
-            return {"error": str(err), "status_code": 500}
-
-    try:
-        loop = asyncio.get_running_loop()
-        is_async_context = True
-    except RuntimeError:
-        is_async_context = False
-
-    if is_async_context:
-        async def run_in_thread():
-            return await sync_to_async(_execute_sync_action_logic, thread_sensitive=False)()
-        result = async_to_sync(run_in_thread)()
-    else:
-        result = _execute_sync_action_logic()
-
-    if "error" in result:
-        return JsonResponse({"error": result["error"]}, status=result.get("status_code", 400))
-    return JsonResponse(result)
-# ======================================================================
-# END: TRANSACTION_ACTION_CONTROLLER_VIEW (PATCH 6 OF 6)
+# END: UTILITY_CONTEXT_TOKEN_BUDGETER (PATCH 5 OF 5)
 # ======================================================================
