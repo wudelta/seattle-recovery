@@ -36,33 +36,53 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
     try:
         runner = MinionRunner()
         try:
-            wu_config = DeltaDirectives.objects.get(directive_name="minion_wu", is_active=True)
+            wu_config = DeltaDirectives.objects.get(
+                directive_name="minion_wu",
+                is_active=True,
+            )
         except DeltaDirectives.DoesNotExist:
-            error_msg = "💥 [REGISTRY CRITICAL]: Master directive configuration 'minion_wu' is missing or inactive in your database ledger!"
+            error_msg = (
+                "💥 [REGISTRY CRITICAL]: Master directive configuration "
+                "'minion_wu' is missing or inactive in your database ledger!"
+            )
             sys.stderr.write(f"{error_msg}\n")
             sys.stderr.flush()
-            return {"status": "ERROR", "message": "Master orchestrator directive is missing in database registry.", "trace": error_msg}
+            return {
+                "status": "ERROR",
+                "message": "Master orchestrator directive is missing in database registry.",
+                "trace": error_msg,
+            }
 
         from aurora.models import ChatLedgerEntry
 
-        # 1. READ CONTEXT BACK OUT OF POSTGRESQL (Strict Limit to Last 6 Blocks to Prevent Bloat)
+        # 1. READ CONTEXT BACK OUT OF POSTGRESQL
         db_history = ChatLedgerEntry.objects.filter(
             session_id=session_id
-        ).order_by('-created_at')[:6]
+        ).order_by("-created_at")[:6]
 
-        # 2. COMPACT HISTORY ASYMMETRICALLY: Format into a lightweight instruction context block
+        # 2. COMPACT HISTORY ASYMMETRICALLY
         history_buffer_lines = []
         for entry in reversed(db_history):
-            # Skip appending the active prompt if it was already saved to avoid doubling text inputs
-            if entry.role == 'user' and entry.text == user_delta_notes:
+            if entry.role == "user" and entry.text == user_delta_notes:
                 continue
-            author_tag = "Developer Intention" if entry.role == 'user' else "Wu Response"
-            history_buffer_lines.append(f"--- PRIOR CONVERSATION STEP ({author_tag}) ---\n{entry.text}")
 
-        # Unify history block text or remain fallback-clean if it is a fresh session thread
-        history_context_block = "\n\n".join(history_buffer_lines) if history_buffer_lines else ""
+            author_tag = (
+                "Developer Intention"
+                if entry.role == "user"
+                else "Wu Response"
+            )
+            history_buffer_lines.append(
+                f"--- PRIOR CONVERSATION STEP ({author_tag}) ---\n"
+                f"{entry.text}"
+            )
 
-        # 3. RESOLVE ONLY THE CURRENT INSTRUCTION AGAINST THE SAFE WORKSPACE BOUNDARY
+        history_context_block = (
+            "\n\n".join(history_buffer_lines)
+            if history_buffer_lines
+            else ""
+        )
+
+        # 3. RESOLVE THE CURRENT INSTRUCTION AGAINST THE WORKSPACE
         workspace_context = resolve_workspace_context(user_delta_notes)
         current_task_input = (
             workspace_context.hydrated_prompt
@@ -70,7 +90,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             else user_delta_notes
         )
 
-        # 4. CONSOLIDATE PAYLOAD: Graft compact history ahead of the active task input
+        # 4. CONSOLIDATE HISTORY AND CURRENT TASK
         compiled_task_notes = current_task_input
         if history_context_block:
             compiled_task_notes = (
@@ -80,11 +100,14 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             )
 
         complete_response_text = ""
-        stream_generator = runner.run_minion_task_stream("minion_wu", compiled_task_notes)
+        stream_generator = runner.run_minion_task_stream(
+            "minion_wu",
+            compiled_task_notes,
+        )
 
-        # Thread-safe async worker strategy to read tokens without latching onto or blocking Daphne's main event loop
         async def consume_stream():
             nonlocal complete_response_text
+
             async for token in stream_generator:
                 complete_response_text += token
 
@@ -96,6 +119,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
                 new_loop.close()
 
         import threading
+
         thread = threading.Thread(target=run_async_in_thread)
         thread.start()
         thread.join()
@@ -118,22 +142,49 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
                 )
                 sys.stderr.flush()
 
-        # Map to Gemini's high-capacity free tier limits (15 Requests Per Minute, 1M Context).
+        sys.stderr.write(
+            "\n🔎 [WU PATCH DEBUG]:\n"
+            f"  -> Workspace Context: {workspace_context is not None}\n"
+            f"  -> Structured Patch: {patch_payload is not None}\n"
+            f"  -> Patch Error: {patch_error!r}\n"
+            f"  -> Response Characters: {len(complete_response_text)}\n\n"
+        )
+        sys.stderr.flush()
+
         r_limit = 15
         r_rem = getattr(runner, "last_rpm_remaining", 14)
         t_limit = 1000000
-        t_used = getattr(runner, "last_tokens_consumed", len(compiled_task_notes) // 4)
+        t_used = getattr(
+            runner,
+            "last_tokens_consumed",
+            len(compiled_task_notes) // 4,
+        )
         t_rem = max(0, t_limit - t_used)
-        tokens_used_pct = round((t_used / t_limit) * 100, 3) if t_limit > 0 else 0.0
-        requests_used_pct = round(((r_limit - r_rem) / r_limit) * 100, 1) if r_limit > 0 else 0.0
+
+        tokens_used_pct = (
+            round((t_used / t_limit) * 100, 3)
+            if t_limit > 0
+            else 0.0
+        )
+        requests_used_pct = (
+            round(((r_limit - r_rem) / r_limit) * 100, 1)
+            if r_limit > 0
+            else 0.0
+        )
 
         fuel_gauge_metrics = {
             "tokens_limit": t_limit,
             "tokens_remaining": t_rem,
-            "tokens_used_pct": min(100.0, max(0.0, tokens_used_pct)),
+            "tokens_used_pct": min(
+                100.0,
+                max(0.0, tokens_used_pct),
+            ),
             "requests_limit": r_limit,
             "requests_remaining": r_rem,
-            "requests_used_pct": min(100.0, max(0.0, requests_used_pct))
+            "requests_used_pct": min(
+                100.0,
+                max(0.0, requests_used_pct),
+            ),
         }
 
         return {
@@ -141,7 +192,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             "wu_response": complete_response_text,
             "patch": patch_payload,
             "patch_error": patch_error,
-            "fuel_gauge": fuel_gauge_metrics
+            "fuel_gauge": fuel_gauge_metrics,
         }
 
     except WorkspaceContextError as err:
@@ -151,7 +202,11 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             "trace": traceback.format_exc(),
         }
     except Exception as err:
-        return {"status": "ERROR", "message": str(err), "trace": traceback.format_exc()}
+        return {
+            "status": "ERROR",
+            "message": str(err),
+            "trace": traceback.format_exc(),
+        }
 
 # ======================================================================
 # END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 5)

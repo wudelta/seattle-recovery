@@ -179,6 +179,15 @@
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
+
+<script>
+require.config({
+    paths: {
+        vs: "{% static 'js/vs' %}"
+    }
+});
+</script>
+
 <script src="{% static 'aurora/js/wu_diff_viewer.js' %}"></script>
 <script src="{% static 'aurora/js/anamod.js' %}"></script>
 <script src="{% static 'aurora/js/anamod_workspace.js' %}"></script>

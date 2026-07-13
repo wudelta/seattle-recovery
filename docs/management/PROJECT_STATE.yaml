@@ -1,116 +1,144 @@
 # ======================================================================
+
 # FILE: docs/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
+
 # START: DEVELOPMENT_STATUS_AND_NEXT_TASK
+
 # ======================================================================
 
 development:
 
-  objective: >
-    Complete end-to-end validation of the Wu-assisted development
-    workflow by reconnecting repository context, AI-generated patch
-    review, and the Monaco verification interface while preserving
-    the provider abstraction architecture.
+objective: >
+Complete end-to-end validation of the Wu-assisted development
+workflow by connecting structured backend patch responses to the
+existing isolated Wu review interface while preserving the provider
+abstraction and Anamod editor boundaries.
 
-  current_phase: >
-    Wu Refactoring Workflow Reconstruction
+current_phase: >
+Wu Structured Patch Frontend Integration
 
-  current_branch: >
-    feature/provider-abstraction
+current_branch: >
+feature/provider-abstraction
 
-  status:
+status:
 
-    architecture:
-      adr_001_ai_execution_architecture: complete
-      adr_002_provider_routing_and_failover: complete
-      adr_003_ai_directive_contract: complete
-      architecture_overview: complete
+```
+architecture:
+  adr_001_ai_execution_architecture: complete
+  adr_002_provider_routing_and_failover: complete
+  adr_003_ai_directive_contract: complete
+  architecture_overview: complete
 
-    provider_layer:
-      interface: complete
-      registry: complete
-      router: complete
-      simulated_provider: complete
-      openai_provider: complete
-      gemini_provider: complete
+provider_layer:
+  interface: complete
+  registry: complete
+  router: complete
+  simulated_provider: complete
+  openai_provider: complete
+  gemini_provider: complete
 
-    execution_engine:
-      provider_integration: complete
-      direct_sdk_removal: complete
-      wu_validation: complete
-      workspace_context_resolution: complete
-      patch_response_parsing: complete
-      structured_patch_pipeline: validation
+execution_engine:
+  provider_integration: complete
+  direct_sdk_removal: complete
+  wu_validation: complete
+  workspace_context_resolution: complete
+  patch_response_parsing: complete
+  structured_patch_pipeline: validation
 
-    configuration:
-      default_provider_selection: complete
-      provider_priority: pending
-      model_mapping: pending
-      directive_constraints_migration: pending
+configuration:
+  default_provider_selection: complete
+  provider_priority: pending
+  model_mapping: pending
+  directive_constraints_migration: pending
 
-    ui_validation:
-      wu_console: validated
-      telemetry_pipeline: validation
-      wu_diff_viewer: pending
-      patch_review_workflow: in_progress
+ui_validation:
+  wu_console: validated
+  single_response_rendering: validated
+  telemetry_pipeline: pending
+  wu_review_slider: validated
+  wu_diff_viewer: validated
+  repeated_review_open_close: validated
+  anamod_editor_isolation: validated
+  frontend_patch_integration: in_progress
+  pending_code_change_approval: pending
 
-    testing:
-      provider_validation: complete
-      workspace_patch_validation: in_progress
-      regression_testing: pending
-      automated_test_rebuild: deferred
-      green_build: complete
+testing:
+  provider_validation: complete
+  workspace_patch_validation: in_progress
+  malformed_patch_validation: pending
+  truncated_patch_validation: pending
+  regression_testing: pending
+  automated_test_rebuild: deferred
+  green_build: complete
 
-    documentation:
-      architecture: complete
-      continuity_system: complete
-      engineering_principles: complete
+documentation:
+  architecture: complete
+  continuity_system: complete
+  engineering_principles: complete
+  reconstruction_plan_accuracy: updated
+```
 
-  known_issues:
+known_issues:
 
-    - Provider routing is functioning through the ProviderRouter and has passed baseline validation.
-    - DeltaDirective constraints still contain legacy prompt instructions that predate Protocol v3.2.
-    - Workspace context hydration is operational but requires additional functional validation with live Wu prompts.
-    - Structured [PATCH_START]/[PATCH_END] parsing is integrated but requires additional validation against malformed and truncated AI responses.
-    - Patch parsing currently returns review metadata only and intentionally performs no automatic file mutations.
-    - The historical transaction approval workflow has been removed and replaced by the new structured patch architecture.
-    - Wu Chat frontend has not yet been updated to consume the new patch and patch_error response payloads.
-    - Monaco-based patch review UI has not yet been reconnected to the structured review pipeline.
-    - Console websocket infrastructure exists but is only partially utilized for execution telemetry.
-    - Automated tests require reconstruction following the provider architecture refactor.
+```
+- Provider routing is functioning through ProviderRouter and has passed baseline validation.
+- DeltaDirective constraints still contain legacy prompt instructions that predate Protocol v3.2.
+- Workspace context hydration is operational but requires additional validation with live Wu refactoring prompts.
+- Structured [PATCH_START]/[PATCH_END] parsing is integrated but requires validation against malformed and truncated AI responses.
+- Patch parsing returns structured review metadata and intentionally performs no automatic repository mutation.
+- The historical WorkspaceTransaction and TrackedCommand approval architecture has been removed.
+- The existing Wu review slider and isolated Monaco diff viewer are functional and do not require reconstruction.
+- The Monaco diff model orientation currently presents proposed content as the original model and current content as the modified model.
+- Wu Chat recognizes patch and patch_error response fields but does not yet invoke window.WuDiffViewer.show(response.patch).
+- No structured review slider appeared during the latest live Wu request, so the backend response payload must be inspected before further frontend changes.
+- The telemetry viewport is present, but no execution telemetry was received during the latest Wu validation request.
+- PendingCodeChange approval and verified repository writing are not connected to the review interface.
+- Automated tests require reconstruction following the provider architecture refactor.
+```
 
-  next_task: >
-    Complete the frontend integration of the structured patch review
-    workflow. Connect Wu Chat to the new patch payload, restore the
-    Monaco review interface, validate successful and malformed patch
-    responses, and complete the human approval workflow before enabling
-    any automated repository mutations.
+next_task: >
+Inspect the live response returned by aurora/api/wu_chat_api.py for a
+repository refactoring request. Confirm whether the response contains
+patch, patch_error, or only conversational output. Correct the Monaco
+diff orientation, then connect response.patch to
+window.WuDiffViewer.show(response.patch) only after the backend payload
+contract has been verified.
 
-  notes:
+notes:
 
-    - ADR-001 through ADR-003 remain the architectural source of truth.
-    - Provider abstraction has reached baseline implementation and is no longer the primary development focus.
-    - Wu Chat is now the validation harness for the complete AI-assisted development workflow.
-    - Provider implementations remain responsible only for SDK integration.
-    - Repository context resolution is architecturally isolated from provider execution.
-    - Structured patch parsing is architecturally isolated from repository mutation.
-    - AI patch review must remain isolated from the standalone Anamod editor.
-    - The historical feature/wu-monaco-diff-slider branch is a behavioral reference only and must not be merged directly.
-    - Repository documentation is the authoritative project memory.
-    - Preserve anchor topology during all repository modifications.
-    - Apply The Delta Way: small, reversible, production-safe iterations.
-    - Today's refactor removed the legacy WorkspaceTransaction / TrackedCommand approval architecture in favor of structured patch review.
-    - Commit checkpoint established:
-      14ac790 - refactor: introduce provider abstraction and routing layer
+```
+- ADR-001 through ADR-003 remain the architectural source of truth.
+- Provider abstraction has reached baseline implementation and is no longer the primary development focus.
+- Wu Chat is the validation harness for the complete AI-assisted development workflow.
+- Provider implementations remain responsible only for SDK integration.
+- Repository context resolution is architecturally isolated from provider execution.
+- Structured patch parsing is architecturally isolated from repository mutation.
+- AI patch review remains isolated from the standalone Anamod editor.
+- The historical feature/wu-monaco-diff-slider branch is a behavioral reference only and must not be merged directly.
+- The Wu review slider markup already exists in wu_chat_console_panel.html.
+- The isolated Wu Monaco diff viewer already exists in wu_diff_viewer.js.
+- Static review layout, repeated open and close behavior, and Anamod isolation have been manually validated.
+- Checkpoints 4 and 5 of the reconstruction plan are complete based on direct UI validation.
+- Checkpoint 6, frontend structured-patch integration, is the active checkpoint.
+- Repository documentation is the authoritative project memory.
+- Preserve anchor topology during all repository modifications.
+- Apply The Delta Way: small, reversible, production-safe iterations.
+- No Git checkpoint is required yet because no new functional milestone has been completed.
+- Stable provider abstraction checkpoint:
+  14ac790 - refactor: introduce provider abstraction and routing layer
+```
 
-  current_objective: >
-    Complete the Aurora baseline by July 15, 2026. Following merge into
-    main, shift development effort toward HopeHub with a target beta
-    deployment by August 15, 2026.
+current_objective: >
+Complete the Aurora baseline by July 15, 2026. Following merge into
+main, shift development effort toward HopeHub with a target beta
+deployment by August 15, 2026.
 
-  next_major_milestone: Aurora Baseline (2026-07-15)
+next_major_milestone: Aurora Baseline (2026-07-15)
 
-  project_target: HopeHub Beta Prototype (2026-08-15)
+project_target: HopeHub Beta Prototype (2026-08-15)
 
 # ======================================================================
+
 # END: DEVELOPMENT_STATUS_AND_NEXT_TASK (PATCH 1 OF 1)
+
 # ======================================================================

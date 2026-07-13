@@ -8,6 +8,8 @@
     let diffEditor = null;
     let proposedModel = null;
     let currentModel = null;
+    let pendingPayload = null;
+    let monacoLoading = false;
 
     function getSlider() {
         return document.getElementById("wu-code-review-slider");
@@ -25,7 +27,7 @@
         }
     }
 
-    function ensureEditor() {
+    function createEditor() {
         const viewport = document.getElementById("wu-code-diff-viewport");
 
         if (!viewport || diffEditor || typeof monaco === "undefined") {
@@ -44,9 +46,9 @@
     }
 
     function loadModels(payload) {
-        ensureEditor();
+        createEditor();
 
-        if (!diffEditor) {
+        if (!diffEditor || typeof monaco === "undefined") {
             return;
         }
 
@@ -54,20 +56,66 @@
 
         const language = payload.language || "plaintext";
 
-        proposedModel = monaco.editor.createModel(
-            payload.proposed_content || "",
-            language
-        );
-
         currentModel = monaco.editor.createModel(
             payload.original_content || "",
             language
         );
 
+        proposedModel = monaco.editor.createModel(
+            payload.proposed_content || "",
+            language
+        );
+
         diffEditor.setModel({
-            original: proposedModel,
-            modified: currentModel
+            original: currentModel,
+            modified: proposedModel
         });
+
+        requestAnimationFrame(function () {
+            diffEditor.layout();
+        });
+    }
+
+    function loadMonaco(payload) {
+        pendingPayload = payload;
+
+        if (typeof monaco !== "undefined") {
+            loadModels(pendingPayload);
+            pendingPayload = null;
+            return;
+        }
+
+        if (monacoLoading) {
+            return;
+        }
+
+        if (typeof require !== "function") {
+            console.error(
+                "[WuDiffViewer] Monaco AMD loader is unavailable."
+            );
+            return;
+        }
+
+        monacoLoading = true;
+
+        require(
+            ["vs/editor/editor.main"],
+            function () {
+                monacoLoading = false;
+
+                if (pendingPayload) {
+                    loadModels(pendingPayload);
+                    pendingPayload = null;
+                }
+            },
+            function (error) {
+                monacoLoading = false;
+                console.error(
+                    "[WuDiffViewer] Monaco failed to load.",
+                    error
+                );
+            }
+        );
     }
 
     function show(payload) {
@@ -80,19 +128,14 @@
         const filePath = document.getElementById("wu-review-file-path");
 
         if (filePath) {
-            filePath.textContent = payload.file_path || "Pending code review";
+            filePath.textContent =
+                payload.file_path || "Pending code review";
         }
-
-        loadModels(payload);
 
         slider.style.transform = "translateX(-100%)";
         slider.setAttribute("aria-hidden", "false");
 
-        requestAnimationFrame(function () {
-            if (diffEditor) {
-                diffEditor.layout();
-            }
-        });
+        loadMonaco(payload);
     }
 
     function hide() {
@@ -107,8 +150,13 @@
     }
 
     function bindControls() {
-        const closeButton = document.getElementById("wu-review-close-btn");
-        const rejectButton = document.getElementById("wu-review-reject-btn");
+        const closeButton = document.getElementById(
+            "wu-review-close-btn"
+        );
+
+        const rejectButton = document.getElementById(
+            "wu-review-reject-btn"
+        );
 
         if (closeButton) {
             closeButton.addEventListener("click", hide);
@@ -132,9 +180,7 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        bindControls();
-    });
+    document.addEventListener("DOMContentLoaded", bindControls);
 
     window.WuDiffViewer = {
         show: show,
