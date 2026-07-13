@@ -37,12 +37,17 @@ from .dev_streamer_api import async_send_to_console
 # START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 
-def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_cockpit_thread"):
-    """Generates the full Gemini execution plan, factoring in low-footprint ledger contexts."""
+def process_wu_logic_synchronous(
+    user_delta_notes,
+    user,
+    session_id="default_cockpit_thread",
+):
+    """Execute Wu and return normalized review and runtime telemetry."""
     try:
         runner = MinionRunner()
+
         try:
-            wu_config = DeltaDirectives.objects.get(
+            DeltaDirectives.objects.get(
                 directive_name="minion_wu",
                 is_active=True,
             )
@@ -53,23 +58,29 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             )
             sys.stderr.write(f"{error_msg}\n")
             sys.stderr.flush()
+
             return {
                 "status": "ERROR",
-                "message": "Master orchestrator directive is missing in database registry.",
+                "message": (
+                    "Master orchestrator directive is missing "
+                    "in database registry."
+                ),
                 "trace": error_msg,
             }
 
         from aurora.models import ChatLedgerEntry
 
-        # 1. READ CONTEXT BACK OUT OF POSTGRESQL
         db_history = ChatLedgerEntry.objects.filter(
             session_id=session_id
         ).order_by("-created_at")[:6]
 
-        # 2. COMPACT HISTORY ASYMMETRICALLY
         history_buffer_lines = []
+
         for entry in reversed(db_history):
-            if entry.role == "user" and entry.text == user_delta_notes:
+            if (
+                entry.role == "user"
+                and entry.text == user_delta_notes
+            ):
                 continue
 
             author_tag = (
@@ -88,16 +99,17 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             else ""
         )
 
-        # 3. RESOLVE THE CURRENT INSTRUCTION AGAINST THE WORKSPACE
-        workspace_context = resolve_workspace_context(user_delta_notes)
+        workspace_context = resolve_workspace_context(
+            user_delta_notes
+        )
         current_task_input = (
             workspace_context.hydrated_prompt
             if workspace_context
             else user_delta_notes
         )
 
-        # 4. CONSOLIDATE HISTORY AND CURRENT TASK
         compiled_task_notes = current_task_input
+
         if history_context_block:
             compiled_task_notes = (
                 f"{history_context_block}\n\n"
@@ -119,14 +131,19 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
 
         def run_async_in_thread():
             new_loop = asyncio.new_event_loop()
+
             try:
-                return new_loop.run_until_complete(consume_stream())
+                return new_loop.run_until_complete(
+                    consume_stream()
+                )
             finally:
                 new_loop.close()
 
         import threading
 
-        thread = threading.Thread(target=run_async_in_thread)
+        thread = threading.Thread(
+            target=run_async_in_thread
+        )
         thread.start()
         thread.join()
 
@@ -137,46 +154,58 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             try:
                 parsed_patch = parse_patch_response(
                     response_text=complete_response_text,
-                    expected_file_path=workspace_context.file_path,
-                    original_content=workspace_context.original_content,
+                    expected_file_path=(
+                        workspace_context.file_path
+                    ),
+                    original_content=(
+                        workspace_context.original_content
+                    ),
                 )
                 patch_payload = parsed_patch.as_payload()
 
-                pending_change = PendingCodeChange.objects.create(
-                    user=user,
-                    file_path=workspace_context.file_path,
-                    original_content=workspace_context.original_content,
-                    proposed_content=patch_payload["proposed_content"],
-                    original_sha256=hashlib.sha256(
-                        workspace_context.original_content.encode("utf-8")
-                    ).hexdigest(),
+                pending_change = (
+                    PendingCodeChange.objects.create(
+                        user=user,
+                        file_path=workspace_context.file_path,
+                        original_content=(
+                            workspace_context.original_content
+                        ),
+                        proposed_content=(
+                            patch_payload["proposed_content"]
+                        ),
+                        original_sha256=hashlib.sha256(
+                            workspace_context.original_content.encode(
+                                "utf-8"
+                            )
+                        ).hexdigest(),
+                    )
                 )
-                patch_payload["pending_change_id"] = str(pending_change.id)
+                patch_payload["pending_change_id"] = str(
+                    pending_change.id
+                )
 
             except PatchParseError as err:
                 patch_error = str(err)
                 sys.stderr.write(
-                    f"⚠️ [WU PATCH REVIEW ERROR]: {patch_error}\n"
+                    f"⚠️ [WU PATCH REVIEW ERROR]: "
+                    f"{patch_error}\n"
                 )
                 sys.stderr.flush()
 
-        sys.stderr.write(
-            "\n🔎 [WU PATCH DEBUG]:\n"
-            f"  -> Workspace Context: {workspace_context is not None}\n"
-            f"  -> Structured Patch: {patch_payload is not None}\n"
-            f"  -> Patch Error: {patch_error!r}\n"
-            f"  -> Response Characters: {len(complete_response_text)}\n\n"
-        )
-        sys.stderr.flush()
+        execution_telemetry = {
+            "provider": runner.last_provider_name,
+            "model": runner.last_model_name,
+            "input_tokens": runner.last_input_tokens,
+            "output_tokens": runner.last_output_tokens,
+            "total_tokens": runner.last_tokens_consumed,
+            "latency_ms": runner.last_latency_ms,
+            "provider_error": runner.last_provider_error,
+        }
 
         r_limit = 15
-        r_rem = getattr(runner, "last_rpm_remaining", 14)
+        r_rem = runner.last_rpm_remaining
         t_limit = 1000000
-        t_used = getattr(
-            runner,
-            "last_tokens_consumed",
-            len(compiled_task_notes) // 4,
-        )
+        t_used = runner.last_tokens_consumed
         t_rem = max(0, t_limit - t_used)
 
         tokens_used_pct = (
@@ -185,7 +214,10 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             else 0.0
         )
         requests_used_pct = (
-            round(((r_limit - r_rem) / r_limit) * 100, 1)
+            round(
+                ((r_limit - r_rem) / r_limit) * 100,
+                1,
+            )
             if r_limit > 0
             else 0.0
         )
@@ -210,6 +242,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
             "wu_response": complete_response_text,
             "patch": patch_payload,
             "patch_error": patch_error,
+            "telemetry": execution_telemetry,
             "fuel_gauge": fuel_gauge_metrics,
         }
 
@@ -237,8 +270,7 @@ def process_wu_logic_synchronous(user_delta_notes, user, session_id="default_coc
 @login_required
 def wu_chat_endpoint(request):
     """
-    Processes requests, stores compact conversation history, and returns
-    execution telemetry with optional structured patch review data.
+    Process Wu requests and return chat, review, and execution telemetry.
     """
     from aurora.models import ChatLedgerEntry
 
@@ -260,7 +292,9 @@ def wu_chat_endpoint(request):
             )
 
         try:
-            sanitized_notes = enforce_context_token_budget(delta_notes)
+            sanitized_notes = enforce_context_token_budget(
+                delta_notes
+            )
         except ValueError as rate_err:
             return JsonResponse(
                 {
@@ -294,7 +328,11 @@ def wu_chat_endpoint(request):
                 status=500,
             )
 
-        model_reply = result.get("wu_response", "").strip()
+        model_reply = result.get(
+            "wu_response",
+            "",
+        ).strip()
+
         if model_reply:
             ChatLedgerEntry.objects.create(
                 user=request.user,
@@ -309,12 +347,19 @@ def wu_chat_endpoint(request):
                 "direct_text_output": result["wu_response"],
                 "patch": result.get("patch"),
                 "patch_error": result.get("patch_error"),
-                "fuel_gauge": result.get("fuel_gauge", {}),
+                "telemetry": result.get("telemetry", {}),
+                "fuel_gauge": result.get(
+                    "fuel_gauge",
+                    {},
+                ),
             }
         )
 
     except Exception as err:
-        return JsonResponse({"error": str(err)}, status=400)
+        return JsonResponse(
+            {"error": str(err)},
+            status=400,
+        )
 
 
 @login_required
@@ -363,11 +408,14 @@ def approve_pending_code_change(request):
                 )
 
             current_sha256 = hashlib.sha256(
-                workspace_context.original_content.encode("utf-8")
+                workspace_context.original_content.encode(
+                    "utf-8"
+                )
             ).hexdigest()
 
             if (
-                current_sha256 != pending_change.original_sha256
+                current_sha256
+                != pending_change.original_sha256
                 or workspace_context.original_content
                 != pending_change.original_content
             ):
@@ -379,6 +427,7 @@ def approve_pending_code_change(request):
                         "date_reviewed",
                     ]
                 )
+
                 return JsonResponse(
                     {
                         "error": (
@@ -396,6 +445,7 @@ def approve_pending_code_change(request):
             )
 
             reviewed_at = timezone.now()
+
             pending_change.status = "APPLIED"
             pending_change.date_reviewed = reviewed_at
             pending_change.date_applied = reviewed_at
@@ -420,12 +470,22 @@ def approve_pending_code_change(request):
             status=404,
         )
     except WorkspaceContextError as err:
-        return JsonResponse({"error": str(err)}, status=400)
+        return JsonResponse(
+            {"error": str(err)},
+            status=400,
+        )
     except (json.JSONDecodeError, ValueError) as err:
-        return JsonResponse({"error": str(err)}, status=400)
+        return JsonResponse(
+            {"error": str(err)},
+            status=400,
+        )
     except OSError:
         return JsonResponse(
-            {"error": "The repository file could not be written."},
+            {
+                "error": (
+                    "The repository file could not be written."
+                )
+            },
             status=500,
         )
 
@@ -469,7 +529,10 @@ def reject_pending_code_change(request):
         return JsonResponse({"status": "REJECTED"})
 
     except (json.JSONDecodeError, ValueError) as err:
-        return JsonResponse({"error": str(err)}, status=400)
+        return JsonResponse(
+            {"error": str(err)},
+            status=400,
+        )
 # ======================================================================
 # END: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS (PATCH 3 OF 5)
 # ======================================================================

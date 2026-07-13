@@ -4,6 +4,7 @@
 # ======================================================================
 
 import os
+import time
 
 from asgiref.sync import async_to_sync, sync_to_async
 from django.conf import settings
@@ -21,7 +22,13 @@ class MinionRunner:
     """
 
     def __init__(self):
+        self.last_provider_name = None
+        self.last_model_name = None
+        self.last_input_tokens = 0
+        self.last_output_tokens = 0
         self.last_tokens_consumed = 0
+        self.last_latency_ms = 0
+        self.last_provider_error = None
         self.last_rpm_remaining = 14
         self._provider_router = provider_router
 
@@ -53,12 +60,9 @@ class MinionRunner:
         directive: DeltaDirectives,
         user_prompt: str,
     ):
-        """
-        Stream output from the selected AI provider.
-        """
+        """Stream output from the selected AI provider."""
 
         provider = self._resolve_provider(directive)
-
         constraints = directive.constraints or {}
 
         model = self._provider_router.resolve_model(
@@ -70,34 +74,43 @@ class MinionRunner:
             ),
         )
 
+        self.last_provider_name = provider.name
+        self.last_model_name = model
+        self.last_input_tokens = 0
+        self.last_output_tokens = 0
+        self.last_tokens_consumed = 0
+        self.last_provider_error = None
+
+        started_at = time.perf_counter()
+
         try:
             async for response_chunk in provider.stream(
                 model=model,
                 prompt=user_prompt,
                 directive=directive,
             ):
-
                 if isinstance(response_chunk, str):
                     yield response_chunk
                     continue
 
-                usage = getattr(
-                    response_chunk,
-                    "usage",
-                    None,
-                )
+                usage = getattr(response_chunk, "usage", None)
 
                 if isinstance(usage, dict):
-                    self.last_tokens_consumed = usage.get(
-                        "total_tokens",
+                    self.last_input_tokens = usage.get(
+                        "input_tokens",
                         0,
                     )
-
-                # The provider has already emitted the response text
-                # incrementally. The terminal AIResponse exists only
-                # to expose metadata (usage, provider, model, etc.).
-                # Re-emitting response_chunk.text here duplicates the
-                # assistant message in streaming consumers.
+                    self.last_output_tokens = usage.get(
+                        "output_tokens",
+                        0,
+                    )
+                    self.last_tokens_consumed = usage.get(
+                        "total_tokens",
+                        (
+                            self.last_input_tokens
+                            + self.last_output_tokens
+                        ),
+                    )
 
             self.last_rpm_remaining = max(
                 1,
@@ -105,10 +118,19 @@ class MinionRunner:
             )
 
         except Exception as exc:
+            self.last_provider_error = (
+                f"{type(exc).__name__}: {exc}"
+            )
             yield (
                 "\n"
                 f"💥 [AI PROVIDER ERROR] "
-                f"{type(exc).__name__}: {exc}\n"
+                f"{self.last_provider_error}\n"
+            )
+
+        finally:
+            self.last_latency_ms = round(
+                (time.perf_counter() - started_at) * 1000,
+                2,
             )
 
     async def run_minion_task_stream(
@@ -116,9 +138,7 @@ class MinionRunner:
         minion_name: str,
         task_input: str,
     ):
-        """
-        Load a directive and execute through the provider layer.
-        """
+        """Load a directive and execute through the provider layer."""
 
         try:
             directive = await sync_to_async(
@@ -148,9 +168,7 @@ class MinionRunner:
         minion_name: str,
         task_input: str,
     ) -> str:
-        """
-        Synchronous compatibility wrapper.
-        """
+        """Synchronous compatibility wrapper."""
 
         async def _gather_stream_tokens():
             tokens = []

@@ -1,18 +1,14 @@
-# ======================================================================
-
-# FILE: docs/management/MIGRATION_CHECKLIST.md (PATCH 1 OF 1)
-
-# START: AURORA_BASELINE_DEFINITION_OF_DONE
-
-# ======================================================================
-
 # Aurora Baseline Definition of Done
 
 This document is **not** project state.
 
-It defines the required conditions for the Aurora baseline to be considered complete.
+It defines the objective completion criteria for the Aurora baseline.
 
-Consult only during milestone reviews, release preparation, or merge readiness.
+Consult only during:
+
+* milestone reviews;
+* release preparation;
+* merge readiness.
 
 ---
 
@@ -40,34 +36,39 @@ Consult only during milestone reviews, release preparation, or merge readiness.
 ## Structured Patch Pipeline
 
 * [x] PATCH_START / PATCH_END detection
-* [x] Patch validation
+* [x] Structured patch validation
 * [x] Malformed response rejection
 * [x] Truncated response rejection
 * [x] Structured review payload generation
 
 ---
 
-## Wu Review Interface
+## Wu Review Workflow
 
 * [x] Wu chat restored
 * [x] Duplicate response elimination
+* [x] Repository hydration
 * [x] Review slider
 * [x] Monaco diff viewer
 * [x] Current / Proposed orientation
 * [x] Frontend patch integration
-* [ ] PendingCodeChange approval
-* [ ] Source consistency verification
-* [ ] Single verified repository write
-* [ ] Reject performs no mutation
+* [x] PendingCodeChange persistence
+* [x] Explicit approval workflow
+* [x] Source consistency verification
+* [x] Conflict detection
+* [x] Single verified repository write
+* [x] Reject performs no repository mutation
 
 ---
 
 ## Observability
 
-* [ ] Provider telemetry
-* [ ] Model telemetry
-* [ ] Patch lifecycle telemetry
-* [ ] Approval telemetry
+* [x] Provider telemetry collection
+* [x] Model telemetry collection
+* [x] Token usage collection
+* [x] Execution latency collection
+* [ ] Telemetry pane presentation polish
+* [ ] Provider failover telemetry
 
 ---
 
@@ -77,20 +78,14 @@ Consult only during milestone reviews, release preparation, or merge readiness.
 * [x] ADR-002
 * [x] ADR-003
 * [x] PROJECT_STATE.yaml
-* [ ] DeltaDirective cleanup
-* [ ] Protocol review
+* [x] DeltaDirective cleanup
+* [x] Protocol v3.2 alignment
 
 ---
 
 ## Release Readiness
 
 * [ ] Regression smoke test
-* [ ] Temporary diagnostics removed
-* [ ] Merge to main
+* [ ] Remove temporary diagnostics
+* [ ] Merge feature/provider-abstraction into main
 * [ ] Aurora baseline complete
-
-# ======================================================================
-
-# END: AURORA_BASELINE_DEFINITION_OF_DONE (PATCH 1 OF 1)
-
-# ======================================================================

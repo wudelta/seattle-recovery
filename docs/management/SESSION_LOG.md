@@ -140,3 +140,56 @@ The provider layer was reorganized from the previous single-module approach into
   - HopeHub beta target: 2026-08-15
 - Agreed that future Aurora enhancements should be driven by HopeHub or shared `core_logic` requirements.
 - Identified development automation (slash commands and scaffolding) as the preferred solution for repetitive engineering tasks.
+
+---
+
+# Session — 2026-07-13
+
+## Summary
+
+Completed the end-to-end Wu code review workflow and transitioned Aurora from AI-assisted chat into a source-verified AI engineering platform.
+
+The development workflow now requires explicit developer approval before repository mutation, verifies that reviewed source has not changed, and guarantees exactly one approved repository write.
+
+## Completed
+
+* Reconstructed the Wu structured patch review workflow.
+* Validated repository workspace context resolution and source hydration.
+* Completed structured patch persistence using `PendingCodeChange`.
+* Implemented explicit Approve and Reject endpoints.
+* Added repository source consistency verification before write.
+* Implemented conflict detection for modified source.
+* Implemented the single-write approval contract.
+* Confirmed rejection performs no repository mutation.
+* Integrated approval controls into the Wu review slider.
+* Validated end-to-end Monaco review workflow.
+* Preserved complete isolation from the Anamod editor.
+* Updated the `minion_wu` directive to align with Protocol v3.2.
+* Added normalized execution telemetry for provider, model, token usage, and latency.
+
+## Validation
+
+Verified:
+
+* Structured patch generation
+* Structured patch parsing
+* Malformed patch rejection
+* Review slider
+* Explicit approval
+* Explicit rejection
+* Repository mutation
+* Source consistency verification
+* Conflict protection
+* Application startup
+* Django system check
+
+## Remaining Baseline Work
+
+* Complete final regression smoke test.
+* Remove any remaining temporary diagnostics.
+* Review merge readiness.
+* Merge `feature/provider-abstraction` into `main`.
+
+## Outcome
+
+The Aurora baseline is now functionally complete. Remaining work is limited to release validation, cleanup, and merge preparation before development focus shifts from Aurora infrastructure to building HopeHub on top of the completed AI execution platform.
