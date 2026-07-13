@@ -1,100 +1,96 @@
-<!-- ====================================================================== -->
-<!-- FILE: docs/management/MIGRATION_CHECKLIST.md (PATCH 1 OF 1) -->
-<!-- START: REMAINING_BASELINE_WORK -->
-<!-- ====================================================================== -->
+# ======================================================================
 
-# Phase 2 — Provider Layer
+# FILE: docs/management/MIGRATION_CHECKLIST.md (PATCH 1 OF 1)
 
-## Core Abstractions
+# START: AURORA_BASELINE_DEFINITION_OF_DONE
 
-- [x] AIProvider interface
-- [x] AIResponse abstraction
-- [x] Provider Registry
+# ======================================================================
 
-## Provider Router
+# Aurora Baseline Definition of Done
 
-- [x] Implement Provider Router baseline
-- [x] Centralize provider selection
-- [ ] Verify `AI_PROVIDER` configuration routing
-- [ ] Centralize model resolution
-- [ ] Implement baseline provider failover
-- [ ] Validate provider routing
-- [ ] Implement provider health tracking (future enhancement)
+This document is **not** project state.
 
-## Provider Implementations
+It defines the required conditions for the Aurora baseline to be considered complete.
 
-- [x] SimulatedProvider
-- [x] OpenAIProvider
-- [x] GeminiProvider
-- [x] Provider response normalization
-- [x] Provider streaming normalization
+Consult only during milestone reviews, release preparation, or merge readiness.
 
 ---
 
-# Phase 4 — Configuration
+## Provider Architecture
 
-- [x] Centralize AI execution configuration
-- [x] Environment-configurable default provider (`AI_PROVIDER`)
-- [ ] Define provider priority policy
-- [ ] Define provider/model mappings
-- [ ] Migrate `DeltaDirectives.constraints` to a provider-independent schema
-
----
-
-# Phase 6 — Validation
-
-## Manual Validation
-
-- [ ] Verify configured provider selection
-- [ ] Model resolution
-- [ ] Streaming responses
-- [ ] Baseline provider failover
-- [ ] Usage accounting
-- [ ] Error handling
-- [ ] Wu Chat
-- [ ] Active minions
-- [ ] Existing workflows
-- [x] Application startup
-- [x] Server stability
+* [x] AIProvider interface
+* [x] Provider registry
+* [x] Provider router
+* [x] OpenAI provider
+* [x] Gemini provider
+* [ ] Provider priority
+* [ ] Automatic failover validation
 
 ---
 
-# Implementation Order
+## Workspace Pipeline
 
-Completed baseline implementation order:
-
-1. Provider Router baseline
-2. SimulatedProvider
-3. OpenAIProvider
-4. GeminiProvider
-5. Execution Engine integration
-
-Remaining implementation order:
-
-6. Verify configured provider routing
-7. Baseline failover
-8. Model resolution
-9. Directive configuration migration
-10. Manual validation
-11. Automated test reconstruction
-12. Green build
-13. Merge
+* [x] Repository path resolution
+* [x] Repository boundary validation
+* [x] Source hydration
+* [x] Structured prompt construction
 
 ---
 
-# Definition of Done
+## Structured Patch Pipeline
 
-The AI Execution Platform baseline is complete when:
+* [x] PATCH_START / PATCH_END detection
+* [x] Patch validation
+* [x] Malformed response rejection
+* [x] Truncated response rejection
+* [x] Structured review payload generation
 
-- The Provider Router owns provider selection.
-- The configured default provider is honored.
-- Baseline provider failover is operational.
-- All provider implementations conform to the `AIProvider` interface.
-- The SimulatedProvider serves as the canonical reference implementation for testing.
-- Application code contains no vendor-specific SDK usage outside provider implementations.
-- The execution engine is vendor-independent.
-- Provider routing decisions are isolated from application logic.
+---
 
-<!-- ====================================================================== -->
-<!-- END: REMAINING_BASELINE_WORK (PATCH 1 OF 1) -->
-<!-- ====================================================================== -->
+## Wu Review Interface
+
+* [x] Wu chat restored
+* [x] Duplicate response elimination
+* [x] Review slider
+* [x] Monaco diff viewer
+* [x] Current / Proposed orientation
+* [x] Frontend patch integration
+* [ ] PendingCodeChange approval
+* [ ] Source consistency verification
+* [ ] Single verified repository write
+* [ ] Reject performs no mutation
+
+---
+
+## Observability
+
+* [ ] Provider telemetry
+* [ ] Model telemetry
+* [ ] Patch lifecycle telemetry
+* [ ] Approval telemetry
+
+---
+
+## Documentation
+
+* [x] ADR-001
+* [x] ADR-002
+* [x] ADR-003
+* [x] PROJECT_STATE.yaml
+* [ ] DeltaDirective cleanup
+* [ ] Protocol review
+
+---
+
+## Release Readiness
+
+* [ ] Regression smoke test
+* [ ] Temporary diagnostics removed
+* [ ] Merge to main
+* [ ] Aurora baseline complete
+
+# ======================================================================
+
+# END: AURORA_BASELINE_DEFINITION_OF_DONE (PATCH 1 OF 1)
+
+# ======================================================================
