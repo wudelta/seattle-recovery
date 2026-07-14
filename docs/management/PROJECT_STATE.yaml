@@ -1,157 +1,149 @@
-```yaml
+# ======================================================================
+# FILE: docs/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
+# START: PROJECT_STATE
+# ======================================================================
+
 project:
   name: Aurora
   branch: feature/provider-abstraction
 
 targets:
-  aurora_baseline: 2026-07-15
+  aurora_baseline: achieved
   hopehub_beta_prototype: 2026-08-15
 
 current:
-  phase: baseline_regression_validation
+  phase: post_baseline_transition
   objective: >
-    Validate the completed Aurora AI execution platform through a final
-    regression pass and prepare the provider abstraction branch for merge.
+    Transition Aurora from a validated AI execution platform into the
+    engineering environment that will build HopeHub while preserving
+    the completed baseline.
+
   next_task: >
-    Execute the baseline regression checklist, remove any remaining
-    temporary diagnostics, and confirm merge readiness.
+    Design and implement the Wu Session Lifecycle, establish
+    orchestration boundaries for future minions, and correct Docker
+    repository ownership so all development tools operate under the
+    host user's identity.
 
 last_verified:
-  date: 2026-07-13
-  commit:
-    message: "feat: implement verified Wu code review approval workflow"
+  date: 2026-07-14
+
+  milestone:
+    aurora_baseline: achieved
+
   workflow:
     provider_abstraction: complete
     workspace_context_resolution: complete
     repository_file_hydration: complete
-    structured_patch_generation: complete
+    structured_patch_generation: validated
     structured_patch_parsing: validated
-    malformed_patch_rejection: validated
-    frontend_patch_payload_routing: validated
     wu_review_slider: validated
     monaco_diff_viewer: validated
-    current_proposed_orientation: validated
-    repeated_slider_open_close: validated
-    anamod_isolation: validated
-    pending_code_change_review: validated
-    explicit_approval_workflow: validated
-    source_consistency_verification: validated
+    approval_workflow: validated
     repository_single_write: validated
-    rejection_without_mutation: validated
-    conflict_detection: validated
     telemetry_pipeline: implemented
-    directive_cleanup: complete
 
-baseline_sequence:
-  - id: provider_abstraction
-    status: complete
-  - id: workspace_context
-    status: complete
-  - id: structured_patch_parser
-    status: complete
-  - id: wu_review_slider
-    status: complete
-  - id: monaco_diff_viewer
-    status: complete
-  - id: frontend_patch_integration
-    status: complete
-  - id: pending_code_change_approval
-    status: complete
-  - id: delta_directive_cleanup
-    status: complete
-  - id: telemetry_visibility
-    status: complete
-  - id: regression_smoke_test
-    status: next
-  - id: merge_to_main
-    status: pending
+current_initiatives:
 
-approval_contract:
-  approve:
-    - receive validated pending review
-    - verify repository boundary
-    - verify reviewed source remains unchanged
-    - perform exactly one repository write
-    - record applied status
-  reject:
-    - record rejection
-    - perform no repository mutation
+  wu_session_lifecycle:
 
-architectural_boundaries:
-  provider:
-    owns:
-      - sdk integration
-      - provider execution
-      - usage normalization
-    must_not:
-      - read repository files
-      - parse patches
-      - mutate repository files
+    status: active
 
-  workspace_context:
-    module: aurora/minions/workspace_context.py
-    owns:
-      - repository path recognition
-      - repository boundary validation
-      - source hydration
-    must_not:
-      - invoke providers
-      - create reviews
-      - mutate files
+    objectives:
 
-  patch_parser:
-    module: aurora/minions/patch_parser.py
-    owns:
-      - structured patch validation
-      - malformed response rejection
-      - review payload creation
-    must_not:
-      - mutate repository files
+      - establish START SESSION workflow
+      - establish END SESSION workflow
+      - separate analysis from Build Mode
+      - preserve Wu as an engineering collaborator
+      - move detailed procedures toward specialized minions
+      - avoid procedural context bloat
 
-  pending_code_change:
-    owns:
-      - review persistence
-      - source verification
-      - approval state
-      - single approved repository write
+  repository_permissions:
+
+    status: active
+
+    objectives:
+
+      - inspect Docker runtime user
+      - align container UID/GID with host user
+      - eliminate root-owned repository artifacts
+      - validate Anamod-generated files
+
+validation_strategy:
+
+  regression:
+    approach: >
+      Validate Aurora by performing real engineering work through Wu
+      rather than executing an artificial regression checklist.
+
+    success_definition:
+      - normal development remains reliable
+      - architectural boundaries remain intact
+      - no baseline regressions discovered during real use
 
 known_issues:
-  - Remove remaining temporary diagnostic logging before merge if still present.
-  - Automated test expansion remains intentionally deferred until after baseline stabilization.
+
+  - Minor Aurora console refinements remain intentionally deferred.
+  - Detailed automated regression testing remains deferred until HopeHub development stabilizes.
+
+architectural_direction:
+
+  wu:
+    role: engineering_collaborator_and_orchestrator
+
+  minions:
+    role: specialized_execution_capabilities
+
+  authority:
+    wu:
+      - architectural reasoning
+      - session coordination
+      - engineering discussion
+      - minion selection
+
+    minions:
+      - specialized execution
+      - deterministic validation
+      - bounded responsibilities
 
 session_resume:
+
   read_first:
+
     - docs/protocol/Aurora_Refactoring_Protocol_v3_2.md
     - docs/management/PROJECT_STATE.yaml
+    - docs/architecture/MINION_ARCHITECTURE.md
+    - docs/vision/HOPEHUB_ENGINEERING_CONTRACT.md
 
-  inspect_next:
-    - aurora/static/aurora/js/wu_chat.js
-    - aurora/api/wu_chat_api.py
+  immediate_focus:
 
-  do_not_repeat:
-    - Rebuild the provider abstraction.
-    - Rebuild the Wu review slider.
-    - Restore WorkspaceTransaction or TrackedCommand.
-    - Merge feature/wu-monaco-diff-slider.
-
-reference_only:
-  branch: origin/feature/wu-monaco-diff-slider
-  rule: behavioral_reference_only
+    - Wu Session Lifecycle
+    - Docker permissions
+    - Task-driven baseline validation
 
 project_brain:
+
   startup_required:
+
     - protocol
     - project_state
     - current_source_file
 
   load_only_when_needed:
-    migration_checklist: milestone_or_merge_review
+
+    roadmap: strategic_discussion
+    engineering_contract: hopehub_work
+    migration_checklist: merge_or_major_refactor
     session_log: historical_investigation
-    architecture_decisions: relevant_architectural_change
 
 principles:
+
   - Repository documentation is authoritative.
   - Keep operational context compact.
   - Preserve behavioral and project-context separation.
+  - Prefer principles over accumulated procedural rules.
+  - Wu coordinates specialized capabilities rather than containing every rule.
   - Apply The Delta Way.
-```
+
+# ======================================================================
+# END: PROJECT_STATE (PATCH 1 OF 1)
+# ======================================================================
