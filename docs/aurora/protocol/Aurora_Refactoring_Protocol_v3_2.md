@@ -277,7 +277,7 @@ Avoid duplicated facts, narrative status reports, and repeated architectural exp
 
 ## 6.1 PROJECT_STATE.yaml
 
-`docs/management/PROJECT_STATE.yaml` is the single authoritative operational snapshot and session-resume guide.
+`docs/aurora/management/PROJECT_STATE.yaml` is the single authoritative operational snapshot and session-resume guide.
 
 It contains:
 
@@ -300,7 +300,7 @@ Do not preserve history inside it.
 
 ## 6.2 MIGRATION_CHECKLIST.md
 
-`docs/management/MIGRATION_CHECKLIST.md` is the compact Definition of Done.
+`docs/aurora/management/MIGRATION_CHECKLIST.md` is the compact Definition of Done.
 
 It contains checklist items only.
 
@@ -317,7 +317,7 @@ Do not load it automatically at every session start.
 
 ## 6.3 SESSION_LOG.md
 
-`docs/management/SESSION_LOG.md` is append-only history.
+`docs/aurora/management/SESSION_LOG.md` is append-only history.
 
 Never rewrite previous entries.
 
@@ -342,7 +342,7 @@ Do not recreate it.
 ADRs live in:
 
 ```text
-docs/architecture/adr/
+docs/aurora/architecture/adr/
 ```
 
 Create an ADR when a decision:

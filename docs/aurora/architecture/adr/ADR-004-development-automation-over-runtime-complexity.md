@@ -1,5 +1,5 @@
 <!-- ====================================================================== -->
-<!-- FILE: docs/architecture/adr/ADR-004-development-automation-over-runtime-complexity.md (PATCH 1 OF 1) -->
+<!-- FILE: docs/aurora/architecture/adr/ADR-004-development-automation-over-runtime-complexity.md (PATCH 1 OF 1) -->
 <!-- START: ADR -->
 <!-- ====================================================================== -->
 

@@ -1,0 +1,420 @@
+# ======================================================================
+# FILE: docs/aurora/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
+# START: PROJECT_STATE
+# ======================================================================
+
+project:
+  name: Aurora
+  branch: feature/provider-abstraction
+
+targets:
+  aurora_baseline: achieved
+  hopehub_beta_prototype: 2026-08-15
+
+current:
+  phase: hopehub_delivery_transition
+  objective: >
+    Deliver the HopeHub beta by August 15, 2026 while using the completed
+    Aurora baseline as the engineering environment for implementation.
+    Aurora and Wu will evolve only in response to real continuity,
+    orchestration, and development needs discovered while building
+    HopeHub.
+
+  next_task: >
+    Convert the HopeHub MVP requirements into bounded vertical slices,
+    beginning with a mobile-aware journal-entry workflow that replaces
+    Django form coupling with a stable API boundary. Use each HopeHub
+    implementation task to identify and capture actionable requirements
+    for Wu's evolution as a persistent co-architect.
+
+last_verified:
+  date: 2026-07-14
+
+  milestone:
+    aurora_baseline: achieved
+
+  workflow:
+    provider_abstraction: complete
+    workspace_context_resolution: complete
+    repository_file_hydration: complete
+    structured_patch_generation: validated
+    structured_patch_parsing: validated
+    wu_review_slider: validated
+    monaco_diff_viewer: validated
+    approval_workflow: validated
+    repository_single_write: validated
+    telemetry_pipeline: implemented
+
+delivery_tracks:
+
+  hopehub_beta:
+
+    status: active
+    priority: critical
+    deadline: 2026-08-15
+    deadline_policy: immovable
+
+    objective: >
+      Deliver a functional HopeHub beta with the smallest complete MVP
+      feature set before adding investor-facing enhancements.
+
+    execution_policy:
+
+      - Build the required MVP before optional enhancements.
+      - Implement features as complete vertical slices.
+      - Preserve mobile-aware architecture and interaction design.
+      - Do not allow speculative Aurora work to delay HopeHub.
+      - Use Aurora improvements only when they remove an observed HopeHub development blocker.
+
+    initial_vertical_slices:
+
+      journal_entries:
+
+        status: planned
+
+        objective: >
+          Refactor journal-entry creation and management away from
+          Django form-bound workflows toward a stable API contract that
+          supports responsive browser interfaces and future mobile
+          clients.
+
+        architectural_requirements:
+
+          - preserve authentication and entry ownership
+          - define explicit create, read, update, and validation contracts
+          - keep business rules outside presentation-specific code
+          - replace full-page form submission with API-driven interaction
+          - expose failures clearly to the user
+          - validate narrow-screen and touch-oriented usability
+          - retain a server-rendered fallback only if operationally justified
+
+  investor_readiness:
+
+    status: queued
+    dependency: hopehub_mvp_operational
+
+    objective: >
+      Add selected visual, usability, and demonstration enhancements
+      after the MVP is functioning so HopeHub presents a credible and
+      attractive beta to potential investors and funding partners.
+
+    constraints:
+
+      - enhancements must not endanger the beta deadline
+      - favor visible user value over architectural novelty
+      - avoid features that create unsupported operational complexity
+
+  aurora_coarchitect_evolution:
+
+    status: observational
+    priority: supporting
+    delivery_model: hopehub_driven
+
+    objective: >
+      Evolve Wu from a session-bound conversational assistant into a
+      persistent engineering collaborator and co-architect without
+      creating a separate pre-beta development program.
+
+    implementation_strategy:
+
+      - observe continuity failures during real HopeHub development
+      - capture future improvements as DeltaNotesEntry records
+      - maintain minute-by-minute execution state in DeltaDirectives
+      - promote only stable strategic decisions into PROJECT_STATE.yaml
+      - implement Aurora improvements when they remove a demonstrated blocker
+      - defer speculative memory features until validated by actual use
+
+    desired_capabilities:
+
+      identity_memory:
+
+        purpose: >
+          Preserve Wu's enduring role, architectural authority, and
+          collaboration posture.
+
+        examples:
+
+          - act as engineering collaborator and orchestrator
+          - protect architectural boundaries
+          - challenge unnecessary complexity
+          - coordinate specialized minions rather than absorb every procedure
+
+      relationship_memory:
+
+        purpose: >
+          Preserve durable engineering preferences that shape how Wu
+          collaborates with the project owner.
+
+        examples:
+
+          - discuss architecture before generating code
+          - prefer small reversible changes
+          - avoid unnecessary code and procedural bloat
+          - explain tradeoffs rather than silently agree
+          - treat repository documentation as authoritative
+          - preserve HopeHub delivery as the governing mission
+
+      project_memory:
+
+        purpose: >
+          Preserve strategic direction, architectural decisions, major
+          baselines, and long-lived project constraints in repository
+          documentation.
+
+      working_memory:
+
+        purpose: >
+          Preserve the immediate task state required to resume work
+          after connection loss, session termination, or context reset.
+
+        desired_fields:
+
+          - current objective
+          - current vertical slice
+          - current file or component
+          - architectural rationale
+          - last completed action
+          - next expected action
+          - completion criteria
+          - blockers and unresolved decisions
+
+current_initiatives:
+
+  hopehub_vertical_slice_planning:
+
+    status: active
+
+    objectives:
+
+      - define the minimum beta feature set
+      - order work by complete user-facing vertical slices
+      - establish explicit completion criteria for each slice
+      - identify mobile-aware API boundaries
+      - separate required MVP work from investor-facing enhancements
+
+  wu_session_lifecycle:
+
+    status: evolving_through_use
+
+    objectives:
+
+      - establish reliable START SESSION behavior
+      - establish reliable END SESSION behavior
+      - preserve active engineering state across interruptions
+      - separate analysis from Build Mode
+      - avoid procedural context bloat
+      - allow Wu to resume as a collaborator rather than reconstructing the relationship
+
+  repository_permissions:
+
+    status: active
+    priority: supporting
+
+    objectives:
+
+      - inspect Docker runtime user
+      - align container UID/GID with host user
+      - eliminate root-owned repository artifacts
+      - validate Anamod-generated files
+
+memory_boundaries:
+
+  project_state:
+
+    model: docs/aurora/management/PROJECT_STATE.yaml
+    role: strategic_project_memory
+    update_frequency: infrequent
+
+    contains:
+
+      - major phases
+      - deadlines
+      - validated baselines
+      - architectural direction
+      - active strategic initiatives
+
+    excludes:
+
+      - minute-by-minute execution details
+      - speculative implementation tasks
+      - conversational history
+
+  future_work:
+
+    model: DeltaNotesEntry
+    role: implementation_backlog
+    update_frequency: as_requirements_emerge
+
+    contains:
+
+      - future implementation tasks
+      - observed workflow deficiencies
+      - candidate Aurora improvements
+      - deferred HopeHub enhancements
+
+    excludes:
+
+      - active execution telemetry
+      - completed strategic baselines
+
+  active_execution:
+
+    model: DeltaDirectives
+    role: operational_working_memory
+    update_frequency: continuous
+
+    contains:
+
+      - current objective
+      - current implementation state
+      - immediate rationale
+      - last completed action
+      - next action
+      - completion conditions
+      - current blockers
+
+    excludes:
+
+      - broad project history
+      - unrelated future backlog
+      - permanent architectural documentation
+
+validation_strategy:
+
+  regression:
+
+    approach: >
+      Validate Aurora by performing real HopeHub engineering work through
+      Wu rather than executing an artificial regression checklist.
+
+    success_definition:
+
+      - HopeHub development continues reliably
+      - interrupted sessions resume without reconstructing hours of conversation
+      - architectural rationale survives session loss
+      - operational state remains compact and current
+      - architectural boundaries remain intact
+      - no baseline regressions are discovered during real use
+
+  coarchitect_evolution:
+
+    approach: >
+      Treat every instance where Wu forgets context, repeats settled
+      discussion, loses task state, or fails to apply known engineering
+      preferences as evidence for a bounded implementation requirement.
+
+    evidence_capture:
+
+      - record the observed failure
+      - record the information Wu needed
+      - identify the correct memory lifetime
+      - create a DeltaNotesEntry task
+      - implement only when the requirement is sufficiently concrete
+      - validate the improvement during subsequent HopeHub work
+
+known_issues:
+
+  - Minor Aurora console refinements remain intentionally deferred.
+  - Detailed automated regression testing remains deferred until HopeHub development stabilizes.
+  - Wu identity, relationship memory, project memory, and working memory are not yet formally separated in implementation.
+  - DeltaNotesEntry is currently closer to a manual todo capture mechanism than an integrated planning backlog.
+  - DeltaDirectives does not yet consistently preserve rationale and explicit completion criteria.
+
+architectural_direction:
+
+  aurora:
+
+    role: hopehub_engineering_environment
+
+    governing_rule: >
+      Aurora evolves during the beta period only when an observed HopeHub
+      development need justifies the change.
+
+  hopehub:
+
+    role: primary_product
+
+    governing_rule: >
+      HopeHub beta delivery remains the critical path through
+      August 15, 2026.
+
+  wu:
+
+    role: persistent_engineering_collaborator_and_orchestrator
+
+    evolution_goal: >
+      Wu should understand the project, preserve the active engineering
+      thread, apply durable collaboration preferences, and interact as a
+      co-architect without replaying long conversation histories.
+
+  minions:
+
+    role: specialized_execution_capabilities
+
+  authority:
+
+    wu:
+
+      - architectural reasoning
+      - session coordination
+      - engineering discussion
+      - project-state interpretation
+      - minion selection
+      - continuity management
+
+    minions:
+
+      - specialized execution
+      - deterministic validation
+      - bounded responsibilities
+
+session_resume:
+
+  read_first:
+
+    - docs/aurora/protocol/Aurora_Refactoring_Protocol_v3_2.md
+    - docs/aurora/management/PROJECT_STATE.yaml
+    - docs/aurora/architecture/MINION_ARCHITECTURE.md
+    - docs/aurora/vision/HOPEHUB_ENGINEERING_CONTRACT.md
+
+  immediate_focus:
+
+    - HopeHub MVP vertical-slice planning
+    - Mobile-aware journal-entry API workflow
+    - Wu continuity requirements discovered during implementation
+    - Docker permissions
+
+project_brain:
+
+  startup_required:
+
+    - protocol
+    - project_state
+    - active_delta_directive
+    - current_source_file
+
+  load_only_when_needed:
+
+    roadmap: strategic_discussion
+    engineering_contract: hopehub_work
+    migration_checklist: merge_or_major_refactor
+    session_log: historical_investigation
+    delta_notes: future_task_selection
+
+principles:
+
+  - HopeHub beta ships on August 15, 2026.
+  - Repository documentation is authoritative.
+  - Keep operational context compact.
+  - Preserve strategic, backlog, and operational memory boundaries.
+  - Let Aurora evolve from demonstrated HopeHub development needs.
+  - Build complete HopeHub vertical slices before optional enhancements.
+  - Mobile-aware design requires both API separation and usable responsive interaction.
+  - Prefer principles over accumulated procedural rules.
+  - Wu coordinates specialized capabilities rather than containing every rule.
+  - Preserve rationale and completion criteria with active work.
+  - Apply The Delta Way.
+
+# ======================================================================
+# END: PROJECT_STATE (PATCH 1 OF 1)
+# ======================================================================

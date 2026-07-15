@@ -1,5 +1,5 @@
 <!-- ====================================================================== -->
-<!-- FILE: docs/vision/AURORA_ROADMAP.md (PATCH 1 OF 1) -->
+<!-- FILE: docs/aurora/vision/AURORA_ROADMAP.md (PATCH 1 OF 1) -->
 <!-- START: AURORA_ROADMAP -->
 <!-- ====================================================================== -->
 

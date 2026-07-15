@@ -1,6 +1,6 @@
 <!-- ====================================================================== -->
 
-<!-- FILE: docs/architecture/MINION_ARCHITECTURE.md (PATCH 1 OF 1) -->
+<!-- FILE: docs/aurora/architecture/MINION_ARCHITECTURE.md (PATCH 1 OF 1) -->
 
 <!-- START: MINION_ARCHITECTURE -->
 
