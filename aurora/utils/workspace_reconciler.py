@@ -4,6 +4,7 @@
 # ======================================================================
 """Read-only comparison of repository files against ComponentRegistry."""
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,6 +21,21 @@ from aurora.utils.component_policy import (
 )
 
 
+def calculate_source_hash(path: Path) -> str:
+    """
+    Return the SHA-256 digest of a repository file's exact contents.
+
+    Hashing is deterministic and independent of AI analysis.
+    """
+    digest = hashlib.sha256()
+
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(65536), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
+
+
 @dataclass(frozen=True)
 class ReconciliationItem:
     """One deterministic workspace reconciliation result."""
@@ -29,6 +45,7 @@ class ReconciliationItem:
     reason: str
     name: str | None = None
     persona: str | None = None
+    source_hash: str | None = None
     registry_id: str | None = None
 
 
@@ -45,10 +62,10 @@ class WorkspaceReconciler:
 
     def load_registry_snapshot(self) -> dict[str, ComponentRegistry]:
         """
-        Load existing registry rows keyed by normalized repository-relative path.
+        Load registry rows keyed by normalized repository-relative path.
 
-        The queryset is evaluated once so reconciliation does not repeatedly
-        query PostgreSQL while traversing the workspace.
+        The queryset is evaluated once to avoid repeated database queries
+        during workspace traversal.
         """
         snapshot: dict[str, ComponentRegistry] = {}
 
@@ -69,9 +86,8 @@ class WorkspaceReconciler:
         """
         Discover repository files under allowed roots and explicit root files.
 
-        Excluded directories are pruned before traversal. Package initializer
-        contents are inspected deterministically to distinguish empty markers
-        from modules that expose imports or execute initialization behavior.
+        Excluded directories are pruned before traversal. Eligible files receive
+        an exact SHA-256 content hash after path policy has approved inspection.
         """
         import ast
         import os
@@ -94,6 +110,10 @@ class WorkspaceReconciler:
                 ).as_posix()
                 classification = classify_component_path(relative_path)
             except (OSError, ValueError):
+                return
+
+            if classification["classification"] == CLASSIFICATION_EXCLUDE:
+                discovered[relative_path] = classification
                 return
 
             if candidate_path.name == "__init__.py":
@@ -126,6 +146,15 @@ class WorkspaceReconciler:
                     classification["reason"] = (
                         "package_initializer_requires_review"
                     )
+
+            if classification["classification"] != CLASSIFICATION_EXCLUDE:
+                try:
+                    classification["source_hash"] = calculate_source_hash(
+                        candidate_path
+                    )
+                except OSError:
+                    classification["source_hash"] = None
+                    classification["reason"] = "source_hash_unavailable"
 
             discovered[relative_path] = classification
 
@@ -182,6 +211,7 @@ class WorkspaceReconciler:
             policy_result = discovered[path]
             existing = registry.pop(path, None)
             policy_classification = policy_result["classification"]
+            observed_hash = policy_result.get("source_hash")
 
             if policy_classification == CLASSIFICATION_EXCLUDE:
                 results.append(
@@ -206,6 +236,7 @@ class WorkspaceReconciler:
                             if existing
                             else policy_result["persona"]
                         ),
+                        source_hash=observed_hash,
                         registry_id=str(existing.id) if existing else None,
                     )
                 )
@@ -219,6 +250,7 @@ class WorkspaceReconciler:
                         reason="eligible_file_missing_from_registry",
                         name=policy_result["name"],
                         persona=policy_result["persona"],
+                        source_hash=observed_hash,
                     )
                 )
                 continue
@@ -232,14 +264,30 @@ class WorkspaceReconciler:
                 persona_is_authoritative
                 and existing.persona != policy_result["persona"]
             )
+            source_changed = (
+                observed_hash is not None
+                and existing.source_hash != observed_hash
+            )
 
             metadata_changed = any(
                 (
                     stored_path != path,
                     existing.status != "ACTIVE",
                     persona_changed,
+                    source_changed,
                 )
             )
+
+            if source_changed:
+                reason = (
+                    "source_hash_missing"
+                    if not existing.source_hash
+                    else "source_content_changed"
+                )
+            elif metadata_changed:
+                reason = "managed_registry_state_is_stale"
+            else:
+                reason = "registry_record_matches_workspace"
 
             results.append(
                 ReconciliationItem(
@@ -249,17 +297,14 @@ class WorkspaceReconciler:
                         if metadata_changed
                         else CLASSIFICATION_KEEP
                     ),
-                    reason=(
-                        "managed_registry_state_is_stale"
-                        if metadata_changed
-                        else "registry_record_matches_workspace"
-                    ),
+                    reason=reason,
                     name=existing.name,
                     persona=(
                         policy_result["persona"]
                         if persona_changed
                         else existing.persona
                     ),
+                    source_hash=observed_hash,
                     registry_id=str(existing.id),
                 )
             )
@@ -292,6 +337,7 @@ class WorkspaceReconciler:
                     ),
                     name=existing.name,
                     persona=existing.persona,
+                    source_hash=existing.source_hash or None,
                     registry_id=str(existing.id),
                 )
             )
