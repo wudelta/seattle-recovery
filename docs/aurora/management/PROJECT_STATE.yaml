@@ -12,23 +12,30 @@ targets:
   hopehub_beta_prototype: 2026-08-15
 
 current:
-  phase: hopehub_delivery_transition
+  phase: workspace_knowledge_reconciliation
+
   objective: >
-    Deliver the HopeHub beta by August 15, 2026 while using the completed
-    Aurora baseline as the engineering environment for implementation.
-    Aurora and Wu will evolve only in response to real continuity,
-    orchestration, and development needs discovered while building
-    HopeHub.
+    Reconstruct Aurora's relational and graph-based knowledge system so
+    ComponentRegistry accurately represents business-relevant application
+    components, Neo4j represents their dependencies, Wu can automatically
+    acquire sufficient repository context, and the same relational-graph
+    operating pattern is validated for HopeHub's critical resource finder.
 
   next_task: >
-    Convert the HopeHub MVP requirements into bounded vertical slices,
-    beginning with a mobile-aware journal-entry workflow that replaces
-    Django form coupling with a stable API boundary. Use each HopeHub
-    implementation task to identify and capture actionable requirements
-    for Wu's evolution as a persistent co-architect.
+    Implement a deterministic, read-only workspace reconciliation foundation.
+    Begin with centralized component inclusion and exclusion policy, then add
+    a dry-run management command that compares eligible repository files with
+    the existing ComponentRegistry and reports KEEP, UPDATE, REGISTER, STAGE,
+    EXCLUDE, and REVIEW classifications without modifying files, PostgreSQL,
+    or Neo4j.
+
+  governing_deadline: >
+    This initiative must directly support the August 15, 2026 HopeHub beta.
+    Work that expands beyond workspace reconciliation, Wu context acquisition,
+    or the HopeHub relational-graph foundation must be deferred.
 
 last_verified:
-  date: 2026-07-14
+  date: 2026-07-15
 
   milestone:
     aurora_baseline: achieved
@@ -39,362 +46,453 @@ last_verified:
     repository_file_hydration: complete
     structured_patch_generation: validated
     structured_patch_parsing: validated
+    advisory_response_patch_handling: implemented_pending_validation
     wu_review_slider: validated
     monaco_diff_viewer: validated
     approval_workflow: validated
     repository_single_write: validated
     telemetry_pipeline: implemented
 
+active_initiative:
+
+  name: workspace_reconciliation_and_knowledge_graph
+
+  status: active
+  priority: critical
+  implementation_mode: go_loop
+  first_execution_date: 2026-07-16
+
+  rationale: >
+    Wu currently lacks a reliable method for deciding which repository files
+    are relevant, determining when sufficient context has been gathered, and
+    remembering which files Aurora can already supply. Aurora already contains
+    partial infrastructure for this purpose through ComponentRegistry,
+    ComponentNode, Django synchronization signals, AST dependency scanning,
+    forge registration, and WorkspaceDocumenter. These pieces are incomplete,
+    inconsistent, and limited primarily to files created through slash macros.
+
+    The relational-graph tandem is also a critical architectural pattern for
+    HopeHub's August 15 resource finder. Completing this initiative therefore
+    supports both Aurora engineering intelligence and HopeHub delivery.
+
+  desired_outcome:
+
+    component_registry: >
+      PostgreSQL contains a current, searchable inventory of application-owned,
+      business-relevant components with stable repository paths, classification,
+      concise responsibility summaries, and freshness metadata.
+
+    dependency_graph: >
+      Neo4j contains synchronized component nodes and deterministic dependency
+      relationships suitable for upstream and downstream impact traversal.
+
+    wu_context: >
+      Wu searches registered components, expands relevant dependency
+      neighborhoods, automatically hydrates known repository paths, avoids
+      redundant file requests, and recommends changes once material context is
+      sufficient.
+
+    hopehub_foundation: >
+      The relational-graph synchronization pattern is proven reliable before
+      applying it to HopeHub organizations, resources, services, eligibility,
+      geography, accessibility, and other resource-finder relationships.
+
+  architecture:
+
+    authoritative_metadata:
+      system: PostgreSQL
+      model: ComponentRegistry
+
+    relationship_topology:
+      system: Neo4j
+      model: ComponentNode
+
+    synchronization:
+      direction: PostgreSQL_to_Neo4j
+      policy: explicit_bounded_and_recoverable
+
+    workspace_reconciliation:
+      default_mode: dry_run
+      source_file_access: read_only
+      mutation_scope:
+        - ComponentRegistry metadata
+        - Neo4j nodes
+        - Neo4j relationships
+
+    ai_analysis:
+      role: optional_incremental_enrichment
+      provider: provider_router
+      requirements:
+        - one structured response per component
+        - save each successful component independently
+        - skip unchanged components
+        - resume after provider or token failure
+        - never block deterministic discovery or graph synchronization
+
+  reconciliation_classifications:
+
+    KEEP: >
+      Existing eligible registry record matches the current repository file
+      and requires no metadata update.
+
+    UPDATE: >
+      Eligible file exists but its registry classification, path metadata,
+      source hash, summary state, or other managed metadata is stale.
+
+    REGISTER: >
+      Eligible application-owned file exists but has no ComponentRegistry row.
+
+    STAGE: >
+      Registered component no longer exists on disk. Report or mark it for
+      review without deleting the record or graph node automatically.
+
+    EXCLUDE: >
+      Existing registry row refers to generated, third-party, migration,
+      cached, collected, temporary, or otherwise prohibited content.
+
+    REVIEW: >
+      Application-owned file has uncertain business relevance and requires
+      explicit human classification before registration.
+
+  component_scope:
+
+    governing_test: >
+      Register a file only when a developer or Wu would reasonably inspect it
+      while changing application behavior, architecture, user experience,
+      security, configuration, or authoritative project documentation.
+
+    allowed_roots:
+      - aurora
+      - hopehub
+      - users
+      - core_logic
+      - docs
+
+    likely_included_types:
+      - Python application modules
+      - application-owned HTML templates
+      - application-owned JavaScript
+      - application-owned CSS
+      - authoritative Markdown documentation
+      - authoritative YAML configuration
+      - selected project runtime configuration
+
+    always_excluded_directories:
+      - .git
+      - .venv
+      - venv
+      - site-packages
+      - node_modules
+      - __pycache__
+      - migrations
+      - staticfiles
+      - media
+      - logs
+      - vendor
+      - vendors
+      - monaco
+      - dist
+      - build
+      - htmlcov
+      - .pytest_cache
+      - .mypy_cache
+      - temporary sandboxes
+
+    always_excluded_files:
+      - "*.pyc"
+      - "*.log"
+      - "*.map"
+      - "*.min.js"
+      - "*.min.css"
+      - database files
+      - collected static assets
+      - Django migration files
+
+  hard_safety_boundaries:
+
+    - The reconciler must never modify repository files.
+    - The reconciler must never insert anchor patches into discovered files.
+    - The reconciler must never reformat source or documentation.
+    - The reconciler must never delete, rename, or move files.
+    - The reconciler must never automatically delete registry rows or graph nodes.
+    - Dry-run must be the default command behavior.
+    - PostgreSQL or Neo4j mutation requires an explicit apply option.
+    - Exclusion policy must execute before file contents are opened.
+    - Initial applied runs must support root, path, and limit boundaries.
+    - Repository paths must remain normalized and repository-relative.
+    - AI availability must not affect deterministic inventory or graph rebuilding.
+
+  implementation_sequence:
+
+    step_01_component_policy:
+      objective: >
+        Centralize repository ownership, inclusion, exclusion, classification,
+        persona inference, and path safety rules.
+      validation:
+        - classify representative Aurora and HopeHub files
+        - exclude migrations
+        - exclude Monaco and vendor assets
+        - exclude virtual environments and generated files
+        - report uncertain application-owned files as REVIEW
+
+    step_02_dry_run_reconciler:
+      objective: >
+        Discover eligible files and compare them against the existing
+        ComponentRegistry without performing writes.
+      validation:
+        - report KEEP
+        - report UPDATE
+        - report REGISTER
+        - report STAGE
+        - report EXCLUDE
+        - report REVIEW
+        - emit categorized paths and summary counts
+
+    step_03_management_command:
+      objective: >
+        Add reconcile_workspace with dry-run default and explicit root, path,
+        limit, and apply controls.
+      validation:
+        - run safely against aurora root
+        - verify no repository files change
+        - verify no database writes during dry-run
+
+    step_04_registry_freshness:
+      objective: >
+        Extend ComponentRegistry only with metadata required for deterministic
+        reconciliation and incremental analysis.
+      expected_metadata:
+        - source content hash
+        - last observed timestamp
+        - last analyzed timestamp
+        - analysis status
+        - analysis version
+      validation:
+        - create and apply focused Django migration
+        - preserve existing registry rows
+        - validate Django system checks
+
+    step_05_controlled_apply:
+      objective: >
+        Apply approved REGISTER, UPDATE, STAGE, and EXCLUDE state changes in
+        small recoverable batches.
+      validation:
+        - apply to a limited Aurora batch
+        - verify existing messy registry behavior
+        - inspect records through Django admin
+        - do not remove excluded or missing records automatically
+
+    step_06_graph_schema:
+      objective: >
+        Align ComponentNode properties with the metadata deliberately
+        synchronized from ComponentRegistry.
+      minimum_properties:
+        - postgres_id
+        - file_path
+        - name
+        - persona
+        - description
+        - status
+      validation:
+        - create or update one node
+        - query synchronized metadata
+        - preserve unique path and PostgreSQL identity anchors
+
+    step_07_signal_repair:
+      objective: >
+        Restrict Django signals to bounded node synchronization and remove
+        obsolete persona-specific topology logic.
+      validation:
+        - remove obsolete CONTROLLER_MODULE and CANVAS_LAYOUT assumptions
+        - stop whole-workspace scanning after every registry save
+        - preserve safe node deletion behavior
+        - surface synchronization failures clearly
+
+    step_08_dependency_rebuild:
+      objective: >
+        Make graph dependency rebuilding an explicit reconciliation stage
+        instead of an implicit post-save side effect.
+      validation:
+        - resolve supported absolute and relative Python imports
+        - connect only registered eligible components
+        - remove or replace stale managed dependency edges safely
+        - retain explicit Django framework relationships where justified
+
+    step_09_incremental_documentation:
+      objective: >
+        Rework WorkspaceDocumenter into a resumable enrichment stage using one
+        structured AI response for summary, developer documentation, and
+        stakeholder documentation.
+      validation:
+        - analyze only missing or changed components
+        - persist each success immediately
+        - resume after failure
+        - support path and limit controls
+        - avoid transmitting source twice
+
+    step_10_wu_registry_context:
+      objective: >
+        Connect Wu's workspace context acquisition to ComponentRegistry and
+        Neo4j dependency traversal.
+      validation:
+        - resolve known paths without asking the user
+        - search by component name and responsibility summary
+        - hydrate selected files automatically
+        - track files already supplied during the active task
+        - request only materially missing context
+        - stop context gathering and provide recommendations when sufficient
+
+    step_11_hopehub_pattern_validation:
+      objective: >
+        Confirm that the PostgreSQL-authoritative and Neo4j-relationship pattern
+        can support the HopeHub resource finder without coupling its domain
+        models to Aurora ComponentNode.
+      validation:
+        - document shared operating pattern
+        - preserve separate Aurora and HopeHub domain schemas
+        - identify minimum resource-finder relationships required for beta
+        - keep August 15 delivery on the critical path
+
+    step_12_retirement_and_cleanup:
+      objective: >
+        Retire obsolete commands and duplicated paths only after the replacement
+        workflow is validated.
+      validation:
+        - remove or redirect document_workspace
+        - preserve slash-macro registration through shared registry services
+        - review existing EXCLUDE and STAGE records
+        - perform deliberate cleanup only after report approval
+
+  expected_files:
+
+    add:
+      - aurora/utils/component_policy.py
+      - aurora/utils/workspace_reconciler.py
+      - aurora/management/commands/reconcile_workspace.py
+      - aurora/migrations/<next_component_registry_migration>.py
+
+    modify:
+      - aurora/models.py
+      - aurora/nodes.py
+      - aurora/signals.py
+      - aurora/utils/forge_registry.py
+      - aurora/utils/ast_scanner.py
+      - aurora/utils/documenter.py
+      - aurora/api/wu_chat_api.py
+      - aurora/minions/workspace_context.py
+      - docs/aurora/management/PROJECT_STATE.yaml
+
+    inspect_before_modifying:
+      - aurora/apps.py
+      - slash-macro dispatcher files
+      - Django admin registration for ComponentRegistry
+      - current migration topology
+      - current Neo4j configuration
+      - current DeltaDirectives contract for minion_wu
+
+    retire_after_validation:
+      - aurora/management/commands/document_workspace.py
+
+  first_go_loop_sequence:
+
+    - inspect repository root and current path conventions
+    - add component_policy.py
+    - validate classification with a temporary Django shell command
+    - add workspace_reconciler.py in read-only mode
+    - add reconcile_workspace.py with dry-run default
+    - run dry-run against the aurora root
+    - review every REGISTER, EXCLUDE, STAGE, and REVIEW candidate
+    - correct policy before enabling any database writes
+    - commit the validated dry-run milestone
+
 delivery_tracks:
 
   hopehub_beta:
-
     status: active
     priority: critical
     deadline: 2026-08-15
     deadline_policy: immovable
 
-    objective: >
-      Deliver a functional HopeHub beta with the smallest complete MVP
-      feature set before adding investor-facing enhancements.
+    required_capabilities:
+      - mobile-aware journal workflow
+      - authentication and ownership boundaries
+      - resource finder
+      - reliable relational and graph data synchronization
 
-    execution_policy:
-
-      - Build the required MVP before optional enhancements.
-      - Implement features as complete vertical slices.
-      - Preserve mobile-aware architecture and interaction design.
-      - Do not allow speculative Aurora work to delay HopeHub.
-      - Use Aurora improvements only when they remove an observed HopeHub development blocker.
-
-    initial_vertical_slices:
-
-      journal_entries:
-
-        status: planned
-
-        objective: >
-          Refactor journal-entry creation and management away from
-          Django form-bound workflows toward a stable API contract that
-          supports responsive browser interfaces and future mobile
-          clients.
-
-        architectural_requirements:
-
-          - preserve authentication and entry ownership
-          - define explicit create, read, update, and validation contracts
-          - keep business rules outside presentation-specific code
-          - replace full-page form submission with API-driven interaction
-          - expose failures clearly to the user
-          - validate narrow-screen and touch-oriented usability
-          - retain a server-rendered fallback only if operationally justified
+    governing_rule: >
+      Aurora reconciliation work continues only while it directly enables Wu
+      development assistance or the HopeHub resource-finder foundation.
 
   investor_readiness:
-
     status: queued
     dependency: hopehub_mvp_operational
 
-    objective: >
-      Add selected visual, usability, and demonstration enhancements
-      after the MVP is functioning so HopeHub presents a credible and
-      attractive beta to potential investors and funding partners.
-
-    constraints:
-
-      - enhancements must not endanger the beta deadline
-      - favor visible user value over architectural novelty
-      - avoid features that create unsupported operational complexity
-
   aurora_coarchitect_evolution:
-
-    status: observational
-    priority: supporting
-    delivery_model: hopehub_driven
-
-    objective: >
-      Evolve Wu from a session-bound conversational assistant into a
-      persistent engineering collaborator and co-architect without
-      creating a separate pre-beta development program.
-
-    implementation_strategy:
-
-      - observe continuity failures during real HopeHub development
-      - capture future improvements as DeltaNotesEntry records
-      - maintain minute-by-minute execution state in DeltaDirectives
-      - promote only stable strategic decisions into PROJECT_STATE.yaml
-      - implement Aurora improvements when they remove a demonstrated blocker
-      - defer speculative memory features until validated by actual use
-
-    desired_capabilities:
-
-      identity_memory:
-
-        purpose: >
-          Preserve Wu's enduring role, architectural authority, and
-          collaboration posture.
-
-        examples:
-
-          - act as engineering collaborator and orchestrator
-          - protect architectural boundaries
-          - challenge unnecessary complexity
-          - coordinate specialized minions rather than absorb every procedure
-
-      relationship_memory:
-
-        purpose: >
-          Preserve durable engineering preferences that shape how Wu
-          collaborates with the project owner.
-
-        examples:
-
-          - discuss architecture before generating code
-          - prefer small reversible changes
-          - avoid unnecessary code and procedural bloat
-          - explain tradeoffs rather than silently agree
-          - treat repository documentation as authoritative
-          - preserve HopeHub delivery as the governing mission
-
-      project_memory:
-
-        purpose: >
-          Preserve strategic direction, architectural decisions, major
-          baselines, and long-lived project constraints in repository
-          documentation.
-
-      working_memory:
-
-        purpose: >
-          Preserve the immediate task state required to resume work
-          after connection loss, session termination, or context reset.
-
-        desired_fields:
-
-          - current objective
-          - current vertical slice
-          - current file or component
-          - architectural rationale
-          - last completed action
-          - next expected action
-          - completion criteria
-          - blockers and unresolved decisions
-
-current_initiatives:
-
-  hopehub_vertical_slice_planning:
-
-    status: active
-
-    objectives:
-
-      - define the minimum beta feature set
-      - order work by complete user-facing vertical slices
-      - establish explicit completion criteria for each slice
-      - identify mobile-aware API boundaries
-      - separate required MVP work from investor-facing enhancements
-
-  wu_session_lifecycle:
-
-    status: evolving_through_use
-
-    objectives:
-
-      - establish reliable START SESSION behavior
-      - establish reliable END SESSION behavior
-      - preserve active engineering state across interruptions
-      - separate analysis from Build Mode
-      - avoid procedural context bloat
-      - allow Wu to resume as a collaborator rather than reconstructing the relationship
-
-  repository_permissions:
-
-    status: active
-    priority: supporting
-
-    objectives:
-
-      - inspect Docker runtime user
-      - align container UID/GID with host user
-      - eliminate root-owned repository artifacts
-      - validate Anamod-generated files
+    status: active_bounded
+    dependency: workspace_reconciliation_and_knowledge_graph
 
 memory_boundaries:
 
   project_state:
-
     model: docs/aurora/management/PROJECT_STATE.yaml
     role: strategic_project_memory
     update_frequency: infrequent
 
-    contains:
-
-      - major phases
-      - deadlines
-      - validated baselines
-      - architectural direction
-      - active strategic initiatives
-
-    excludes:
-
-      - minute-by-minute execution details
-      - speculative implementation tasks
-      - conversational history
-
   future_work:
-
     model: DeltaNotesEntry
     role: implementation_backlog
     update_frequency: as_requirements_emerge
 
-    contains:
-
-      - future implementation tasks
-      - observed workflow deficiencies
-      - candidate Aurora improvements
-      - deferred HopeHub enhancements
-
-    excludes:
-
-      - active execution telemetry
-      - completed strategic baselines
-
   active_execution:
-
     model: DeltaDirectives
     role: operational_working_memory
     update_frequency: continuous
 
-    contains:
-
-      - current objective
-      - current implementation state
-      - immediate rationale
-      - last completed action
-      - next action
-      - completion conditions
-      - current blockers
-
-    excludes:
-
-      - broad project history
-      - unrelated future backlog
-      - permanent architectural documentation
-
-validation_strategy:
-
-  regression:
-
-    approach: >
-      Validate Aurora by performing real HopeHub engineering work through
-      Wu rather than executing an artificial regression checklist.
-
-    success_definition:
-
-      - HopeHub development continues reliably
-      - interrupted sessions resume without reconstructing hours of conversation
-      - architectural rationale survives session loss
-      - operational state remains compact and current
-      - architectural boundaries remain intact
-      - no baseline regressions are discovered during real use
-
-  coarchitect_evolution:
-
-    approach: >
-      Treat every instance where Wu forgets context, repeats settled
-      discussion, loses task state, or fails to apply known engineering
-      preferences as evidence for a bounded implementation requirement.
-
-    evidence_capture:
-
-      - record the observed failure
-      - record the information Wu needed
-      - identify the correct memory lifetime
-      - create a DeltaNotesEntry task
-      - implement only when the requirement is sufficiently concrete
-      - validate the improvement during subsequent HopeHub work
-
 known_issues:
 
-  - Minor Aurora console refinements remain intentionally deferred.
-  - Detailed automated regression testing remains deferred until HopeHub development stabilizes.
-  - Wu identity, relationship memory, project memory, and working memory are not yet formally separated in implementation.
-  - DeltaNotesEntry is currently closer to a manual todo capture mechanism than an integrated planning backlog.
-  - DeltaDirectives does not yet consistently preserve rationale and explicit completion criteria.
-
-architectural_direction:
-
-  aurora:
-
-    role: hopehub_engineering_environment
-
-    governing_rule: >
-      Aurora evolves during the beta period only when an observed HopeHub
-      development need justifies the change.
-
-  hopehub:
-
-    role: primary_product
-
-    governing_rule: >
-      HopeHub beta delivery remains the critical path through
-      August 15, 2026.
-
-  wu:
-
-    role: persistent_engineering_collaborator_and_orchestrator
-
-    evolution_goal: >
-      Wu should understand the project, preserve the active engineering
-      thread, apply durable collaboration preferences, and interact as a
-      co-architect without replaying long conversation histories.
-
-  minions:
-
-    role: specialized_execution_capabilities
-
-  authority:
-
-    wu:
-
-      - architectural reasoning
-      - session coordination
-      - engineering discussion
-      - project-state interpretation
-      - minion selection
-      - continuity management
-
-    minions:
-
-      - specialized execution
-      - deterministic validation
-      - bounded responsibilities
+  - ComponentRegistry currently represents primarily slash-macro-created assets rather than the full business-relevant repository.
+  - WorkspaceDocumenter documents only existing registry rows and sends each source file through AI twice.
+  - document_workspace calls methods no longer exposed by WorkspaceDocumenter.
+  - ComponentNode lacks metadata currently assigned by synchronization signals.
+  - signals.py contains obsolete CONTROLLER_MODULE and CANVAS_LAYOUT taxonomy.
+  - ComponentRegistry saves currently trigger a whole-workspace AST scan.
+  - AST dependency mapping links only already-registered Python nodes.
+  - Relative imports and non-Python dependencies are not fully represented.
+  - Existing registry data contains useful test cases but may include migrations, generated files, stale paths, and other exclusions.
+  - Wu does not yet query ComponentRegistry or Neo4j when selecting repository context.
+  - Wu does not yet retain a durable ledger of files already hydrated during the active task.
+  - Detailed automated regression testing remains deferred in favor of focused command and workflow validation.
 
 session_resume:
 
   read_first:
-
     - docs/aurora/protocol/Aurora_Refactoring_Protocol_v3_2.md
     - docs/aurora/management/PROJECT_STATE.yaml
-    - docs/aurora/architecture/MINION_ARCHITECTURE.md
-    - docs/aurora/vision/HOPEHUB_ENGINEERING_CONTRACT.md
+
+  inspect_first:
+    - aurora/utils/forge_registry.py
+    - aurora/models.py
+    - aurora/nodes.py
+    - aurora/signals.py
+    - aurora/utils/ast_scanner.py
+    - aurora/utils/documenter.py
+    - aurora/management/commands/document_workspace.py
 
   immediate_focus:
-
-    - HopeHub MVP vertical-slice planning
-    - Mobile-aware journal-entry API workflow
-    - Wu continuity requirements discovered during implementation
-    - Docker permissions
+    - implement centralized component policy
+    - implement dry-run workspace reconciliation
+    - validate classifications against the existing ComponentRegistry
+    - perform no PostgreSQL, Neo4j, or repository-file writes before report review
 
 project_brain:
 
   startup_required:
-
     - protocol
     - project_state
     - active_delta_directive
     - current_source_file
 
   load_only_when_needed:
-
     roadmap: strategic_discussion
     engineering_contract: hopehub_work
     migration_checklist: merge_or_major_refactor
@@ -404,15 +502,17 @@ project_brain:
 principles:
 
   - HopeHub beta ships on August 15, 2026.
-  - Repository documentation is authoritative.
-  - Keep operational context compact.
-  - Preserve strategic, backlog, and operational memory boundaries.
-  - Let Aurora evolve from demonstrated HopeHub development needs.
-  - Build complete HopeHub vertical slices before optional enhancements.
-  - Mobile-aware design requires both API separation and usable responsive interaction.
-  - Prefer principles over accumulated procedural rules.
-  - Wu coordinates specialized capabilities rather than containing every rule.
-  - Preserve rationale and completion criteria with active work.
+  - Repository files are read-only to the reconciler.
+  - PostgreSQL owns authoritative component metadata.
+  - Neo4j owns traversable relationships, not primary records.
+  - Deterministic discovery and graph synchronization must not depend on AI.
+  - Dry-run is the default.
+  - Existing messy registry data is the initial reconciliation test surface.
+  - Excluded and missing records are reported before cleanup.
+  - Business-relevant application knowledge is preferred over exhaustive filesystem inventory.
+  - Migrations, Monaco, third-party libraries, generated files, and caches are excluded.
+  - Wu should use Aurora's repository intelligence before asking the user for files.
+  - HopeHub and Aurora may share the relational-graph operating pattern without sharing domain models.
   - Apply The Delta Way.
 
 # ======================================================================

@@ -31,7 +31,38 @@ Use the correct comment syntax:
 
 Do not dump entire source files when a localized patch is sufficient.
 
-Documentation may be delivered as a complete document when its structure requires full replacement.
+Large repository documentation should follow the same surgical patch protocol as application source whenever practical.
+
+Repository documentation includes, but is not limited to:
+
+- ADRs
+- architecture documents
+- design specifications
+- engineering guides
+- roadmaps
+- engineering contracts
+- operational documentation
+
+Documentation patches should:
+
+- use anchored replacement blocks;
+- preserve existing content within the patch boundaries;
+- replace complete logical sections rather than partial fragments;
+- remain reviewable and easy to validate.
+
+Target approximately **50–150 lines** per documentation patch when practical.
+
+Avoid exceeding **200 lines**.
+
+New documents that comfortably fit within a single response may still be delivered as one complete document.
+
+Complete document replacement remains appropriate when:
+
+- the document is short;
+- the document is being created for the first time;
+- or surgical replacement would reduce clarity.
+
+Documentation patching follows the same atomic replacement rules as source code.
 
 ---
 
@@ -61,11 +92,11 @@ Never deliver partial fragments intended to be inserted inside an existing patch
 
 ## 1.4 Patch Size
 
-Target fewer than 100 lines when practical.
+Target fewer than **100 lines** per patch when practical.
 
-Avoid exceeding 200 lines.
+Avoid exceeding **200 lines**.
 
-Split source changes into additional patches when necessary.
+Split both **source code** and **repository documentation** into additional anchored patches whenever necessary to remain reviewable, resilient to truncation, and independently verifiable.
 
 ---
 
