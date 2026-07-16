@@ -43,6 +43,11 @@ class ComponentRegistry(models.Model):
         ('PUBLIC', 'Public Access Node'),
         ('PRIVATE', 'Private Protected Node'),
     ]
+    ANALYSIS_STATUS_CHOICES = [
+        ('PENDING', 'Pending Analysis'),
+        ('COMPLETE', 'Analysis Complete'),
+        ('FAILED', 'Analysis Failed'),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
@@ -51,8 +56,7 @@ class ComponentRegistry(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
     locked = models.BooleanField(default=False)
-    
-    # Fix: Overwrite 'User' with 'settings.AUTH_USER_MODEL' to resolve the scope break created_by = models.ForeignKey(
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -61,6 +65,34 @@ class ComponentRegistry(models.Model):
     )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
+    source_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="SHA-256 digest from the most recently observed source content.",
+    )
+    last_observed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent reconciliation timestamp at which the file was observed.",
+    )
+    last_analyzed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent successful or failed AI enrichment attempt.",
+    )
+    analysis_status = models.CharField(
+        max_length=20,
+        choices=ANALYSIS_STATUS_CHOICES,
+        default='PENDING',
+        help_text="Current incremental documentation analysis state.",
+    )
+    analysis_version = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        help_text="Analyzer contract version used for the stored documentation.",
+    )
     description = models.TextField(
         blank=True, help_text="Primary unified summary of what this component module executes."
     )
