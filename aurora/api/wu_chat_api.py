@@ -21,6 +21,7 @@ from aurora.minions.engine import MinionRunner
 from aurora.minions.patch_parser import (
     PatchParseError,
     parse_patch_response,
+    response_contains_patch_markers,
 )
 from aurora.minions.workspace_context import (
     WorkspaceContextError,
@@ -150,7 +151,14 @@ def process_wu_logic_synchronous(
         patch_payload = None
         patch_error = None
 
-        if workspace_context:
+        should_parse_patch = (
+            workspace_context is not None
+            and response_contains_patch_markers(
+                complete_response_text
+            )
+        )
+
+        if should_parse_patch:
             try:
                 parsed_patch = parse_patch_response(
                     response_text=complete_response_text,

@@ -92,6 +92,22 @@ def _detect_language(file_path: str) -> str:
     )
 
 
+def response_contains_patch_markers(response_text: str) -> bool:
+    """
+    Return whether a Wu response contains any structured patch marker.
+
+    Ordinary conversational, advisory, and recommendation responses
+    return False and must not be treated as failed patch responses.
+    """
+    if not isinstance(response_text, str) or not response_text:
+        return False
+
+    return bool(
+        _PATCH_START_PATTERN.search(response_text)
+        or _PATCH_END_PATTERN.search(response_text)
+    )
+
+
 def _extract_single_patch(response_text: str) -> re.Match:
     complete_matches = list(_PATCH_PATTERN.finditer(response_text))
     start_count = len(_PATCH_START_PATTERN.findall(response_text))
