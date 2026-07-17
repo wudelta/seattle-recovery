@@ -2,25 +2,30 @@
 # FILE: aurora/management/commands/reconcile_workspace.py (PATCH 1 OF 3)
 # START: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT
 # ======================================================================
-"""Read-only workspace reconciliation management command."""
+"""Workspace reconciliation and explicit bounded synchronization command."""
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from aurora.utils.component_policy import ALLOWED_ROOTS
 from aurora.utils.workspace_reconciler import WorkspaceReconciler
+from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
+
+
+UserModel = get_user_model()
 
 
 class Command(BaseCommand):
     """
     Compare business-relevant repository files with ComponentRegistry.
 
-    This command is dry-run only. It never modifies repository files,
-    PostgreSQL records, Neo4j nodes, or graph relationships.
+    Reconciliation remains read-only by default. PostgreSQL and Neo4j mutation
+    require an explicit synchronization operation and --apply.
     """
 
     help = (
-        "Reports deterministic workspace and ComponentRegistry differences "
-        "without performing writes."
+        "Reports deterministic workspace differences and optionally applies "
+        "one explicitly bounded synchronization operation."
     )
 
     def add_arguments(self, parser):
@@ -39,12 +44,41 @@ class Command(BaseCommand):
         parser.add_argument(
             "--limit",
             type=int,
-            help="Limit the number of displayed items in each classification.",
+            help="Limit the number of displayed or synchronized items.",
+        )
+        parser.add_argument(
+            "--operation",
+            choices=("reconcile", "update", "register"),
+            default="reconcile",
+            help=(
+                "Choose read-only reconciliation, existing-row updates, "
+                "or new-row registration."
+            ),
+        )
+        parser.add_argument(
+            "--apply",
+            action="store_true",
+            help="Explicitly permit the selected database operation.",
+        )
+        parser.add_argument(
+            "--user",
+            help=(
+                "Username assigned as created_by for new registrations. "
+                "Required when applying registration."
+            ),
+        )
+        parser.add_argument(
+            "--skip-graph",
+            action="store_true",
+            help="Register PostgreSQL rows without Neo4j projection.",
         )
 
     def _validate_options(self, options):
         requested_path = options.get("path")
         limit = options.get("limit")
+        operation = options.get("operation")
+        apply = options.get("apply")
+        username = options.get("user")
 
         if requested_path:
             normalized_path = requested_path.strip().replace("\\", "/")
@@ -56,13 +90,50 @@ class Command(BaseCommand):
 
         if limit is not None and limit < 1:
             raise CommandError("--limit must be greater than zero.")
+
+        if operation == "reconcile" and apply:
+            raise CommandError(
+                "--apply cannot be used with the reconcile operation."
+            )
+
+        if operation == "register" and apply:
+            if not username:
+                raise CommandError(
+                    "--user is required when applying registration."
+                )
+
+            if not requested_path and limit != 1:
+                raise CommandError(
+                    "Initial registration validation requires --path "
+                    "or --limit 1."
+                )
+
+        if operation != "register" and username:
+            raise CommandError(
+                "--user is only valid with the register operation."
+            )
+
+        if operation != "register" and options.get("skip_graph"):
+            raise CommandError(
+                "--skip-graph is only valid with the register operation."
+            )
+
+    @staticmethod
+    def _resolve_user(username: str):
+        """Resolve one explicit registration owner from the configured user model."""
+        try:
+            return UserModel.objects.get(username=username)
+        except UserModel.DoesNotExist as error:
+            raise CommandError(
+                f"User '{username}' does not exist."
+            ) from error
 # ======================================================================
 # END: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT (PATCH 1 OF 3)
 # ======================================================================
 
 # ======================================================================
 # FILE: aurora/management/commands/reconcile_workspace.py (PATCH 2 OF 3)
-# START: BOUNDED_REPORT_FILTERING
+# START: BOUNDED_REPORT_FILTERING_AND_SYNCHRONIZATION
 # ======================================================================
     def _build_filtered_report(self, options) -> dict[str, object]:
         """Build the dry-run report and apply optional result boundaries."""
@@ -129,8 +200,33 @@ class Command(BaseCommand):
                 "limit": limit,
             },
         }
+
+    def _run_synchronization(self, options) -> dict[str, object]:
+        """Preview or apply one explicitly bounded synchronization operation."""
+        self._validate_options(options)
+
+        operation = options["operation"]
+        apply = options["apply"]
+        requested_path = options.get("path")
+        limit = options.get("limit")
+        username = options.get("user")
+        synchronize_graph = not options.get("skip_graph", False)
+
+        user_instance = None
+
+        if operation == "register" and apply:
+            user_instance = self._resolve_user(username)
+
+        return WorkspaceSynchronizer().run(
+            apply=apply,
+            operation=operation,
+            user_instance=user_instance,
+            path=requested_path,
+            limit=limit,
+            synchronize_graph=synchronize_graph,
+        )
 # ======================================================================
-# END: BOUNDED_REPORT_FILTERING (PATCH 2 OF 3)
+# END: BOUNDED_REPORT_FILTERING_AND_SYNCHRONIZATION (PATCH 2 OF 3)
 # ======================================================================
 
 # ======================================================================
@@ -138,7 +234,112 @@ class Command(BaseCommand):
 # START: COMMAND_EXECUTION_AND_REPORT_OUTPUT
 # ======================================================================
     def handle(self, *args, **options):
-        """Execute and print the bounded dry-run reconciliation report."""
+        """Execute reconciliation or one explicit synchronization operation."""
+        operation = options["operation"]
+
+        if operation != "reconcile":
+            result = self._run_synchronization(options)
+            apply = result["apply"]
+            candidates = result["candidates"]
+            counts = result["counts"]
+
+            mode = "APPLY" if apply else "PREVIEW"
+
+            self.stdout.write(
+                self.style.MIGRATE_HEADING(
+                    f"Workspace Synchronization — {operation.upper()} {mode}"
+                )
+            )
+            self.stdout.write(
+                "Boundaries: "
+                f"path={options.get('path') or '*'} "
+                f"limit={options.get('limit') or '*'}"
+            )
+            self.stdout.write("")
+
+            self.stdout.write(
+                self.style.HTTP_INFO(
+                    f"CANDIDATES ({len(candidates)})"
+                )
+            )
+
+            if not candidates:
+                self.stdout.write("  —")
+            else:
+                for item in candidates:
+                    metadata = []
+
+                    if item.name:
+                        metadata.append(f"name={item.name}")
+
+                    if item.persona:
+                        metadata.append(f"persona={item.persona}")
+
+                    metadata_text = (
+                        f" | {' | '.join(metadata)}"
+                        if metadata
+                        else ""
+                    )
+
+                    self.stdout.write(
+                        f"  {item.path} | {item.reason}{metadata_text}"
+                    )
+
+            self.stdout.write("")
+
+            if not apply:
+                self.stdout.write(
+                    self.style.WARNING(
+                        "Preview complete. No PostgreSQL or Neo4j "
+                        "changes were performed."
+                    )
+                )
+                return
+
+            report = result["report"]
+
+            for failure in report.failures:
+                self.stderr.write(
+                    self.style.ERROR(f"POSTGRES FAILURE: {failure}")
+                )
+
+            for failure in report.graph_failures:
+                self.stderr.write(
+                    self.style.ERROR(f"GRAPH FAILURE: {failure}")
+                )
+
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "Summary: "
+                    + " | ".join(
+                        f"{key}={value}"
+                        for key, value in counts.items()
+                    )
+                )
+            )
+
+            if report.graph_failures:
+                self.stdout.write(
+                    self.style.WARNING(
+                        "PostgreSQL changes completed with Neo4j failures. "
+                        "Graph projection requires deliberate retry."
+                    )
+                )
+            elif report.failures:
+                self.stdout.write(
+                    self.style.WARNING(
+                        "Synchronization completed with PostgreSQL failures."
+                    )
+                )
+            else:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        "Synchronization completed successfully."
+                    )
+                )
+
+            return
+
         report = self._build_filtered_report(options)
         filters = report["filters"]
 
