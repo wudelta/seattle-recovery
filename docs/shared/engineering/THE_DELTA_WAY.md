@@ -40,14 +40,15 @@ A fragile architecture that requires continual repair is not.
 
 # Cheap and Right
 
-Engineering is constrained by two finite resources:
+Engineering is constrained by three finite resources:
 
 * time
 * money
+* attention
 
-AI usage has a direct cost.
+Attention is often the most valuable of the three.
 
-Developer time has an even greater cost.
+Every debugging loop, unnecessary context switch, repeated explanation, or avoidable investigation consumes attention that could have been invested in better architecture.
 
 Whenever possible:
 
@@ -107,6 +108,24 @@ Never the reverse.
 
 ---
 
+# Separate Thinking from Building
+
+Architecture should be decided before implementation begins.
+
+Implementation should execute an approved plan rather than discover one.
+
+Questions, challenges, alternatives, and design discussions belong before coding.
+
+Once implementation begins, engineering should proceed through small, deterministic steps whose purpose has already been agreed upon.
+
+Planning is creative.
+
+Implementation is disciplined.
+
+Both deserve their own time.
+
+---
+
 # Baseline Before Optimization
 
 Architecture earns the right to expand by first proving that it works.
@@ -120,6 +139,24 @@ Only then introduce additional abstractions, automation, or optimization.
 Ideas are never lost.
 
 Premature implementation is avoided.
+
+---
+
+# Deterministic Before Intelligent
+
+Whenever software can solve a problem deterministically, software should solve it.
+
+AI should augment deterministic systems rather than replace them.
+
+Repository discovery, validation, workflow execution, context selection, and engineering automation should be implemented as repeatable software systems whenever practical.
+
+Intelligence should be reserved for problems that genuinely require interpretation, reasoning, creativity, or communication.
+
+Aurora should not ask AI to remember what software can record.
+
+Aurora should not ask AI to infer what software can compute.
+
+Aurora should not ask AI to discover what software can index.
 
 ---
 
@@ -165,6 +202,20 @@ Consistent progress is preferred over dramatic progress.
 
 ---
 
+# Validate Continuously
+
+Engineering confidence should be built incrementally.
+
+Every completed step should demonstrate one additional property of the system before the next step begins.
+
+Small validations prevent large debugging sessions.
+
+The objective is not simply to discover defects quickly.
+
+The objective is to prevent uncertainty from accumulating.
+
+---
+
 # Continuous Learning
 
 Every difficult debugging session should improve Aurora itself.
@@ -186,3 +237,44 @@ Aurora is intended to become an engineering platform.
 The quality of the platform is determined as much by the way it is built as by the features it contains.
 
 The Delta Way exists to ensure that every engineering decision moves the project toward a system that is understandable, maintainable, resilient, and capable of evolving for many years.
+
+Aurora should become easier to engineer with every completed engineering session.
+
+Every improvement to the platform should reduce future effort, reduce uncertainty, or increase the reliability of the engineering process itself.
+
+The platform is not only the product being built.
+
+It is also the means by which future products will be built.
+
+---
+
+# In Practice
+
+The Delta Way is reflected in every engineering session.
+
+The workflow is intentionally divided into distinct phases:
+
+1. Define the problem.
+2. Establish the architectural objective.
+3. Design an implementation strategy.
+4. Challenge assumptions and refine the plan.
+5. Implement in small, bounded steps.
+6. Validate continuously.
+7. Reach a stable milestone.
+8. Document immediately.
+9. Commit only proven work.
+10. Extract general principles that improve future engineering.
+
+Planning and implementation are different disciplines.
+
+Architecture should be deliberate.
+
+Implementation should be disciplined.
+
+Validation should be continuous.
+
+Documentation should preserve both decisions and their rationale.
+
+Every completed session should improve not only the software, but also the process used to build it.
+
+That is the essence of The Delta Way.

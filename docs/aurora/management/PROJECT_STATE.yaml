@@ -1,3 +1,4 @@
+```yaml
 # ======================================================================
 # FILE: docs/aurora/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
 # START: PROJECT_STATE
@@ -12,155 +13,122 @@ targets:
   hopehub_beta_prototype: 2026-08-15
 
 current:
-  phase: workspace_knowledge_reconciliation
+  phase: controlled_workspace_synchronization
 
   objective: >
-    Reconstruct Aurora's relational and graph-based knowledge system so
-    ComponentRegistry accurately represents business-relevant application
-    components, Neo4j represents their dependencies, Wu can automatically
-    acquire sufficient repository context, and the same relational-graph
-    operating pattern is validated for HopeHub's critical resource finder.
+    Build Aurora's deterministic repository intelligence layer so PostgreSQL
+    contains an accurate inventory of business-relevant components, Neo4j
+    contains bounded dependency topology, and Wu can acquire sufficient
+    repository context without broad AI-driven discovery.
 
   next_task: >
-    Implement a deterministic, read-only workspace reconciliation foundation.
-    Begin with centralized component inclusion and exclusion policy, then add
-    a dry-run management command that compares eligible repository files with
-    the existing ComponentRegistry and reports KEEP, UPDATE, REGISTER, STAGE,
-    EXCLUDE, and REVIEW classifications without modifying files, PostgreSQL,
-    or Neo4j.
+    Implement safe registration of eligible REGISTER candidates without
+    triggering the obsolete ComponentRegistry post-save graph scan. Repair the
+    graph synchronization boundary before enabling bulk creation, staging, or
+    exclusion-state updates.
 
   governing_deadline: >
-    This initiative must directly support the August 15, 2026 HopeHub beta.
-    Work that expands beyond workspace reconciliation, Wu context acquisition,
-    or the HopeHub relational-graph foundation must be deferred.
+    Continue Aurora reconciliation work only while it directly improves Wu
+    development assistance or validates the relational-graph foundation needed
+    for the August 15, 2026 HopeHub beta.
 
 last_verified:
-  date: 2026-07-15
+  date: 2026-07-16
 
   milestone:
-    aurora_baseline: achieved
+    deterministic_workspace_reconciliation: achieved
+    live_existing_registry_updates: achieved
 
-  workflow:
-    provider_abstraction: complete
-    workspace_context_resolution: complete
-    repository_file_hydration: complete
-    structured_patch_generation: validated
-    structured_patch_parsing: validated
-    advisory_response_patch_handling: implemented_pending_validation
-    wu_review_slider: validated
-    monaco_diff_viewer: validated
-    approval_workflow: validated
-    repository_single_write: validated
-    telemetry_pipeline: implemented
+  validation:
+    django_system_check: passed
+    migration_0004: applied
+    dry_run_reconciliation: passed
+    bounded_output_filters: passed
+    source_hash_detection: passed
+    read_only_guarantee: passed
+    controlled_postgresql_update: passed
+    existing_record_convergence: passed
 
 active_initiative:
-
   name: workspace_reconciliation_and_knowledge_graph
-
   status: active
   priority: critical
   implementation_mode: go_loop
-  first_execution_date: 2026-07-16
 
-  rationale: >
-    Wu currently lacks a reliable method for deciding which repository files
-    are relevant, determining when sufficient context has been gathered, and
-    remembering which files Aurora can already supply. Aurora already contains
-    partial infrastructure for this purpose through ComponentRegistry,
-    ComponentNode, Django synchronization signals, AST dependency scanning,
-    forge registration, and WorkspaceDocumenter. These pieces are incomplete,
-    inconsistent, and limited primarily to files created through slash macros.
-
-    The relational-graph tandem is also a critical architectural pattern for
-    HopeHub's August 15 resource finder. Completing this initiative therefore
-    supports both Aurora engineering intelligence and HopeHub delivery.
+  architectural_purpose: >
+    Aurora must prefer deterministic computation whenever repository discovery,
+    classification, freshness detection, dependency traversal, workflow
+    execution, or context selection can be solved without AI. AI remains an
+    optional interpretation and enrichment layer.
 
   desired_outcome:
-
     component_registry: >
-      PostgreSQL contains a current, searchable inventory of application-owned,
-      business-relevant components with stable repository paths, classification,
-      concise responsibility summaries, and freshness metadata.
+      PostgreSQL contains current, searchable, business-relevant components
+      with stable repository paths, architectural classification, freshness
+      metadata, and concise responsibility summaries.
 
     dependency_graph: >
-      Neo4j contains synchronized component nodes and deterministic dependency
-      relationships suitable for upstream and downstream impact traversal.
+      Neo4j contains synchronized component nodes and explicit dependency
+      relationships suitable for impact analysis and context expansion.
 
     wu_context: >
-      Wu searches registered components, expands relevant dependency
-      neighborhoods, automatically hydrates known repository paths, avoids
-      redundant file requests, and recommends changes once material context is
-      sufficient.
+      Wu searches registered components, follows relevant dependency
+      neighborhoods, hydrates known paths automatically, avoids repeated file
+      requests, and stops gathering context when sufficient information exists.
 
     hopehub_foundation: >
-      The relational-graph synchronization pattern is proven reliable before
-      applying it to HopeHub organizations, resources, services, eligibility,
-      geography, accessibility, and other resource-finder relationships.
+      The PostgreSQL-authoritative and Neo4j-relationship pattern is validated
+      before being applied to HopeHub resource-finder domain data.
 
-  architecture:
+architecture:
+  authoritative_metadata:
+    system: PostgreSQL
+    model: ComponentRegistry
 
-    authoritative_metadata:
-      system: PostgreSQL
-      model: ComponentRegistry
+  relationship_topology:
+    system: Neo4j
+    model: ComponentNode
 
-    relationship_topology:
-      system: Neo4j
-      model: ComponentNode
+  synchronization:
+    direction: PostgreSQL_to_Neo4j
+    policy: explicit_bounded_and_recoverable
 
-    synchronization:
-      direction: PostgreSQL_to_Neo4j
-      policy: explicit_bounded_and_recoverable
+  deterministic_pipeline:
+    - component policy
+    - repository discovery
+    - reconciliation
+    - SHA-256 source freshness
+    - controlled PostgreSQL synchronization
+    - graph synchronization
+    - dependency traversal
+    - AI context assembly
 
-    workspace_reconciliation:
-      default_mode: dry_run
-      source_file_access: read_only
-      mutation_scope:
-        - ComponentRegistry metadata
-        - Neo4j nodes
-        - Neo4j relationships
+  ai_boundary:
+    role:
+      - interpretation
+      - documentation enrichment
+      - architectural critique
+      - recommendations
+      - code generation
+    rule: >
+      AI availability must never block deterministic inventory, freshness
+      detection, synchronization, or graph rebuilding.
 
-    ai_analysis:
-      role: optional_incremental_enrichment
-      provider: provider_router
-      requirements:
-        - one structured response per component
-        - save each successful component independently
-        - skip unchanged components
-        - resume after provider or token failure
-        - never block deterministic discovery or graph synchronization
+reconciliation:
+  default_mode: dry_run
+  repository_file_mutation: prohibited
+  database_mutation: explicit_only
+  graph_mutation: explicit_only
 
-  reconciliation_classifications:
-
-    KEEP: >
-      Existing eligible registry record matches the current repository file
-      and requires no metadata update.
-
-    UPDATE: >
-      Eligible file exists but its registry classification, path metadata,
-      source hash, summary state, or other managed metadata is stale.
-
-    REGISTER: >
-      Eligible application-owned file exists but has no ComponentRegistry row.
-
-    STAGE: >
-      Registered component no longer exists on disk. Report or mark it for
-      review without deleting the record or graph node automatically.
-
-    EXCLUDE: >
-      Existing registry row refers to generated, third-party, migration,
-      cached, collected, temporary, or otherwise prohibited content.
-
-    REVIEW: >
-      Application-owned file has uncertain business relevance and requires
-      explicit human classification before registration.
+  classifications:
+    KEEP: eligible registry record matches the repository
+    UPDATE: existing eligible record has stale managed metadata or source hash
+    REGISTER: eligible repository file has no registry record
+    STAGE: registered component is missing from the repository
+    EXCLUDE: registry record violates current component policy
+    REVIEW: business relevance cannot be determined safely
 
   component_scope:
-
-    governing_test: >
-      Register a file only when a developer or Wu would reasonably inspect it
-      while changing application behavior, architecture, user experience,
-      security, configuration, or authoritative project documentation.
-
     allowed_roots:
       - aurora
       - hopehub
@@ -168,351 +136,225 @@ active_initiative:
       - core_logic
       - docs
 
-    likely_included_types:
-      - Python application modules
-      - application-owned HTML templates
-      - application-owned JavaScript
-      - application-owned CSS
-      - authoritative Markdown documentation
-      - authoritative YAML configuration
-      - selected project runtime configuration
+    allowed_root_files:
+      - manage.py
 
-    always_excluded_directories:
-      - .git
-      - .venv
-      - venv
-      - site-packages
-      - node_modules
-      - __pycache__
+    exclusions:
       - migrations
-      - staticfiles
-      - media
-      - logs
-      - vendor
-      - vendors
-      - monaco
-      - dist
-      - build
-      - htmlcov
-      - .pytest_cache
-      - .mypy_cache
-      - temporary sandboxes
+      - tests
+      - caches
+      - virtual environments
+      - Monaco and vendor assets
+      - collected static files
+      - logs and temporary staging
+      - credentials and secrets
+      - generated and minified assets
 
-    always_excluded_files:
-      - "*.pyc"
-      - "*.log"
-      - "*.map"
-      - "*.min.js"
-      - "*.min.css"
-      - database files
-      - collected static assets
-      - Django migration files
+    governing_test: >
+      Register a file only when a developer or Wu would reasonably inspect it
+      while changing application behavior, architecture, user experience,
+      security, configuration, or authoritative documentation.
 
-  hard_safety_boundaries:
+completed_work:
+  component_policy:
+    status: validated
+    capabilities:
+      - normalized repository-relative paths
+      - traversal rejection
+      - allowed-root enforcement
+      - deterministic exclusions
+      - persona inference
+      - content-aware __init__.py classification
+      - secret and credential protection
 
-    - The reconciler must never modify repository files.
-    - The reconciler must never insert anchor patches into discovered files.
-    - The reconciler must never reformat source or documentation.
-    - The reconciler must never delete, rename, or move files.
-    - The reconciler must never automatically delete registry rows or graph nodes.
-    - Dry-run must be the default command behavior.
-    - PostgreSQL or Neo4j mutation requires an explicit apply option.
-    - Exclusion policy must execute before file contents are opened.
-    - Initial applied runs must support root, path, and limit boundaries.
-    - Repository paths must remain normalized and repository-relative.
-    - AI availability must not affect deterministic inventory or graph rebuilding.
+  workspace_reconciler:
+    status: validated
+    capabilities:
+      - read-only repository traversal
+      - KEEP UPDATE REGISTER STAGE EXCLUDE REVIEW reporting
+      - SHA-256 exact-source hashing
+      - accurate bounded reporting
+      - root path and display-limit filters
+      - no PostgreSQL Neo4j AI or repository mutations
 
-  implementation_sequence:
+  management_command:
+    file: aurora/management/commands/reconcile_workspace.py
+    status: validated
+    behavior:
+      - dry-run only
+      - root filter
+      - path filter
+      - display limit
+      - full matching counts preserved when output is limited
 
-    step_01_component_policy:
-      objective: >
-        Centralize repository ownership, inclusion, exclusion, classification,
-        persona inference, and path safety rules.
-      validation:
-        - classify representative Aurora and HopeHub files
-        - exclude migrations
-        - exclude Monaco and vendor assets
-        - exclude virtual environments and generated files
-        - report uncertain application-owned files as REVIEW
+  registry_freshness:
+    status: validated
+    migration: 0004_componentregistry_analysis_status_and_more
+    fields:
+      - source_hash
+      - last_observed_at
+      - last_analyzed_at
+      - analysis_status
+      - analysis_version
 
-    step_02_dry_run_reconciler:
-      objective: >
-        Discover eligible files and compare them against the existing
-        ComponentRegistry without performing writes.
-      validation:
-        - report KEEP
-        - report UPDATE
-        - report REGISTER
-        - report STAGE
-        - report EXCLUDE
-        - report REVIEW
-        - emit categorized paths and summary counts
+  workspace_synchronizer:
+    status: existing_updates_validated
+    behavior:
+      - preview by default
+      - apply requires explicit true value
+      - path and limit boundaries
+      - updates existing rows through QuerySet.update
+      - bypasses post-save signals
+      - writes source hash and observation timestamp
+      - applies authoritative persona corrections
+      - performs no registration staging deletion Neo4j or AI work
 
-    step_03_management_command:
-      objective: >
-        Add reconcile_workspace with dry-run default and explicit root, path,
-        limit, and apply controls.
-      validation:
-        - run safely against aurora root
-        - verify no repository files change
-        - verify no database writes during dry-run
+  current_registry_state:
+    existing_eligible_records: converged_to_KEEP
+    eligible_unregistered_files: approximately_102
+    missing_registered_files: 1
+    policy_excluded_registry_records: 36
 
-    step_04_registry_freshness:
-      objective: >
-        Extend ComponentRegistry only with metadata required for deterministic
-        reconciliation and incremental analysis.
-      expected_metadata:
-        - source content hash
-        - last observed timestamp
-        - last analyzed timestamp
-        - analysis status
-        - analysis version
-      validation:
-        - create and apply focused Django migration
-        - preserve existing registry rows
-        - validate Django system checks
+implementation_sequence:
+  step_01_component_policy: complete
+  step_02_dry_run_reconciler: complete
+  step_03_management_command: complete
+  step_04_registry_freshness: complete
+  step_05_existing_record_apply: complete
 
-    step_05_controlled_apply:
-      objective: >
-        Apply approved REGISTER, UPDATE, STAGE, and EXCLUDE state changes in
-        small recoverable batches.
-      validation:
-        - apply to a limited Aurora batch
-        - verify existing messy registry behavior
-        - inspect records through Django admin
-        - do not remove excluded or missing records automatically
+  step_05_new_registration:
+    status: next
+    requirement: >
+      Register eligible files safely without invoking obsolete post-save graph
+      behavior or whole-workspace AST scans.
 
-    step_06_graph_schema:
-      objective: >
-        Align ComponentNode properties with the metadata deliberately
-        synchronized from ComponentRegistry.
-      minimum_properties:
-        - postgres_id
-        - file_path
-        - name
-        - persona
-        - description
-        - status
-      validation:
-        - create or update one node
-        - query synchronized metadata
-        - preserve unique path and PostgreSQL identity anchors
+  step_06_graph_schema:
+    status: pending
+    requirement: >
+      Add deliberate ComponentNode projection properties for name, persona,
+      description, and status while preserving PostgreSQL identity anchors.
 
-    step_07_signal_repair:
-      objective: >
-        Restrict Django signals to bounded node synchronization and remove
-        obsolete persona-specific topology logic.
-      validation:
-        - remove obsolete CONTROLLER_MODULE and CANVAS_LAYOUT assumptions
-        - stop whole-workspace scanning after every registry save
-        - preserve safe node deletion behavior
-        - surface synchronization failures clearly
+  step_07_signal_repair:
+    status: pending
+    requirement: >
+      Restrict signals to bounded single-node synchronization, remove obsolete
+      persona topology, and eliminate implicit whole-workspace scanning.
 
-    step_08_dependency_rebuild:
-      objective: >
-        Make graph dependency rebuilding an explicit reconciliation stage
-        instead of an implicit post-save side effect.
-      validation:
-        - resolve supported absolute and relative Python imports
-        - connect only registered eligible components
-        - remove or replace stale managed dependency edges safely
-        - retain explicit Django framework relationships where justified
+  step_08_dependency_rebuild:
+    status: pending
 
-    step_09_incremental_documentation:
-      objective: >
-        Rework WorkspaceDocumenter into a resumable enrichment stage using one
-        structured AI response for summary, developer documentation, and
-        stakeholder documentation.
-      validation:
-        - analyze only missing or changed components
-        - persist each success immediately
-        - resume after failure
-        - support path and limit controls
-        - avoid transmitting source twice
+  step_09_incremental_documentation:
+    status: pending
 
-    step_10_wu_registry_context:
-      objective: >
-        Connect Wu's workspace context acquisition to ComponentRegistry and
-        Neo4j dependency traversal.
-      validation:
-        - resolve known paths without asking the user
-        - search by component name and responsibility summary
-        - hydrate selected files automatically
-        - track files already supplied during the active task
-        - request only materially missing context
-        - stop context gathering and provide recommendations when sufficient
+  step_10_wu_registry_context:
+    status: pending
 
-    step_11_hopehub_pattern_validation:
-      objective: >
-        Confirm that the PostgreSQL-authoritative and Neo4j-relationship pattern
-        can support the HopeHub resource finder without coupling its domain
-        models to Aurora ComponentNode.
-      validation:
-        - document shared operating pattern
-        - preserve separate Aurora and HopeHub domain schemas
-        - identify minimum resource-finder relationships required for beta
-        - keep August 15 delivery on the critical path
+  step_11_hopehub_pattern_validation:
+    status: pending
 
-    step_12_retirement_and_cleanup:
-      objective: >
-        Retire obsolete commands and duplicated paths only after the replacement
-        workflow is validated.
-      validation:
-        - remove or redirect document_workspace
-        - preserve slash-macro registration through shared registry services
-        - review existing EXCLUDE and STAGE records
-        - perform deliberate cleanup only after report approval
+  step_12_retirement_and_cleanup:
+    status: pending
 
-  expected_files:
+known_issues:
+  - New ComponentRegistry creation still triggers obsolete post-save graph logic.
+  - ComponentNode lacks metadata currently assigned by signals.
+  - ComponentRegistry saves may trigger whole-workspace AST scanning.
+  - signals.py contains obsolete CONTROLLER_MODULE and CANVAS_LAYOUT behavior.
+  - Existing excluded and missing registry rows require deliberate review.
+  - Relative Python imports and non-Python dependencies are incomplete.
+  - WorkspaceDocumenter sends source through AI twice.
+  - document_workspace calls an obsolete WorkspaceDocumenter method.
+  - Wu does not yet query ComponentRegistry or Neo4j for context selection.
+  - Metrics collection has been approved but is not yet implemented.
 
-    add:
-      - aurora/utils/component_policy.py
-      - aurora/utils/workspace_reconciler.py
-      - aurora/management/commands/reconcile_workspace.py
-      - aurora/migrations/<next_component_registry_migration>.py
+architectural_decisions:
+  accepted:
+    - ADR-001-ai-execution-architecture.md
+    - ADR-002-provider-routing-and-failover.md
+    - ADR-003-ai-directive-contract.md
+    - ADR-004-development-automation-over-runtime-complexity.md
+    - ADR-005-deterministic-engineering-before-ai.md
+    - ADR-006-engineering-workflow-quality-metrics.md
 
-    modify:
-      - aurora/models.py
-      - aurora/nodes.py
-      - aurora/signals.py
-      - aurora/utils/forge_registry.py
-      - aurora/utils/ast_scanner.py
-      - aurora/utils/documenter.py
-      - aurora/api/wu_chat_api.py
-      - aurora/minions/workspace_context.py
-      - docs/aurora/management/PROJECT_STATE.yaml
+session_quality_baseline:
+  date: 2026-07-16
+  designation: first_deterministic_engineering_baseline
 
-    inspect_before_modifying:
-      - aurora/apps.py
-      - slash-macro dispatcher files
-      - Django admin registration for ComponentRegistry
-      - current migration topology
-      - current Neo4j configuration
-      - current DeltaDirectives contract for minion_wu
+  observed_results:
+    syntax_errors: 0
+    monaco_parser_errors: 0
+    server_crashes: 0
+    migration_failures: 0
+    copy_paste_failures: 0
+    debugging_loops: 0
+    rollback_events: 0
+    behavioral_refinements: several
+    protocol_compliance: complete
 
-    retire_after_validation:
-      - aurora/management/commands/document_workspace.py
-
-  first_go_loop_sequence:
-
-    - inspect repository root and current path conventions
-    - add component_policy.py
-    - validate classification with a temporary Django shell command
-    - add workspace_reconciler.py in read-only mode
-    - add reconcile_workspace.py with dry-run default
-    - run dry-run against the aurora root
-    - review every REGISTER, EXCLUDE, STAGE, and REVIEW candidate
-    - correct policy before enabling any database writes
-    - commit the validated dry-run milestone
+  significance: >
+    This was the first major Aurora implementation session completed without a
+    debugging loop. Corrections were bounded behavioral refinements discovered
+    through deterministic validation rather than syntax, runtime, migration,
+    patch-placement, or server failures.
 
 delivery_tracks:
-
   hopehub_beta:
     status: active
     priority: critical
     deadline: 2026-08-15
     deadline_policy: immovable
 
-    required_capabilities:
-      - mobile-aware journal workflow
-      - authentication and ownership boundaries
-      - resource finder
-      - reliable relational and graph data synchronization
-
-    governing_rule: >
-      Aurora reconciliation work continues only while it directly enables Wu
-      development assistance or the HopeHub resource-finder foundation.
-
   investor_readiness:
     status: queued
-    dependency: hopehub_mvp_operational
-
-  aurora_coarchitect_evolution:
-    status: active_bounded
-    dependency: workspace_reconciliation_and_knowledge_graph
+    evidence_strategy:
+      - engineering throughput
+      - debugging-loop reduction
+      - deterministic coverage
+      - AI requests and token use
+      - failure and rollback rates
 
 memory_boundaries:
-
   project_state:
-    model: docs/aurora/management/PROJECT_STATE.yaml
     role: strategic_project_memory
     update_frequency: infrequent
 
-  future_work:
-    model: DeltaNotesEntry
-    role: implementation_backlog
-    update_frequency: as_requirements_emerge
+  DeltaNotesEntry:
+    role: future_implementation_backlog
 
-  active_execution:
-    model: DeltaDirectives
-    role: operational_working_memory
-    update_frequency: continuous
-
-known_issues:
-
-  - ComponentRegistry currently represents primarily slash-macro-created assets rather than the full business-relevant repository.
-  - WorkspaceDocumenter documents only existing registry rows and sends each source file through AI twice.
-  - document_workspace calls methods no longer exposed by WorkspaceDocumenter.
-  - ComponentNode lacks metadata currently assigned by synchronization signals.
-  - signals.py contains obsolete CONTROLLER_MODULE and CANVAS_LAYOUT taxonomy.
-  - ComponentRegistry saves currently trigger a whole-workspace AST scan.
-  - AST dependency mapping links only already-registered Python nodes.
-  - Relative imports and non-Python dependencies are not fully represented.
-  - Existing registry data contains useful test cases but may include migrations, generated files, stale paths, and other exclusions.
-  - Wu does not yet query ComponentRegistry or Neo4j when selecting repository context.
-  - Wu does not yet retain a durable ledger of files already hydrated during the active task.
-  - Detailed automated regression testing remains deferred in favor of focused command and workflow validation.
+  DeltaDirectives:
+    role: active_operational_working_memory
 
 session_resume:
-
   read_first:
     - docs/aurora/protocol/Aurora_Refactoring_Protocol_v3_2.md
     - docs/aurora/management/PROJECT_STATE.yaml
 
   inspect_first:
-    - aurora/utils/forge_registry.py
-    - aurora/models.py
-    - aurora/nodes.py
     - aurora/signals.py
-    - aurora/utils/ast_scanner.py
-    - aurora/utils/documenter.py
-    - aurora/management/commands/document_workspace.py
+    - aurora/nodes.py
+    - aurora/apps.py
+    - aurora/utils/workspace_synchronizer.py
+    - aurora/utils/forge_registry.py
 
   immediate_focus:
-    - implement centralized component policy
-    - implement dry-run workspace reconciliation
-    - validate classifications against the existing ComponentRegistry
-    - perform no PostgreSQL, Neo4j, or repository-file writes before report review
-
-project_brain:
-
-  startup_required:
-    - protocol
-    - project_state
-    - active_delta_directive
-    - current_source_file
-
-  load_only_when_needed:
-    roadmap: strategic_discussion
-    engineering_contract: hopehub_work
-    migration_checklist: merge_or_major_refactor
-    session_log: historical_investigation
-    delta_notes: future_task_selection
+    - design safe new-row registration
+    - prevent post-save whole-workspace graph scanning
+    - preserve dry-run and explicit-apply boundaries
+    - validate one registration before any bulk apply
 
 principles:
-
   - HopeHub beta ships on August 15, 2026.
-  - Repository files are read-only to the reconciler.
+  - Prefer deterministic computation before AI inference.
+  - The same inputs should produce the same engineering workflow.
+  - Repository files remain read-only to reconciliation.
   - PostgreSQL owns authoritative component metadata.
-  - Neo4j owns traversable relationships, not primary records.
-  - Deterministic discovery and graph synchronization must not depend on AI.
+  - Neo4j owns traversable relationships.
   - Dry-run is the default.
-  - Existing messy registry data is the initial reconciliation test surface.
-  - Excluded and missing records are reported before cleanup.
-  - Business-relevant application knowledge is preferred over exhaustive filesystem inventory.
-  - Migrations, Monaco, third-party libraries, generated files, and caches are excluded.
-  - Wu should use Aurora's repository intelligence before asking the user for files.
-  - HopeHub and Aurora may share the relational-graph operating pattern without sharing domain models.
+  - Mutation requires explicit bounded apply.
+  - Never delete registry or graph records automatically.
+  - Do not ask AI to remember what software can record.
+  - Do not ask AI to infer what software can compute.
+  - Do not ask AI to discover what software can index.
   - Apply The Delta Way.
 
 # ======================================================================
