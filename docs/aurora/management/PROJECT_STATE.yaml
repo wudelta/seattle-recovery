@@ -1,4 +1,3 @@
-```yaml
 # ======================================================================
 # FILE: docs/aurora/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
 # START: PROJECT_STATE
@@ -13,353 +12,198 @@ targets:
   hopehub_beta_prototype: 2026-08-15
 
 current:
-  phase: controlled_workspace_synchronization
+
+  phase: explicit_workspace_synchronization
 
   objective: >
-    Build Aurora's deterministic repository intelligence layer so PostgreSQL
-    contains an accurate inventory of business-relevant components, Neo4j
-    contains bounded dependency topology, and Wu can acquire sufficient
-    repository context without broad AI-driven discovery.
+    Complete Aurora's deterministic repository intelligence layer by
+    maintaining PostgreSQL as the authoritative engineering catalog and
+    Neo4j as an explicit, recoverable projection used for dependency
+    traversal and AI context acquisition.
 
   next_task: >
-    Implement safe registration of eligible REGISTER candidates without
-    triggering the obsolete ComponentRegistry post-save graph scan. Repair the
-    graph synchronization boundary before enabling bulk creation, staging, or
-    exclusion-state updates.
+    Implement durable graph synchronization state so incremental graph
+    projection advances naturally through the repository without
+    reprocessing already synchronized components.
 
   governing_deadline: >
-    Continue Aurora reconciliation work only while it directly improves Wu
-    development assistance or validates the relational-graph foundation needed
-    for the August 15, 2026 HopeHub beta.
+    Continue Aurora work only while it directly improves engineering
+    productivity or validates infrastructure required for the HopeHub
+    beta scheduled for August 15, 2026.
 
 last_verified:
+
   date: 2026-07-16
 
   milestone:
+
     deterministic_workspace_reconciliation: achieved
-    live_existing_registry_updates: achieved
+    explicit_graph_projection: achieved
 
   validation:
+
     django_system_check: passed
     migration_0004: applied
-    dry_run_reconciliation: passed
-    bounded_output_filters: passed
-    source_hash_detection: passed
-    read_only_guarantee: passed
-    controlled_postgresql_update: passed
-    existing_record_convergence: passed
+
+    workspace_reconciliation_preview: passed
+    workspace_update_apply: passed
+    workspace_registration_apply: passed
+
+    graph_preview: passed
+    graph_apply: passed
+    graph_metadata_projection: passed
 
 active_initiative:
-  name: workspace_reconciliation_and_knowledge_graph
+
+  name: deterministic_repository_intelligence
+
   status: active
-  priority: critical
-  implementation_mode: go_loop
 
-  architectural_purpose: >
-    Aurora must prefer deterministic computation whenever repository discovery,
-    classification, freshness detection, dependency traversal, workflow
-    execution, or context selection can be solved without AI. AI remains an
-    optional interpretation and enrichment layer.
-
-  desired_outcome:
-    component_registry: >
-      PostgreSQL contains current, searchable, business-relevant components
-      with stable repository paths, architectural classification, freshness
-      metadata, and concise responsibility summaries.
-
-    dependency_graph: >
-      Neo4j contains synchronized component nodes and explicit dependency
-      relationships suitable for impact analysis and context expansion.
-
-    wu_context: >
-      Wu searches registered components, follows relevant dependency
-      neighborhoods, hydrates known paths automatically, avoids repeated file
-      requests, and stops gathering context when sufficient information exists.
-
-    hopehub_foundation: >
-      The PostgreSQL-authoritative and Neo4j-relationship pattern is validated
-      before being applied to HopeHub resource-finder domain data.
+  objective: >
+    Build a deterministic engineering knowledge layer capable of supplying
+    Wu with sufficient repository context before AI reasoning is invoked.
 
 architecture:
+
   authoritative_metadata:
+
     system: PostgreSQL
     model: ComponentRegistry
 
-  relationship_topology:
+  relationship_projection:
+
     system: Neo4j
     model: ComponentNode
 
+    policy: explicit_projection_only
+
   synchronization:
+
     direction: PostgreSQL_to_Neo4j
-    policy: explicit_bounded_and_recoverable
+
+    guarantees:
+
+      - preview_before_apply
+      - explicit_execution
+      - bounded_operations
+      - recoverable_execution
+      - idempotent_projection
 
   deterministic_pipeline:
-    - component policy
+
     - repository discovery
+    - component classification
     - reconciliation
-    - SHA-256 source freshness
-    - controlled PostgreSQL synchronization
-    - graph synchronization
+    - PostgreSQL synchronization
+    - graph projection
     - dependency traversal
     - AI context assembly
 
   ai_boundary:
-    role:
+
+    deterministic_first: true
+
+    AI_responsibilities:
+
       - interpretation
       - documentation enrichment
-      - architectural critique
       - recommendations
       - code generation
-    rule: >
-      AI availability must never block deterministic inventory, freshness
-      detection, synchronization, or graph rebuilding.
 
-reconciliation:
-  default_mode: dry_run
-  repository_file_mutation: prohibited
-  database_mutation: explicit_only
-  graph_mutation: explicit_only
+    deterministic_responsibilities:
 
-  classifications:
-    KEEP: eligible registry record matches the repository
-    UPDATE: existing eligible record has stale managed metadata or source hash
-    REGISTER: eligible repository file has no registry record
-    STAGE: registered component is missing from the repository
-    EXCLUDE: registry record violates current component policy
-    REVIEW: business relevance cannot be determined safely
+      - repository discovery
+      - classification
+      - synchronization
+      - graph rebuilding
+      - context indexing
 
-  component_scope:
-    allowed_roots:
-      - aurora
-      - hopehub
-      - users
-      - core_logic
-      - docs
+implementation_status:
 
-    allowed_root_files:
-      - manage.py
+  completed:
 
-    exclusions:
-      - migrations
-      - tests
-      - caches
-      - virtual environments
-      - Monaco and vendor assets
-      - collected static files
-      - logs and temporary staging
-      - credentials and secrets
-      - generated and minified assets
+    - deterministic reconciliation
+    - bounded PostgreSQL synchronization
+    - bounded component registration
+    - explicit graph synchronizer
+    - explicit graph preview
+    - explicit graph apply
+    - ComponentNode metadata projection
+    - removal of implicit Django signals
+    - PATCH_SAFETY_KERNEL
 
-    governing_test: >
-      Register a file only when a developer or Wu would reasonably inspect it
-      while changing application behavior, architecture, user experience,
-      security, configuration, or authoritative documentation.
+  next:
 
-completed_work:
-  component_policy:
-    status: validated
-    capabilities:
-      - normalized repository-relative paths
-      - traversal rejection
-      - allowed-root enforcement
-      - deterministic exclusions
-      - persona inference
-      - content-aware __init__.py classification
-      - secret and credential protection
+    - graph synchronization state
+    - incremental batch progression
+    - dependency relationship projection
+    - Wu graph-assisted context acquisition
 
-  workspace_reconciler:
-    status: validated
-    capabilities:
-      - read-only repository traversal
-      - KEEP UPDATE REGISTER STAGE EXCLUDE REVIEW reporting
-      - SHA-256 exact-source hashing
-      - accurate bounded reporting
-      - root path and display-limit filters
-      - no PostgreSQL Neo4j AI or repository mutations
+known_work:
 
-  management_command:
-    file: aurora/management/commands/reconcile_workspace.py
-    status: validated
-    behavior:
-      - dry-run only
-      - root filter
-      - path filter
-      - display limit
-      - full matching counts preserved when output is limited
+  immediate:
 
-  registry_freshness:
-    status: validated
-    migration: 0004_componentregistry_analysis_status_and_more
-    fields:
-      - source_hash
-      - last_observed_at
-      - last_analyzed_at
-      - analysis_status
-      - analysis_version
-
-  workspace_synchronizer:
-    status: existing_updates_validated
-    behavior:
-      - preview by default
-      - apply requires explicit true value
-      - path and limit boundaries
-      - updates existing rows through QuerySet.update
-      - bypasses post-save signals
-      - writes source hash and observation timestamp
-      - applies authoritative persona corrections
-      - performs no registration staging deletion Neo4j or AI work
-
-  current_registry_state:
-    existing_eligible_records: converged_to_KEEP
-    eligible_unregistered_files: approximately_102
-    missing_registered_files: 1
-    policy_excluded_registry_records: 36
-
-implementation_sequence:
-  step_01_component_policy: complete
-  step_02_dry_run_reconciler: complete
-  step_03_management_command: complete
-  step_04_registry_freshness: complete
-  step_05_existing_record_apply: complete
-
-  step_05_new_registration:
-    status: next
-    requirement: >
-      Register eligible files safely without invoking obsolete post-save graph
-      behavior or whole-workspace AST scans.
-
-  step_06_graph_schema:
-    status: pending
-    requirement: >
-      Add deliberate ComponentNode projection properties for name, persona,
-      description, and status while preserving PostgreSQL identity anchors.
-
-  step_07_signal_repair:
-    status: pending
-    requirement: >
-      Restrict signals to bounded single-node synchronization, remove obsolete
-      persona topology, and eliminate implicit whole-workspace scanning.
-
-  step_08_dependency_rebuild:
-    status: pending
-
-  step_09_incremental_documentation:
-    status: pending
-
-  step_10_wu_registry_context:
-    status: pending
-
-  step_11_hopehub_pattern_validation:
-    status: pending
-
-  step_12_retirement_and_cleanup:
-    status: pending
-
-known_issues:
-  - New ComponentRegistry creation still triggers obsolete post-save graph logic.
-  - ComponentNode lacks metadata currently assigned by signals.
-  - ComponentRegistry saves may trigger whole-workspace AST scanning.
-  - signals.py contains obsolete CONTROLLER_MODULE and CANVAS_LAYOUT behavior.
-  - Existing excluded and missing registry rows require deliberate review.
-  - Relative Python imports and non-Python dependencies are incomplete.
-  - WorkspaceDocumenter sends source through AI twice.
-  - document_workspace calls an obsolete WorkspaceDocumenter method.
-  - Wu does not yet query ComponentRegistry or Neo4j for context selection.
-  - Metrics collection has been approved but is not yet implemented.
+    - add graph_sync_status
+    - add graph_sync_hash
+    - add graph_synced_at
+    - add graph_sync_error
+    - process only pending or stale graph records
+    - validate incremental graph batches
 
 architectural_decisions:
-  accepted:
-    - ADR-001-ai-execution-architecture.md
-    - ADR-002-provider-routing-and-failover.md
-    - ADR-003-ai-directive-contract.md
-    - ADR-004-development-automation-over-runtime-complexity.md
-    - ADR-005-deterministic-engineering-before-ai.md
-    - ADR-006-engineering-workflow-quality-metrics.md
 
-session_quality_baseline:
-  date: 2026-07-16
-  designation: first_deterministic_engineering_baseline
+  authoritative_store:
+    PostgreSQL
 
-  observed_results:
-    syntax_errors: 0
-    monaco_parser_errors: 0
-    server_crashes: 0
-    migration_failures: 0
-    copy_paste_failures: 0
-    debugging_loops: 0
-    rollback_events: 0
-    behavioral_refinements: several
-    protocol_compliance: complete
+  projection_store:
+    Neo4j
 
-  significance: >
-    This was the first major Aurora implementation session completed without a
-    debugging loop. Corrections were bounded behavioral refinements discovered
-    through deterministic validation rather than syntax, runtime, migration,
-    patch-placement, or server failures.
+  repository_truth:
+    filesystem
 
-delivery_tracks:
-  hopehub_beta:
-    status: active
-    priority: critical
-    deadline: 2026-08-15
-    deadline_policy: immovable
+  synchronization_policy:
+    explicit_only
 
-  investor_readiness:
-    status: queued
-    evidence_strategy:
-      - engineering throughput
-      - debugging-loop reduction
-      - deterministic coverage
-      - AI requests and token use
-      - failure and rollback rates
+  dry_run_default:
+    true
 
-memory_boundaries:
-  project_state:
-    role: strategic_project_memory
-    update_frequency: infrequent
-
-  DeltaNotesEntry:
-    role: future_implementation_backlog
-
-  DeltaDirectives:
-    role: active_operational_working_memory
+  mutation_policy:
+    explicit_apply_required
 
 session_resume:
+
   read_first:
-    - docs/aurora/protocol/Aurora_Refactoring_Protocol_v3_2.md
+
+    - docs/aurora/protocol/PATCH_SAFETY_KERNEL.md
     - docs/aurora/management/PROJECT_STATE.yaml
 
   inspect_first:
-    - aurora/signals.py
-    - aurora/nodes.py
-    - aurora/apps.py
-    - aurora/utils/workspace_synchronizer.py
-    - aurora/utils/forge_registry.py
 
-  immediate_focus:
-    - design safe new-row registration
-    - prevent post-save whole-workspace graph scanning
-    - preserve dry-run and explicit-apply boundaries
-    - validate one registration before any bulk apply
+    - aurora/utils/workspace_synchronizer.py
+    - aurora/utils/graph_synchronizer.py
+    - aurora/management/commands/reconcile_workspace.py
+    - aurora/utils/forge_registry.py
+    - aurora/nodes.py
+
+  first_objective:
+
+    - implement graph synchronization state
+    - validate advancing graph batches
+    - begin dependency relationship projection
 
 principles:
-  - HopeHub beta ships on August 15, 2026.
-  - Prefer deterministic computation before AI inference.
-  - The same inputs should produce the same engineering workflow.
-  - Repository files remain read-only to reconciliation.
-  - PostgreSQL owns authoritative component metadata.
-  - Neo4j owns traversable relationships.
+
+  - HopeHub beta ships August 15, 2026.
+  - Prefer deterministic computation before AI.
+  - PostgreSQL owns authoritative engineering metadata.
+  - Neo4j is an explicit projection.
   - Dry-run is the default.
-  - Mutation requires explicit bounded apply.
-  - Never delete registry or graph records automatically.
-  - Do not ask AI to remember what software can record.
-  - Do not ask AI to infer what software can compute.
-  - Do not ask AI to discover what software can index.
+  - Mutation requires explicit apply.
+  - Repository reconciliation never modifies source files.
+  - Never ask AI to compute what software can compute.
+  - Never ask AI to remember what software can record.
   - Apply The Delta Way.
 
-session_resume.read_first:
-    - docs/aurora/protocol/PATCH_SAFETY_KERNEL.md
-    
 # ======================================================================
-# END: PROJECT_STATE (PATCH 1 OF 1)
+# END: PROJECT_STATE
 # ======================================================================
