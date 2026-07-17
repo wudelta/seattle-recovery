@@ -48,17 +48,17 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--operation",
-            choices=("reconcile", "update", "register"),
+            choices=("reconcile", "update", "register", "graph"),
             default="reconcile",
             help=(
                 "Choose read-only reconciliation, existing-row updates, "
-                "or new-row registration."
+                "new-row registration, or graph projection."
             ),
         )
         parser.add_argument(
             "--apply",
             action="store_true",
-            help="Explicitly permit the selected database operation.",
+            help="Explicitly permit the selected synchronization operation.",
         )
         parser.add_argument(
             "--user",
@@ -82,11 +82,15 @@ class Command(BaseCommand):
 
         if requested_path:
             normalized_path = requested_path.strip().replace("\\", "/")
-            if normalized_path.startswith("/") or ".." in normalized_path.split("/"):
+            if (
+                normalized_path.startswith("/")
+                or ".." in normalized_path.split("/")
+            ):
                 raise CommandError(
                     "--path must be a safe repository-relative path."
                 )
             options["path"] = normalized_path.rstrip("/")
+            requested_path = options["path"]
 
         if limit is not None and limit < 1:
             raise CommandError("--limit must be greater than zero.")
@@ -108,6 +112,13 @@ class Command(BaseCommand):
                     "or --limit 1."
                 )
 
+        if operation == "graph" and apply:
+            if not requested_path and limit != 1:
+                raise CommandError(
+                    "Initial graph synchronization validation requires "
+                    "--path or --limit 1."
+                )
+
         if operation != "register" and username:
             raise CommandError(
                 "--user is only valid with the register operation."
@@ -120,7 +131,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _resolve_user(username: str):
-        """Resolve one explicit registration owner from the configured user model."""
+        """Resolve one explicit owner from the configured user model."""
         try:
             return UserModel.objects.get(username=username)
         except UserModel.DoesNotExist as error:
@@ -266,14 +277,52 @@ class Command(BaseCommand):
             if not candidates:
                 self.stdout.write("  —")
             else:
-                for item in candidates:
+                for candidate in candidates:
+                    candidate_path = getattr(
+                        candidate,
+                        "path",
+                        None,
+                    ) or getattr(
+                        candidate,
+                        "file_path",
+                        "",
+                    )
+
+                    candidate_reason = getattr(
+                        candidate,
+                        "reason",
+                        None,
+                    )
+
+                    if not candidate_reason and operation == "graph":
+                        candidate_reason = (
+                            "active_registry_record_eligible_for_graph_projection"
+                        )
+
                     metadata = []
 
-                    if item.name:
-                        metadata.append(f"name={item.name}")
+                    candidate_name = getattr(candidate, "name", None)
+                    candidate_persona = getattr(candidate, "persona", None)
+                    candidate_registry_id = getattr(
+                        candidate,
+                        "registry_id",
+                        None,
+                    ) or getattr(
+                        candidate,
+                        "id",
+                        None,
+                    )
 
-                    if item.persona:
-                        metadata.append(f"persona={item.persona}")
+                    if candidate_name:
+                        metadata.append(f"name={candidate_name}")
+
+                    if candidate_persona:
+                        metadata.append(f"persona={candidate_persona}")
+
+                    if candidate_registry_id:
+                        metadata.append(
+                            f"registry_id={candidate_registry_id}"
+                        )
 
                     metadata_text = (
                         f" | {' | '.join(metadata)}"
@@ -281,8 +330,14 @@ class Command(BaseCommand):
                         else ""
                     )
 
+                    reason_text = (
+                        f" | {candidate_reason}"
+                        if candidate_reason
+                        else ""
+                    )
+
                     self.stdout.write(
-                        f"  {item.path} | {item.reason}{metadata_text}"
+                        f"  {candidate_path}{reason_text}{metadata_text}"
                     )
 
             self.stdout.write("")

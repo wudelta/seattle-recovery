@@ -51,8 +51,10 @@ class SynchronizationReport:
             "TOTAL": (
                 len(self.updated)
                 + len(self.registered)
+                + len(self.graph_synchronized)
                 + len(self.skipped)
                 + len(self.failures)
+                + len(self.graph_failures)
             ),
         }
 
@@ -101,21 +103,32 @@ class WorkspaceSynchronizer:
     def _component_name(item: ReconciliationItem) -> str:
         """Derive a stable initial component name from its repository path."""
         return Path(item.path).stem
+
+    @staticmethod
+    def _eligible_graph_components():
+        """Return active registry records eligible for graph projection."""
+        return ComponentRegistry.objects.filter(
+            status="ACTIVE",
+        ).exclude(
+            file_path="",
+        ).order_by(
+            "file_path",
+        )
 # ======================================================================
 # END: SYNCHRONIZATION_TYPES_AND_INITIALIZATION (PATCH 1 OF 3)
 # ======================================================================
 
 # ======================================================================
 # FILE: aurora/utils/workspace_synchronizer.py (PATCH 2 OF 3)
-# START: BOUNDED_DATABASE_SYNCHRONIZATION
+# START: BOUNDED_DATABASE_AND_GRAPH_SYNCHRONIZATION
 # ======================================================================
     @staticmethod
     def _apply_boundaries(
-        items: list[ReconciliationItem],
+        items,
         *,
         path: str | None = None,
         limit: int | None = None,
-    ) -> list[ReconciliationItem]:
+    ):
         """Apply stable repository-path and result-count boundaries."""
         bounded_items = items
 
@@ -139,6 +152,36 @@ class WorkspaceSynchronizer:
             bounded_items = bounded_items[:limit]
 
         return bounded_items
+
+    @staticmethod
+    def _apply_component_boundaries(
+        components,
+        *,
+        path: str | None = None,
+        limit: int | None = None,
+    ) -> list[ComponentRegistry]:
+        """Apply path and count boundaries to registry graph candidates."""
+        bounded_components = components
+
+        if path:
+            normalized_path = path.strip().replace("\\", "/").rstrip("/")
+            path_prefix = f"{normalized_path}/"
+            bounded_components = bounded_components.filter(
+                file_path__startswith=path_prefix,
+            ) | bounded_components.filter(
+                file_path=normalized_path,
+            )
+
+            bounded_components = bounded_components.order_by("file_path")
+
+        if limit is not None:
+            if limit < 1:
+                raise ValueError(
+                    "Synchronization limit must be greater than zero."
+                )
+            bounded_components = bounded_components[:limit]
+
+        return list(bounded_components)
 
     def apply_updates(
         self,
@@ -245,8 +288,36 @@ class WorkspaceSynchronizer:
                 )
 
         return report
+
+    def apply_graph_synchronization(
+        self,
+        *,
+        path: str | None = None,
+        limit: int | None = None,
+    ) -> SynchronizationReport:
+        """
+        Project bounded active ComponentRegistry records into Neo4j.
+
+        This operation performs no PostgreSQL or repository mutation.
+        """
+        report = SynchronizationReport()
+        components = self._apply_component_boundaries(
+            self._eligible_graph_components(),
+            path=path,
+            limit=limit,
+        )
+
+        graph_report = self.graph_synchronizer.synchronize_components(
+            components,
+        )
+
+        report.graph_synchronized.extend(graph_report.synchronized)
+        report.graph_failures.extend(graph_report.failures)
+        report.skipped.extend(graph_report.skipped)
+
+        return report
 # ======================================================================
-# END: BOUNDED_DATABASE_SYNCHRONIZATION (PATCH 2 OF 3)
+# END: BOUNDED_DATABASE_AND_GRAPH_SYNCHRONIZATION (PATCH 2 OF 3)
 # ======================================================================
 
 # ======================================================================
@@ -269,8 +340,9 @@ class WorkspaceSynchronizer:
         Supported operations:
         - update: refresh existing ComponentRegistry records
         - register: create new ComponentRegistry records
+        - graph: project existing active registry records into Neo4j
 
-        Database mutation occurs only when apply=True is supplied.
+        Mutation occurs only when apply=True is supplied.
         """
         normalized_operation = operation.strip().lower()
 
@@ -337,10 +409,38 @@ class WorkspaceSynchronizer:
                 synchronize_graph=synchronize_graph,
             )
 
+        elif normalized_operation == "graph":
+            candidates = self._apply_component_boundaries(
+                self._eligible_graph_components(),
+                path=path,
+                limit=limit,
+            )
+
+            if not apply:
+                return {
+                    "apply": False,
+                    "operation": normalized_operation,
+                    "candidates": candidates,
+                    "counts": {
+                        "CANDIDATES": len(candidates),
+                        "UPDATED": 0,
+                        "REGISTERED": 0,
+                        "GRAPH_SYNCHRONIZED": 0,
+                        "SKIPPED": 0,
+                        "FAILURES": 0,
+                        "GRAPH_FAILURES": 0,
+                    },
+                }
+
+            synchronization_report = self.apply_graph_synchronization(
+                path=path,
+                limit=limit,
+            )
+
         else:
             raise ValueError(
                 "Unsupported synchronization operation. "
-                "Expected 'update' or 'register'."
+                "Expected 'update', 'register', or 'graph'."
             )
 
         return {
