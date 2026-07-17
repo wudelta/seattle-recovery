@@ -4,8 +4,8 @@
 # ======================================================================
 """Explicit bounded projection of ComponentRegistry records into Neo4j."""
 
-from dataclasses import dataclass, field
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 
 from aurora.models import ComponentRegistry
 from aurora.nodes import ComponentNode
@@ -36,7 +36,7 @@ class GraphSynchronizationReport:
 
 class GraphSynchronizer:
     """
-    Project authoritative ComponentRegistry identities into Neo4j.
+    Project authoritative ComponentRegistry records into Neo4j.
 
     This service performs no repository discovery, dependency analysis,
     PostgreSQL mutation, AI execution, or whole-workspace scanning.
@@ -63,7 +63,9 @@ class GraphSynchronizer:
             node = ComponentNode.nodes.get(postgres_id=postgres_id)
         except ComponentNode.DoesNotExist:
             try:
-                node = ComponentNode.nodes.get(file_path=component.file_path)
+                node = ComponentNode.nodes.get(
+                    file_path=component.file_path,
+                )
             except ComponentNode.DoesNotExist:
                 node = ComponentNode(
                     postgres_id=postgres_id,
@@ -72,6 +74,10 @@ class GraphSynchronizer:
 
         node.postgres_id = postgres_id
         node.file_path = component.file_path
+        node.name = component.name or ""
+        node.persona = component.persona or ""
+        node.status = component.status or ""
+        node.description = component.description or ""
         node.save()
 
         return node
