@@ -13,7 +13,11 @@ from django.utils import timezone
 
 from aurora.models import ComponentRegistry
 from aurora.utils.component_policy import (
+    CLASSIFICATION_EXCLUDE,
+    CLASSIFICATION_KEEP,
     CLASSIFICATION_REGISTER,
+    CLASSIFICATION_REVIEW,
+    CLASSIFICATION_STAGE,
     CLASSIFICATION_UPDATE,
 )
 from aurora.utils.forge_registry import register_new_component
@@ -328,6 +332,126 @@ class WorkspaceSynchronizer:
 # FILE: aurora/utils/workspace_synchronizer.py (PATCH 3 OF 3)
 # START: EXPLICIT_SYNCHRONIZATION_ENTRY_POINT
 # ======================================================================
+    def synchronize_path(
+        self,
+        path: str,
+        *,
+        user_instance: UserModel | None = None,
+        synchronize_graph: bool = True,
+    ) -> dict[str, object]:
+        """
+        Reconcile and synchronize exactly one repository-relative file.
+
+        The reconciler determines desired state. This synchronizer applies
+        registration or update mutations and then refreshes graph projection.
+        """
+        normalized_path = path.strip().replace("\\", "/").lstrip("/")
+
+        if not normalized_path:
+            raise ValueError(
+                "A repository-relative path is required for synchronization."
+            )
+
+        matching_items = [
+            item
+            for item in self.reconciler.reconcile()
+            if item.path == normalized_path
+        ]
+
+        if len(matching_items) != 1:
+            raise ValueError(
+                "Path synchronization requires exactly one reconciliation "
+                f"result for '{normalized_path}'."
+            )
+
+        item = matching_items[0]
+        report = SynchronizationReport()
+
+        if item.classification == CLASSIFICATION_REGISTER:
+            if user_instance is None:
+                raise ValueError(
+                    "user_instance is required when registering a new path."
+                )
+
+            report = self.apply_registrations(
+                user_instance=user_instance,
+                path=normalized_path,
+                limit=1,
+                synchronize_graph=synchronize_graph,
+            )
+
+        elif item.classification == CLASSIFICATION_UPDATE:
+            update_report = self.apply_updates(
+                path=normalized_path,
+                limit=1,
+            )
+            report.updated.extend(update_report.updated)
+            report.skipped.extend(update_report.skipped)
+            report.failures.extend(update_report.failures)
+
+            if (
+                synchronize_graph
+                and not update_report.failures
+                and normalized_path in update_report.updated
+            ):
+                graph_report = self.apply_graph_synchronization(
+                    path=normalized_path,
+                    limit=1,
+                )
+                report.graph_synchronized.extend(
+                    graph_report.graph_synchronized
+                )
+                report.skipped.extend(graph_report.skipped)
+                report.graph_failures.extend(
+                    graph_report.graph_failures
+                )
+
+        elif item.classification == CLASSIFICATION_KEEP:
+            if synchronize_graph:
+                graph_report = self.apply_graph_synchronization(
+                    path=normalized_path,
+                    limit=1,
+                )
+                report.graph_synchronized.extend(
+                    graph_report.graph_synchronized
+                )
+                report.skipped.extend(graph_report.skipped)
+                report.graph_failures.extend(
+                    graph_report.graph_failures
+                )
+
+            if (
+                not report.graph_synchronized
+                and not report.graph_failures
+                and normalized_path not in report.skipped
+            ):
+                report.skipped.append(normalized_path)
+
+        elif item.classification in {
+            CLASSIFICATION_EXCLUDE,
+            CLASSIFICATION_REVIEW,
+            CLASSIFICATION_STAGE,
+        }:
+            report.failures.append(
+                f"{normalized_path}: path classified as "
+                f"{item.classification} ({item.reason})"
+            )
+
+        else:
+            report.failures.append(
+                f"{normalized_path}: unsupported reconciliation "
+                f"classification '{item.classification}'"
+            )
+
+        return {
+            "path": normalized_path,
+            "classification": item.classification,
+            "reason": item.reason,
+            "item": item,
+            "report": report,
+            "counts": report.counts,
+        }
+
     def run(
         self,
         *,
