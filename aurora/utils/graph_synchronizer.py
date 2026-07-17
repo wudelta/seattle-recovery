@@ -7,6 +7,9 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from django.db.models import F, Q, QuerySet
+from django.utils import timezone
+
 from aurora.models import ComponentRegistry
 from aurora.nodes import ComponentNode
 
@@ -39,8 +42,43 @@ class GraphSynchronizer:
     Project authoritative ComponentRegistry records into Neo4j.
 
     This service performs no repository discovery, dependency analysis,
-    PostgreSQL mutation, AI execution, or whole-workspace scanning.
+    AI execution, or whole-workspace scanning.
     """
+
+    def eligible_components(
+        self,
+        limit: int | None = None,
+    ) -> QuerySet[ComponentRegistry]:
+        """Return active records whose graph projection is pending or stale."""
+        components = (
+            ComponentRegistry.objects
+            .filter(status="ACTIVE")
+            .filter(
+                Q(graph_sync_status__in=("PENDING", "FAILED"))
+                | ~Q(source_hash=F("graph_sync_hash"))
+            )
+            .order_by("file_path")
+        )
+
+        if limit is not None:
+            if limit < 1:
+                raise ValueError("Graph synchronization limit must be positive.")
+            return components[:limit]
+
+        return components
+
+    def component_is_eligible(
+        self,
+        component: ComponentRegistry,
+    ) -> bool:
+        """Return whether one registry record requires graph projection."""
+        return (
+            component.status == "ACTIVE"
+            and (
+                component.graph_sync_status in {"PENDING", "FAILED"}
+                or component.source_hash != component.graph_sync_hash
+            )
+        )
 
     def synchronize_component(
         self,
@@ -86,19 +124,42 @@ class GraphSynchronizer:
         self,
         components: Iterable[ComponentRegistry],
     ) -> GraphSynchronizationReport:
-        """Project only the explicitly supplied registry records."""
+        """Project eligible explicitly supplied registry records."""
         report = GraphSynchronizationReport()
 
         for component in components:
             display_path = component.file_path or f"registry:{component.id}"
 
+            if not self.component_is_eligible(component):
+                report.skipped.append(display_path)
+                continue
+
             try:
                 self.synchronize_component(component)
+                component.graph_sync_status = "COMPLETE"
+                component.graph_sync_hash = component.source_hash
+                component.graph_synced_at = timezone.now()
+                component.graph_sync_error = ""
+                component.save(
+                    update_fields=[
+                        "graph_sync_status",
+                        "graph_sync_hash",
+                        "graph_synced_at",
+                        "graph_sync_error",
+                    ]
+                )
                 report.synchronized.append(display_path)
             except Exception as error:
-                report.failures.append(
-                    f"{display_path}: {type(error).__name__}: {error}"
+                failure = f"{type(error).__name__}: {error}"
+                component.graph_sync_status = "FAILED"
+                component.graph_sync_error = failure
+                component.save(
+                    update_fields=[
+                        "graph_sync_status",
+                        "graph_sync_error",
+                    ]
                 )
+                report.failures.append(f"{display_path}: {failure}")
 
         return report
 # ======================================================================

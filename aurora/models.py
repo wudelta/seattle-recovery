@@ -16,6 +16,7 @@ from django.utils import timezone
 # ======================================================================
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
+
     PERSONA_CHOICES = [
         ('Core Vectors', [
             ('ENTRY_POINT', 'Entry Point / Execution Vector'),
@@ -47,6 +48,11 @@ class ComponentRegistry(models.Model):
         ('PENDING', 'Pending Analysis'),
         ('COMPLETE', 'Analysis Complete'),
         ('FAILED', 'Analysis Failed'),
+    ]
+    GRAPH_SYNC_STATUS_CHOICES = [
+        ('PENDING', 'Pending Graph Synchronization'),
+        ('COMPLETE', 'Graph Synchronization Complete'),
+        ('FAILED', 'Graph Synchronization Failed'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -92,6 +98,29 @@ class ComponentRegistry(models.Model):
         blank=True,
         default='',
         help_text="Analyzer contract version used for the stored documentation.",
+    )
+    graph_sync_status = models.CharField(
+        max_length=20,
+        choices=GRAPH_SYNC_STATUS_CHOICES,
+        default='PENDING',
+        db_index=True,
+        help_text="Current PostgreSQL-to-Neo4j projection state.",
+    )
+    graph_sync_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="Source hash most recently projected successfully into Neo4j.",
+    )
+    graph_synced_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent successful Neo4j projection timestamp.",
+    )
+    graph_sync_error = models.TextField(
+        blank=True,
+        default='',
+        help_text="Most recent graph synchronization failure details.",
     )
     description = models.TextField(
         blank=True, help_text="Primary unified summary of what this component module executes."

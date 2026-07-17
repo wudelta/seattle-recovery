@@ -104,16 +104,13 @@ class WorkspaceSynchronizer:
         """Derive a stable initial component name from its repository path."""
         return Path(item.path).stem
 
-    @staticmethod
-    def _eligible_graph_components():
-        """Return active registry records eligible for graph projection."""
-        return ComponentRegistry.objects.filter(
-            status="ACTIVE",
-        ).exclude(
-            file_path="",
-        ).order_by(
-            "file_path",
-        )
+    def _eligible_graph_components(
+        self,
+        *,
+        limit: int | None = None,
+    ):
+        """Return pending, failed, or stale active graph projections."""
+        return self.graph_synchronizer.eligible_components(limit=limit)
 # ======================================================================
 # END: SYNCHRONIZATION_TYPES_AND_INITIALIZATION (PATCH 1 OF 3)
 # ======================================================================
@@ -239,7 +236,7 @@ class WorkspaceSynchronizer:
         Register bounded REGISTER candidates and explicitly project them.
 
         PostgreSQL registration succeeds independently of Neo4j projection.
-        Graph failures are reported for deliberate retry.
+        Graph failures are persisted and reported for deliberate retry.
         """
         report = SynchronizationReport()
         registrations = self._apply_boundaries(
@@ -268,6 +265,7 @@ class WorkspaceSynchronizer:
                         status="ACTIVE",
                     )
 
+                component.refresh_from_db()
                 report.registered.append(item.path)
 
             except Exception as error:
@@ -279,13 +277,18 @@ class WorkspaceSynchronizer:
             if not synchronize_graph:
                 continue
 
-            try:
-                self.graph_synchronizer.synchronize_component(component)
-                report.graph_synchronized.append(item.path)
-            except Exception as error:
-                report.graph_failures.append(
-                    f"{item.path}: {type(error).__name__}: {error}"
-                )
+            graph_report = self.graph_synchronizer.synchronize_components(
+                [component],
+            )
+            report.graph_synchronized.extend(
+                graph_report.synchronized
+            )
+            report.graph_failures.extend(
+                graph_report.failures
+            )
+            report.skipped.extend(
+                graph_report.skipped
+            )
 
         return report
 
@@ -296,9 +299,10 @@ class WorkspaceSynchronizer:
         limit: int | None = None,
     ) -> SynchronizationReport:
         """
-        Project bounded active ComponentRegistry records into Neo4j.
+        Project bounded eligible ComponentRegistry records into Neo4j.
 
-        This operation performs no PostgreSQL or repository mutation.
+        Repository files remain unchanged. PostgreSQL graph synchronization
+        state is updated after each projection attempt.
         """
         report = SynchronizationReport()
         components = self._apply_component_boundaries(
