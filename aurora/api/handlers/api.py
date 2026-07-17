@@ -6,9 +6,8 @@ from django.http import JsonResponse
 
 from aurora.api.handlers.base import BaseCommandHandler
 from aurora.utils.api_skeleton import ApiSkeletonBuilder
-from aurora.utils.forge_registry import register_new_component
-from aurora.utils.graph_synchronizer import GraphSynchronizer
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.utils.telemetry import TelemetryLogger
+from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
 
 
 class ApiCommandHandler(BaseCommandHandler):
@@ -38,13 +37,13 @@ class ApiCommandHandler(BaseCommandHandler):
         )
         path = f"{c_app}/api/{c_endpoint}_api.py"
 
-        PageSkeletonBuilder.emit_log(
+        TelemetryLogger.emit(
             "[FORGE_ENGINE] Initializing forge sequence for API "
             f"streaming endpoint: '{path}'\n"
         )
 
         res = ApiSkeletonBuilder.forge_api(c_app, c_endpoint, vis)
-        captured_telemetry_logs = PageSkeletonBuilder.flush_telemetry()
+        captured_telemetry_logs = TelemetryLogger.flush()
 
         if res.get("status") == "error":
             return JsonResponse({
@@ -78,51 +77,47 @@ class ApiCommandHandler(BaseCommandHandler):
                     is_staff=True,
                 )
 
-        asset = register_new_component(
+        synchronization = WorkspaceSynchronizer().synchronize_path(
             path,
-            f_name,
-            vis,
-            user_instance,
-            "ENTRY_POINT",
-            (
-                "Automated function-based JSON stream endpoint inside "
-                f"{c_app}/api."
-            ),
+            user_instance=user_instance,
+        )
+        synchronization_report = synchronization["report"]
+
+        failures = (
+            synchronization_report.failures
+            + synchronization_report.graph_failures
         )
 
-        graph_report = GraphSynchronizer().synchronize_components([asset])
-
-        if graph_report.failures:
-            failure_message = graph_report.failures[0]
+        if failures:
             captured_telemetry_logs += (
-                "[ERROR] API route registration completed, but graph "
-                f"synchronization failed: {failure_message}\n"
+                "[ERROR] API route generated, but workspace "
+                f"synchronization failed: {failures[0]}\n"
             )
 
             return JsonResponse({
                 "status": "success",
                 "minion_log": (
-                    "Forge generated and registered the API endpoint, "
-                    "but graph synchronization failed."
+                    "Forge generated the API endpoint, but deterministic "
+                    "workspace synchronization failed."
                 ),
                 "telemetry_stream": captured_telemetry_logs,
                 "validation": {
                     "valid": False,
-                    "errors": [failure_message],
+                    "errors": failures,
                     "warnings": [],
                 },
             })
 
         captured_telemetry_logs += (
-            "[SUCCESS] API route generated, registered, and graph "
-            f"synchronized. Registry ID: {asset.id}\n"
+            "[SUCCESS] API route generated and synchronized through the "
+            f"workspace pipeline: {path}\n"
         )
 
         return JsonResponse({
             "status": "success",
             "minion_log": (
                 f"FORGE SUCCESS: {res.get('message')} "
-                f"(Postgres UUID: {asset.id} -> Graph synchronized)."
+                f"({synchronization['classification']} -> synchronized)."
             ),
             "generated_code": (
                 f"# API Path registered: "
