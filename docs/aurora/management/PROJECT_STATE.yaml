@@ -357,6 +357,9 @@ principles:
   - Do not ask AI to discover what software can index.
   - Apply The Delta Way.
 
+session_resume.read_first:
+    - docs/aurora/protocol/PATCH_SAFETY_KERNEL.md
+    
 # ======================================================================
 # END: PROJECT_STATE (PATCH 1 OF 1)
 # ======================================================================
