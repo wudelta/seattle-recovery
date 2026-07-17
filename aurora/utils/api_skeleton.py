@@ -5,7 +5,9 @@
 import os
 import re
 import traceback
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+
+from aurora.utils.telemetry import TelemetryLogger
+
 
 class ApiSkeletonBuilder:
     """Automated multi-app builder and destroyer to forge functional API endpoints with visibility safety."""
@@ -13,7 +15,7 @@ class ApiSkeletonBuilder:
     @classmethod
     def emit_log(cls, text: str):
         """Routes utility trace metrics directly into the shared master telemetry buffer pool."""
-        PageSkeletonBuilder.emit_log(text)
+        TelemetryLogger.emit(text)
 
     @staticmethod
     def clean_inputs(app_name: str, endpoint_name: str):
@@ -123,7 +125,7 @@ class ApiSkeletonBuilder:
 
 # ======================================================================
 # FILE: aurora/utils/api_skeleton.py (PATCH 4 OF 5)
-# START: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION
+# START: URL_ROUTING_INJECTION_AND_FORGE_COMPLETION
 # ======================================================================
             # 3. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
@@ -143,51 +145,7 @@ class ApiSkeletonBuilder:
                     urls_content = "urlpatterns = [".join(p)
                 with open(urls_file, 'w') as f:
                     f.write(urls_content)
-    
-            # 4. Forged API Unit Test Generation for Component Verification
-            cls.emit_log(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
-            os.makedirs(os.path.dirname(test_file), exist_ok=True)
-            with open(test_file, 'w') as f:
-                exp_status = "302" if is_private else "200"
-                fmt_cls = func_name.replace("_", " ").title().replace(" ", "")
-                f.write(
-                    f'# ======================================================================\n'
-                    f'# FILE: {app}/tests/test_api_{endpoint}_{app}.py\n'
-                    f'# START: LIFECYCLE_TEST_SUITE_SETUP\n'
-                    f'# ======================================================================\n'
-                    f'import os\n'
-                    f'from django.test import TestCase\n'
-                    f'from django.urls import reverse\n'
-                    f'from django.contrib.auth.models import User\n'
-                    f'from neomodel import db\n'
-                    f'from aurora.models import ComponentRegistry\n'
-                    f'from aurora.utils.forge_registry import register_new_component\n\n'
-                    f'class {app.capitalize()}{fmt_cls}ProductionTest(TestCase):\n'
-                    f'    def setUp(self):\n'
-                    f'        self.test_user = User.objects.create_user(username="test_dev", password="password")\n'
-                    f'        self.expected_path = "{app}/api/{endpoint}_api.py"\n'
-                    f'        try:\n'
-                    f'            db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = \'" + self.expected_path + "\' DETACH DELETE n")\n'
-                    f'        except Exception:\n'
-                    f'            pass\n'
-                    f'        register_new_component(self.expected_path, "{func_name}", "{visibility}", self.test_user, "ENTRY_POINT", "Verification baseline")\n'
-                    f'# ======================================================================\n'
-                    f'# END: LIFECYCLE_TEST_SUITE_SETUP\n'
-                    f'# ======================================================================\n\n'
-                    f'# ======================================================================\n'
-                    f'# START: LIFECYCLE_TEST_EXECUTION_FLOW\n'
-                    f'# ======================================================================\n'
-                    f'    def test_forged_endpoint_integrity(self):\n'
-                    f'        disk_path = os.path.join(os.getcwd(), "{app}", "api", "{endpoint}_api.py")\n'
-                    f'        self.assertTrue(os.path.exists(disk_path), f"API core module missing from disk path: {{disk_path}}")\n\n'
-                    f'        url = reverse("{app}:{func_name}")\n'
-                    f'        response = self.client.get(url)\n'
-                    f'        self.assertEqual(response.status_code, {exp_status})\n\n'
-                    f'        self.assertTrue(ComponentRegistry.objects.filter(file_path=self.expected_path).exists(), "Postgres API endpoint index mapping unresolved.")\n'
-                    f'# ======================================================================\n'
-                    f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
-                    f'# ======================================================================\n'
-                )
+
             cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Functional API module '{func_name}' successfully compiled.\n")
             return {"status": "success", "message": f"Successfully forged API function '{func_name}' inside app '{app}/api/' ({visibility})."}
         except Exception as e:
@@ -195,7 +153,7 @@ class ApiSkeletonBuilder:
             cls.emit_log(f"{error_trace}\n")
             return {"status": "error", "message": f"Failed to execute API forge sequence: {str(e)}"}
 # ======================================================================
-# END: URL_ROUTING_INJECTION_AND_ISOLATED_TEST_GENERATION (PATCH 4 OF 5)
+# END: URL_ROUTING_INJECTION_AND_FORGE_COMPLETION (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
@@ -204,49 +162,90 @@ class ApiSkeletonBuilder:
 # ======================================================================
     @classmethod
     def purge_api(cls, target_app: str, endpoint_name: str) -> dict:
-        """Surgically undoes file builds and deletes registrations completely."""
+        """Surgically removes forged filesystem artifacts."""
         app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
         base_dir = os.getcwd()
         view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
         view_init = os.path.join(base_dir, app, 'api', '__init__.py')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
         logs = []
-        cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for API endpoint: {app}/api/{endpoint}_api.py\n")
+
+        cls.emit_log(
+            f"[FORGE_ENGINE] Initializing surgical wipe operation for API endpoint: "
+            f"{app}/api/{endpoint}_api.py\n"
+        )
+
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted api: {endpoint}_api.py")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased API core script: {view_file}\n")
-            if os.path.exists(test_file):
-                if "AURORA_TEST_RUNNING" not in os.environ:
-                    os.remove(test_file)
-                    logs.append(f"Deleted test file: test_api_{endpoint}_{app}.py")
-                    cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
-                else:
-                    logs.append("Preserved test file context during active test suite execution.")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Physically erased API core script: "
+                    f"{view_file}\n"
+                )
+
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
-                clean_lines = [l for l in lines if f"{endpoint}_api" not in l and f"'{func_name}'" not in l]
+
+                clean_lines = [
+                    line
+                    for line in lines
+                    if f"{endpoint}_api" not in line
+                    and f"'{func_name}'" not in line
+                ]
+
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
+
                 logs.append("Scrubbed api package exporter.")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned API package whitelist references inside: {view_init}\n")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Cleaned API package whitelist "
+                    f"references inside: {view_init}\n"
+                )
+
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
-                clean_lines = [l for l in lines if f"api_commands.{func_name}" not in l and f"'api/{endpoint}/'" not in l]
+
+                clean_lines = [
+                    line
+                    for line in lines
+                    if f"api_commands.{func_name}" not in line
+                    and f"'api/{endpoint}/'" not in line
+                ]
+
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
+
                 logs.append("Erased url routing node.")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
-            cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Wipe routine complete for API '{endpoint}'. Status: Success.\n")
-            return {"status": "success", "message": " | ".join(logs) if logs else "No API components found to purge."}
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Cleaned application URL "
+                    f"configuration space: {urls_file}\n"
+                )
+
+            cls.emit_log(
+                f"[FORGE_ENGINE] SUCCESS: Wipe routine complete for API "
+                f"'{endpoint}'. Status: Success.\n"
+            )
+
+            return {
+                "status": "success",
+                "message": " | ".join(logs)
+                if logs
+                else "No API components found to purge.",
+            }
+
         except Exception as e:
-            error_trace = f"[FAIL] Wipe failure occurred during API unlinking procedure:\n{traceback.format_exc()}"
+            error_trace = (
+                "[FAIL] Wipe failure occurred during API unlinking procedure:\n"
+                f"{traceback.format_exc()}"
+            )
             cls.emit_log(f"{error_trace}\n")
-            return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
+            return {
+                "status": "error",
+                "message": f"Surgical wipe failure: {str(e)}",
+            }
 # ======================================================================
 # END: SURGICAL_API_COMPONENT_PURGE_ROUTINE (PATCH 5 OF 5)
 # ======================================================================

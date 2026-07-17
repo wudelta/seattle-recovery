@@ -5,9 +5,8 @@
 from django.http import JsonResponse
 
 from aurora.api.handlers.base import BaseCommandHandler
-from aurora.utils.forge_registry import register_new_component
-from aurora.utils.graph_synchronizer import GraphSynchronizer
 from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
 
 
 class PageCommandHandler(BaseCommandHandler):
@@ -35,11 +34,12 @@ class PageCommandHandler(BaseCommandHandler):
             app,
             page,
         )
-        path = f"templates/{c_app}/{c_page}.html"
+        view_path = f"{c_app}/views/{c_page}_view.py"
+        template_path = f"{c_app}/templates/{c_app}/{c_page}.html"
 
         PageSkeletonBuilder.emit_log(
-            "[INFO] Initializing forge sequence for page layout "
-            f"template: '{path}' [{vis}]\n"
+            "[INFO] Initializing forge sequence for page component "
+            f"view: '{view_path}' [{vis}]\n"
         )
 
         res = PageSkeletonBuilder.forge_page(c_app, c_page, vis)
@@ -77,50 +77,65 @@ class PageCommandHandler(BaseCommandHandler):
                     is_staff=True,
                 )
 
-        asset = register_new_component(
-            path,
-            f"{c_page}_layout",
-            vis,
-            user_instance,
-            "COMPILER_MODULE",
-            f"Automated layout canvas configuration for {c_app}.",
+        synchronizer = WorkspaceSynchronizer()
+
+        view_synchronization = synchronizer.synchronize_path(
+            view_path,
+            user_instance=user_instance,
+        )
+        template_synchronization = synchronizer.synchronize_path(
+            template_path,
+            user_instance=user_instance,
         )
 
-        graph_report = GraphSynchronizer().synchronize_components([asset])
+        view_report = view_synchronization["report"]
+        template_report = template_synchronization["report"]
 
-        if graph_report.failures:
-            failure_message = graph_report.failures[0]
+        failures = (
+            view_report.failures
+            + view_report.graph_failures
+            + template_report.failures
+            + template_report.graph_failures
+        )
+
+        if failures:
             captured_telemetry_logs += (
-                "[ERROR] Page registration completed, but graph "
-                f"synchronization failed: {failure_message}\n"
+                "[ERROR] Page component generated, but workspace "
+                f"synchronization failed: {failures[0]}\n"
             )
 
             return JsonResponse({
                 "status": "success",
                 "minion_log": (
-                    "Forge generated and registered the page template, "
-                    "but graph synchronization failed."
+                    "Forge generated the page component, but deterministic "
+                    "workspace synchronization failed."
                 ),
                 "telemetry_stream": captured_telemetry_logs,
                 "validation": {
                     "valid": False,
-                    "errors": [failure_message],
+                    "errors": failures,
                     "warnings": [],
                 },
             })
 
         captured_telemetry_logs += (
-            "[SUCCESS] Page template generated, registered, and graph "
-            f"synchronized. Registry ID: {asset.id}\n"
+            "[SUCCESS] Page view and template synchronized through the "
+            "workspace pipeline: "
+            f"{view_path}, {template_path}\n"
         )
 
         return JsonResponse({
             "status": "success",
             "minion_log": (
                 f"FORGE SUCCESS: {res.get('message')} "
-                f"(Postgres UUID: {asset.id} -> Graph synchronized)."
+                f"(view: {view_synchronization['classification']}; "
+                f"template: {template_synchronization['classification']} "
+                "-> synchronized)."
             ),
-            "generated_code": f"<!-- Layout located at: {path} -->\n",
+            "generated_code": (
+                f"# View located at: {view_path}\n"
+                f"<!-- Template located at: {template_path} -->\n"
+            ),
             "telemetry_stream": captured_telemetry_logs,
             "validation": {
                 "valid": True,

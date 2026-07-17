@@ -52,7 +52,6 @@ class PageSkeletonBuilder:
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
         template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
         if os.path.exists(view_file) or os.path.exists(template_file):
             cls.emit_log(f"[FORGE_ENGINE] [ERROR] Collision detected: Component '{page}' already exists in app '{app}'.\n")
             return {"status": "error", "message": f"Collision: Component '{page}' already exists in app '{app}'."}
@@ -145,92 +144,58 @@ class PageSkeletonBuilder:
 
 # ======================================================================
 # FILE: aurora/utils/page_skeleton.py (PATCH 4 OF 5)
-# START: CLEAN_URL_ROUTING_INJECTION_AND_TEST_GENERATION
+# START: CLEAN_URL_ROUTING_INJECTION_AND_FORGE_COMPLETION
 # ======================================================================
             # 4. Inject into target urls.py pattern loop safely
             if os.path.exists(urls_file):
-                cls.emit_log(f"[FORGE_ENGINE] Injecting layout routing pathway to URL dispatcher configuration: {urls_file}\n")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] Injecting layout routing pathway "
+                    f"to URL dispatcher configuration: {urls_file}\n"
+                )
                 with open(urls_file, 'r') as f:
                     urls_content = f.read()
+
                 if "urlpatterns = [" in urls_content:
                     parts = urls_content.split("urlpatterns = [")
                     sub_parts = parts[1].split("]", 1)
                     inner_urls = sub_parts[0].rstrip()
-                    url_route = f"    path('{page}/', views.{class_name}.as_view(), name='{page}'),"
+                    url_route = (
+                        f"    path('{page}/', views.{class_name}.as_view(), "
+                        f"name='{page}'),"
+                    )
+
                     if url_route.strip() not in inner_urls:
                         sub_parts[0] = f"{inner_urls}\n{url_route}\n"
+
                     parts[1] = "]".join(sub_parts)
                     urls_content = "urlpatterns = [".join(parts)
+
                 with open(urls_file, 'w') as f:
                     f.write(urls_content)
 
-            # 5. Forged Scoped Unit Test Generation for Component Verification
-            cls.emit_log(f"[FORGE_ENGINE] Writing automated validation test suite harness: {test_file}\n")
-            os.makedirs(os.path.dirname(test_file), exist_ok=True)
-            with open(test_file, 'w') as f:
-                expected_status = "302" if is_private else "200"
-                f.write(
-                    f'# ======================================================================\n'
-                    f'# FILE: {app}/tests/test_page_{page}_{app}.py\n'
-                    f'# START: LIFECYCLE_TEST_SUITE_SETUP\n'
-                    f'# ======================================================================\n'
-                    f'import os\n'
-                    f'from django.test import TestCase\n'
-                    f'from django.urls import reverse\n'
-                    f'from django.contrib.auth.models import User\n'
-                    f'from neomodel import db\n'
-                    f'from aurora.models import ComponentRegistry\n'
-                    f'from aurora.utils.forge_registry import register_new_component\n\n'
-                    f'class {app.capitalize()}{class_name}ProductionTest(TestCase):\n'
-                    f'    def setUp(self):\n'
-                    f'        self.test_user = User.objects.create_user(username="test_dev", password="password")\n'
-                    f'        self.expected_path = "templates/{app}/{page}.html"\n'
-                    f'        try:\n'
-                    f'            db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = \'" + self.expected_path + "\' DETACH DELETE n")\n'
-                    f'        except Exception:\n'
-                    f'            pass\n'
-                    f'        register_new_component(self.expected_path, "{page}_layout", "{visibility}", self.test_user, "COMPILER_MODULE", "Verification baseline")\n'
-                    f'# ======================================================================\n'
-                    f'# END: LIFECYCLE_TEST_SUITE_SETUP\n'
-                    f'# ======================================================================\n\n'
-                    f'# ======================================================================\n'
-                    f'# START: LIFECYCLE_TEST_EXECUTION_FLOW\n'
-                    f'# ======================================================================\n'
-                    f'    def test_forged_component_integrity(self):\n'
-                    f'        disk_path = os.path.join(os.getcwd(), "{app}", "templates", "{app}", "{page}.html")\n'
-                    f'        self.assertTrue(os.path.exists(disk_path), f"Layout canvas missing from disk path: {{disk_path}}")\n\n'
-                    f'        url = reverse("{app}:{page}")\n'
-                    f'        response = self.client.get(url)\n'
-                    f'        self.assertEqual(response.status_code, {expected_status})\n\n'
-                    f'        self.assertTrue(ComponentRegistry.objects.filter(file_path=self.expected_path).exists(), "Postgres component index mapping unresolved.")\n'
-                    f'# ======================================================================\n'
-                    f'# END: LIFECYCLE_TEST_EXECUTION_FLOW\n'
-                    f'# ======================================================================\n'
-                )
-
-            from aurora.utils.forge_registry import register_new_component
-            from django.contrib.auth import get_user_model
-            User_Model = get_user_model()
-            sys_operator = User_Model.objects.filter(is_staff=True).first()
-            if not sys_operator:
-                sys_operator = User_Model.objects.create_user(username="test_forge_operator", is_staff=True)
-            rel_view_path = f"{app}/views/{page}_view.py"
-            register_new_component(
-                file_path=rel_view_path,
-                name=f"{page}_view",
-                visibility=visibility,
-                user_instance=sys_operator,
-                persona="CONTROLLER_MODULE",
-                description=f"Generated view handler engine code module for application context: {app}.",
-                run_scanner=False
+            cls.emit_log(
+                f"[FORGE_ENGINE] SUCCESS: Architectural canvas "
+                f"'{class_name}' successfully compiled.\n"
             )
-            cls.emit_log(f"[FORGE_ENGINE] SUCCESS: Architectural canvas '{class_name}' successfully compiled.\n")
-            return {"status": "success", "message": f"Successfully forged '{class_name}' inside app '{app}' ({visibility})."}
+            return {
+                "status": "success",
+                "message": (
+                    f"Successfully forged '{class_name}' inside app "
+                    f"'{app}' ({visibility})."
+                ),
+            }
+
         except Exception as e:
-            cls.emit_log(f"[FORGE_ENGINE] [CRITICAL] Compilation exception caught inside forge layer: {str(e)}\n")
-            return {"status": "error", "message": f"Failed to execute forge sequence: {str(e)}"}
+            cls.emit_log(
+                f"[FORGE_ENGINE] [CRITICAL] Compilation exception caught "
+                f"inside forge layer: {str(e)}\n"
+            )
+            return {
+                "status": "error",
+                "message": f"Failed to execute forge sequence: {str(e)}",
+            }
 # ======================================================================
-# END: CLEAN_URL_ROUTING_INJECTION_AND_TEST_GENERATION (PATCH 4 OF 5)
+# END: CLEAN_URL_ROUTING_INJECTION_AND_FORGE_COMPLETION (PATCH 4 OF 5)
 # ======================================================================
 
 # ======================================================================
@@ -239,62 +204,129 @@ class PageSkeletonBuilder:
 # ======================================================================
     @classmethod
     def purge_page(cls, target_app: str, page_name: str) -> dict:
-        """Surgically undoes file builds and deletes registrations completely."""
+        """Surgically removes forged filesystem artifacts and legacy metadata."""
         app, page, class_name = cls.clean_inputs(target_app, page_name)
         base_dir = os.getcwd()
         view_file = os.path.join(base_dir, app, 'views', f'{page}_view.py')
         view_init = os.path.join(base_dir, app, 'views', '__init__.py')
-        template_file = os.path.join(base_dir, app, 'templates', app, f'{page}.html')
+        template_file = os.path.join(
+            base_dir,
+            app,
+            'templates',
+            app,
+            f'{page}.html',
+        )
         urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_page_{page}_{app}.py')
         logs = []
-        cls.emit_log(f"[FORGE_ENGINE] Initializing surgical wipe operation for component module: {app}/{page}\n")
+
+        cls.emit_log(
+            f"[FORGE_ENGINE] Initializing surgical wipe operation for "
+            f"component module: {app}/{page}\n"
+        )
+
         try:
             if os.path.exists(view_file):
                 os.remove(view_file)
                 logs.append(f"Deleted view: {page}_view.py")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased view controller script: {view_file}\n")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Physically erased view "
+                    f"controller script: {view_file}\n"
+                )
+
             if os.path.exists(template_file):
                 os.remove(template_file)
                 logs.append(f"Deleted template: {page}.html")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased template HTML layout: {template_file}\n")
-            if os.path.exists(test_file):
-                if "AURORA_TEST_RUNNING" not in os.environ:
-                    os.remove(test_file)
-                    logs.append(f"Deleted test file: test_page_{page}_{app}.py")
-                    cls.emit_log(f"[FORGE_ENGINE] [PURGE] Physically erased test script module: {test_file}\n")
-                else:
-                    logs.append("Preserved test file context during active test suite execution.")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Physically erased template "
+                    f"HTML layout: {template_file}\n"
+                )
+
             if os.path.exists(view_init):
                 with open(view_init, 'r') as f:
                     lines = f.readlines()
-                clean_lines = [l for l in lines if f"{page}_view" not in l and f"'{class_name}'" not in l]
+
+                clean_lines = [
+                    line
+                    for line in lines
+                    if f"{page}_view" not in line
+                    and f"'{class_name}'" not in line
+                ]
+
                 with open(view_init, 'w') as f:
                     f.writelines(clean_lines)
+
                 logs.append("Scrubbed package exporter.")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned package whitelist references inside: {view_init}\n")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Cleaned package whitelist "
+                    f"references inside: {view_init}\n"
+                )
+
             if os.path.exists(urls_file):
                 with open(urls_file, 'r') as f:
                     lines = f.readlines()
-                clean_lines = [l for l in lines if f"views.{class_name}.as_view()" not in l and f"'{page}/'" not in l]
+
+                clean_lines = [
+                    line
+                    for line in lines
+                    if f"views.{class_name}.as_view()" not in line
+                    and f"'{page}/'" not in line
+                ]
+
                 with open(urls_file, 'w') as f:
                     f.writelines(clean_lines)
+
                 logs.append("Erased url routing node.")
-                cls.emit_log(f"[FORGE_ENGINE] [PURGE] Cleaned application URL configuration space: {urls_file}\n")
+                cls.emit_log(
+                    f"[FORGE_ENGINE] [PURGE] Cleaned application URL "
+                    f"configuration space: {urls_file}\n"
+                )
+
             try:
                 from aurora.models import ComponentRegistry
                 from neomodel import db
+
                 rel_view_path = f"{app}/views/{page}_view.py"
-                ComponentRegistry.objects.filter(file_path=rel_view_path).delete()
-                db.cypher_query("MATCH (n:ComponentNode) WHERE n.file_path = $path DETACH DELETE n", {"path": rel_view_path})
+                ComponentRegistry.objects.filter(
+                    file_path=rel_view_path
+                ).delete()
+                db.cypher_query(
+                    (
+                        "MATCH (n:ComponentNode) "
+                        "WHERE n.file_path = $path "
+                        "DETACH DELETE n"
+                    ),
+                    {"path": rel_view_path},
+                )
                 logs.append("Purged controller view metadata mappings.")
+
             except Exception as scrub_err:
-                cls.emit_log(f"[WARNING] Database mirror cleanup anomaly: {str(scrub_err)}\n")
-            cls.emit_log(f"[FORGE_ENGINE] Wipe routing complete for {page}. Status: Success.\n")
-            return {"status": "success", "message": " | ".join(logs) if logs else "No structural components found to purge."}
+                cls.emit_log(
+                    f"[WARNING] Database mirror cleanup anomaly: "
+                    f"{str(scrub_err)}\n"
+                )
+
+            cls.emit_log(
+                f"[FORGE_ENGINE] Wipe routing complete for {page}. "
+                f"Status: Success.\n"
+            )
+            return {
+                "status": "success",
+                "message": (
+                    " | ".join(logs)
+                    if logs
+                    else "No structural components found to purge."
+                ),
+            }
+
         except Exception as e:
-            cls.emit_log(f"[FORGE_ENGINE] [CRITICAL] Wipe failure occurred during unlinking procedure: {str(e)}\n")
-            return {"status": "error", "message": f"Surgical wipe failure: {str(e)}"}
+            cls.emit_log(
+                f"[FORGE_ENGINE] [CRITICAL] Wipe failure occurred during "
+                f"unlinking procedure: {str(e)}\n"
+            )
+            return {
+                "status": "error",
+                "message": f"Surgical wipe failure: {str(e)}",
+            }
 # ======================================================================
 # END: SURGICAL_COMPONENT_PURGE_ROUTINE (PATCH 5 OF 5)
-# ======================================================================
+# ======================================================================s
