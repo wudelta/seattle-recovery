@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from aurora.models import ComponentRegistry
 from aurora.nodes import ComponentNode
+from aurora.utils.dependency_analyzer import DependencyAnalyzer
 
 
 @dataclass
@@ -41,9 +42,17 @@ class GraphSynchronizer:
     """
     Project authoritative ComponentRegistry records into Neo4j.
 
-    This service performs no repository discovery, dependency analysis,
-    AI execution, or whole-workspace scanning.
+    This service performs no repository discovery, AI execution,
+    or whole-workspace scanning.
     """
+
+    def __init__(
+        self,
+        dependency_analyzer: DependencyAnalyzer | None = None,
+    ):
+        self.dependency_analyzer = (
+            dependency_analyzer or DependencyAnalyzer()
+        )
 
     def eligible_components(
         self,
@@ -62,7 +71,9 @@ class GraphSynchronizer:
 
         if limit is not None:
             if limit < 1:
-                raise ValueError("Graph synchronization limit must be positive.")
+                raise ValueError(
+                    "Graph synchronization limit must be positive."
+                )
             return components[:limit]
 
         return components
@@ -87,12 +98,14 @@ class GraphSynchronizer:
         """Create or update one ComponentNode from one registry record."""
         if component.id is None:
             raise ValueError(
-                "ComponentRegistry must be persisted before graph synchronization."
+                "ComponentRegistry must be persisted before graph "
+                "synchronization."
             )
 
         if not component.file_path:
             raise ValueError(
-                "ComponentRegistry requires a file_path for graph synchronization."
+                "ComponentRegistry requires a file_path for graph "
+                "synchronization."
             )
 
         postgres_id = str(component.id)
@@ -120,6 +133,38 @@ class GraphSynchronizer:
 
         return node
 
+    def synchronize_dependencies(
+        self,
+        component: ComponentRegistry,
+        source_node: ComponentNode,
+    ) -> list[str]:
+        """
+        Replace one component's outgoing dependencies with current analysis.
+
+        Dependency nodes are created or refreshed when necessary, but their
+        PostgreSQL graph synchronization state remains independently managed.
+        """
+        dependencies = self.dependency_analyzer.resolve_dependencies(
+            component
+        )
+
+        target_nodes: list[ComponentNode] = []
+
+        for dependency in dependencies:
+            target_nodes.append(
+                self.synchronize_component(dependency)
+            )
+
+        source_node.depends_on.disconnect_all()
+
+        for target_node in target_nodes:
+            source_node.depends_on.connect(target_node)
+
+        return [
+            dependency.file_path
+            for dependency in dependencies
+        ]
+
     def synchronize_components(
         self,
         components: Iterable[ComponentRegistry],
@@ -128,14 +173,21 @@ class GraphSynchronizer:
         report = GraphSynchronizationReport()
 
         for component in components:
-            display_path = component.file_path or f"registry:{component.id}"
+            display_path = (
+                component.file_path or f"registry:{component.id}"
+            )
 
             if not self.component_is_eligible(component):
                 report.skipped.append(display_path)
                 continue
 
             try:
-                self.synchronize_component(component)
+                source_node = self.synchronize_component(component)
+                self.synchronize_dependencies(
+                    component,
+                    source_node,
+                )
+
                 component.graph_sync_status = "COMPLETE"
                 component.graph_sync_hash = component.source_hash
                 component.graph_synced_at = timezone.now()
@@ -149,6 +201,7 @@ class GraphSynchronizer:
                     ]
                 )
                 report.synchronized.append(display_path)
+
             except Exception as error:
                 failure = f"{type(error).__name__}: {error}"
                 component.graph_sync_status = "FAILED"
@@ -159,7 +212,9 @@ class GraphSynchronizer:
                         "graph_sync_error",
                     ]
                 )
-                report.failures.append(f"{display_path}: {failure}")
+                report.failures.append(
+                    f"{display_path}: {failure}"
+                )
 
         return report
 # ======================================================================
