@@ -106,17 +106,17 @@ class Command(BaseCommand):
                     "--user is required when applying registration."
                 )
 
-            if not requested_path and limit != 1:
+            if not requested_path and limit is None:
                 raise CommandError(
-                    "Initial registration validation requires --path "
-                    "or --limit 1."
+                    "Registration requires --path or a positive --limit "
+                    "when using --apply."
                 )
 
         if operation == "graph" and apply:
-            if not requested_path and limit != 1:
+            if not requested_path and limit is None:
                 raise CommandError(
-                    "Initial graph synchronization validation requires "
-                    "--path or --limit 1."
+                    "Graph synchronization requires --path or a positive "
+                    "--limit when using --apply."
                 )
 
         if operation != "register" and username:
