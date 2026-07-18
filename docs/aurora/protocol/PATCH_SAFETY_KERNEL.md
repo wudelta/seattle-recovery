@@ -1,112 +1,246 @@
+# ======================================================================
+# FILE: docs/aurora/protocol/PATCH_SAFETY_KERNEL.md (PATCH 1 OF 3)
+# START: TITLE_PURPOSE_AND_FOUNDATIONAL_RULES
+# ======================================================================
+
 # Aurora Patch Safety Kernel
 
-Version: 1.0
-
-## Purpose
-
-This document defines the minimum patch-safety rules that apply to every Aurora code-editing session.
-
-It is intentionally small enough to load at session start without creating significant context overhead.
-
-The full refactoring protocol remains authoritative for larger implementation work.
+**Version: 2.0**
 
 ---
 
-## 1. Anchored Patches Are Complete Replacement Units
+# Purpose
+
+The Patch Safety Kernel defines the minimum engineering rules that apply to every Aurora implementation session.
+
+It is intentionally concise so it can be loaded at the beginning of development without significant context overhead.
+
+The full Aurora Refactoring Protocol remains the authoritative engineering standard.
+
+The Safety Kernel exists to answer one question:
+
+> **"How do we avoid delivering a bad patch?"**
+
+---
+
+# 1. Human-Safe Editing
+
+The objective of every patch is to minimize opportunities for both AI mistakes and human editing mistakes.
+
+Whenever practical:
+
+- replace complete anchored regions;
+- avoid manual editing;
+- eliminate partial merge operations;
+- provide deterministic copy-and-paste replacements.
+
+The safest patch is the smallest complete replacement unit—not necessarily the patch with the fewest changed lines.
+
+---
+
+# 2. Architectural Replacement Units
+
+Anchored patches represent logical architectural units.
+
+Whenever practical, an anchored region should contain one cohesive responsibility such as:
+
+- imports and configuration;
+- one complete function;
+- one complete class;
+- one API handler;
+- one utility group;
+- one documentation section.
+
+Do not split a logical implementation simply to satisfy an arbitrary line-count preference.
+
+Architecture determines anchor boundaries.
+
+---
+
+# 3. Complete Replacement Rule
 
 Every anchored patch replaces the entire region between its START and END markers.
 
 A replacement patch must:
 
-- preserve all unchanged code inside the existing region;
-- include every function, class, constant, import, and comment that remains valid;
-- remove code only when the removal is intentional and stated;
-- parse or compile independently within the existing file;
-- require no manual merging.
+- preserve all unchanged content inside its boundaries;
+- include every remaining symbol belonging to the region;
+- remain syntactically complete;
+- require no manual merging;
+- be immediately usable as delivered.
 
-Never deliver only the changed lines inside an anchored replacement patch.
+Never deliver only the changed lines from an anchored replacement region.
+
+# ======================================================================
+# END: TITLE_PURPOSE_AND_FOUNDATIONAL_RULES (PATCH 1 OF 3)
+# ======================================================================
+
+# ======================================================================
+# FILE: docs/aurora/protocol/PATCH_SAFETY_KERNEL.md (PATCH 2 OF 3)
+# START: PATCH_VERIFICATION_AND_DELIVERY_DISCIPLINE
+# ======================================================================
+
+# 4. Inspect Before Modifying
+
+Never generate a replacement patch for code that has not been inspected.
+
+Before implementation:
+
+- verify the repository-relative file path;
+- inspect the current source;
+- understand the surrounding anchor boundaries;
+- identify the intended modification.
+
+Never invent unseen code.
+
+When uncertainty exists, request the current source before proceeding.
 
 ---
 
-## 2. Do Not Mix Replacement and Insertion Instructions
+# 5. Preserve Patch Topology
 
-An anchored patch must use one clear operation:
+Anchored regions are part of the repository architecture.
 
-- replace an existing anchored region; or
-- insert a new separately anchored region at an exact location.
+A replacement patch inherits the identity of the patch it replaces.
 
-Never say “add this beneath” while presenting the content as a replacement for an existing patch.
+Verify:
 
-When inserting new code, identify the exact surrounding anchor or symbol.
+- FILE path;
+- PATCH numbering;
+- START heading;
+- END heading;
+- replacement boundaries.
+
+Do not renumber, split, merge, or eliminate anchored regions unless the implementation explicitly changes the file's anchor topology.
+
+When topology changes are required, deliver the complete revised topology.
 
 ---
 
-## 3. Symbol Preservation Check
+# 6. Symbol Preservation
 
-Before delivering a replacement patch, compare the current region with the proposed region.
+Before delivering a replacement patch, account for every symbol contained within the current anchor.
 
-Account for all existing:
+Examples include:
 
 - imports;
 - constants;
+- decorators;
 - classes;
 - methods;
 - functions;
-- properties;
-- signal receivers;
-- command arguments.
+- configuration;
+- exported symbols.
 
-Any symbol missing from the proposed patch must be deliberately removed and explicitly identified.
+Any omitted symbol must be intentionally removed.
 
 Unexplained symbol loss is a patch failure.
 
 ---
 
-## 4. Patch Boundary Check
+# 7. Explicit Delivery Instructions
 
-Before delivery, verify:
+Every patch should describe exactly one editing operation.
 
-- the FILE path is correct;
-- PATCH numbering is correct;
-- START and END headings match;
-- the replacement boundary is neither broader nor narrower than intended;
-- neighboring patch regions are not included;
-- indentation remains valid at the insertion point.
+Examples:
 
----
+- "Replace the current PATCH 2 OF 5 with:"
+- "Insert this new PATCH immediately after PATCH 3 OF 6."
+- "Delete this file."
 
-## 5. Delivery Language
+Avoid ambiguous instructions such as:
 
-Use explicit language:
+- "add this below";
+- "merge this into";
+- "update this section";
+- "include the following."
 
-- “Replace the current PATCH X OF Y with:”
-- “Insert this new patch immediately after:”
-- “Delete this file entirely:”
+The required editing operation should never require interpretation.
 
-Do not use ambiguous instructions such as:
+# ======================================================================
+# END: PATCH_VERIFICATION_AND_DELIVERY_DISCIPLINE (PATCH 2 OF 3)
+# ======================================================================
 
-- “add this somewhere below”;
-- “update this section”;
-- “include this method”;
-- “merge this into the existing patch.”
+# ======================================================================
+# FILE: docs/aurora/protocol/PATCH_SAFETY_KERNEL.md (PATCH 3 OF 3)
+# START: VALIDATION_AND_GOVERNING_PRINCIPLES
+# ======================================================================
 
----
-
-## 6. Validation
+# 8. Validate Before Continuing
 
 After each patch:
 
-1. run the smallest relevant validation command;
-2. stop;
-3. review the result;
+1. perform the smallest validation capable of confirming the intended change;
+2. review the result;
+3. stop;
 4. continue only after explicit approval.
 
-A passing system check does not prove behavioral correctness. Run a focused behavioral validation when the patch changes runtime behavior.
+A successful syntax check confirms only that the code is structurally valid.
+
+Whenever runtime behavior changes, perform an appropriate behavioral validation before considering the implementation complete.
 
 ---
 
-## 7. Governing Rule
+# 9. The GO Loop
 
-When speed conflicts with patch completeness, preserve completeness.
+Every implementation follows the same review cycle:
 
-A smaller complete patch is better than a faster partial patch.
+```text
+Inspect
+    ↓
+Plan
+    ↓
+Deliver One Complete Patch
+    ↓
+Validate
+    ↓
+Review
+    ↓
+GO
+```
+
+Do not skip review cycles.
+
+Frequent validation and small recovery points are fundamental engineering practices, not optional workflow preferences.
+
+---
+
+# 10. Final Pre-Delivery Checklist
+
+Before sending any patch, confirm all of the following:
+
+□ The correct file was inspected.
+
+□ The repository-relative path is correct.
+
+□ The patch numbering matches the existing topology.
+
+□ START and END anchors match the current file.
+
+□ The replacement boundary is correct.
+
+□ Every existing symbol has been accounted for.
+
+□ The replacement is complete.
+
+□ No manual merge is required.
+
+□ The patch is syntactically valid.
+
+□ The intended validation method has been identified.
+
+If any item cannot be confidently answered, stop and resolve the uncertainty before delivering the patch.
+
+---
+
+# Governing Rule
+
+When speed conflicts with safety, choose safety.
+
+A complete, deterministic, and reviewable patch is always preferable to a faster patch that depends on manual editing, assumptions, or incomplete context.
+
+The Safety Kernel exists to prevent implementation mistakes before they reach the repository.
+
+# ======================================================================
+# END: VALIDATION_AND_GOVERNING_PRINCIPLES (PATCH 3 OF 3)
+# ======================================================================

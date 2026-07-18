@@ -1,209 +1,129 @@
 # ======================================================================
-# FILE: docs/aurora/management/PROJECT_STATE.yaml (PATCH 1 OF 1)
-# START: PROJECT_STATE
+# Aurora Project State
 # ======================================================================
 
 project:
+
   name: Aurora
-  branch: feature/provider-abstraction
+  version: 2
 
 targets:
-  aurora_baseline: achieved
-  hopehub_beta_prototype: 2026-08-15
 
-current:
+  aurora_baseline:
+    status: achieved
 
-  phase: explicit_workspace_synchronization
+  hopehub_beta_prototype:
+    target_date: 2026-08-15
 
-  objective: >
-    Complete Aurora's deterministic repository intelligence layer by
-    maintaining PostgreSQL as the authoritative engineering catalog and
-    Neo4j as an explicit, recoverable projection used for dependency
-    traversal and AI context acquisition.
+development:
 
-  next_task: >
-    Implement durable graph synchronization state so incremental graph
-    projection advances naturally through the repository without
-    reprocessing already synchronized components.
-
-  governing_deadline: >
-    Continue Aurora work only while it directly improves engineering
-    productivity or validates infrastructure required for the HopeHub
-    beta scheduled for August 15, 2026.
-
-last_verified:
-
-  date: 2026-07-16
-
-  milestone:
-
-    deterministic_workspace_reconciliation: achieved
-    explicit_graph_projection: achieved
-
-  validation:
-
-    django_system_check: passed
-    migration_0004: applied
-
-    workspace_reconciliation_preview: passed
-    workspace_update_apply: passed
-    workspace_registration_apply: passed
-
-    graph_preview: passed
-    graph_apply: passed
-    graph_metadata_projection: passed
-
-active_initiative:
-
-  name: deterministic_repository_intelligence
-
-  status: active
+  current_phase: >
+    Slash Command Architecture Cleanup
 
   objective: >
-    Build a deterministic engineering knowledge layer capable of supplying
-    Wu with sufficient repository context before AI reasoning is invoked.
+    Complete the transition to deterministic workspace management by
+    separating filesystem generation, repository synchronization,
+    telemetry, and command orchestration into independent architectural
+    layers.
 
 architecture:
 
-  authoritative_metadata:
+  provider_abstraction:
+    status: complete
 
-    system: PostgreSQL
-    model: ComponentRegistry
+  ai_execution_platform:
+    status: complete
 
-  relationship_projection:
+  workspace_architecture:
 
-    system: Neo4j
-    model: ComponentNode
+    deterministic_builders: complete
 
-    policy: explicit_projection_only
+    workspace_synchronizer:
+      repository_projection: complete
+      component_registry_sync: complete
+      graph_sync: complete
 
-  synchronization:
+    telemetry_logger:
+      centralized_logging: complete
 
-    direction: PostgreSQL_to_Neo4j
+    slash_command_orchestration:
+      page: validated
+      api: validated
+      destroy: validated
 
-    guarantees:
+forge_pipeline:
 
-      - preview_before_apply
-      - explicit_execution
-      - bounded_operations
-      - recoverable_execution
-      - idempotent_projection
+  builders:
 
-  deterministic_pipeline:
+    page_builder:
+      filesystem_generation: complete
+      metadata_registration: removed
+      automatic_test_generation: removed
 
-    - repository discovery
-    - component classification
-    - reconciliation
-    - PostgreSQL synchronization
-    - graph projection
-    - dependency traversal
-    - AI context assembly
+    api_builder:
+      filesystem_generation: complete
+      metadata_registration: removed
+      automatic_test_generation: removed
 
-  ai_boundary:
+artifact_lifecycle:
 
-    deterministic_first: true
+  page_creation: validated
+  page_destruction: validated
+  api_creation: validated
+  repository_synchronization: validated
 
-    AI_responsibilities:
+validation:
 
-      - interpretation
-      - documentation enrichment
-      - recommendations
-      - code generation
+  provider_routing: complete
+  workspace_context_resolution: complete
+  structured_patch_generation: complete
+  structured_patch_parsing: complete
+  monaco_review_workflow: complete
+  workspace_synchronization: complete
+  artifact_lifecycle: complete
 
-    deterministic_responsibilities:
-
-      - repository discovery
-      - classification
-      - synchronization
-      - graph rebuilding
-      - context indexing
-
-implementation_status:
-
-  completed:
-
-    - deterministic reconciliation
-    - bounded PostgreSQL synchronization
-    - bounded component registration
-    - explicit graph synchronizer
-    - explicit graph preview
-    - explicit graph apply
-    - ComponentNode metadata projection
-    - removal of implicit Django signals
-    - PATCH_SAFETY_KERNEL
-
-  next:
-
-    - graph synchronization state
-    - incremental batch progression
-    - dependency relationship projection
-    - Wu graph-assisted context acquisition
-
-known_work:
+remaining_work:
 
   immediate:
 
-    - add graph_sync_status
-    - add graph_sync_hash
-    - add graph_synced_at
-    - add graph_sync_error
-    - process only pending or stale graph records
-    - validate incremental graph batches
+    - Audit all slash command handlers for remaining architectural coupling.
+    - Remove remaining direct metadata manipulation from command handlers.
+    - Ensure WorkspaceSynchronizer is the sole authority for repository synchronization.
+    - Ensure TelemetryLogger is the sole owner of telemetry capture.
 
-architectural_decisions:
+  next_major_phase:
 
-  authoritative_store:
-    PostgreSQL
-
-  projection_store:
-    Neo4j
-
-  repository_truth:
-    filesystem
-
-  synchronization_policy:
-    explicit_only
-
-  dry_run_default:
-    true
-
-  mutation_policy:
-    explicit_apply_required
-
-session_resume:
-
-  read_first:
-
-    - docs/aurora/protocol/PATCH_SAFETY_KERNEL.md
-    - docs/aurora/management/PROJECT_STATE.yaml
-
-  inspect_first:
-
-    - aurora/utils/workspace_synchronizer.py
-    - aurora/utils/graph_synchronizer.py
-    - aurora/management/commands/reconcile_workspace.py
-    - aurora/utils/forge_registry.py
-    - aurora/nodes.py
-
-  first_objective:
-
-    - implement graph synchronization state
-    - validate advancing graph batches
-    - begin dependency relationship projection
+    - Complete slash command architectural cleanup.
+    - Begin HopeHub engineering implementation.
+    - Continue mobile-first API transition.
+    - Preserve Aurora as the engineering platform for HopeHub.
 
 principles:
 
-  - HopeHub beta ships August 15, 2026.
-  - Prefer deterministic computation before AI.
-  - PostgreSQL owns authoritative engineering metadata.
-  - Neo4j is an explicit projection.
-  - Dry-run is the default.
-  - Mutation requires explicit apply.
-  - Repository reconciliation never modifies source files.
-  - Never ask AI to compute what software can compute.
-  - Never ask AI to remember what software can record.
-  - Apply The Delta Way.
+  architecture:
 
-# ======================================================================
-# END: PROJECT_STATE
-# ======================================================================
+    - Builders perform deterministic filesystem mutation only.
+    - Command handlers orchestrate services.
+    - WorkspaceSynchronizer owns repository synchronization.
+    - TelemetryLogger owns telemetry.
+    - Business logic remains isolated from orchestration.
+    - No automatic generated unit tests.
+    - Maintain deterministic, reversible workflows.
+
+status:
+
+  repository_state: stable
+  architecture_state: converging
+  production_readiness: approaching_baseline
+
+last_verified:
+
+  date: 2026-07-17
+
+notes: >
+  The Forge pipeline has been successfully transitioned from direct
+  metadata mutation toward deterministic filesystem generation followed
+  by centralized workspace synchronization. Page creation, API creation,
+  and artifact destruction have been validated end-to-end. The remaining
+  effort is focused on removing the final orchestration-layer coupling
+  before shifting development toward HopeHub implementation.
