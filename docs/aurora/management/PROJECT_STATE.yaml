@@ -18,13 +18,12 @@ targets:
 development:
 
   current_phase: >
-    Slash Command Architecture Cleanup
+    Slash Command Cleanup & Workspace Stabilization
 
   objective: >
-    Complete the transition to deterministic workspace management by
-    separating filesystem generation, repository synchronization,
-    telemetry, and command orchestration into independent architectural
-    layers.
+    Complete the architectural cleanup of slash command orchestration while
+    validating deterministic repository synchronization and preparing Aurora
+    to transition into HopeHub engineering.
 
 architecture:
 
@@ -39,9 +38,20 @@ architecture:
     deterministic_builders: complete
 
     workspace_synchronizer:
-      repository_projection: complete
-      component_registry_sync: complete
-      graph_sync: complete
+
+      repository_projection:
+        implementation: complete
+        validation: complete
+
+      component_registry_sync:
+        implementation: complete
+        batch_processing: pending
+        stale_record_reconciliation: pending
+        validation: pending
+
+      graph_sync:
+        implementation: complete
+        validation: pending
 
     telemetry_logger:
       centralized_logging: complete
@@ -50,20 +60,6 @@ architecture:
       page: validated
       api: validated
       destroy: validated
-
-forge_pipeline:
-
-  builders:
-
-    page_builder:
-      filesystem_generation: complete
-      metadata_registration: removed
-      automatic_test_generation: removed
-
-    api_builder:
-      filesystem_generation: complete
-      metadata_registration: removed
-      automatic_test_generation: removed
 
 artifact_lifecycle:
 
@@ -79,23 +75,36 @@ validation:
   structured_patch_generation: complete
   structured_patch_parsing: complete
   monaco_review_workflow: complete
-  workspace_synchronization: complete
   artifact_lifecycle: complete
+
+  workspace_editor:
+    create_file: complete
+    create_directory: complete
+    save_existing_file: complete
+    rename: complete
+    delete: complete
+
+  docker_compose:
+    web_server_restored: complete
 
 remaining_work:
 
   immediate:
 
-    - Audit all slash command handlers for remaining architectural coupling.
+    - Audit remaining slash command handlers for architectural coupling.
     - Remove remaining direct metadata manipulation from command handlers.
     - Ensure WorkspaceSynchronizer is the sole authority for repository synchronization.
     - Ensure TelemetryLogger is the sole owner of telemetry capture.
+    - Run ComponentRegistry synchronization in controlled batches.
+    - Verify previously synchronized records are skipped during subsequent batch runs.
+    - Reconcile stale ComponentRegistry records with the current repository.
+    - Validate graph synchronization after ComponentRegistry synchronization completes.
 
   next_major_phase:
 
     - Complete slash command architectural cleanup.
     - Begin HopeHub engineering implementation.
-    - Continue mobile-first API transition.
+    - Continue the mobile-first API transition.
     - Preserve Aurora as the engineering platform for HopeHub.
 
 principles:
@@ -113,17 +122,18 @@ principles:
 status:
 
   repository_state: stable
-  architecture_state: converging
+  architecture_state: stabilizing
   production_readiness: approaching_baseline
 
 last_verified:
 
-  date: 2026-07-17
+  date: 2026-07-18
 
 notes: >
-  The Forge pipeline has been successfully transitioned from direct
-  metadata mutation toward deterministic filesystem generation followed
-  by centralized workspace synchronization. Page creation, API creation,
-  and artifact destruction have been validated end-to-end. The remaining
-  effort is focused on removing the final orchestration-layer coupling
-  before shifting development toward HopeHub implementation.
+  Slash command orchestration is nearing completion and the deterministic
+  workspace architecture has been stabilized. Editor save semantics and
+  Docker Compose infrastructure regressions discovered during this session
+  were corrected and validated. The remaining engineering effort is focused
+  on completing end-to-end validation of ComponentRegistry synchronization,
+  graph synchronization, and the final orchestration cleanup before Aurora
+  transitions into primary HopeHub development.
