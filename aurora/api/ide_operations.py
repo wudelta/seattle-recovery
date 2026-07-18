@@ -81,40 +81,62 @@ def file_operation_api(request):
         file_path = request.GET.get('path')
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
-            
+
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         if not os.path.exists(file_path):
             return JsonResponse({'error': f'File not found: {file_path}'}, status=404)
 
-        binary_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.pyc', '.pdf', '.zip', '.tar', '.gz'}
+        binary_extensions = {
+            '.png',
+            '.jpg',
+            '.jpeg',
+            '.gif',
+            '.ico',
+            '.pyc',
+            '.pdf',
+            '.zip',
+            '.tar',
+            '.gz',
+        }
         if any(file_path.lower().endswith(ext) for ext in binary_extensions):
-            return JsonResponse({'content': '# Binary Asset detected. Contents hidden inside text viewport.'})
+            return JsonResponse({
+                'content': '# Binary Asset detected. Contents hidden inside text viewport.'
+            })
 
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 return JsonResponse({'content': f.read()})
         except Exception as e:
-            return JsonResponse({'error': f'Could not decode file: {str(e)}'}, status=500)
+            return JsonResponse(
+                {'error': f'Could not decode file: {str(e)}'},
+                status=500,
+            )
 
     elif request.method == 'POST':
         data = json.loads(request.body)
         file_path = data.get('path')
         node_type = data.get('type', 'file')
         content = data.get('content', '')
-        
+
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
 
         if node_type not in {'file', 'directory'}:
-            return JsonResponse({'error': 'Unsupported workspace node type'}, status=400)
+            return JsonResponse(
+                {'error': 'Unsupported workspace node type'},
+                status=400,
+            )
 
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         if os.path.exists(file_path):
-            return JsonResponse({'error': 'Workspace node already exists'}, status=409)
+            return JsonResponse(
+                {'error': 'Workspace node already exists'},
+                status=409,
+            )
 
         try:
             if node_type == 'directory':
@@ -138,7 +160,51 @@ def file_operation_api(request):
                 'path': file_path,
             })
         except Exception as e:
-            return JsonResponse({'error': f'Failed to create workspace node: {str(e)}'}, status=500)
+            return JsonResponse(
+                {'error': f'Failed to create workspace node: {str(e)}'},
+                status=500,
+            )
+
+    elif request.method == 'PATCH':
+        data = json.loads(request.body)
+        file_path = data.get('path')
+        content = data.get('content')
+
+        if not file_path:
+            return JsonResponse({'error': 'No file path provided'}, status=400)
+
+        if content is None:
+            return JsonResponse({'error': 'No file content provided'}, status=400)
+
+        if not file_path.startswith('/app/'):
+            file_path = os.path.join('/app', file_path.lstrip('/'))
+
+        if not os.path.exists(file_path):
+            return JsonResponse(
+                {'error': 'Target file does not exist'},
+                status=404,
+            )
+
+        if not os.path.isfile(file_path):
+            return JsonResponse(
+                {'error': 'Target path is not a file'},
+                status=400,
+            )
+
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            return JsonResponse({
+                'status': 'success',
+                'type': 'file',
+                'path': file_path,
+            })
+        except Exception as e:
+            return JsonResponse(
+                {'error': f'Failed to update workspace file: {str(e)}'},
+                status=500,
+            )
 
     elif request.method == 'PUT':
         data = json.loads(request.body)
@@ -146,36 +212,50 @@ def file_operation_api(request):
         new_name = data.get('new_name')
 
         if not file_path or not new_name:
-            return JsonResponse({'error': 'Missing source path or new name payload'}, status=400)
+            return JsonResponse(
+                {'error': 'Missing source path or new name payload'},
+                status=400,
+            )
 
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         if not os.path.exists(file_path):
-            return JsonResponse({'error': 'Target file to rename does not exist'}, status=404)
+            return JsonResponse(
+                {'error': 'Target file to rename does not exist'},
+                status=404,
+            )
 
         try:
             parent_dir = os.path.dirname(file_path)
             new_file_path = os.path.join(parent_dir, new_name)
-            
-            # Execute filesystem migration
+
             os.rename(file_path, new_file_path)
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'error': f'Rename tracking failure: {str(e)}'}, status=500)
+            return JsonResponse(
+                {'error': f'Rename tracking failure: {str(e)}'},
+                status=500,
+            )
 
     elif request.method == 'DELETE':
         data = json.loads(request.body)
         file_path = data.get('path')
 
         if not file_path:
-            return JsonResponse({'error': 'No targeting path provided for purge action'}, status=400)
+            return JsonResponse(
+                {'error': 'No targeting path provided for purge action'},
+                status=400,
+            )
 
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
         if not os.path.exists(file_path):
-            return JsonResponse({'error': 'File already absent from disk hierarchy'}, status=404)
+            return JsonResponse(
+                {'error': 'File already absent from disk hierarchy'},
+                status=404,
+            )
 
         try:
             if os.path.isdir(file_path):
@@ -183,9 +263,13 @@ def file_operation_api(request):
                 shutil.rmtree(file_path)
             else:
                 os.remove(file_path)
+
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'error': f'Purge validation routine failure: {str(e)}'}, status=500)
+            return JsonResponse(
+                {'error': f'Purge validation routine failure: {str(e)}'},
+                status=500,
+            )
 # ======================================================================
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART2 (PATCH 2 OF 3)
 # ======================================================================

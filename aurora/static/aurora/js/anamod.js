@@ -275,21 +275,45 @@ $(document)
 // 3. Central Application Action Form Trigger Elements
 $('#anamod-save-btn').off('click').on('click', function() {
     if (!currentFilePath || !window.editorInstance) return;
-    window.updateAnamodTerminal(`[SYSTEM] Syncing active layout buffers to host disk...\n`);
+
+    window.updateAnamodTerminal(
+        `[SYSTEM] Syncing active layout buffers to host disk...\n`
+    );
+
     $.ajax({
         url: '/aurora/api/files/op/',
-        type: 'POST',
+        type: 'PATCH',
         contentType: 'application/json',
         headers: { 'X-CSRFToken': csrfToken },
-        data: JSON.stringify({ path: currentFilePath, content: window.editorInstance.getValue() }),
+        data: JSON.stringify({
+            path: currentFilePath,
+            content: window.editorInstance.getValue()
+        }),
         success: function() {
-            window.updateAnamodTerminal(`[SUCCESS] File buffers saved to physical disk address.\n`);
-            $('#anamod-save-btn').prop('disabled', true).removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
-            $('#anamod-discard-btn').prop('disabled', true).removeClass('btn-danger text-dark font-weight-bold').addClass('btn-outline-danger');
+            window.updateAnamodTerminal(
+                `[SUCCESS] File buffers saved to physical disk address.\n`
+            );
+
+            $('#anamod-save-btn')
+                .prop('disabled', true)
+                .removeClass('btn-warning text-dark font-weight-bold')
+                .addClass('btn-outline-warning');
+
+            $('#anamod-discard-btn')
+                .prop('disabled', true)
+                .removeClass('btn-danger text-dark font-weight-bold')
+                .addClass('btn-outline-danger');
+
             $('#active-file-indicator').removeClass('text-warning');
         },
         error: function(xhr) {
-            window.updateAnamodTerminal(`[ERROR] Commit transaction rejected: ${xhr.statusText}\n`);
+            const message = xhr.responseJSON && xhr.responseJSON.error
+                ? xhr.responseJSON.error
+                : xhr.statusText;
+
+            window.updateAnamodTerminal(
+                `[ERROR] Commit transaction rejected: ${message}\n`
+            );
         }
     });
 });
