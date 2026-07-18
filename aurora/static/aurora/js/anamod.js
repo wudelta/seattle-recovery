@@ -75,9 +75,12 @@ function runInlineSyntaxValidation(codeText, model) {
                 if (compileMatch) {
                     const lineNum = parseInt(compileMatch, 10);
                     markers.push({
-                        startLineNumber: lineNum, endLineNumber: lineNum,
-                        startColumn: 1, endColumn: 100,
-                        message: response.errors, severity: monaco.MarkerSeverity.Error
+                        startLineNumber: lineNum,
+                        endLineNumber: lineNum,
+                        startColumn: 1,
+                        endColumn: 100,
+                        message: response.errors,
+                        severity: monaco.MarkerSeverity.Error
                     });
                 }
             } else {
@@ -89,9 +92,12 @@ function runInlineSyntaxValidation(codeText, model) {
                         const colNum = parseInt(match, 10);
                         const msgStr = match || line;
                         markers.push({
-                            startLineNumber: lineNum, endLineNumber: lineNum,
-                            startColumn: colNum || 1, endColumn: colNum ? colNum + 15 : 100,
-                            message: msgStr.trim(), severity: monaco.MarkerSeverity.Error
+                            startLineNumber: lineNum,
+                            endLineNumber: lineNum,
+                            startColumn: colNum || 1,
+                            endColumn: colNum ? colNum + 15 : 100,
+                            message: msgStr.trim(),
+                            severity: monaco.MarkerSeverity.Error
                         });
                     }
                 });
@@ -104,6 +110,7 @@ function runInlineSyntaxValidation(codeText, model) {
 
 function buildMonacoInstance(targetDom) {
     if (window.editorInstance !== null) return;
+
     try {
         window.editorInstance = monaco.editor.create(targetDom, {
             value: "# Select a modular file from the directory tree to start coding...\n",
@@ -123,13 +130,16 @@ function buildMonacoInstance(targetDom) {
             $('#anamod-save-btn').prop('disabled', false)
                 .removeClass('btn-outline-warning')
                 .addClass('btn-warning text-dark font-weight-bold');
+
             $('#anamod-discard-btn').prop('disabled', false)
                 .removeClass('btn-outline-danger')
                 .addClass('btn-danger text-dark font-weight-bold');
+
             $('#active-file-indicator').addClass('text-warning');
             
             const model = window.editorInstance.getModel();
             const currentText = window.editorInstance.getValue();
+
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function() {
                 runInlineSyntaxValidation(currentText, model);
@@ -137,51 +147,123 @@ function buildMonacoInstance(targetDom) {
         });
         
         window.editorInstance.layout();
-        window.updateAnamodTerminal(`[SYSTEM] Monaco core engine connected with active diagnostics loop.\n`);
+        window.updateAnamodTerminal(
+            `[SYSTEM] Monaco core engine connected with active diagnostics loop.\n`
+        );
     } catch (err) {
-        window.updateAnamodTerminal(`[CRITICAL ERROR] Failed to build instance: ${err.message}\n`);
+        window.updateAnamodTerminal(
+            `[CRITICAL ERROR] Failed to build instance: ${err.message}\n`
+        );
     }
 }
 
 mountEditorInstance();
 
-// FIXED: Scoped clipboard copier handler with precise style restoration metrics
-$(document).off('click', '#anamod-copy-path-btn').on('click', '#anamod-copy-path-btn', function(e) {
-    e.preventDefault();
-    
-    const $indicator = $('#active-file-indicator');
-    let pathText = currentFilePath || $indicator.attr('title') || $indicator.text();
-    pathText = pathText ? pathText.trim() : "";
-    
-    if (!pathText || pathText === "No file active") {
+function copyTextToClipboard(text, onSuccess) {
+    if (
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText === 'function'
+    ) {
+        navigator.clipboard.writeText(text)
+            .then(onSuccess)
+            .catch(function() {
+                copyTextWithFallback(text, onSuccess);
+            });
+
         return;
     }
-    
-    pathText = pathText.replace(/^\/app\//, '').replace(/^app\//, '');
-    const $btn = $(this);
-    
-    function flashSuccessFeedback() {
-        // Swap color states smoothly while keeping inline layout dimensions intact
-        $btn.css({ 'color': '#0f5132', 'background-color': '#d1e7dd', 'border-color': '#badbcc' }).text('✓ Copied');
-        
-        setTimeout(function() {
-            // FIXED: Target specific color variables to preserve original button shapes, padding, and text-sizing
-            $btn.css({ 'color': '#8a9ba8', 'background-color': 'transparent', 'border-color': '#30404d' }).text('📋 Copy Path');
-        }, 1000);
+
+    copyTextWithFallback(text, onSuccess);
+}
+
+function copyTextWithFallback(text, onSuccess) {
+    const tempTextarea = document.createElement('textarea');
+    tempTextarea.value = text;
+    tempTextarea.setAttribute('readonly', '');
+    tempTextarea.style.position = 'fixed';
+    tempTextarea.style.opacity = '0';
+
+    document.body.appendChild(tempTextarea);
+    tempTextarea.select();
+
+    const copied = document.execCommand('copy');
+    document.body.removeChild(tempTextarea);
+
+    if (copied) {
+        onSuccess();
     }
-    
-    navigator.clipboard.writeText(pathText).then(function() {
-        flashSuccessFeedback();
-    }).catch(function() {
-        const tempTextarea = document.createElement('textarea');
-        tempTextarea.value = pathText;
-        document.body.appendChild(tempTextarea);
-        tempTextarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempTextarea);
-        flashSuccessFeedback();
+}
+
+function flashClipboardSuccess($button, restoredText) {
+    $button
+        .css({
+            'color': '#0f5132',
+            'background-color': '#d1e7dd',
+            'border-color': '#badbcc'
+        })
+        .text('✓ Copied');
+
+    setTimeout(function() {
+        $button
+            .css({
+                'color': '#8a9ba8',
+                'background-color': 'transparent',
+                'border-color': '#30404d'
+            })
+            .text(restoredText);
+    }, 1000);
+}
+
+// Scoped clipboard copier for the complete active Monaco buffer
+$(document)
+    .off('click', '#anamod-copy-file-btn')
+    .on('click', '#anamod-copy-file-btn', function(e) {
+        e.preventDefault();
+
+        if (
+            !currentFilePath ||
+            !window.editorInstance ||
+            typeof window.editorInstance.getValue !== 'function'
+        ) {
+            return;
+        }
+
+        const fileContent = window.editorInstance.getValue();
+        const $btn = $(this);
+
+        copyTextToClipboard(fileContent, function() {
+            flashClipboardSuccess($btn, '📄 Copy File');
+        });
     });
-});
+
+// Scoped clipboard copier for the active repository-relative file path
+$(document)
+    .off('click', '#anamod-copy-path-btn')
+    .on('click', '#anamod-copy-path-btn', function(e) {
+        e.preventDefault();
+        
+        const $indicator = $('#active-file-indicator');
+        let pathText =
+            currentFilePath ||
+            $indicator.attr('title') ||
+            $indicator.text();
+
+        pathText = pathText ? pathText.trim() : "";
+        
+        if (!pathText || pathText === "No file active") {
+            return;
+        }
+        
+        pathText = pathText
+            .replace(/^\/app\//, '')
+            .replace(/^app\//, '');
+
+        const $btn = $(this);
+
+        copyTextToClipboard(pathText, function() {
+            flashClipboardSuccess($btn, '📋 Copy Path');
+        });
+    });
 // ======================================================================
 // END: ANAMOD_REALTIME_MULTI_MARKER_VALIDATOR (PATCH 2 OF 4)
 // ======================================================================

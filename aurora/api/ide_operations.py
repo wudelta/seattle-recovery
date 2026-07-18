@@ -76,7 +76,7 @@ def file_tree_api(request):
 # ======================================================================
 @csrf_exempt
 def file_operation_api(request):
-    """API Endpoint handling reading, writing, renaming, and deleting files safely."""
+    """Handles reading, writing, creating, renaming, and deleting workspace nodes."""
     if request.method == 'GET':
         file_path = request.GET.get('path')
         if not file_path:
@@ -101,24 +101,44 @@ def file_operation_api(request):
     elif request.method == 'POST':
         data = json.loads(request.body)
         file_path = data.get('path')
+        node_type = data.get('type', 'file')
         content = data.get('content', '')
         
         if not file_path:
             return JsonResponse({'error': 'No file path provided'}, status=400)
 
+        if node_type not in {'file', 'directory'}:
+            return JsonResponse({'error': 'Unsupported workspace node type'}, status=400)
+
         if not file_path.startswith('/app/'):
             file_path = os.path.join('/app', file_path.lstrip('/'))
 
+        if os.path.exists(file_path):
+            return JsonResponse({'error': 'Workspace node already exists'}, status=409)
+
         try:
+            if node_type == 'directory':
+                os.makedirs(file_path)
+                return JsonResponse({
+                    'status': 'success',
+                    'type': 'directory',
+                    'path': file_path,
+                })
+
             parent_dir = os.path.dirname(file_path)
             if parent_dir and not os.path.exists(parent_dir):
                 os.makedirs(parent_dir, exist_ok=True)
 
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
-            return JsonResponse({'status': 'success'})
+
+            return JsonResponse({
+                'status': 'success',
+                'type': 'file',
+                'path': file_path,
+            })
         except Exception as e:
-            return JsonResponse({'error': f'Failed to write file: {str(e)}'}, status=500)
+            return JsonResponse({'error': f'Failed to create workspace node: {str(e)}'}, status=500)
 
     elif request.method == 'PUT':
         data = json.loads(request.body)
