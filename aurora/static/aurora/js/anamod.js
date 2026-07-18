@@ -58,6 +58,7 @@ function runInlineSyntaxValidation(codeText, model) {
         monaco.editor.setModelMarkers(model, "owner", []);
         return;
     }
+
     $.ajax({
         url: '/aurora/api/sandbox/lint/',
         type: 'POST',
@@ -95,6 +96,7 @@ function runInlineSyntaxValidation(codeText, model) {
                     }
                 });
             }
+
             monaco.editor.setModelMarkers(model, "owner", markers);
         }
     });
@@ -111,6 +113,7 @@ function buildMonacoInstance(targetDom) {
             fontSize: 13,
             fontFamily: 'Fira Code, Courier New, monospace',
             minimap: { enabled: false },
+            wordWrap: 'on',
             readOnly: false
         });
         
