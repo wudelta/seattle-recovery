@@ -551,3 +551,58 @@ Implementation completion and operational validation are separate milestones.
 Although the WorkspaceSynchronizer implementation is largely complete, ComponentRegistry synchronization and graph synchronization remain unvalidated until full batch processing and repository reconciliation have been successfully executed.
 
 Project documentation has been updated to reflect implementation status separately from validation status.
+
+# Session — 2026-07-18
+
+## Summary
+
+Completed the deterministic ComponentRegistry baseline.
+
+The workspace synchronization architecture was validated from a clean bootstrap by intentionally resetting both PostgreSQL and Neo4j, rebuilding the registry using the finalized component policy, and verifying deterministic reconciliation.
+
+This establishes the ComponentRegistry as a reproducible metadata cache rather than persistent project data.
+
+## Major Architectural Decisions
+
+* Registry cleanup will **not** become a permanent synchronization feature.
+* Obsolete registry records caused by policy evolution will be handled by explicit registry rebuilds rather than ongoing prune logic.
+* ComponentRegistry and Neo4j remain derived state and can be reconstructed deterministically from the repository.
+* Registration continues to perform immediate Neo4j projection by default.
+* Added an explicit one-time `reset_component_registry` management command to rebuild the metadata stores safely when required.
+
+## Implementation Completed
+
+### Workspace Synchronization
+
+* Validated deterministic repository discovery.
+* Validated deterministic registration from an empty registry.
+* Validated bounded registration behavior.
+* Verified previously registered files are skipped automatically.
+* Verified source hashes remain stable after rebuild.
+* Verified deterministic reconciliation reports a clean baseline.
+
+### Neo4j Projection
+
+* Verified automatic graph projection during registration.
+* Confirmed graph projection no longer requires a separate synchronization pass after registration.
+* Added explicit registry reset utility capable of clearing both PostgreSQL and Neo4j.
+* Corrected Neo4j reset reporting to return accurate deletion counts.
+
+### Validation Results
+
+After rebuilding from an empty registry:
+
+* KEEP = 142
+* UPDATE = 0
+* REGISTER = 0
+* STAGE = 0
+* REVIEW = 0
+* EXCLUDE = 7
+
+This confirms repository discovery, registration, graph projection, and reconciliation are deterministic and internally consistent.
+
+## Current Status
+
+The ComponentRegistry subsystem has reached its Phase 1 baseline.
+
+Remaining work has shifted back to slash command architectural cleanup, specifically eliminating remaining orchestration coupling and completing the command handler refactor before transitioning Aurora into primary HopeHub development.
