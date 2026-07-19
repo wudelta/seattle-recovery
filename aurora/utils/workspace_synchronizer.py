@@ -205,6 +205,7 @@ class WorkspaceSynchronizer:
                     "source_hash": item.source_hash,
                     "last_observed_at": observed_at,
                     "status": "ACTIVE",
+                    "analysis_status": "PENDING",
                 }
 
                 if item.persona:
