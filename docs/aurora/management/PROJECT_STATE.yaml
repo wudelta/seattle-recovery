@@ -18,12 +18,13 @@ targets:
 development:
 
   current_phase: >
-    Slash Command Cleanup & Workspace Stabilization
+    Repository Intelligence
 
   objective: >
-    Complete the remaining architectural cleanup of slash command
-    orchestration before transitioning Aurora into full-time HopeHub
-    engineering.
+    Complete the AI enrichment of ComponentRegistry and begin using
+    repository intelligence to support Wu-driven subsystem design,
+    architectural analysis, and large-scale refactoring before
+    transitioning Aurora into full-time HopeHub engineering.
 
 architecture:
 
@@ -57,6 +58,18 @@ architecture:
         implementation: complete
         validation: complete
 
+    component_registry_documentation:
+
+      ai_enrichment_pipeline:
+        implementation: complete
+        validation: complete
+
+      directive_driven_analysis:
+        implementation: complete
+
+      deterministic_ai_separation:
+        implementation: complete
+
     telemetry_logger:
       centralized_logging: complete
 
@@ -89,12 +102,16 @@ validation:
     delete: complete
 
   component_registry:
+
     deterministic_discovery: complete
     clean_bootstrap: complete
     deterministic_registration: complete
     deterministic_graph_projection: complete
     deterministic_reconciliation: complete
     clean_rebuild_validation: complete
+
+    ai_description_pipeline: complete
+    single_component_validation: complete
 
   docker_compose:
     web_server_restored: complete
@@ -103,25 +120,26 @@ remaining_work:
 
   immediate:
 
-    - Audit remaining slash command handlers for architectural coupling.
-    - Remove remaining direct metadata manipulation from command handlers.
-    - Ensure WorkspaceSynchronizer is the sole authority for repository synchronization.
-    - Ensure TelemetryLogger is the sole owner of telemetry capture.
+    - Evaluate AI-generated descriptions across representative repository components.
+    - Refine ComponentRegistry description quality through prompt and constraint iteration.
+    - Improve architectural dependency summaries where beneficial.
 
   next_major_phase:
 
-    - Complete slash command architectural cleanup.
+    - Integrate ComponentRegistry intelligence into Wu repository understanding.
+    - Enable subsystem-level architectural analysis and refactoring workflows.
     - Begin HopeHub engineering implementation.
     - Continue the mobile-first API transition.
-    - Preserve Aurora as the engineering platform for HopeHub.
 
 principles:
 
   architecture:
 
     - Builders perform deterministic filesystem mutation only.
-    - Command handlers orchestrate services.
-    - WorkspaceSynchronizer owns repository synchronization.
+    - WorkspaceSynchronizer is the sole authority for repository synchronization.
+    - AI enrichment operates only on deterministic registry output.
+    - Standing AI behavior resides in DeltaDirectives.
+    - Application code supplies task context only.
     - TelemetryLogger owns telemetry.
     - Business logic remains isolated from orchestration.
     - No automatic generated unit tests.
@@ -130,18 +148,21 @@ principles:
 status:
 
   repository_state: stable
-  component_registry_state: baseline_validated
-  architecture_state: stabilizing
-  production_readiness: approaching_baseline
+  component_registry_state: ai_enrichment_validated
+  architecture_state: repository_intelligence
+  production_readiness: approaching_hopehub
 
 last_verified:
 
-  date: 2026-07-18
+  date: 2026-07-19
 
 notes: >
-  The ComponentRegistry subsystem has been fully validated from a clean
-  bootstrap. Repository discovery, bounded registration, immediate Neo4j
-  projection, deterministic reconciliation, and complete registry rebuild
-  were successfully verified. Remaining work is focused on completing the
-  slash command architectural cleanup before Aurora transitions into
-  primary HopeHub development.
+  Aurora now implements a complete deterministic-to-AI repository
+  intelligence pipeline. WorkspaceSynchronizer performs deterministic
+  repository discovery, synchronization, hashing, and dependency updates.
+  WorkspaceDocumenter enriches only ACTIVE and PENDING ComponentRegistry
+  records using directive-driven AI analysis while validating source hashes
+  before and after execution. The resulting architectural descriptions are
+  intended to become Wu's primary source of repository understanding for
+  subsystem design, architectural analysis, and future large-scale
+  refactoring.
