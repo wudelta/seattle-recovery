@@ -6,6 +6,8 @@ import os
 import re
 import traceback
 
+from django.conf import settings
+
 from aurora.utils.telemetry import TelemetryLogger
 
 
@@ -32,60 +34,135 @@ class ApiSkeletonBuilder:
 # START: PATH_RESOLUTION_AND_FUNCTION_VIEW_FORGE
 # ======================================================================
     @classmethod
-    def forge_api(cls, target_app: str, endpoint_name: str, visibility: str) -> dict:
-        app, endpoint, func_name = cls.clean_inputs(target_app, endpoint_name)
+    def forge_api(
+        cls,
+        target_app: str,
+        endpoint_name: str,
+        visibility: str,
+    ) -> dict:
+        app, endpoint, func_name = cls.clean_inputs(
+            target_app,
+            endpoint_name,
+        )
+
         if not app or not endpoint:
-            cls.emit_log("[FORGE_ENGINE] [FAIL] Invalid parameters provided to forge API.\n")
-            return {"status": "error", "message": "Invalid architectural parameters."}
-            
+            cls.emit_log(
+                "[FORGE_ENGINE] [FAIL] Invalid parameters provided "
+                "to forge API.\n"
+            )
+            return {
+                "status": "error",
+                "message": "Invalid architectural parameters.",
+            }
+
         is_private = visibility.lower().strip() != "public"
-        base_dir = os.getcwd()
-        
-        if not os.path.exists(os.path.join(base_dir, app)):
-            cls.emit_log(f"[FORGE_ENGINE] [FAIL] Target app directory '{app}' does not exist on host.\n")
-            return {"status": "error", "message": f"Target app directory '{app}' does not exist."}
-            
-        view_file = os.path.join(base_dir, app, 'api', f'{endpoint}_api.py')
-        view_init = os.path.join(base_dir, app, 'api', '__init__.py')
-        urls_file = os.path.join(base_dir, app, 'urls.py')
-        test_file = os.path.join(base_dir, app, 'tests', f'test_api_{endpoint}_{app}.py')
-        
+        base_dir = str(settings.BASE_DIR)
+        app_dir = os.path.join(base_dir, app)
+        api_dir = os.path.join(app_dir, "api")
+
+        if not os.path.isdir(app_dir):
+            cls.emit_log(
+                "[FORGE_ENGINE] [FAIL] Target app directory "
+                f"'{app}' does not exist on host.\n"
+            )
+            return {
+                "status": "error",
+                "message": (
+                    f"Target app directory '{app}' does not exist."
+                ),
+            }
+
+        if not os.path.isdir(api_dir):
+            cls.emit_log(
+                "[FORGE_ENGINE] [FAIL] Target API directory does not "
+                f"exist: '{app}/api'.\n"
+            )
+            return {
+                "status": "error",
+                "message": (
+                    f"Target API directory '{app}/api' does not exist. "
+                    "Directory creation requires an explicit "
+                    "architectural operation."
+                ),
+            }
+
+        view_file = os.path.join(
+            api_dir,
+            f"{endpoint}_api.py",
+        )
+        view_init = os.path.join(
+            api_dir,
+            "__init__.py",
+        )
+        urls_file = os.path.join(
+            app_dir,
+            "urls.py",
+        )
+        test_file = os.path.join(
+            app_dir,
+            "tests",
+            f"test_api_{endpoint}_{app}.py",
+        )
+
         if os.path.exists(view_file):
-            cls.emit_log(f"[FORGE_ENGINE] [FAIL] Collision detected: API Component '{endpoint}' already exists.\n")
-            return {"status": "error", "message": f"Collision: API Component '{endpoint}' already exists."}
-            
+            cls.emit_log(
+                "[FORGE_ENGINE] [FAIL] Collision detected: API "
+                f"Component '{endpoint}' already exists.\n"
+            )
+            return {
+                "status": "error",
+                "message": (
+                    f"Collision: API Component '{endpoint}' "
+                    "already exists."
+                ),
+            }
+
         try:
             # 1. Generate Function-Based View with Explicit Module Anchors
-            cls.emit_log(f"[INFO] Writing endpoint logic script file artifact: {view_file}\n")
-            os.makedirs(os.path.dirname(view_file), exist_ok=True)
-            with open(view_file, 'w') as f:
-                dec_import = "from django.contrib.auth.decorators import login_required\n" if is_private else ""
-                dec_line = "@login_required\n" if is_private else ""
-                f.write(
-                    f'# ======================================================================\n'
-                    f'# FILE: {app}/api/{endpoint}_api.py\n'
-                    f'# START: PACKAGED_IMPORTS_AND_DEPENDENCIES\n'
-                    f'# ======================================================================\n'
-                    f'from django.http import JsonResponse\n{dec_import}'
-                    f'# ======================================================================\n'
-                    f'# END: PACKAGED_IMPORTS_AND_DEPENDENCIES\n'
-                    f'# ======================================================================\n\n'
-                    f'# ======================================================================\n'
-                    f'# START: API_ENDPOINT_LOGIC\n'
-                    f'# ======================================================================\n'
-                    f'{dec_line}'
-                    f'def {func_name}(request):\n'
-                    f'    """Automated JSON payload endpoint forged by Aurora Forge Engine."""\n'
-                    f'    payload = {{\n'
-                    f'        "status": "success",\n'
+            cls.emit_log(
+                "[INFO] Writing endpoint logic script file artifact: "
+                f"{view_file}\n"
+            )
+
+            with open(view_file, "w") as file_handle:
+                decorator_import = (
+                    "from django.contrib.auth.decorators "
+                    "import login_required\n"
+                    if is_private
+                    else ""
+                )
+                decorator_line = (
+                    "@login_required\n"
+                    if is_private
+                    else ""
+                )
+                file_handle.write(
+                    f"# {'=' * 70}\n"
+                    f"# FILE: {app}/api/{endpoint}_api.py\n"
+                    "# START: PACKAGED_IMPORTS_AND_DEPENDENCIES\n"
+                    f"# {'=' * 70}\n"
+                    "from django.http import JsonResponse\n"
+                    f"{decorator_import}"
+                    f"# {'=' * 70}\n"
+                    "# END: PACKAGED_IMPORTS_AND_DEPENDENCIES\n"
+                    f"# {'=' * 70}\n\n"
+                    f"# {'=' * 70}\n"
+                    "# START: API_ENDPOINT_LOGIC\n"
+                    f"# {'=' * 70}\n"
+                    f"{decorator_line}"
+                    f"def {func_name}(request):\n"
+                    '    """Automated JSON payload endpoint forged '
+                    'by Aurora Forge Engine."""\n'
+                    "    payload = {\n"
+                    '        "status": "success",\n'
                     f'        "visibility": "{visibility}",\n'
                     f'        "endpoint": "{endpoint}",\n'
                     f'        "app": "{app}"\n'
-                    f'    }}\n'
-                    f'    return JsonResponse(payload)\n'
-                    f'# ======================================================================\n'
-                    f'# END: API_ENDPOINT_LOGIC\n'
-                    f'# ======================================================================\n'
+                    "    }\n"
+                    "    return JsonResponse(payload)\n"
+                    f"# {'=' * 70}\n"
+                    "# END: API_ENDPOINT_LOGIC\n"
+                    f"# {'=' * 70}\n"
                 )
 # ======================================================================
 # END: PATH_RESOLUTION_AND_FUNCTION_VIEW_FORGE (PATCH 2 OF 5)
