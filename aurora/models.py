@@ -61,7 +61,7 @@ class ComponentRegistry(models.Model):
     persona = models.CharField(max_length=30, choices=PERSONA_CHOICES, default='COMPILER_MODULE')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
-    locked = models.BooleanField(default=False)
+    locked = models.BooleanField(default=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
