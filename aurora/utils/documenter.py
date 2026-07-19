@@ -1,129 +1,209 @@
 # ======================================================================
 # FILE: aurora/utils/documenter.py (PATCH 1 OF 1)
-# START: BATCH_PAUSE_THROTTLED_DOCUMENTER_CRAWLER
+# START: BOUNDED_COMPONENT_DESCRIPTION_ANALYZER
 # ======================================================================
-import os
-import sys
-import asyncio
+"""Bounded AI enrichment for pending ComponentRegistry descriptions."""
+
+import hashlib
+from pathlib import Path
+
 from django.conf import settings
-from aurora.models import ComponentRegistry
+from django.utils import timezone
+
 from aurora.minions.engine import MinionRunner
-from aurora.api.dev_streamer_api import async_send_to_console
+from aurora.models import ComponentRegistry
+
 
 class WorkspaceDocumenter:
     """
-    Crawls active registered application modules from disk, passes code to the
-    Groq fleet AI writer minion, and streams live telemetry to the browser console.
+    Generate descriptions for explicitly bounded pending components.
+
+    Repository discovery and freshness detection remain deterministic concerns.
+    Standing AI instructions belong exclusively to DeltaDirectives.
     """
-    def __init__(self, runner=None):
+
+    ANALYSIS_VERSION = "component-description-v1"
+    DIRECTIVE_NAME = "component_registry_documenter"
+
+    def __init__(self, runner: MinionRunner | None = None):
         self.runner = runner or MinionRunner()
+        self.repository_root = Path(settings.BASE_DIR).resolve()
 
-    async def log_async(self, message: str):
-        """Streams tracing lines over real-time WebSockets and fallbacks cleanly to stdout."""
-        print(message)
+    def _eligible_components(
+        self,
+        *,
+        path: str | None = None,
+        limit: int | None = None,
+    ) -> list[ComponentRegistry]:
+        """Return stable active components currently awaiting AI analysis."""
+        queryset = ComponentRegistry.objects.filter(
+            status="ACTIVE",
+            analysis_status="PENDING",
+        ).order_by("file_path")
+
+        if path:
+            normalized_path = path.strip().replace("\\", "/").lstrip("/").rstrip("/")
+            path_prefix = f"{normalized_path}/"
+
+            queryset = (
+                queryset.filter(file_path=normalized_path)
+                | queryset.filter(file_path__startswith=path_prefix)
+            ).order_by("file_path")
+
+        if limit is not None:
+            if limit < 1:
+                raise ValueError("Analysis limit must be greater than zero.")
+            queryset = queryset[:limit]
+
+        return list(queryset)
+
+    def _resolve_source_path(self, repository_path: str) -> Path:
+        """Resolve one repository-relative path without permitting traversal."""
+        source_path = (self.repository_root / repository_path).resolve()
+
         try:
-            await async_send_to_console(message)
-        except Exception:
-            pass
+            source_path.relative_to(self.repository_root)
+        except ValueError as error:
+            raise ValueError(
+                f"Component path escapes the repository root: {repository_path}"
+            ) from error
 
-    def read_source_code(self, absolute_path: str) -> str:
-        """Safely pulls code text files from disk straight into memory buffers."""
-        if not os.path.exists(absolute_path):
-            return ""
-        try:
-            with open(absolute_path, "r", encoding="utf-8") as file_stream:
-                return file_stream.read()
-        except Exception as err:
-            print(f"⚠️ [FILE READ EXCEPTION] Path {absolute_path}: {str(err)}")
-            return ""
+        return source_path
 
-    async def execute_documentation_sweep_async(self) -> dict:
+    @staticmethod
+    def _read_source(source_path: Path) -> tuple[str, str]:
+        """Read UTF-8 source and return its exact SHA-256 digest."""
+        source_bytes = source_path.read_bytes()
+        source_text = source_bytes.decode("utf-8")
+        source_hash = hashlib.sha256(source_bytes).hexdigest()
+        return source_text, source_hash
+
+    @staticmethod
+    def _build_task_context(
+        component: ComponentRegistry,
+        source_text: str,
+    ) -> str:
+        """Provide factual task data without embedding minion instructions."""
+        return (
+            f"FILE_PATH: {component.file_path}\n"
+            f"PERSONA: {component.persona}\n"
+            "SOURCE:\n"
+            f"{source_text}"
+        )
+
+    def _validate_description(self, description: str) -> str:
+        """Reject execution faults and empty results before database mutation."""
+        normalized_description = description.strip()
+
+        if self.runner.last_provider_error:
+            raise RuntimeError(
+                f"AI provider execution failed: {self.runner.last_provider_error}"
+            )
+
+        error_markers = (
+            "💥 [REGISTRY ERROR]",
+            "💥 [AI PROVIDER ERROR]",
+        )
+
+        if any(marker in normalized_description for marker in error_markers):
+            raise RuntimeError(normalized_description)
+
+        if not normalized_description:
+            raise RuntimeError("AI provider returned an empty description.")
+
+        return normalized_description
+
+    def analyze_pending(
+        self,
+        *,
+        apply: bool = False,
+        path: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, object]:
         """
-        FIXED: Uses Django's native async queryset evaluation loop (.all()) 
-        to stream rows across Daphne thread layers safely without losing context.
+        Preview or analyze a bounded set of pending components.
+
+        AI results are committed only when the file hash still matches the
+        ComponentRegistry hash captured by deterministic synchronization.
         """
+        components = self._eligible_components(path=path, limit=limit)
         report = {
-            "processed_files": [],
-            "skipped_files": [],
-            "failures": []
+            "apply": apply,
+            "candidates": [component.file_path for component in components],
+            "completed": [],
+            "skipped": [],
+            "failures": [],
         }
-        
-        # FIXED: Evaluate the queryset count using native async ORM methods (.acount)
-        active_queryset = ComponentRegistry.objects.filter(status="ACTIVE")
-        total_count = await active_queryset.acount()
-        
-        await self.log_async(f"🔎 [SWEEP START] Found {total_count} active components to evaluate.")
-        
-        processed_in_current_batch = 0
-        current_index = 0
-        
-        # FIXED: Use 'async for' to streams rows asynchronously from PostgreSQL natively
-        async for component in active_queryset:
-            current_index += 1
-            path = component.file_path
-            await self.log_async(f"⚡ [{current_index}/{total_count}] Evaluating component '{component.name}' at path: {path}")
-            
-            audiences = component.description_audiences or {}
-            if audiences.get("developer_docs") and audiences.get("stakeholder_docs") and component.description:
-                await self.log_async(f"⏩ [SKIP] Complete documentation already exists for: {path}")
-                report["skipped_files"].append(path)
-                continue
-                
-            code_content = self.read_source_code(path)
-            if not code_content:
-                await self.log_async(f"❌ [FAILURE] Target file missing or empty on disk: {path}")
-                report["failures"].append(path)
-                continue
-                
-            try:
-                await self.log_async(f"🤖 [AI RUN] Requesting developer_docs generation...")
-                dev_prompt = f"Analyze this source code module and generate a detailed developer-oriented engineering architecture overview:\n\n{code_content}"
-                dev_docs = self.runner.run_minion_task("minion_AI_writer", dev_prompt)
-                
-                await self.log_async(f"🤖 [AI RUN] Requesting stakeholder_docs generation...")
-                stakeholder_prompt = f"Analyze this source code module and translate its utility into a clean business value overview for non-technical stakeholders:\n\n{code_content}"
-                stakeholder_docs = self.runner.run_minion_task("minion_AI_writer", stakeholder_prompt)
-                
-                if "Error:" in dev_docs or "Error:" in stakeholder_docs:
-                    await self.log_async(f"❌ [API FAULT] Engine execution returned an internal error state.")
-                    report["failures"].append(path)
-                    continue
-                    
-                await self.log_async(f"💾 [DB WRITE] Saving plain-text overview and rich documentation dictionaries...")
-                component.description = f"Automated engineering profile for module {component.name} handling runtime codebase assets."
-                
-                # FIXED: Use native async save (.asave) to commit row columns safely
-                component.description_audiences["developer_docs"] = dev_docs
-                component.description_audiences["stakeholder_docs"] = stakeholder_docs
-                await component.asave()
-                
-                await self.log_async(f"✅ [SUCCESS] Fields successfully committed for: {path}")
-                report["processed_files"].append(path)
-                
-                processed_in_current_batch += 1
-                if processed_in_current_batch >= 10 and current_index < total_count:
-                    await self.log_async(f"\n⏳ [BATCH LIMIT REACHED] Processed {processed_in_current_batch} records in this slot.")
-                    await self.log_async("⏸️ Pausing execution loop for 60 seconds to completely refresh your token rate limits...\n")
-                    await asyncio.sleep(60)
-                    processed_in_current_batch = 0
-                    
-            except Exception as loop_err:
-                await self.log_async(f"💥 [CRASH] Fatal mutation failure on component loop: {str(loop_err)}")
-                report["failures"].append(path)
-                
-        return report
 
-    def clear_component_documentation(self, component) -> bool:
-        """Utility maintenance helper to reset the JSON documentation fields for a targeted component row."""
-        try:
-            print(f"🧹 [DB clean] Wiping documentation fields for: {component.file_path}")
-            component.description = ""
-            component.description_audiences = {}
-            component.save()
-            return True
-        except Exception as err:
-            print(f"❌ [DB clean FAULT] Failed to clear component state: {str(err)}")
-            return False
+        if not apply:
+            return report
+
+        for component in components:
+            try:
+                source_path = self._resolve_source_path(component.file_path)
+
+                if not source_path.is_file():
+                    report["failures"].append(
+                        f"{component.file_path}: source file is missing"
+                    )
+                    continue
+
+                source_text, observed_hash = self._read_source(source_path)
+
+                if observed_hash != component.source_hash:
+                    report["skipped"].append(
+                        f"{component.file_path}: source hash is stale"
+                    )
+                    continue
+
+                description = self.runner.run_minion_task(
+                    self.DIRECTIVE_NAME,
+                    self._build_task_context(component, source_text),
+                )
+                description = self._validate_description(description)
+
+                _, current_hash = self._read_source(source_path)
+
+                if current_hash != observed_hash:
+                    report["skipped"].append(
+                        f"{component.file_path}: source changed during analysis"
+                    )
+                    continue
+
+                analyzed_at = timezone.now()
+                updated_count = ComponentRegistry.objects.filter(
+                    id=component.id,
+                    source_hash=observed_hash,
+                    analysis_status="PENDING",
+                ).update(
+                    description=description,
+                    analysis_status="COMPLETE",
+                    analysis_version=self.ANALYSIS_VERSION,
+                    last_analyzed_at=analyzed_at,
+                )
+
+                if updated_count == 1:
+                    report["completed"].append(component.file_path)
+                else:
+                    report["skipped"].append(
+                        f"{component.file_path}: registry state changed during analysis"
+                    )
+
+            except Exception as error:
+                ComponentRegistry.objects.filter(
+                    id=component.id,
+                    source_hash=component.source_hash,
+                    analysis_status="PENDING",
+                ).update(
+                    analysis_status="FAILED",
+                    analysis_version=self.ANALYSIS_VERSION,
+                    last_analyzed_at=timezone.now(),
+                )
+                report["failures"].append(
+                    f"{component.file_path}: {type(error).__name__}: {error}"
+                )
+
+        return report
 # ======================================================================
-# END: BATCH_PAUSE_THROTTLED_DOCUMENTER_CRAWLER (PATCH 1 OF 1)
+# END: BOUNDED_COMPONENT_DESCRIPTION_ANALYZER (PATCH 1 OF 1)
 # ======================================================================
