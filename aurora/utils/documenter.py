@@ -1,10 +1,11 @@
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 1 OF 1)
-# START: BOUNDED_COMPONENT_DESCRIPTION_ANALYZER
+# FILE: aurora/utils/documenter.py (PATCH 1 OF 4)
+# START: DOCUMENTATION_PROGRESS_INFRASTRUCTURE
 # ======================================================================
 """Bounded AI enrichment for pending ComponentRegistry descriptions."""
 
 import hashlib
+from collections.abc import Callable
 from pathlib import Path
 
 from django.conf import settings
@@ -12,6 +13,11 @@ from django.utils import timezone
 
 from aurora.minions.engine import MinionRunner
 from aurora.models import ComponentRegistry
+from aurora.utils.telemetry import TelemetryLogger
+
+
+class ProviderExecutionError(RuntimeError):
+    """Signal a provider failure that requires stopping the analysis batch."""
 
 
 class WorkspaceDocumenter:
@@ -22,7 +28,7 @@ class WorkspaceDocumenter:
     Standing AI instructions belong exclusively to DeltaDirectives.
     """
 
-    ANALYSIS_VERSION = "component-description-v1"
+    ANALYSIS_VERSION = "component-description-v2"
     DIRECTIVE_NAME = "component_registry_documenter"
 
     def __init__(self, runner: MinionRunner | None = None):
@@ -91,12 +97,30 @@ class WorkspaceDocumenter:
             f"{source_text}"
         )
 
+    @staticmethod
+    def _emit_progress(
+        message: str,
+        progress_callback: Callable[[str], None] | None,
+    ) -> None:
+        """Emit one canonical event to telemetry and the active caller."""
+        TelemetryLogger.emit(f"{message}\n")
+
+        if progress_callback:
+            progress_callback(message)
+# ======================================================================
+# END: DOCUMENTATION_PROGRESS_INFRASTRUCTURE (PATCH 1 OF 4)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/utils/documenter.py (PATCH 2 OF 4)
+# START: DESCRIPTION_VALIDATION_AND_RUN_INITIALIZATION
+# ======================================================================
     def _validate_description(self, description: str) -> str:
         """Reject execution faults and empty results before database mutation."""
         normalized_description = description.strip()
 
         if self.runner.last_provider_error:
-            raise RuntimeError(
+            raise ProviderExecutionError(
                 f"AI provider execution failed: {self.runner.last_provider_error}"
             )
 
@@ -106,7 +130,7 @@ class WorkspaceDocumenter:
         )
 
         if any(marker in normalized_description for marker in error_markers):
-            raise RuntimeError(normalized_description)
+            raise ProviderExecutionError(normalized_description)
 
         if not normalized_description:
             raise RuntimeError("AI provider returned an empty description.")
@@ -119,6 +143,7 @@ class WorkspaceDocumenter:
         apply: bool = False,
         path: str | None = None,
         limit: int | None = None,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> dict[str, object]:
         """
         Preview or analyze a bounded set of pending components.
@@ -127,50 +152,107 @@ class WorkspaceDocumenter:
         ComponentRegistry hash captured by deterministic synchronization.
         """
         components = self._eligible_components(path=path, limit=limit)
+        total = len(components)
+
         report = {
             "apply": apply,
             "candidates": [component.file_path for component in components],
             "completed": [],
             "skipped": [],
             "failures": [],
+            "stopped": False,
+            "last_completed": None,
+            "failure_point": None,
+            "restart_from": None,
+            "remaining": total,
         }
 
         if not apply:
             return report
 
-        for component in components:
+        self._emit_progress(
+            (
+                f"Documentation run started: {total} candidate(s), "
+                f"analysis version {self.ANALYSIS_VERSION}."
+            ),
+            progress_callback,
+        )
+# ======================================================================
+# END: DESCRIPTION_VALIDATION_AND_RUN_INITIALIZATION (PATCH 2 OF 4)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/utils/documenter.py (PATCH 3 OF 4)
+# START: COMPONENT_ANALYSIS_PROGRESS_LOOP
+# ======================================================================
+        for position, component in enumerate(components, start=1):
+            prefix = f"[{position}/{total}]"
+
+            self._emit_progress(
+                f"{prefix} STARTED   {component.file_path}",
+                progress_callback,
+            )
+
             try:
                 source_path = self._resolve_source_path(component.file_path)
 
                 if not source_path.is_file():
-                    report["failures"].append(
-                        f"{component.file_path}: source file is missing"
+                    message = f"{component.file_path}: source file is missing"
+                    report["failures"].append(message)
+
+                    self._emit_progress(
+                        (
+                            f"{prefix} FAILED    {component.file_path}\n"
+                            "            FileNotFoundError: source file is missing"
+                        ),
+                        progress_callback,
                     )
                     continue
 
                 source_text, observed_hash = self._read_source(source_path)
 
                 if observed_hash != component.source_hash:
-                    report["skipped"].append(
-                        f"{component.file_path}: source hash is stale"
+                    message = f"{component.file_path}: source hash is stale"
+                    report["skipped"].append(message)
+
+                    self._emit_progress(
+                        (
+                            f"{prefix} SKIPPED   {component.file_path}\n"
+                            "            Source hash is stale."
+                        ),
+                        progress_callback,
                     )
                     continue
 
-                description = self.runner.run_minion_task(
-                    self.DIRECTIVE_NAME,
-                    self._build_task_context(component, source_text),
-                )
+                try:
+                    description = self.runner.run_minion_task(
+                        self.DIRECTIVE_NAME,
+                        self._build_task_context(component, source_text),
+                    )
+                except Exception as error:
+                    raise ProviderExecutionError(
+                        f"{type(error).__name__}: {error}"
+                    ) from error
+
                 description = self._validate_description(description)
 
                 _, current_hash = self._read_source(source_path)
 
                 if current_hash != observed_hash:
-                    report["skipped"].append(
+                    message = (
                         f"{component.file_path}: source changed during analysis"
+                    )
+                    report["skipped"].append(message)
+
+                    self._emit_progress(
+                        (
+                            f"{prefix} SKIPPED   {component.file_path}\n"
+                            "            Source changed during analysis."
+                        ),
+                        progress_callback,
                     )
                     continue
 
-                analyzed_at = timezone.now()
                 updated_count = ComponentRegistry.objects.filter(
                     id=component.id,
                     source_hash=observed_hash,
@@ -179,16 +261,40 @@ class WorkspaceDocumenter:
                     description=description,
                     analysis_status="COMPLETE",
                     analysis_version=self.ANALYSIS_VERSION,
-                    last_analyzed_at=analyzed_at,
+                    last_analyzed_at=timezone.now(),
                 )
 
                 if updated_count == 1:
                     report["completed"].append(component.file_path)
-                else:
-                    report["skipped"].append(
-                        f"{component.file_path}: registry state changed during analysis"
-                    )
+                    report["last_completed"] = component.file_path
 
+                    self._emit_progress(
+                        f"{prefix} COMPLETE  {component.file_path}",
+                        progress_callback,
+                    )
+                    continue
+
+                message = (
+                    f"{component.file_path}: "
+                    "registry state changed during analysis"
+                )
+                report["skipped"].append(message)
+
+                self._emit_progress(
+                    (
+                        f"{prefix} SKIPPED   {component.file_path}\n"
+                        "            Registry state changed during analysis."
+                    ),
+                    progress_callback,
+                )
+# ======================================================================
+# END: COMPONENT_ANALYSIS_PROGRESS_LOOP (PATCH 3 OF 4)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/utils/documenter.py (PATCH 4 OF 4)
+# START: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY
+# ======================================================================
             except Exception as error:
                 ComponentRegistry.objects.filter(
                     id=component.id,
@@ -199,11 +305,56 @@ class WorkspaceDocumenter:
                     analysis_version=self.ANALYSIS_VERSION,
                     last_analyzed_at=timezone.now(),
                 )
-                report["failures"].append(
-                    f"{component.file_path}: {type(error).__name__}: {error}"
+
+                message = (
+                    f"{component.file_path}: "
+                    f"{type(error).__name__}: {error}"
                 )
+                report["failures"].append(message)
+
+                self._emit_progress(
+                    (
+                        f"{prefix} FAILED    {component.file_path}\n"
+                        f"            {type(error).__name__}: {error}"
+                    ),
+                    progress_callback,
+                )
+
+                if isinstance(error, ProviderExecutionError):
+                    report["stopped"] = True
+                    report["failure_point"] = component.file_path
+                    report["restart_from"] = component.file_path
+
+                    self._emit_progress(
+                        "Stopping after provider failure.",
+                        progress_callback,
+                    )
+                    break
+
+        processed_count = (
+            len(report["completed"])
+            + len(report["skipped"])
+            + len(report["failures"])
+        )
+        report["remaining"] = max(total - processed_count, 0)
+
+        self._emit_progress(
+            (
+                "Documentation run finished.\n"
+                f"Candidates: {total}\n"
+                f"Completed: {len(report['completed'])}\n"
+                f"Skipped: {len(report['skipped'])}\n"
+                f"Failed: {len(report['failures'])}\n"
+                f"Remaining: {report['remaining']}\n"
+                f"Last completed: {report['last_completed'] or 'None'}\n"
+                f"Failure point: {report['failure_point'] or 'None'}\n"
+                f"Restart from: {report['restart_from'] or 'None'}\n"
+                f"Analysis version: {self.ANALYSIS_VERSION}"
+            ),
+            progress_callback,
+        )
 
         return report
 # ======================================================================
-# END: BOUNDED_COMPONENT_DESCRIPTION_ANALYZER (PATCH 1 OF 1)
+# END: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY (PATCH 4 OF 4)
 # ======================================================================
