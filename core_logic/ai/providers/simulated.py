@@ -23,12 +23,18 @@ class SimulatedProvider(AIProvider):
 
     def chat(
         self,
+        *,
+        model: str,
         prompt: str,
         directive,
+        timeout_seconds: float | None = None,
     ) -> AIResponse:
         """
         Execute a deterministic response without contacting an external
         AI service.
+
+        timeout_seconds is accepted to satisfy the provider contract but
+        is not required because simulated execution performs no I/O.
         """
 
         response_text = (
@@ -39,7 +45,7 @@ class SimulatedProvider(AIProvider):
         return AIResponse(
             text=response_text,
             provider=self.name,
-            model="simulated",
+            model=model,
             usage={
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
@@ -52,8 +58,11 @@ class SimulatedProvider(AIProvider):
 
     async def stream(
         self,
+        *,
+        model: str,
         prompt: str,
         directive,
+        timeout_seconds: float | None = None,
     ):
         """
         Stream a deterministic response.
@@ -63,8 +72,10 @@ class SimulatedProvider(AIProvider):
         """
 
         response = self.chat(
+            model=model,
             prompt=prompt,
             directive=directive,
+            timeout_seconds=timeout_seconds,
         )
 
         # Simulate asynchronous execution so callers exercise the same

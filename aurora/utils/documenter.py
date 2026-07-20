@@ -121,7 +121,7 @@ class WorkspaceDocumenter:
 
         if self.runner.last_provider_error:
             raise ProviderExecutionError(
-                f"AI provider execution failed: {self.runner.last_provider_error}"
+                f"AI provider failed: {self.runner.last_provider_error}"
             )
 
         error_markers = (

@@ -3,17 +3,35 @@
 # START: OPENAI_PROVIDER_IMPLEMENTATION
 # ======================================================================
 
-from openai import OpenAI
+from typing import NoReturn
+
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    OpenAI,
+    RateLimitError,
+)
 
 from core_logic.ai.base import AIProvider, AIResponse
+from core_logic.ai.exceptions import (
+    NetworkUnavailableError,
+    ProviderAuthenticationError,
+    ProviderExecutionError,
+    ProviderRateLimitError,
+    ProviderRequestError,
+    ProviderTimeoutError,
+    ProviderUnavailableError,
+)
 
 
 class OpenAIProvider(AIProvider):
     """
     Provider implementation for the OpenAI Responses API.
 
-    This class is responsible only for translating between Aurora's
-    provider interface and the OpenAI SDK.
+    This class translates Aurora requests, timeouts, responses, and
+    failures to and from the OpenAI SDK.
     """
 
     @property
@@ -28,10 +46,7 @@ class OpenAIProvider(AIProvider):
         )
 
     def _normalize_usage(self, usage):
-        """
-        Normalize SDK-specific usage objects into Aurora's
-        standard usage dictionary.
-        """
+        """Normalize OpenAI usage into Aurora's standard dictionary."""
 
         if usage is None:
             return {
@@ -76,20 +91,107 @@ class OpenAIProvider(AIProvider):
             if value is not None
         }
 
+    def _request_client(
+        self,
+        timeout_seconds: float | None,
+    ):
+        """
+        Create request-scoped SDK options.
+
+        SDK retries are disabled because Aurora's central execution layer
+        owns retry and provider-failover policy.
+        """
+
+        options = {
+            "max_retries": 0,
+        }
+
+        if timeout_seconds is not None:
+            options["timeout"] = timeout_seconds
+
+        return self.client.with_options(**options)
+
+    def _raise_normalized_error(
+        self,
+        error: Exception,
+    ) -> NoReturn:
+        """Translate OpenAI SDK failures into Aurora provider failures."""
+
+        if isinstance(error, APITimeoutError):
+            raise ProviderTimeoutError(
+                "Request exceeded its execution deadline.",
+                provider_name=self.name,
+            ) from error
+
+        if isinstance(error, APIConnectionError):
+            raise NetworkUnavailableError(
+                "Unable to reach the provider. Check network connectivity.",
+                provider_name=self.name,
+            ) from error
+
+        if isinstance(error, AuthenticationError):
+            raise ProviderAuthenticationError(
+                "Provider credentials were rejected.",
+                provider_name=self.name,
+            ) from error
+
+        if isinstance(error, RateLimitError):
+            raise ProviderRateLimitError(
+                "Provider rate limit was reached.",
+                provider_name=self.name,
+            ) from error
+
+        if isinstance(error, APIStatusError):
+            status_code = error.status_code
+
+            if status_code == 408:
+                raise ProviderTimeoutError(
+                    "Provider returned a request timeout.",
+                    provider_name=self.name,
+                ) from error
+
+            if status_code >= 500:
+                raise ProviderUnavailableError(
+                    f"Provider returned HTTP {status_code}.",
+                    provider_name=self.name,
+                ) from error
+
+            if status_code in {401, 403}:
+                raise ProviderAuthenticationError(
+                    f"Provider rejected access with HTTP {status_code}.",
+                    provider_name=self.name,
+                ) from error
+
+            raise ProviderRequestError(
+                f"Provider rejected the request with HTTP {status_code}.",
+                provider_name=self.name,
+            ) from error
+
+        raise ProviderExecutionError(
+            f"Unexpected provider failure: {error}",
+            provider_name=self.name,
+        ) from error
+
     def chat(
         self,
+        *,
         model: str,
         prompt: str,
         directive,
+        timeout_seconds: float | None = None,
     ) -> AIResponse:
-
-        response = self.client.responses.create(
-            **self._build_request(
-                model=model,
-                prompt=prompt,
-                directive=directive,
+        try:
+            response = self._request_client(
+                timeout_seconds,
+            ).responses.create(
+                **self._build_request(
+                    model=model,
+                    prompt=prompt,
+                    directive=directive,
+                )
             )
-        )
+        except Exception as error:
+            self._raise_normalized_error(error)
 
         return AIResponse(
             text=response.output_text,
@@ -105,9 +207,11 @@ class OpenAIProvider(AIProvider):
 
     async def stream(
         self,
+        *,
         model: str,
         prompt: str,
         directive,
+        timeout_seconds: float | None = None,
     ):
         """
         Stream response fragments while preserving a normalized
@@ -121,27 +225,33 @@ class OpenAIProvider(AIProvider):
         )
         request["stream"] = True
 
-        stream = self.client.responses.create(
-            **request,
-        )
-
         accumulated = ""
         usage = None
 
-        for event in stream:
-            event_type = getattr(event, "type", "")
+        try:
+            stream = self._request_client(
+                timeout_seconds,
+            ).responses.create(
+                **request,
+            )
 
-            if event_type == "response.output_text.delta":
-                delta = getattr(event, "delta", "")
-                accumulated += delta
-                yield delta
+            for event in stream:
+                event_type = getattr(event, "type", "")
 
-            elif event_type == "response.completed":
-                usage = getattr(
-                    event.response,
-                    "usage",
-                    None,
-                )
+                if event_type == "response.output_text.delta":
+                    delta = getattr(event, "delta", "")
+                    accumulated += delta
+                    yield delta
+
+                elif event_type == "response.completed":
+                    usage = getattr(
+                        event.response,
+                        "usage",
+                        None,
+                    )
+
+        except Exception as error:
+            self._raise_normalized_error(error)
 
         yield AIResponse(
             text=accumulated,
@@ -152,6 +262,7 @@ class OpenAIProvider(AIProvider):
                 "directive": directive.directive_name,
             },
         )
+
 
 # ======================================================================
 # END: OPENAI_PROVIDER_IMPLEMENTATION (PATCH 1 OF 1)
