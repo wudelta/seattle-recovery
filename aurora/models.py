@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 7)
+# FILE: aurora/models.py (PATCH 1 OF 8)
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,11 +7,11 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 7)
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 7)
+# FILE: aurora/models.py (PATCH 2 OF 8)
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
@@ -143,39 +143,44 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 7)
+# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 7)
+# FILE: aurora/models.py (PATCH 3 OF 8)
 # START: STATIC_CONTENT_SCHEMA
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
+
     class ApplicationChoices(models.TextChoices):
         AURORA = 'aurora', 'Aurora'
         HOPEHUB = 'hopehub', 'HopeHub'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.CharField(
-        max_length=10, choices=ApplicationChoices.choices, default=ApplicationChoices.AURORA
+        max_length=10,
+        choices=ApplicationChoices.choices,
+        default=ApplicationChoices.AURORA,
     )
     title = models.CharField(max_length=255)
     html_content = models.TextField()
-    
-    # Fix: Point relation to the active swapped settings model
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+    )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"StaticContent: {self.title} [{self.application}] (ID: {self.id})"
 # ======================================================================
-# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 7)
+# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 4 OF 7)
+# FILE: aurora/models.py (PATCH 4 OF 8)
 # START: PERSISTENT_CHAT_LEDGER_SCHEMA
 # ======================================================================
 class ChatLedgerEntry(models.Model):
@@ -183,18 +188,23 @@ class ChatLedgerEntry(models.Model):
     Lightweight, index-optimized conversational transaction table.
     Enforces a low-footprint sliding history window to prevent context bloat.
     """
+
     ROLE_CHOICES = (
         ('user', 'User Input Prompt'),
         ('model', 'Model Assistant Response'),
     )
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name='chat_ledger_entries',
         help_text="The authenticated user operating the active workspace session thread."
     )
-    session_id = models.CharField(max_length=255, db_index=True, help_text="Unique workspace thread isolation tracker token.")
+    session_id = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="Unique workspace thread isolation tracker token.",
+    )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, db_index=True)
     text = models.TextField(help_text="Raw conversational data chunk payload.")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -202,13 +212,18 @@ class ChatLedgerEntry(models.Model):
     class Meta:
         verbose_name = "Chat Ledger Entry"
         verbose_name_plural = "Chat Ledger Entries"
-        # FIXED: Upgraded legacy index_together syntax to modern Django 5.x indices array blocks
         indexes = [
-            models.Index(fields=['session_id', 'created_at'], name='aurora_chat_ledger_idx')
+            models.Index(
+                fields=['session_id', 'created_at'],
+                name='aurora_chat_ledger_idx',
+            ),
         ]
 
     def __str__(self):
-        return f"[{self.session_id}] {self.role.upper()} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        return (
+            f"[{self.session_id}] {self.role.upper()} - "
+            f"{self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        )
 
     def save(self, *args, **kwargs):
         """
@@ -216,21 +231,21 @@ class ChatLedgerEntry(models.Model):
         surgically deletes surplus old rows past the 20-row history limit.
         """
         super().save(*args, **kwargs)
-        
-        # Pull entry ID list past the rolling 20-message row buffer limit
+
         excess_entries = ChatLedgerEntry.objects.filter(
             session_id=self.session_id
         ).order_by('-created_at')[20:]
-        
+
         if excess_entries:
-            # Batch erase old records inside a single SQL deletion execution pass
-            ChatLedgerEntry.objects.filter(id__in=[entry.id for entry in excess_entries]).delete()
+            ChatLedgerEntry.objects.filter(
+                id__in=[entry.id for entry in excess_entries]
+            ).delete()
 # ======================================================================
-# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 7)
+# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 5 OF 7)
+# FILE: aurora/models.py (PATCH 5 OF 8)
 # START: DIRECTIVES_SCHEMA
 # ======================================================================
 class DeltaDirectives(models.Model):
@@ -238,12 +253,13 @@ class DeltaDirectives(models.Model):
     Standalone configuration engine storing system instructions, prompts, and 
     model processing boundaries for your AI minion fleet.
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     directive_name = models.CharField(max_length=255, unique=True, db_index=True)
     instructions = models.TextField()
     constraints = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
-    
+
     # Fix: Point relation to the active swapped settings model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -253,66 +269,22 @@ class DeltaDirectives(models.Model):
         verbose_name = "Delta Directive Profile"
         verbose_name_plural = "Delta Directive Profiles"
 
-    @classmethod
-    def provision_standard_minions(cls, author_user) -> int:
-        """Programmatically seeds the database with default settings for the core minion fleet."""
-        minion_fleet = {
-            "minion_wu": {
-                "instructions": "Act as the master project orchestrator. Parse complex multi-step tasks, evaluate repo requirements, and delegate isolated tasks down to the specialized 8B fleet.",
-                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1}
-            },
-            "minion_UI_layout": {
-                "instructions": "Generate structural layouts. Produce clean, well-formed HTML skeleton layout blocks based on context.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4}
-            },
-            "minion_UI_style": {
-                "instructions": "Generate interface style themes. Output clean utility or custom CSS styling rules.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3}
-            },
-            "minion_UI_logic": {
-                "instructions": "Generate client interactivity. Output pure modern JavaScript block strings code blocks.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2}
-            },
-            "minion_anamod": {
-                "instructions": "Analyze existing repository code modules. Propose clean code modifications or file patches safely.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1}
-            },
-            "minion_AI_writer": {
-                "instructions": "Refactor raw text blocks. Polish clarity, style, documentation records, and structural layout phrasing.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6}
-            }
-        }
-        seeded_count = 0
-        for name, data in minion_fleet.items():
-            obj, created = cls.objects.get_or_create(
-                directive_name=name,
-                defaults={
-                    "instructions": data["instructions"],
-                    "constraints": data["constraints"],
-                    "is_active": True,
-                    "created_by": author_user
-                }
-            )
-            if created:
-                seeded_count += 1
-        return seeded_count
-
     def __str__(self):
         return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: DIRECTIVES_SCHEMA (PATCH 5 OF 7)
+# END: DIRECTIVES_SCHEMA (PATCH 5 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 6 OF 7)
+# FILE: aurora/models.py (PATCH 6 OF 8)
 # START: DELTA_NOTES_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
-    Tracks daily developer intentions, active task execution blocks, and 
+    Tracks daily developer intentions, active task execution blocks, and
     accumulated focus time per session window.
     """
-    # Fix: Point relation to the active swapped settings model
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -324,10 +296,13 @@ class DeltaNotesEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     processed = models.BooleanField(default=False)
     total_seconds_logged = models.PositiveIntegerField(
-        default=0, help_text="Total accumulated active focus time recorded in seconds."
+        default=0,
+        help_text="Total accumulated active focus time recorded in seconds."
     )
     last_started_at = models.DateTimeField(
-        null=True, blank=True, help_text="Timestamp when the active session timer toggle was engaged."
+        null=True,
+        blank=True,
+        help_text="Timestamp when the active session timer toggle was engaged."
     )
 
     class Meta:
@@ -336,13 +311,17 @@ class DeltaNotesEntry(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
+        return (
+            f"DeltaNote {self.id} - "
+            f"User: {self.user.username} "
+            f"({self.created_at.strftime('%Y-%m-%d')})"
+        )
 # ======================================================================
-# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 7)
+# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 7 OF 7)
+# FILE: aurora/models.py (PATCH 7 OF 8)
 # START: CODE_CHANGE_REVIEW_SCHEMA
 # ======================================================================
 class PendingCodeChange(models.Model):
@@ -398,5 +377,123 @@ class PendingCodeChange(models.Model):
     def __str__(self):
         return f"{self.file_path} [{self.status}]"
 # ======================================================================
-# END: CODE_CHANGE_REVIEW_SCHEMA (PATCH 7 OF 7)
+# END: CODE_CHANGE_REVIEW_SCHEMA (PATCH 7 OF 8)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 8 OF 8)
+# START: EXECUTION_PLAN_SCHEMA
+# ======================================================================
+class ExecutionStatus(models.TextChoices):
+    """Shared lifecycle states for execution planning."""
+
+    PLANNED = "PLANNED", "Planned"
+    ACTIVE = "ACTIVE", "Active"
+    PAUSED = "PAUSED", "Paused"
+    COMPLETED = "COMPLETED", "Completed"
+
+
+class Initiative(models.Model):
+    """A top-level engineering objective."""
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
+    position = models.PositiveIntegerField(default=0)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="initiatives_created",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class Phase(models.Model):
+    """A milestone within an Initiative."""
+
+    initiative = models.ForeignKey(
+        Initiative,
+        on_delete=models.CASCADE,
+        related_name="phases",
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
+    position = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+        unique_together = [("initiative", "position")]
+
+    def __str__(self):
+        return f"{self.initiative} / {self.title}"
+
+
+class Step(models.Model):
+    """A single implementation task within a Phase."""
+
+    phase = models.ForeignKey(
+        Phase,
+        on_delete=models.CASCADE,
+        related_name="steps",
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    position = models.PositiveIntegerField(default=0)
+
+    completed = models.BooleanField(default=False, db_index=True)
+
+    validated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="validated_steps",
+    )
+
+    validation_notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+        unique_together = [("phase", "position")]
+
+    def __str__(self):
+        return f"{self.phase} / {self.title}"
+# ======================================================================
+# END: EXECUTION_PLAN_SCHEMA (PATCH 8 OF 8)
 # ======================================================================
