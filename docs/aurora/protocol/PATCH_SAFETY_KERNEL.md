@@ -5,7 +5,7 @@
 
 # Aurora Patch Safety Kernel
 
-**Version: 2.0**
+**Version: 2.1**
 
 ---
 
@@ -119,7 +119,7 @@ When topology changes are required, deliver the complete revised topology.
 
 # 6. Symbol Preservation
 
-Before delivering a replacement patch, account for every symbol contained within the current anchor.
+Before delivering a replacement patch, account for every implementation element contained within the current anchor.
 
 Examples include:
 
@@ -130,11 +130,13 @@ Examples include:
 - methods;
 - functions;
 - configuration;
-- exported symbols.
+- exported symbols;
+- docstrings;
+- comments that carry engineering meaning.
 
-Any omitted symbol must be intentionally removed.
+Any omitted implementation element must be intentionally removed.
 
-Unexplained symbol loss is a patch failure.
+Unexplained omissions are a patch failure.
 
 ---
 
@@ -170,7 +172,7 @@ The required editing operation should never require interpretation.
 
 After each patch:
 
-1. perform the smallest validation capable of confirming the intended change;
+1. perform the smallest deterministic validation capable of confirming the intended change;
 2. review the result;
 3. stop;
 4. continue only after explicit approval.
@@ -205,6 +207,16 @@ Frequent validation and small recovery points are fundamental engineering practi
 
 ---
 
+# 9.1 One Patch Rule
+
+Unless explicitly requested otherwise, deliver one implementation patch at a time.
+
+After validation, stop and wait for explicit approval before delivering the next patch.
+
+This minimizes rollback scope and keeps every implementation step independently reviewable.
+
+---
+
 # 10. Final Pre-Delivery Checklist
 
 Before sending any patch, confirm all of the following:
@@ -219,7 +231,7 @@ Before sending any patch, confirm all of the following:
 
 □ The replacement boundary is correct.
 
-□ Every existing symbol has been accounted for.
+□ Every existing implementation element has been accounted for.
 
 □ The replacement is complete.
 
@@ -235,7 +247,7 @@ If any item cannot be confidently answered, stop and resolve the uncertainty bef
 
 # Governing Rule
 
-When speed conflicts with safety, choose safety.
+When simplicity, speed, or convenience conflict with safety, choose safety.
 
 A complete, deterministic, and reviewable patch is always preferable to a faster patch that depends on manual editing, assumptions, or incomplete context.
 

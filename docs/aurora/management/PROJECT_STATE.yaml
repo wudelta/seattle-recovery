@@ -18,13 +18,14 @@ targets:
 development:
 
   current_phase: >
-    Repository Intelligence
+    Repository Intelligence Consumption
 
   objective: >
-    Complete the AI enrichment of ComponentRegistry and begin using
-    repository intelligence to support Wu-driven subsystem design,
-    architectural analysis, and large-scale refactoring before
-    transitioning Aurora into full-time HopeHub engineering.
+    Integrate ComponentRegistry intelligence into Wu so architectural
+    descriptions and dependency information become the primary source of
+    repository understanding for subsystem design, architectural analysis,
+    and large-scale refactoring while preparing Aurora for full-time
+    HopeHub engineering.
 
 architecture:
 
@@ -120,16 +121,17 @@ remaining_work:
 
   immediate:
 
-    - Evaluate AI-generated descriptions across representative repository components.
-    - Refine ComponentRegistry description quality through prompt and constraint iteration.
-    - Improve architectural dependency summaries where beneficial.
+    - Evaluate AI-generated ComponentRegistry descriptions across representative repository components.
+    - Refine AI enrichment prompts and directive constraints where needed.
+    - Integrate ComponentRegistry intelligence into Wu repository understanding.
+    - Validate repository-aware subsystem analysis using ComponentRegistry metadata.
 
   next_major_phase:
 
-    - Integrate ComponentRegistry intelligence into Wu repository understanding.
-    - Enable subsystem-level architectural analysis and refactoring workflows.
+    - Enable subsystem-level architectural analysis and large-scale refactoring workflows.
     - Begin HopeHub engineering implementation.
     - Continue the mobile-first API transition.
+    - Design and implement the automated /end-session workflow, including verified backups and off-site replication.
 
 principles:
 
@@ -148,21 +150,25 @@ principles:
 status:
 
   repository_state: stable
-  component_registry_state: ai_enrichment_validated
-  architecture_state: repository_intelligence
+  component_registry_state: repository_intelligence_ready
+  architecture_state: repository_intelligence_consumption
   production_readiness: approaching_hopehub
 
 last_verified:
 
-  date: 2026-07-19
+  date: 2026-07-20
 
 notes: >
-  Aurora now implements a complete deterministic-to-AI repository
-  intelligence pipeline. WorkspaceSynchronizer performs deterministic
-  repository discovery, synchronization, hashing, and dependency updates.
-  WorkspaceDocumenter enriches only ACTIVE and PENDING ComponentRegistry
-  records using directive-driven AI analysis while validating source hashes
-  before and after execution. The resulting architectural descriptions are
-  intended to become Wu's primary source of repository understanding for
-  subsystem design, architectural analysis, and future large-scale
-  refactoring.
+  Aurora now implements a complete deterministic repository intelligence
+  pipeline. WorkspaceSynchronizer performs deterministic repository
+  discovery, synchronization, hashing, dependency analysis, graph
+  projection, and ComponentRegistry reconciliation. WorkspaceDocumenter
+  enriches deterministic ComponentRegistry records using directive-driven
+  AI analysis while validating source hashes before and after execution.
+  Repository intelligence is now ready to become Wu's primary source of
+  repository understanding for subsystem design, architectural analysis,
+  and large-scale refactoring. The next architectural milestone is to
+  consume this intelligence throughout Aurora, followed by full-time
+  HopeHub engineering. Future workflow automation will culminate in a
+  deterministic `/end-session` command that verifies backups, records
+  session state, and replicates project data to off-site storage.
