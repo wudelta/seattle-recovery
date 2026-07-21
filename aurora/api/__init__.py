@@ -18,8 +18,6 @@ from .dev_streamer_api import (
     run_development_pipeline_async,
 )
 
-# NEW CONNECTION: Import the new automated workspace view directly from endpoints
-from .endpoints import aurora_chat_stream
 from .wu_chat_api import (
     approve_pending_code_change,
     reject_pending_code_change,
@@ -35,21 +33,20 @@ from .ide_operations import (
 )
 
 __all__ = [
-    'delta_notes_endpoint',
-    'execute_blueprint_api',
-    'unlocked_components_endpoint',
-    'trigger_pipeline',
-    'run_development_pipeline_async',
-    'content_endpoint',
-    'directives_endpoint',
-    'aurora_chat_stream',
-    'wu_chat_endpoint',
-    'approve_pending_code_change',
-    'reject_pending_code_change',
-    'file_tree_api',
-    'file_operation_api',
-    'run_code_api',
-    'lint_code_api',
+    "delta_notes_endpoint",
+    "execute_blueprint_api",
+    "unlocked_components_endpoint",
+    "trigger_pipeline",
+    "run_development_pipeline_async",
+    "content_endpoint",
+    "directives_endpoint",
+    "wu_chat_endpoint",
+    "approve_pending_code_change",
+    "reject_pending_code_change",
+    "file_tree_api",
+    "file_operation_api",
+    "run_code_api",
+    "lint_code_api",
 ]
 # ====================================================================== #
 # END: MODULE_ROUTING_REGISTRATION_FOOTPRINT (PATCH 1 OF 1)              #

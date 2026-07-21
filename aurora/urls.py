@@ -1,4 +1,3 @@
-from aurora import api as api_commands
 # ====================================================================== #
 # FILE: aurora/urls.py (PATCH 1 OF 1)                                    #
 # START: SYSTEM_DISPATCH_ROUTING_MATRIX_AND_LOGIN_ENTRIES                #
@@ -24,9 +23,6 @@ urlpatterns = [
 
     # 3. AI PIPELINES: Background endpoints handling asynchronous communication with Wu
     path('api/command/', api_endpoints.execute_blueprint_api, name='api_command'),
-
-    # FIXED: Updated target moniker referencing the correct namespace vector variable
-    path('api/gemini_chat/', api_endpoints.aurora_chat_stream, name='gemini_chat_stream'),
 
     # FIXED: Direct standalone path for the unlocked components tracking matrix registry endpoint
     path(
