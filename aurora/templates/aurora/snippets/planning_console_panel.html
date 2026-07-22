@@ -1,0 +1,240 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 1 OF 1) -->
+<!-- START: PLANNING_CONSOLE_PANEL -->
+<!-- ====================================================================== -->
+<div
+    id="planning-console-panel"
+    class="h-100 w-100 d-flex flex-column bg-black text-light"
+    style="min-height: 0;"
+>
+    <div
+        class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary flex-shrink-0"
+    >
+        <div>
+            <div
+                class="text-uppercase fw-bold"
+                style="letter-spacing: 1px;"
+            >
+                Decision Engine
+            </div>
+            <div class="small text-muted">
+                Initiative → Phase → Step execution planning
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span
+                id="planning-summary-badge"
+                class="badge bg-dark border border-secondary text-info"
+            >
+                Not loaded
+            </span>
+
+            <button
+                id="planning-refresh-btn"
+                type="button"
+                class="btn btn-sm btn-outline-info"
+            >
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <div
+        id="planning-status-bar"
+        class="px-3 py-2 border-bottom border-secondary small text-muted flex-shrink-0"
+        role="status"
+        aria-live="polite"
+    >
+        Open the Planning panel to load persisted execution plans.
+    </div>
+
+    <div
+        id="planning-workspace"
+        class="flex-grow-1 overflow-auto p-3"
+        style="min-height: 0;"
+    >
+        <div
+            id="planning-loading-state"
+            class="d-none h-100 align-items-center justify-content-center text-center"
+        >
+            <div>
+                <div
+                    class="spinner-border text-info mb-3"
+                    role="status"
+                    aria-hidden="true"
+                ></div>
+                <div class="text-muted">
+                    Loading Decision Engine records...
+                </div>
+            </div>
+        </div>
+
+        <div
+            id="planning-error-state"
+            class="d-none alert alert-danger"
+            role="alert"
+        >
+            <div class="fw-bold mb-1">
+                Planning data could not be loaded.
+            </div>
+            <div id="planning-error-message">
+                An unexpected error occurred.
+            </div>
+        </div>
+
+        <div
+            id="planning-empty-state"
+            class="d-none h-100 align-items-center justify-content-center text-center"
+        >
+            <div class="border border-secondary rounded p-4 bg-dark">
+                <div class="fs-5 fw-bold mb-2">
+                    No initiatives exist
+                </div>
+                <div class="text-muted">
+                    Create an Initiative in Django admin or through a future
+                    Decision Engine editing workflow.
+                </div>
+            </div>
+        </div>
+
+        <div
+            id="planning-initiative-list"
+            class="d-flex flex-column gap-3"
+        ></div>
+    </div>
+
+    <template id="planning-initiative-template">
+        <article
+            class="planning-initiative border border-secondary rounded bg-dark"
+        >
+            <header
+                class="d-flex justify-content-between align-items-start gap-3 p-3 border-bottom border-secondary"
+            >
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span
+                            class="planning-initiative-position badge bg-black text-secondary border border-secondary"
+                        ></span>
+
+                        <h2
+                            class="planning-initiative-title h5 mb-0 text-light"
+                        ></h2>
+
+                        <span
+                            class="planning-initiative-status badge"
+                        ></span>
+                    </div>
+
+                    <p
+                        class="planning-initiative-description text-muted small mt-2 mb-0"
+                    ></p>
+                </div>
+
+                <div class="text-end small text-muted flex-shrink-0">
+                    <div class="planning-initiative-owner"></div>
+                    <div class="planning-initiative-updated"></div>
+                </div>
+            </header>
+
+            <div class="planning-phase-list p-3 d-flex flex-column gap-3"></div>
+        </article>
+    </template>
+
+    <template id="planning-phase-template">
+        <section
+            class="planning-phase border border-secondary rounded"
+            style="background-color: #10161a;"
+        >
+            <header
+                class="d-flex justify-content-between align-items-start gap-3 px-3 py-2 border-bottom border-secondary"
+            >
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span
+                            class="planning-phase-position badge bg-black text-secondary border border-secondary"
+                        ></span>
+
+                        <h3
+                            class="planning-phase-title h6 mb-0 text-light"
+                        ></h3>
+
+                        <span
+                            class="planning-phase-status badge"
+                        ></span>
+                    </div>
+
+                    <p
+                        class="planning-phase-description text-muted small mt-2 mb-0"
+                    ></p>
+                </div>
+
+                <div
+                    class="planning-phase-summary small text-muted text-end flex-shrink-0"
+                ></div>
+            </header>
+
+            <div class="planning-step-list"></div>
+        </section>
+    </template>
+
+    <template id="planning-step-template">
+        <div
+            class="planning-step d-flex align-items-start gap-3 px-3 py-3 border-bottom border-secondary"
+        >
+            <div class="flex-shrink-0">
+                <span
+                    class="planning-step-position badge bg-black text-secondary border border-secondary"
+                ></span>
+            </div>
+
+            <div class="flex-grow-1" style="min-width: 0;">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h4
+                        class="planning-step-title h6 mb-0 text-light"
+                    ></h4>
+
+                    <span class="planning-step-status badge"></span>
+
+                    <span
+                        class="planning-step-estimate badge bg-black text-info border border-secondary"
+                    ></span>
+                </div>
+
+                <p
+                    class="planning-step-description text-muted small mt-2 mb-1"
+                ></p>
+
+                <div
+                    class="planning-step-validation small mt-2"
+                >
+                    <span class="text-warning fw-bold">
+                        Validation:
+                    </span>
+                    <span
+                        class="planning-step-validation-description text-muted"
+                    ></span>
+                </div>
+
+                <div
+                    class="planning-step-validation-result small mt-1 d-none"
+                >
+                    <span class="text-success fw-bold">
+                        Evidence:
+                    </span>
+                    <span
+                        class="planning-step-validation-notes text-muted"
+                    ></span>
+                </div>
+            </div>
+
+            <div class="text-end small text-muted flex-shrink-0">
+                <div class="planning-step-validator"></div>
+                <div class="planning-step-updated"></div>
+            </div>
+        </div>
+    </template>
+</div>
+<!-- ====================================================================== -->
+<!-- END: PLANNING_CONSOLE_PANEL (PATCH 1 OF 1) -->
+<!-- ====================================================================== -->

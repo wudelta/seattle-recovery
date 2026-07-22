@@ -819,3 +819,77 @@ Primary questions:
 7. How should minion assignment and PendingCodeChange approval eventually fit into Step execution?
 
 Do not begin implementation until these boundaries are sufficiently clear.
+
+## 2026-07-21 — Wu Subsystem Extraction
+
+Refactored the first architectural unit in the package-boundary cleanup.
+
+The session began with the recognition that `aurora/minions/` and
+`aurora/utils/` had accumulated modules based on implementation style rather
+than architectural ownership. The governing decision is now:
+
+> Deterministic versus AI behavior is not the package boundary. Subsystem
+> ownership is the package boundary.
+
+Created the new `aurora/wu/` package and moved Wu-owned behavior into it:
+
+* `aurora/minions/patch_parser.py`
+  → `aurora/wu/patch_parser.py`
+* `aurora/minions/workspace_context.py`
+  → `aurora/wu/workspace_context.py`
+* the untracked `aurora/execution/context.py`
+  → `aurora/wu/execution_context.py`
+
+Updated `aurora/api/wu_chat_api.py` to import:
+
+* `ExecutionContextResolver`
+* patch parsing behavior
+* workspace-context resolution
+
+from `aurora.wu`.
+
+`aurora/minions/engine.py` remains in place because `MinionRunner` is shared AI
+execution infrastructure rather than Wu-specific behavior.
+
+Removed the obsolete source copies and confirmed that no repository imports
+remain for:
+
+* `aurora.execution`
+* `aurora.minions.patch_parser`
+* `aurora.minions.workspace_context`
+
+Validation completed successfully:
+
+```text
+System check identified no issues (0 silenced).
+```
+
+The staged changes correctly appeared as two Git renames, one new Wu execution
+context module, the new package initializer, and the Wu Chat import update.
+
+Committed as:
+
+```text
+refactor: establish cohesive Wu subsystem
+```
+
+The working tree was clean at session end.
+
+### Next session
+
+Begin with the proposed generation subsystem:
+
+```text
+aurora/generation/
+    api_skeleton.py
+    page_skeleton.py
+    automation_utilities.py
+```
+
+Do not move files immediately. First inspect the three candidates and build
+their complete import graph. Confirm that `automation_utilities.py` belongs
+with generation rather than the later workspace subsystem.
+
+After generation, evaluate the larger workspace subsystem containing component
+policy, dependency analysis, documentation, registry synchronization, graph
+synchronization, reconciliation, and workspace synchronization.

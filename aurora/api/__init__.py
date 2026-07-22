@@ -4,6 +4,7 @@
 # ====================================================================== #
 from .directives_api import directives_endpoint
 from .content_api import content_endpoint
+from .planning_api import planning_endpoint
 
 # Consolidated imports from the unified api_commands.py file layer
 from .api_commands import (
@@ -40,6 +41,7 @@ __all__ = [
     "run_development_pipeline_async",
     "content_endpoint",
     "directives_endpoint",
+    "planning_endpoint",
     "wu_chat_endpoint",
     "approve_pending_code_change",
     "reject_pending_code_change",

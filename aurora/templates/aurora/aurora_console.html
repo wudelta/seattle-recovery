@@ -23,12 +23,14 @@
     .matrix-radio-pill {
         display: none !important; /* Hide native input circles cleanly */
     }
+
     .matrix-pill-label {
         flex: 1;
         min-width: 130px;
         margin-bottom: 0 !important;
         cursor: pointer;
     }
+
     .matrix-btn-box {
         padding: 0.4rem 0.75rem;
         background-color: #10161a;
@@ -43,12 +45,14 @@
         transition: all 0.15s ease-in-out;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
     }
+
     /* Hover micro-interactions */
     .matrix-pill-label:hover .matrix-btn-box {
         background-color: #1a252c;
         color: #f5f8fa;
         border-color: #555555;
     }
+
     /* Checked active selection state remapping */
     .matrix-radio-pill:checked + .matrix-btn-box {
         background-color: #137cbd !important;
@@ -56,6 +60,7 @@
         color: #ffffff !important;
         box-shadow: 0 0 4px rgba(19, 124, 189, 0.4);
     }
+
     /* Offline state layout lock rules when session has not initiated */
     .matrix-selector-disabled {
         pointer-events: none !important;
@@ -71,16 +76,19 @@
     <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
     <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
         <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
-            
+
             <!-- FIXED: Transformed from legacydropdown selector into high-utility radio action pill row matrix -->
             <div class="d-flex align-items-center gap-3 flex-grow-1 me-3">
-                <span class="text-light text-uppercase font-weight-bold mb-0 small text-nowrap" style="letter-spacing: 1px;">Console Matrix Selector:</span>
-                
                 <div id="console-view-selector-group" class="d-flex gap-1 flex-wrap flex-grow-1 matrix-selector-disabled" role="radiogroup">
-                    
+
                     <label class="matrix-pill-label">
                         <input type="radio" name="console_pane_target" value="delta_notes" class="matrix-radio-pill" checked>
                         <div class="matrix-btn-box">Delta Notes</div>
+                    </label>
+
+                    <label class="matrix-pill-label">
+                        <input type="radio" name="console_pane_target" value="planning" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Project</div>
                     </label>
 
                     <label class="matrix-pill-label">
@@ -89,13 +97,13 @@
                     </label>
 
                     <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="blueprint" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Blueprint</div>
+                        <input type="radio" name="console_pane_target" value="anamod" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Anamod</div>
                     </label>
 
                     <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="anamod" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Anamod</div>
+                        <input type="radio" name="console_pane_target" value="directives_panel" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Directives</div>
                     </label>
 
                     <label class="matrix-pill-label">
@@ -104,19 +112,21 @@
                     </label>
 
                     <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="directives_panel" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Directives</div>
+                        <input type="radio" name="console_pane_target" value="blueprint" class="matrix-radio-pill">
+                        <div class="matrix-btn-box">Blueprint</div>
                     </label>
 
                 </div>
+
                 <!-- Hidden selector mock state to remain backwards-compatible with legacy console.js listener attachment routines -->
                 <select id="console-view-selector" class="d-none">
                     <option value="delta_notes" selected>delta_notes</option>
+                    <option value="planning">planning</option>
                     <option value="wu_chat">wu_chat</option>
-                    <option value="blueprint">blueprint</option>
                     <option value="anamod">anamod</option>
-                    <option value="content_panel">content_panel</option>
                     <option value="directives_panel">directives_panel</option>
+                    <option value="content_panel">content_panel</option>
+                    <option value="blueprint">blueprint</option>
                 </select>
             </div>
 
@@ -132,7 +142,7 @@
 
     <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
     <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
-        
+
         <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
         <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999; pointer-events: auto;">
             <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
@@ -144,19 +154,28 @@
         <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/delta_notes_console_panel.html" %}
         </div>
+
         <div class="workspace-section d-none h-100 w-100" id="wu_chat-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/wu_chat_console_panel.html" %}
         </div>
+
+        <div class="workspace-section d-none h-100 w-100" id="planning-workspace-container" style="min-height: 0; overflow: hidden;">
+            {% include "aurora/snippets/planning_console_panel.html" %}
+        </div>
+
         <div class="workspace-section d-none style-panel-sync h-100 w-100" id="ai-blueprint-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/blueprint_console_panel.html" %}
             <div id="unlocked-components-list"></div>
         </div>
+
         <div class="workspace-section d-none h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/anamod_console_panel.html" %}
         </div>
+
         <div class="workspace-section d-none h-100 w-100" id="content_panel-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/content_console_panel.html" %}
         </div>
+
         <div class="workspace-section d-none h-100 w-100" id="directives_panel-workspace-container" style="min-height: 0; overflow: hidden;">
             {% include "aurora/snippets/directives_console_panel.html" %}
         </div>
@@ -177,6 +196,7 @@
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
+<script src="{% static 'aurora/js/planning.js' %}"></script>
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
 
@@ -201,10 +221,12 @@ $(document).ready(function() {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
         content_endpoint: "{% url 'aurora:content_endpoint' %}",
         directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
+        planning_endpoint: "{% url 'aurora:planning_endpoint' %}",
         wu_chat_endpoint: "{% url 'aurora:wu_chat_endpoint' %}",
         wu_chat_approve_endpoint: "{% url 'aurora:approve_pending_code_change' %}",
         wu_chat_reject_endpoint: "{% url 'aurora:reject_pending_code_change' %}"
     };
+    let planningInitialized = false;
     let anamodInitialized = false;
     let contentPanelInitialized = false;
     let directivesPanelInitialized = false;
@@ -239,10 +261,19 @@ $(document).ready(function() {
         $('#console-view-selector-group').removeClass('matrix-selector-disabled');
 
         const currentView = $('#console-view-selector').val();
+        if (currentView === 'planning') { triggerPlanningLoad(); }
         if (currentView === 'anamod') { triggerAnamodLoad(); }
         if (currentView === 'content_panel') { triggerContentPanelLoad(); }
         if (currentView === 'directives_panel') { triggerDirectivesPanelLoad(); }
     });
+
+    function triggerPlanningLoad() {
+        if (!planningInitialized && window.initPlanningConsole) {
+            console.log("[Planning Orchestrator] Panel active. Loading Decision Engine data...");
+            window.initPlanningConsole(systemEndpoints);
+            planningInitialized = true;
+        }
+    }
 
     function triggerAnamodLoad() {
         if (!anamodInitialized && window.initAnamodConsole) {
@@ -274,6 +305,7 @@ $(document).ready(function() {
     }
 
     $(document).on('aurora:view_changed', function(e, viewMode) {
+        if (viewMode === 'planning') { setTimeout(triggerPlanningLoad, 80); }
         if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
         if (viewMode === 'content_panel') { setTimeout(triggerContentPanelLoad, 80); }
         if (viewMode === 'directives_panel') { setTimeout(triggerDirectivesPanelLoad, 80); }
