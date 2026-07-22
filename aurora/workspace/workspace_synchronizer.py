@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/workspace_synchronizer.py (PATCH 1 OF 3)
+# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 1 OF 3)
 # START: SYNCHRONIZATION_TYPES_AND_INITIALIZATION
 # ======================================================================
 """Controlled application of approved workspace reconciliation changes."""
@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from aurora.models import ComponentRegistry
-from aurora.utils.component_policy import (
+from aurora.workspace.component_policy import (
     CLASSIFICATION_EXCLUDE,
     CLASSIFICATION_KEEP,
     CLASSIFICATION_REGISTER,
@@ -20,9 +20,9 @@ from aurora.utils.component_policy import (
     CLASSIFICATION_STAGE,
     CLASSIFICATION_UPDATE,
 )
-from aurora.utils.forge_registry import register_new_component
-from aurora.utils.graph_synchronizer import GraphSynchronizer
-from aurora.utils.workspace_reconciler import (
+from aurora.workspace.forge_registry import register_new_component
+from aurora.workspace.graph_synchronizer import GraphSynchronizer
+from aurora.workspace.workspace_reconciler import (
     ReconciliationItem,
     WorkspaceReconciler,
 )
@@ -120,7 +120,7 @@ class WorkspaceSynchronizer:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/workspace_synchronizer.py (PATCH 2 OF 3)
+# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 2 OF 3)
 # START: BOUNDED_DATABASE_AND_GRAPH_SYNCHRONIZATION
 # ======================================================================
     @staticmethod
@@ -331,7 +331,7 @@ class WorkspaceSynchronizer:
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/workspace_synchronizer.py (PATCH 3 OF 3)
+# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 3 OF 3)
 # START: EXPLICIT_SYNCHRONIZATION_ENTRY_POINT
 # ======================================================================
     def synchronize_path(

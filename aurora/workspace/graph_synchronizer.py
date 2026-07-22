@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from aurora.models import ComponentRegistry
 from aurora.nodes import ComponentNode
-from aurora.utils.dependency_analyzer import DependencyAnalyzer
+from aurora.workspace.dependency_analyzer import DependencyAnalyzer
 
 
 @dataclass

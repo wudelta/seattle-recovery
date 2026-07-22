@@ -7,9 +7,9 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
-from aurora.utils.component_policy import ALLOWED_ROOTS
-from aurora.utils.workspace_reconciler import WorkspaceReconciler
-from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
+from aurora.workspace.component_policy import ALLOWED_ROOTS
+from aurora.workspace.workspace_reconciler import WorkspaceReconciler
+from aurora.workspace.workspace_synchronizer import WorkspaceSynchronizer
 
 
 UserModel = get_user_model()
