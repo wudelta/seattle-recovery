@@ -1,6 +1,6 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 1 OF 1) -->
-<!-- START: PLANNING_CONSOLE_PANEL -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 1 OF 6) -->
+<!-- START: PLANNING_CONSOLE_LAYOUT -->
 <!-- ====================================================================== -->
 <div
     id="planning-console-panel"
@@ -31,6 +31,14 @@
             </span>
 
             <button
+                id="planning-create-initiative-btn"
+                type="button"
+                class="btn btn-sm btn-outline-success"
+            >
+                New Initiative
+            </button>
+
+            <button
                 id="planning-refresh-btn"
                 type="button"
                 class="btn btn-sm btn-outline-info"
@@ -46,9 +54,127 @@
         role="status"
         aria-live="polite"
     >
-        Open the Planning panel to load persisted execution plans.
+        Open the Project panel to load persisted execution plans.
     </div>
+<!-- ====================================================================== -->
+<!-- END: PLANNING_CONSOLE_LAYOUT (PATCH 1 OF 6) -->
+<!-- ====================================================================== -->
 
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 2 OF 6) -->
+<!-- START: INITIATIVE_CREATION_FORM -->
+<!-- ====================================================================== -->
+    <div
+        id="planning-initiative-form-panel"
+        class="d-none flex-shrink-0 border-bottom border-secondary bg-dark"
+    >
+        <form id="planning-initiative-form" class="p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="fw-bold text-light">
+                        Create Initiative
+                    </div>
+                    <div class="small text-muted">
+                        Define the highest-level engineering objective.
+                    </div>
+                </div>
+
+                <button
+                    id="planning-cancel-initiative-btn"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                >
+                    Cancel
+                </button>
+            </div>
+
+            <div
+                id="planning-initiative-form-error"
+                class="d-none alert alert-danger py-2"
+                role="alert"
+            ></div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-9">
+                    <label
+                        for="planning-initiative-title"
+                        class="form-label small text-light"
+                    >
+                        Title
+                    </label>
+                    <input
+                        id="planning-initiative-title"
+                        name="title"
+                        type="text"
+                        class="form-control form-control-sm bg-black text-light border-secondary"
+                        maxlength="255"
+                        required
+                    >
+                </div>
+
+                <div class="col-12 col-lg-3">
+                    <label
+                        for="planning-initiative-status"
+                        class="form-label small text-light"
+                    >
+                        Status
+                    </label>
+                    <select
+                        id="planning-initiative-status"
+                        name="status"
+                        class="form-select form-select-sm bg-black text-light border-secondary"
+                    >
+                        <option value="PLANNED" selected>Planned</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="PAUSED">Paused</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label
+                        for="planning-initiative-description"
+                        class="form-label small text-light"
+                    >
+                        Description
+                    </label>
+                    <textarea
+                        id="planning-initiative-description"
+                        name="description"
+                        class="form-control form-control-sm bg-black text-light border-secondary"
+                        rows="4"
+                        placeholder="Describe the objective, scope, constraints, and expected outcome."
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button
+                    type="reset"
+                    class="btn btn-sm btn-outline-secondary"
+                >
+                    Clear
+                </button>
+
+                <button
+                    id="planning-save-initiative-btn"
+                    type="submit"
+                    class="btn btn-sm btn-success"
+                >
+                    Save Initiative
+                </button>
+            </div>
+        </form>
+    </div>
+<!-- ====================================================================== -->
+<!-- END: INITIATIVE_CREATION_FORM (PATCH 2 OF 6) -->
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 3 OF 6) -->
+<!-- START: PLANNING_WORKSPACE_STATES -->
+<!-- ====================================================================== -->
     <div
         id="planning-workspace"
         class="flex-grow-1 overflow-auto p-3"
@@ -91,10 +217,16 @@
                 <div class="fs-5 fw-bold mb-2">
                     No initiatives exist
                 </div>
-                <div class="text-muted">
-                    Create an Initiative in Django admin or through a future
-                    Decision Engine editing workflow.
+                <div class="text-muted mb-3">
+                    Create the first Initiative for the active project.
                 </div>
+                <button
+                    id="planning-empty-create-initiative-btn"
+                    type="button"
+                    class="btn btn-sm btn-outline-success"
+                >
+                    New Initiative
+                </button>
             </div>
         </div>
 
@@ -103,7 +235,14 @@
             class="d-flex flex-column gap-3"
         ></div>
     </div>
+<!-- ====================================================================== -->
+<!-- END: PLANNING_WORKSPACE_STATES (PATCH 3 OF 6) -->
+<!-- ====================================================================== -->
 
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 4 OF 6) -->
+<!-- START: INITIATIVE_TEMPLATE -->
+<!-- ====================================================================== -->
     <template id="planning-initiative-template">
         <article
             class="planning-initiative border border-secondary rounded bg-dark"
@@ -131,16 +270,130 @@
                     ></p>
                 </div>
 
-                <div class="text-end small text-muted flex-shrink-0">
-                    <div class="planning-initiative-owner"></div>
-                    <div class="planning-initiative-updated"></div>
+                <div class="text-end flex-shrink-0">
+                    <div class="small text-muted">
+                        <div class="planning-initiative-owner"></div>
+                        <div class="planning-initiative-updated"></div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="planning-new-phase-btn btn btn-sm btn-outline-success mt-2"
+                    >
+                        New Phase
+                    </button>
                 </div>
             </header>
 
-            <div class="planning-phase-list p-3 d-flex flex-column gap-3"></div>
+            <div
+                class="planning-phase-form-panel d-none border-bottom border-secondary"
+                style="background-color: #10161a;"
+            >
+                <form class="planning-phase-form p-3">
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-3"
+                    >
+                        <div>
+                            <div class="fw-bold text-light">
+                                Create Phase
+                            </div>
+                            <div class="small text-muted">
+                                Add an ordered milestone to this Initiative.
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="planning-cancel-phase-btn btn btn-sm btn-outline-secondary"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div
+                        class="planning-phase-form-error d-none alert alert-danger py-2"
+                        role="alert"
+                    ></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-9">
+                            <label class="form-label small text-light">
+                                Title
+                            </label>
+
+                            <input
+                                name="title"
+                                type="text"
+                                class="planning-phase-form-title form-control form-control-sm bg-black text-light border-secondary"
+                                maxlength="255"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-12 col-lg-3">
+                            <label class="form-label small text-light">
+                                Status
+                            </label>
+
+                            <select
+                                name="status"
+                                class="planning-phase-form-status form-select form-select-sm bg-black text-light border-secondary"
+                            >
+                                <option value="PLANNED" selected>
+                                    Planned
+                                </option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="PAUSED">Paused</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-light">
+                                Description
+                            </label>
+
+                            <textarea
+                                name="description"
+                                class="planning-phase-form-description form-control form-control-sm bg-black text-light border-secondary"
+                                rows="3"
+                                placeholder="Describe the milestone, intended result, and boundaries."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button
+                            type="reset"
+                            class="btn btn-sm btn-outline-secondary"
+                        >
+                            Clear
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="planning-save-phase-btn btn btn-sm btn-success"
+                        >
+                            Save Phase
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div
+                class="planning-phase-list p-3 d-flex flex-column gap-3"
+            ></div>
         </article>
     </template>
+<!-- ====================================================================== -->
+<!-- END: INITIATIVE_TEMPLATE (PATCH 4 OF 6) -->
+<!-- ====================================================================== -->
 
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 5 OF 6) -->
+<!-- START: PHASE_TEMPLATE -->
+<!-- ====================================================================== -->
     <template id="planning-phase-template">
         <section
             class="planning-phase border border-secondary rounded"
@@ -177,7 +430,14 @@
             <div class="planning-step-list"></div>
         </section>
     </template>
+<!-- ====================================================================== -->
+<!-- END: PHASE_TEMPLATE (PATCH 5 OF 6) -->
+<!-- ====================================================================== -->
 
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 6 OF 6) -->
+<!-- START: STEP_TEMPLATE -->
+<!-- ====================================================================== -->
     <template id="planning-step-template">
         <div
             class="planning-step d-flex align-items-start gap-3 px-3 py-3 border-bottom border-secondary"
@@ -236,5 +496,5 @@
     </template>
 </div>
 <!-- ====================================================================== -->
-<!-- END: PLANNING_CONSOLE_PANEL (PATCH 1 OF 1) -->
+<!-- END: STEP_TEMPLATE (PATCH 6 OF 6) -->
 <!-- ====================================================================== -->

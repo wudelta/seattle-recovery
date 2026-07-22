@@ -1,6 +1,6 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 1 OF 1)
-// START: PLANNING_CONSOLE_CONTROLLER
+// FILE: aurora/static/aurora/js/planning.js (PATCH 1 OF 7)
+// START: PLANNING_STATE_AND_SHARED_UTILITIES
 // ======================================================================
 (function(window, $) {
     "use strict";
@@ -8,6 +8,8 @@
     let planningInitialized = false;
     let planningEndpoints = {};
     let planningRequest = null;
+    let initiativeRequest = null;
+    let phaseRequest = null;
 
     const STATUS_CLASSES = {
         PLANNED: "bg-secondary text-light",
@@ -16,10 +18,6 @@
         COMPLETED: "bg-success text-light",
         CANCELLED: "bg-danger text-light",
     };
-
-    function escapeHtml(value) {
-        return $("<div>").text(value || "").html();
-    }
 
     function formatDate(value) {
         if (!value) {
@@ -49,6 +47,27 @@
         return $(template.content.cloneNode(true));
     }
 
+    function getCsrfToken() {
+        const cookie = document.cookie
+            .split("; ")
+            .find(function(item) {
+                return item.startsWith("csrftoken=");
+            });
+
+        if (!cookie) {
+            return "";
+        }
+
+        return decodeURIComponent(cookie.split("=")[1]);
+    }
+// ======================================================================
+// END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 7)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 2 OF 7)
+// START: PLANNING_WORKSPACE_STATE
+// ======================================================================
     function setLoadingState(isLoading) {
         const $loadingState = $("#planning-loading-state");
         const $refreshButton = $("#planning-refresh-btn");
@@ -102,7 +121,14 @@
             .addClass("text-info")
             .text("0 initiatives");
     }
+// ======================================================================
+// END: PLANNING_WORKSPACE_STATE (PATCH 2 OF 7)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 3 OF 7)
+// START: PLANNING_HIERARCHY_RENDERERS
+// ======================================================================
     function renderStep(step) {
         const $fragment = cloneTemplate("planning-step-template");
         const $step = $fragment.find(".planning-step");
@@ -367,7 +393,14 @@
                 + `${new Date().toLocaleTimeString()}.`
             );
     }
+// ======================================================================
+// END: PLANNING_HIERARCHY_RENDERERS (PATCH 3 OF 7)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 4 OF 7)
+// START: PLANNING_DATA_LOADER
+// ======================================================================
     function loadPlanningData() {
         const endpoint = planningEndpoints.planning_endpoint;
 
@@ -433,13 +466,446 @@
                 setLoadingState(false);
             });
     }
+// ======================================================================
+// END: PLANNING_DATA_LOADER (PATCH 4 OF 7)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 5 OF 7)
+// START: INITIATIVE_CREATION_CONTROLLER
+// ======================================================================
+    function clearInitiativeFormError() {
+        $("#planning-initiative-form-error")
+            .addClass("d-none")
+            .empty();
+    }
+
+    function showInitiativeFormError(message, fieldErrors) {
+        const errors = [];
+
+        if (fieldErrors) {
+            Object.keys(fieldErrors).forEach(function(fieldName) {
+                errors.push(fieldErrors[fieldName]);
+            });
+        }
+
+        $("#planning-initiative-form-error")
+            .removeClass("d-none")
+            .text(
+                errors.length
+                    ? errors.join(" ")
+                    : message || "The Initiative could not be saved."
+            );
+    }
+
+    function resetInitiativeForm() {
+        const form = document.getElementById(
+            "planning-initiative-form"
+        );
+
+        if (form) {
+            form.reset();
+        }
+
+        $("#planning-initiative-status").val("PLANNED");
+        clearInitiativeFormError();
+    }
+
+    function openInitiativeForm() {
+        resetInitiativeForm();
+
+        $("#planning-initiative-form-panel")
+            .removeClass("d-none");
+
+        $("#planning-initiative-title").trigger("focus");
+    }
+
+    function closeInitiativeForm() {
+        resetInitiativeForm();
+
+        $("#planning-initiative-form-panel")
+            .addClass("d-none");
+    }
+
+    function setInitiativeSaveState(isSaving) {
+        $("#planning-save-initiative-btn")
+            .prop("disabled", isSaving)
+            .text(isSaving ? "Saving..." : "Save Initiative");
+
+        $("#planning-cancel-initiative-btn")
+            .prop("disabled", isSaving);
+
+        $("#planning-initiative-form")
+            .find("input, textarea, select, button[type='reset']")
+            .prop("disabled", isSaving);
+    }
+
+    function createInitiative() {
+        const endpoint = planningEndpoints.planning_endpoint;
+        const title = $("#planning-initiative-title").val().trim();
+
+        clearInitiativeFormError();
+
+        if (!endpoint) {
+            showInitiativeFormError(
+                "The planning endpoint was not supplied by Aurora Console."
+            );
+            return;
+        }
+
+        if (!title) {
+            showInitiativeFormError(
+                "Initiative title is required.",
+                {
+                    title: "Enter an Initiative title.",
+                }
+            );
+
+            $("#planning-initiative-title").trigger("focus");
+            return;
+        }
+
+        if (initiativeRequest) {
+            return;
+        }
+
+        setInitiativeSaveState(true);
+
+        initiativeRequest = $.ajax({
+            url: endpoint,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            headers: {
+                "X-CSRFToken": getCsrfToken(),
+            },
+            data: JSON.stringify({
+                title: title,
+                description: $("#planning-initiative-description")
+                    .val()
+                    .trim(),
+                status: $("#planning-initiative-status").val(),
+            }),
+        })
+            .done(function(response) {
+                if (!response || response.status !== "success") {
+                    showInitiativeFormError(
+                        "The planning endpoint returned an invalid response."
+                    );
+                    return;
+                }
+
+                closeInitiativeForm();
+                loadPlanningData();
+            })
+            .fail(function(xhr) {
+                const response = xhr.responseJSON || {};
+
+                showInitiativeFormError(
+                    response.message || "The Initiative request failed.",
+                    response.field_errors
+                );
+            })
+            .always(function() {
+                initiativeRequest = null;
+                setInitiativeSaveState(false);
+            });
+    }
+// ======================================================================
+// END: INITIATIVE_CREATION_CONTROLLER (PATCH 5 OF 7)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 6 OF 7)
+// START: PHASE_CREATION_CONTROLLER
+// ======================================================================
+    function clearPhaseFormError($initiative) {
+        $initiative
+            .find(".planning-phase-form-error")
+            .addClass("d-none")
+            .empty();
+    }
+
+    function showPhaseFormError(
+        $initiative,
+        message,
+        fieldErrors
+    ) {
+        const errors = [];
+
+        if (fieldErrors) {
+            Object.keys(fieldErrors).forEach(function(fieldName) {
+                errors.push(fieldErrors[fieldName]);
+            });
+        }
+
+        $initiative
+            .find(".planning-phase-form-error")
+            .removeClass("d-none")
+            .text(
+                errors.length
+                    ? errors.join(" ")
+                    : message || "The Phase could not be saved."
+            );
+    }
+
+    function resetPhaseForm($initiative) {
+        const form = $initiative
+            .find(".planning-phase-form")
+            .get(0);
+
+        if (form) {
+            form.reset();
+        }
+
+        $initiative
+            .find(".planning-phase-form-status")
+            .val("PLANNED");
+
+        clearPhaseFormError($initiative);
+    }
+
+    function openPhaseForm($initiative) {
+        $(".planning-initiative").each(function() {
+            const $otherInitiative = $(this);
+
+            if (!$otherInitiative.is($initiative)) {
+                closePhaseForm($otherInitiative);
+            }
+        });
+
+        resetPhaseForm($initiative);
+
+        $initiative
+            .find(".planning-phase-form-panel")
+            .removeClass("d-none");
+
+        $initiative
+            .find(".planning-phase-form-title")
+            .trigger("focus");
+    }
+
+    function closePhaseForm($initiative) {
+        resetPhaseForm($initiative);
+
+        $initiative
+            .find(".planning-phase-form-panel")
+            .addClass("d-none");
+    }
+
+    function setPhaseSaveState($initiative, isSaving) {
+        $initiative
+            .find(".planning-save-phase-btn")
+            .prop("disabled", isSaving)
+            .text(isSaving ? "Saving..." : "Save Phase");
+
+        $initiative
+            .find(".planning-cancel-phase-btn")
+            .prop("disabled", isSaving);
+
+        $initiative
+            .find(".planning-phase-form")
+            .find("input, textarea, select, button[type='reset']")
+            .prop("disabled", isSaving);
+    }
+
+    function createPhase($initiative) {
+        const endpoint = planningEndpoints.planning_endpoint;
+        const initiativeId = $initiative.data("initiative-id");
+
+        const title = $initiative
+            .find(".planning-phase-form-title")
+            .val()
+            .trim();
+
+        clearPhaseFormError($initiative);
+
+        if (!endpoint) {
+            showPhaseFormError(
+                $initiative,
+                "The planning endpoint was not supplied by Aurora Console."
+            );
+            return;
+        }
+
+        if (!initiativeId) {
+            showPhaseFormError(
+                $initiative,
+                "The parent Initiative could not be identified."
+            );
+            return;
+        }
+
+        if (!title) {
+            showPhaseFormError(
+                $initiative,
+                "Phase title is required.",
+                {
+                    title: "Enter a Phase title.",
+                }
+            );
+
+            $initiative
+                .find(".planning-phase-form-title")
+                .trigger("focus");
+
+            return;
+        }
+
+        if (phaseRequest) {
+            return;
+        }
+
+        setPhaseSaveState($initiative, true);
+
+        phaseRequest = $.ajax({
+            url: endpoint,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            headers: {
+                "X-CSRFToken": getCsrfToken(),
+            },
+            data: JSON.stringify({
+                operation: "create_phase",
+                initiative_id: initiativeId,
+                title: title,
+                description: $initiative
+                    .find(".planning-phase-form-description")
+                    .val()
+                    .trim(),
+                status: $initiative
+                    .find(".planning-phase-form-status")
+                    .val(),
+            }),
+        })
+            .done(function(response) {
+                if (!response || response.status !== "success") {
+                    showPhaseFormError(
+                        $initiative,
+                        "The planning endpoint returned an invalid response."
+                    );
+                    return;
+                }
+
+                closePhaseForm($initiative);
+                loadPlanningData();
+            })
+            .fail(function(xhr) {
+                const response = xhr.responseJSON || {};
+
+                showPhaseFormError(
+                    $initiative,
+                    response.message || "The Phase request failed.",
+                    response.field_errors
+                );
+            })
+            .always(function() {
+                phaseRequest = null;
+                setPhaseSaveState($initiative, false);
+            });
+    }
+// ======================================================================
+// END: PHASE_CREATION_CONTROLLER (PATCH 6 OF 7)
+// ======================================================================
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 7 OF 7)
+// START: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API
+// ======================================================================
     function bindPlanningEvents() {
         $("#planning-refresh-btn")
             .off("click.planning")
             .on("click.planning", function() {
                 loadPlanningData();
             });
+
+        $(
+            "#planning-create-initiative-btn, "
+            + "#planning-empty-create-initiative-btn"
+        )
+            .off("click.planning")
+            .on("click.planning", function() {
+                openInitiativeForm();
+            });
+
+        $("#planning-cancel-initiative-btn")
+            .off("click.planning")
+            .on("click.planning", function() {
+                closeInitiativeForm();
+            });
+
+        $("#planning-initiative-form")
+            .off("submit.planning")
+            .on("submit.planning", function(event) {
+                event.preventDefault();
+                createInitiative();
+            })
+            .off("reset.planning")
+            .on("reset.planning", function() {
+                clearInitiativeFormError();
+
+                window.setTimeout(function() {
+                    $("#planning-initiative-status").val("PLANNED");
+                }, 0);
+            });
+
+        $("#planning-initiative-list")
+            .off("click.planningPhase")
+            .on(
+                "click.planningPhase",
+                ".planning-new-phase-btn",
+                function() {
+                    const $initiative = $(this).closest(
+                        ".planning-initiative"
+                    );
+
+                    openPhaseForm($initiative);
+                }
+            )
+            .on(
+                "click.planningPhase",
+                ".planning-cancel-phase-btn",
+                function() {
+                    const $initiative = $(this).closest(
+                        ".planning-initiative"
+                    );
+
+                    closePhaseForm($initiative);
+                }
+            )
+            .off("submit.planningPhase")
+            .on(
+                "submit.planningPhase",
+                ".planning-phase-form",
+                function(event) {
+                    event.preventDefault();
+
+                    const $initiative = $(this).closest(
+                        ".planning-initiative"
+                    );
+
+                    createPhase($initiative);
+                }
+            )
+            .off("reset.planningPhase")
+            .on(
+                "reset.planningPhase",
+                ".planning-phase-form",
+                function() {
+                    const $initiative = $(this).closest(
+                        ".planning-initiative"
+                    );
+
+                    clearPhaseFormError($initiative);
+
+                    window.setTimeout(function() {
+                        $initiative
+                            .find(".planning-phase-form-status")
+                            .val("PLANNED");
+                    }, 0);
+                }
+            );
     }
 
     window.initPlanningConsole = function(
@@ -464,5 +930,5 @@
     };
 })(window, jQuery);
 // ======================================================================
-// END: PLANNING_CONSOLE_CONTROLLER (PATCH 1 OF 1)
+// END: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API (PATCH 7 OF 7)
 // ======================================================================

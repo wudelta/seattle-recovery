@@ -1,13 +1,16 @@
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 1 OF 1)
-# START: PLANNING_API
+# FILE: aurora/api/planning_api.py (PATCH 1 OF 6)
+# START: PLANNING_SERIALIZATION
 # ======================================================================
-from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+import json
 
-from aurora.models import Initiative, Phase, Step
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.db.models import Max, Prefetch
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+from aurora.models import ExecutionStatus, Initiative, Phase, Step
 
 
 def serialize_user(user):
@@ -104,12 +107,16 @@ def serialize_initiative(initiative):
             else None
         ),
     }
+# ======================================================================
+# END: PLANNING_SERIALIZATION (PATCH 1 OF 6)
+# ======================================================================
 
-
-@login_required
-@require_GET
-def planning_endpoint(request):
-    """Returns the persisted Initiative → Phase → Step hierarchy."""
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 2 OF 6)
+# START: PLANNING_HIERARCHY_QUERY
+# ======================================================================
+def build_planning_payload():
+    """Builds the complete persisted planning hierarchy."""
     step_queryset = (
         Step.objects
         .select_related("validated_by")
@@ -155,7 +162,7 @@ def planning_endpoint(request):
         for phase in initiative["phases"]
     )
 
-    return JsonResponse({
+    return {
         "status": "success",
         "summary": {
             "initiative_count": len(initiative_payload),
@@ -163,7 +170,277 @@ def planning_endpoint(request):
             "step_count": step_count,
         },
         "initiatives": initiative_payload,
-    })
+    }
 # ======================================================================
-# END: PLANNING_API (PATCH 1 OF 1)
+# END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 6)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 3 OF 6)
+# START: PLANNING_REQUEST_VALIDATION
+# ======================================================================
+def parse_json_request(request):
+    """Returns a decoded JSON object or a structured validation error."""
+    try:
+        payload = json.loads(request.body or b"{}")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "The request body must contain valid JSON.",
+            },
+            status=400,
+        )
+
+    if not isinstance(payload, dict):
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "The request body must be a JSON object.",
+            },
+            status=400,
+        )
+
+    return payload, None
+
+
+def valid_execution_statuses():
+    """Returns the persisted lifecycle values accepted by planning records."""
+    return {
+        choice.value
+        for choice in ExecutionStatus
+    }
+
+
+def validate_title(payload, record_label):
+    """Validates a required planning-record title."""
+    title = str(payload.get("title", "")).strip()
+
+    if not title:
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": f"{record_label} title is required.",
+                "field_errors": {
+                    "title": f"Enter a {record_label} title.",
+                },
+            },
+            status=400,
+        )
+
+    if len(title) > 255:
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    f"{record_label} title must not exceed 255 characters."
+                ),
+                "field_errors": {
+                    "title": "Use 255 characters or fewer.",
+                },
+            },
+            status=400,
+        )
+
+    return title, None
+
+
+def validate_status(payload, record_label):
+    """Validates an optional execution status."""
+    status = str(
+        payload.get("status", ExecutionStatus.PLANNED)
+    ).strip().upper()
+
+    if status not in valid_execution_statuses():
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": f"{record_label} status is invalid.",
+                "field_errors": {
+                    "status": f"Select a valid {record_label} status.",
+                },
+            },
+            status=400,
+        )
+
+    return status, None
+# ======================================================================
+# END: PLANNING_REQUEST_VALIDATION (PATCH 3 OF 6)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 4 OF 6)
+# START: INITIATIVE_CREATION_API
+# ======================================================================
+def create_initiative(request, payload):
+    """Validates and persists one new Initiative."""
+    title, error_response = validate_title(
+        payload,
+        "Initiative",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    status, error_response = validate_status(
+        payload,
+        "Initiative",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    description = str(payload.get("description", "")).strip()
+
+    with transaction.atomic():
+        highest_position = (
+            Initiative.objects
+            .aggregate(highest=Max("position"))
+            .get("highest")
+        )
+
+        initiative = Initiative.objects.create(
+            title=title,
+            description=description,
+            status=status,
+            position=(
+                highest_position + 1
+                if highest_position is not None
+                else 0
+            ),
+            created_by=request.user,
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Initiative created.",
+            "initiative": serialize_initiative(initiative),
+        },
+        status=201,
+    )
+# ======================================================================
+# END: INITIATIVE_CREATION_API (PATCH 4 OF 6)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 5 OF 6)
+# START: PHASE_CREATION_API
+# ======================================================================
+def create_phase(payload):
+    """Validates and persists one Phase beneath an Initiative."""
+    initiative_id = payload.get("initiative_id")
+
+    if initiative_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Initiative is required.",
+                "field_errors": {
+                    "initiative_id": "Select an Initiative.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        initiative = Initiative.objects.get(pk=initiative_id)
+    except (Initiative.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Initiative does not exist.",
+                "field_errors": {
+                    "initiative_id": "Select a valid Initiative.",
+                },
+            },
+            status=404,
+        )
+
+    title, error_response = validate_title(
+        payload,
+        "Phase",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    status, error_response = validate_status(
+        payload,
+        "Phase",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    description = str(payload.get("description", "")).strip()
+
+    with transaction.atomic():
+        highest_position = (
+            Phase.objects
+            .filter(initiative=initiative)
+            .aggregate(highest=Max("position"))
+            .get("highest")
+        )
+
+        phase = Phase.objects.create(
+            initiative=initiative,
+            title=title,
+            description=description,
+            status=status,
+            position=(
+                highest_position + 1
+                if highest_position is not None
+                else 0
+            ),
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Phase created.",
+            "phase": serialize_phase(phase),
+            "initiative_id": initiative.pk,
+        },
+        status=201,
+    )
+# ======================================================================
+# END: PHASE_CREATION_API (PATCH 5 OF 6)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 6 OF 6)
+# START: PLANNING_ENDPOINT_ROUTER
+# ======================================================================
+@login_required
+@require_http_methods(["GET", "POST"])
+def planning_endpoint(request):
+    """Reads the hierarchy or performs a supported planning operation."""
+    if request.method == "GET":
+        return JsonResponse(build_planning_payload())
+
+    payload, error_response = parse_json_request(request)
+
+    if error_response is not None:
+        return error_response
+
+    operation = str(
+        payload.get("operation", "create_initiative")
+    ).strip().lower()
+
+    if operation == "create_initiative":
+        return create_initiative(request, payload)
+
+    if operation == "create_phase":
+        return create_phase(payload)
+
+    return JsonResponse(
+        {
+            "status": "error",
+            "message": "The requested planning operation is not supported.",
+        },
+        status=400,
+    )
+# ======================================================================
+# END: PLANNING_ENDPOINT_ROUTER (PATCH 6 OF 6)
 # ======================================================================

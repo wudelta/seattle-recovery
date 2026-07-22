@@ -183,6 +183,26 @@ Whenever runtime behavior changes, perform an appropriate behavioral validation 
 
 ---
 
+# 8.1 Validation Matrix
+
+Whenever practical, perform deterministic validation appropriate to the type of artifact being modified before behavioral testing.
+
+| Artifact | Deterministic Validation | Behavioral Validation |
+|----------|--------------------------|-----------------------|
+| Python | `daurora-check` | Exercise the affected endpoint, API, command, or UI. |
+| JavaScript | `djscheck` | Exercise the affected browser interaction or UI workflow. |
+| Django Template | `daurora-check` | Render the affected page or panel and verify expected behavior. |
+| Database Migration | `dmakemigrations` (when applicable), `daurora-migrate` | Verify schema changes and affected CRUD operations. |
+| Documentation | Markdown rendering or structural review | Human review for clarity, completeness, and architectural correctness. |
+
+Deterministic validation verifies that an artifact is structurally valid.
+
+Behavioral validation verifies that it accomplishes the intended engineering objective.
+
+Both are required before an implementation is considered complete.
+
+---
+
 # 9. The GO Loop
 
 Every implementation follows the same review cycle:
@@ -240,6 +260,10 @@ Before sending any patch, confirm all of the following:
 □ The patch is syntactically valid.
 
 □ The intended validation method has been identified.
+
+□ The required deterministic validation has been identified.
+
+□ The required behavioral validation has been identified.
 
 If any item cannot be confidently answered, stop and resolve the uncertainty before delivering the patch.
 
