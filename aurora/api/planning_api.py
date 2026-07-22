@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 1 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 1 OF 7)
 # START: PLANNING_SERIALIZATION
 # ======================================================================
 import json
@@ -108,11 +108,11 @@ def serialize_initiative(initiative):
         ),
     }
 # ======================================================================
-# END: PLANNING_SERIALIZATION (PATCH 1 OF 6)
+# END: PLANNING_SERIALIZATION (PATCH 1 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 2 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 2 OF 7)
 # START: PLANNING_HIERARCHY_QUERY
 # ======================================================================
 def build_planning_payload():
@@ -172,11 +172,11 @@ def build_planning_payload():
         "initiatives": initiative_payload,
     }
 # ======================================================================
-# END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 6)
+# END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 3 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 3 OF 7)
 # START: PLANNING_REQUEST_VALIDATION
 # ======================================================================
 def parse_json_request(request):
@@ -265,11 +265,11 @@ def validate_status(payload, record_label):
 
     return status, None
 # ======================================================================
-# END: PLANNING_REQUEST_VALIDATION (PATCH 3 OF 6)
+# END: PLANNING_REQUEST_VALIDATION (PATCH 3 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 4 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 4 OF 7)
 # START: INITIATIVE_CREATION_API
 # ======================================================================
 def create_initiative(request, payload):
@@ -320,11 +320,11 @@ def create_initiative(request, payload):
         status=201,
     )
 # ======================================================================
-# END: INITIATIVE_CREATION_API (PATCH 4 OF 6)
+# END: INITIATIVE_CREATION_API (PATCH 4 OF 7)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 5 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 5 OF 7)
 # START: PHASE_CREATION_API
 # ======================================================================
 def create_phase(payload):
@@ -409,7 +409,161 @@ def create_phase(payload):
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 6 OF 6)
+# FILE: aurora/api/planning_api.py (PATCH 6 OF 7)
+# START: STEP_CREATION_API
+# ======================================================================
+def create_step(payload):
+    """Validates and persists one Step beneath a Phase."""
+    phase_id = payload.get("phase_id")
+
+    if phase_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Phase is required.",
+                "field_errors": {
+                    "phase_id": "Select a Phase.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        phase = Phase.objects.get(pk=phase_id)
+    except (Phase.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Phase does not exist.",
+                "field_errors": {
+                    "phase_id": "Select a valid Phase.",
+                },
+            },
+            status=404,
+        )
+
+    title, error_response = validate_title(
+        payload,
+        "Step",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    status, error_response = validate_status(
+        payload,
+        "Step",
+    )
+
+    if error_response is not None:
+        return error_response
+
+    estimated_minutes_value = payload.get("estimated_minutes")
+
+    if estimated_minutes_value in (None, ""):
+        estimated_minutes = None
+    else:
+        try:
+            estimated_minutes = int(estimated_minutes_value)
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Step estimate is invalid.",
+                    "field_errors": {
+                        "estimated_minutes": (
+                            "Enter an estimate using whole minutes."
+                        ),
+                    },
+                },
+                status=400,
+            )
+
+        if estimated_minutes < 0:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Step estimate is invalid.",
+                    "field_errors": {
+                        "estimated_minutes": (
+                            "Estimated minutes cannot be negative."
+                        ),
+                    },
+                },
+                status=400,
+            )
+
+    estimate_confidence = str(
+        payload.get("estimate_confidence", "")
+    ).strip().upper()
+
+    if not estimate_confidence:
+        estimate_confidence = None
+    elif estimate_confidence not in {
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+    }:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Step estimate confidence is invalid.",
+                "field_errors": {
+                    "estimate_confidence": (
+                        "Select Low, Medium, or High confidence."
+                    ),
+                },
+            },
+            status=400,
+        )
+
+    description = str(
+        payload.get("description", "")
+    ).strip()
+
+    validation_description = str(
+        payload.get("validation_description", "")
+    ).strip()
+
+    with transaction.atomic():
+        highest_position = (
+            Step.objects
+            .filter(phase=phase)
+            .aggregate(highest=Max("position"))
+            .get("highest")
+        )
+
+        step = Step.objects.create(
+            phase=phase,
+            title=title,
+            description=description,
+            status=status,
+            position=(
+                highest_position + 1
+                if highest_position is not None
+                else 0
+            ),
+            estimated_minutes=estimated_minutes,
+            estimate_confidence=estimate_confidence,
+            validation_description=validation_description,
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Step created.",
+            "step": serialize_step(step),
+            "phase_id": phase.pk,
+            "initiative_id": phase.initiative_id,
+        },
+        status=201,
+    )
+# ======================================================================
+# END: STEP_CREATION_API (PATCH 6 OF 7)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 7 OF 7)
 # START: PLANNING_ENDPOINT_ROUTER
 # ======================================================================
 @login_required
@@ -434,6 +588,9 @@ def planning_endpoint(request):
     if operation == "create_phase":
         return create_phase(payload)
 
+    if operation == "create_step":
+        return create_step(payload)
+
     return JsonResponse(
         {
             "status": "error",
@@ -442,5 +599,5 @@ def planning_endpoint(request):
         status=400,
     )
 # ======================================================================
-# END: PLANNING_ENDPOINT_ROUTER (PATCH 6 OF 6)
+# END: PLANNING_ENDPOINT_ROUTER (PATCH 7 OF 7)
 # ======================================================================
