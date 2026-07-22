@@ -391,6 +391,15 @@ class ExecutionStatus(models.TextChoices):
     ACTIVE = "ACTIVE", "Active"
     PAUSED = "PAUSED", "Paused"
     COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class EstimateConfidence(models.TextChoices):
+    """Confidence levels for implementation effort estimates."""
+
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
 
 
 class Initiative(models.Model):
@@ -459,7 +468,7 @@ class Phase(models.Model):
 
 
 class Step(models.Model):
-    """A single implementation task within a Phase."""
+    """A single validated implementation task within a Phase."""
 
     phase = models.ForeignKey(
         Phase,
@@ -470,9 +479,33 @@ class Step(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
 
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
     position = models.PositiveIntegerField(default=0)
 
-    completed = models.BooleanField(default=False, db_index=True)
+    estimated_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Estimated implementation effort in minutes.",
+    )
+
+    estimate_confidence = models.CharField(
+        max_length=10,
+        choices=EstimateConfidence.choices,
+        null=True,
+        blank=True,
+        help_text="Confidence in the current implementation estimate.",
+    )
+
+    validation_description = models.TextField(
+        blank=True,
+        help_text="Deterministic evidence required to validate this step.",
+    )
 
     validated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -482,7 +515,10 @@ class Step(models.Model):
         related_name="validated_steps",
     )
 
-    validation_notes = models.TextField(blank=True)
+    validation_notes = models.TextField(
+        blank=True,
+        help_text="Observed validation results and supporting evidence.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
