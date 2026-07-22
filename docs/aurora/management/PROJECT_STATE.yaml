@@ -1,174 +1,306 @@
 # ======================================================================
+
 # Aurora Project State
+
 # ======================================================================
 
 project:
 
-  name: Aurora
-  version: 2
+name: Aurora
+version: 2
 
 targets:
 
-  aurora_baseline:
-    status: achieved
+aurora_baseline:
+status: achieved
 
-  hopehub_beta_prototype:
-    target_date: 2026-08-15
+hopehub_beta_prototype:
+target_date: 2026-08-15
 
 development:
 
-  current_phase: >
-    Repository Intelligence Consumption
+current_phase: >
+Project Planning Integration and Wu Orchestration Design
 
-  objective: >
-    Integrate ComponentRegistry intelligence into Wu so architectural
-    descriptions and dependency information become the primary source of
-    repository understanding for subsystem design, architectural analysis,
-    and large-scale refactoring while preparing Aurora for full-time
-    HopeHub engineering.
+objective: >
+Determine how Aurora's Initiative, Phase, and Step planning models
+should become useful to Wu without prematurely implementing another
+large orchestration subsystem. Define a small, independently valuable
+first milestone that gives Wu reliable project-state awareness before
+introducing DeltaNotes triage, minion assignment, execution controls,
+or autonomous implementation.
 
 architecture:
 
-  provider_abstraction:
-    status: complete
+provider_abstraction:
+status: complete
 
-  ai_execution_platform:
-    status: complete
+ai_execution_platform:
+status: complete
 
-  workspace_architecture:
+legacy_ai_cleanup:
 
-    deterministic_builders: complete
+```
+direct_gemini_chat_endpoint:
+  removal: complete
+  repository_reference_scan: complete
+  django_validation: complete
+  diff_validation: complete
 
-    workspace_synchronizer:
+abandoned_minion_architecture:
+  cleanup: complete
+```
 
-      repository_projection:
-        implementation: complete
-        validation: complete
+workspace_architecture:
 
-      component_registry_sync:
-        implementation: complete
-        batch_processing: complete
-        stale_record_reconciliation: complete
-        validation: complete
+```
+deterministic_builders: complete
 
-      graph_sync:
-        implementation: complete
-        validation: complete
+workspace_synchronizer:
 
-      registry_reset:
-        implementation: complete
-        validation: complete
+  repository_projection:
+    implementation: complete
+    validation: complete
 
-    component_registry_documentation:
+  component_registry_sync:
+    implementation: complete
+    batch_processing: complete
+    stale_record_reconciliation: complete
+    validation: complete
 
-      ai_enrichment_pipeline:
-        implementation: complete
-        validation: complete
+  graph_sync:
+    implementation: complete
+    validation: complete
 
-      directive_driven_analysis:
-        implementation: complete
+  registry_reset:
+    implementation: complete
+    validation: complete
 
-      deterministic_ai_separation:
-        implementation: complete
+component_registry_documentation:
 
-    telemetry_logger:
-      centralized_logging: complete
+  ai_enrichment_pipeline:
+    implementation: complete
+    validation: complete
 
-    slash_command_orchestration:
-      page: validated
-      api: validated
-      destroy: validated
+  directive_driven_analysis:
+    implementation: complete
+
+  deterministic_ai_separation:
+    implementation: complete
+
+telemetry_logger:
+  centralized_logging: complete
+
+slash_command_orchestration:
+  page: validated
+  api: validated
+  destroy: validated
+```
+
+project_planning:
+
+```
+initiative_model:
+  implementation: complete
+
+phase_model:
+  implementation: complete
+
+step_model:
+  implementation: complete
+
+hierarchy:
+  structure: initiative_phase_step
+  implementation: complete
+
+statuses:
+  planned: supported
+  active: supported
+  paused: supported
+  completed: supported
+
+initiative_ownership:
+  created_by_user: supported
+
+wu_consumption:
+  status: design_required
+
+project_dashboard:
+  status: not_started
+```
 
 artifact_lifecycle:
 
-  page_creation: validated
-  page_destruction: validated
-  api_creation: validated
-  repository_synchronization: validated
+page_creation: validated
+page_destruction: validated
+api_creation: validated
+repository_synchronization: validated
 
 validation:
 
-  provider_routing: complete
-  workspace_context_resolution: complete
-  structured_patch_generation: complete
-  structured_patch_parsing: complete
-  monaco_review_workflow: complete
-  artifact_lifecycle: complete
+provider_routing: complete
+workspace_context_resolution: complete
+structured_patch_generation: complete
+structured_patch_parsing: complete
+monaco_review_workflow: complete
+artifact_lifecycle: complete
 
-  workspace_editor:
-    create_file: complete
-    create_directory: complete
-    save_existing_file: complete
-    rename: complete
-    delete: complete
+workspace_editor:
+create_file: complete
+create_directory: complete
+save_existing_file: complete
+rename: complete
+delete: complete
 
-  component_registry:
+component_registry:
 
-    deterministic_discovery: complete
-    clean_bootstrap: complete
-    deterministic_registration: complete
-    deterministic_graph_projection: complete
-    deterministic_reconciliation: complete
-    clean_rebuild_validation: complete
+```
+deterministic_discovery: complete
+clean_bootstrap: complete
+deterministic_registration: complete
+deterministic_graph_projection: complete
+deterministic_reconciliation: complete
+clean_rebuild_validation: complete
 
-    ai_description_pipeline: complete
-    single_component_validation: complete
+ai_description_pipeline: complete
+single_component_validation: complete
+```
 
-  docker_compose:
-    web_server_restored: complete
+docker_compose:
+web_server_restored: complete
+
+legacy_gemini_cleanup:
+repository_scan: complete
+django_system_check: complete
+git_diff_check: complete
+
+current_design_questions:
+
+* How should Wu consume Initiative, Phase, and Step records as project context?
+* What is the smallest Project Dashboard milestone that provides immediate value?
+* Should the first dashboard be read-only and expose only current project state?
+* How should unprocessed DeltaNotesEntry records enter the planning hierarchy?
+* Which actions require explicit human approval before creating planning records?
+* Should minion assignment live on Step, on a future execution record, or both?
+* Is a transient StepExecution-style model eventually required?
+* How should execution state remain separate from durable project planning state?
+* How should PendingCodeChange participate in future Step execution and approval?
 
 remaining_work:
 
-  immediate:
+immediate:
 
-    - Evaluate AI-generated ComponentRegistry descriptions across representative repository components.
-    - Refine AI enrichment prompts and directive constraints where needed.
-    - Integrate ComponentRegistry intelligence into Wu repository understanding.
-    - Validate repository-aware subsystem analysis using ComponentRegistry metadata.
+```
+- Conduct a high-level architectural discussion before modifying code.
+- Inspect the implemented Initiative, Phase, and Step models.
+- Define the first independently useful Project Dashboard milestone.
+- Define the minimum project context Wu needs to answer what is active and what comes next.
+- Preserve DeltaNotesEntry as an informal intake mechanism until its promotion workflow is designed.
+- Avoid implementing AI triage, minion execution, and approval orchestration as one subsystem.
+```
 
-  next_major_phase:
+likely_first_milestone:
 
-    - Enable subsystem-level architectural analysis and large-scale refactoring workflows.
-    - Begin HopeHub engineering implementation.
-    - Continue the mobile-first API transition.
-    - Design and implement the automated /end-session workflow, including verified backups and off-site replication.
+```
+- Create a read-only project-state projection.
+- Identify the active Initiative.
+- Identify the current Phase.
+- Identify the current or next incomplete Step.
+- Expose paused and planned work.
+- Make the same deterministic project context available to Wu.
+- Perform no AI planning, minion assignment, or repository mutation.
+```
+
+deferred_until_designed:
+
+```
+- AI-assisted DeltaNotesEntry triage.
+- Promotion of notes into Initiatives, Phases, or Steps.
+- Minion recommendation and assignment.
+- Prepared execution packages.
+- Execute controls.
+- Step execution tracking.
+- Automated implementation attempts.
+- Validation-driven Step completion.
+- Automatic Phase and Initiative completion.
+- Integration with PendingCodeChange approval workflows.
+```
+
+next_major_phase:
+
+```
+- Enable Wu to consume deterministic project-planning context.
+- Enable repository-aware subsystem analysis using ComponentRegistry metadata.
+- Begin HopeHub engineering implementation.
+- Continue the mobile-first API transition.
+- Design and implement the automated /end-session workflow, including verified backups and off-site replication.
+```
 
 principles:
 
-  architecture:
+architecture:
 
-    - Builders perform deterministic filesystem mutation only.
-    - WorkspaceSynchronizer is the sole authority for repository synchronization.
-    - AI enrichment operates only on deterministic registry output.
-    - Standing AI behavior resides in DeltaDirectives.
-    - Application code supplies task context only.
-    - TelemetryLogger owns telemetry.
-    - Business logic remains isolated from orchestration.
-    - No automatic generated unit tests.
-    - Maintain deterministic, reversible workflows.
+```
+- Builders perform deterministic filesystem mutation only.
+- WorkspaceSynchronizer is the sole authority for repository synchronization.
+- AI enrichment operates only on deterministic registry output.
+- Standing AI behavior resides in DeltaDirectives.
+- Application code supplies task context only.
+- TelemetryLogger owns telemetry.
+- Business logic remains isolated from orchestration.
+- No automatic generated unit tests.
+- Maintain deterministic, reversible workflows.
+- DeltaNotesEntry is an intake mechanism, not an executable instruction.
+- Initiative, Phase, and Step records represent durable approved project planning.
+- Execution state must remain distinct from durable planning state.
+- AI proposals must remain reviewable before they modify the project plan.
+- Execute operations must apply to bounded Steps rather than informal notes.
+- Every implementation milestone must provide standalone value.
+- Do not attack the entire planning and execution subsystem at once.
+```
 
 status:
 
-  repository_state: stable
-  component_registry_state: repository_intelligence_ready
-  architecture_state: repository_intelligence_consumption
-  production_readiness: approaching_hopehub
+repository_state: stable
+component_registry_state: repository_intelligence_ready
+planning_model_state: implemented
+planning_consumption_state: architectural_design
+architecture_state: high_level_review
+production_readiness: approaching_hopehub
 
 last_verified:
 
-  date: 2026-07-20
+date: 2026-07-21
+
+checks:
+
+```
+- No remaining aurora_chat_stream references.
+- No remaining gemini_chat_stream references.
+- No remaining gemini_chat_endpoint references.
+- Django system check completed successfully.
+- Git diff whitespace and conflict-marker check completed successfully.
+```
 
 notes: >
-  Aurora now implements a complete deterministic repository intelligence
-  pipeline. WorkspaceSynchronizer performs deterministic repository
-  discovery, synchronization, hashing, dependency analysis, graph
-  projection, and ComponentRegistry reconciliation. WorkspaceDocumenter
-  enriches deterministic ComponentRegistry records using directive-driven
-  AI analysis while validating source hashes before and after execution.
-  Repository intelligence is now ready to become Wu's primary source of
-  repository understanding for subsystem design, architectural analysis,
-  and large-scale refactoring. The next architectural milestone is to
-  consume this intelligence throughout Aurora, followed by full-time
-  HopeHub engineering. Future workflow automation will culminate in a
-  deterministic `/end-session` command that verifies backups, records
-  session state, and replicates project data to off-site storage.
+Aurora now contains implemented Initiative, Phase, and Step planning models,
+but those models are not yet integrated into Wu's working context or execution
+workflow. An older DeltaNotesEntry concept proposed a Project Dashboard that
+would process unhandled notes into AI instructions, assign work to minions,
+expose an Execute button, and submit implementation attempts for approval.
+That concept remains useful background but is not an approved implementation
+plan. The current decision is to pause before coding and conduct a high-level
+architectural review. The first implementation should be small, deterministic,
+independently useful, and likely read-only. It should establish reliable
+project-state visibility for both Delta and Wu before adding AI triage,
+assignment, execution, or autonomous repository changes. This restraint is
+informed by the cleanup completed on 2026-07-21, which removed remnants of
+earlier subsystem-scale attempts, including the legacy direct Gemini chat path.
+
+current_initiative:
+  name: decision_engine_planning_mvp
+  status: active
+  started: 2026-07-21
+  target_completion: 2026-07-28
+  source: docs/aurora/management/CURRENT_INITIATIVE.md
+  current_step: inspect_existing_planning_and_console_architecture

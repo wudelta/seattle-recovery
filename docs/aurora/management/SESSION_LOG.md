@@ -699,3 +699,123 @@ Primary objectives:
 2. Improve prompt quality where beneficial.
 3. Begin integrating ComponentRegistry intelligence into Wu.
 4. Enable repository-aware subsystem analysis as the foundation for future HopeHub engineering.
+
+# Session — 2026-07-21
+
+## Summary
+
+Completed architectural cleanup and established the next high-level design question for Aurora.
+
+The implemented Initiative, Phase, and Step models now provide a durable project-planning hierarchy, but they are not yet useful to Wu. Discussion shifted toward how Wu should consume project state and how a future Project Dashboard might connect informal DeltaNotesEntry records to approved planning and execution workflows.
+
+An older DeltaNotesEntry task was revisited. It proposed a Project Dashboard that would process unhandled notes into AI instructions, assign work to a minion, expose an Execute button, and submit implementation attempts for approval. This remains relevant historical intent, but it is not yet accepted as the architecture to implement.
+
+The session ended with a decision to pause implementation and begin the next session with a high-level architectural discussion. Aurora will not attempt to build the complete planning, triage, assignment, execution, and approval subsystem at once.
+
+## Completed
+
+* Confirmed that Initiative, Phase, and Step models have already been implemented.
+* Confirmed the planning hierarchy:
+
+  * Initiative
+  * Phase
+  * Step
+* Confirmed support for planned, active, paused, and completed planning states.
+* Confirmed Initiative-level user ownership.
+* Removed the legacy direct Gemini chat endpoint.
+* Removed obsolete endpoint exports and URL routing.
+* Removed the obsolete Gemini endpoint configuration from the Aurora console.
+* Confirmed no remaining repository references to:
+
+  * `aurora_chat_stream`
+  * `gemini_chat_stream`
+  * `gemini_chat_endpoint`
+* Completed Django system validation successfully.
+* Completed Git diff validation successfully.
+* Completed cleanup of remnants from an abandoned earlier minion architecture.
+
+## Architectural Discussion
+
+The Initiative, Phase, and Step hierarchy answers:
+
+> What work exists and how is it organized?
+
+It does not yet answer:
+
+> What is Wu doing now, what should happen next, and how does a Step become an approved implementation attempt?
+
+The old Project Dashboard concept suggested this pipeline:
+
+```text
+DeltaNotesEntry
+    ↓
+AI-generated instructions
+    ↓
+Minion assignment
+    ↓
+Execute
+    ↓
+Implementation attempt
+    ↓
+Approval
+```
+
+The current discussion refined that concept.
+
+DeltaNotesEntry should likely remain an informal intake or backlog mechanism. It may contain ideas, bugs, incomplete observations, and future work that has not yet been accepted into the project plan.
+
+Initiative, Phase, and Step records should represent durable, approved planning.
+
+An informal note should not become executable work without a reviewed promotion process.
+
+Execution should likely operate on a bounded Step rather than directly on a DeltaNotesEntry.
+
+A future transient execution model may be required to separate durable planning state from active execution state, prepared prompts, minion assignment, results, validation, errors, and PendingCodeChange approval records. No decision was made to implement such a model.
+
+## Development Principle
+
+The morning's cleanup reinforced the cost of attempting an entire subsystem in one implementation pass.
+
+The following rule was adopted for the next phase:
+
+> Every implementation milestone must provide standalone value.
+
+The Project Dashboard and Wu planning integration must therefore be developed incrementally.
+
+The likely first milestone is intentionally limited:
+
+* no AI triage;
+* no automatic promotion of DeltaNotesEntry records;
+* no minion execution;
+* no repository mutation;
+* no Execute button;
+* no autonomous completion logic.
+
+The first useful capability should probably be a deterministic, read-only projection that shows:
+
+* the active Initiative;
+* the current Phase;
+* the current or next incomplete Step;
+* upcoming Steps;
+* paused work;
+* planned Initiatives.
+
+The same project-state projection should then become available to Wu so Wu can reliably answer:
+
+> What are we working on, and what comes next?
+
+## Next Session
+
+Begin with a high-level architectural discussion.
+
+Primary questions:
+
+1. How should Wu consume Initiative, Phase, and Step records?
+2. What is the smallest independently useful Project Dashboard milestone?
+3. Should the first dashboard be read-only?
+4. What deterministic project context should be made available to Wu?
+5. How should DeltaNotesEntry remain separate from approved project planning?
+6. What future boundary should separate planning records from execution records?
+7. How should minion assignment and PendingCodeChange approval eventually fit into Step execution?
+
+Do not begin implementation until these boundaries are sufficiently clear.
