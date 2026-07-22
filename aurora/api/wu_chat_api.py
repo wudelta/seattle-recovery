@@ -16,14 +16,15 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 
-from aurora.models import DeltaDirectives, PendingCodeChange
 from aurora.minions.engine import MinionRunner
-from aurora.minions.patch_parser import (
+from aurora.models import DeltaDirectives, PendingCodeChange
+from aurora.wu.execution_context import ExecutionContextResolver
+from aurora.wu.patch_parser import (
     PatchParseError,
     parse_patch_response,
     response_contains_patch_markers,
 )
-from aurora.minions.workspace_context import (
+from aurora.wu.workspace_context import (
     WorkspaceContextError,
     resolve_workspace_context,
 )

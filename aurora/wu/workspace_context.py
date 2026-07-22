@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/minions/workspace_context.py (PATCH 1 OF 1)
+# FILE: aurora/wu/workspace_context.py (PATCH 1 OF 1)
 # START: SAFE_WORKSPACE_CONTEXT_RESOLUTION
 # ======================================================================
 import re

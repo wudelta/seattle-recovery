@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/minions/patch_parser.py (PATCH 1 OF 1)
+# FILE: aurora/wu/patch_parser.py (PATCH 1 OF 1)
 # START: STRUCTURED_WU_PATCH_RESPONSE_PARSER
 # ======================================================================
 import re
