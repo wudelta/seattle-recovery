@@ -1,6 +1,6 @@
 # ======================================================================
-# FILE: aurora/admin.py (PATCH 1 OF 2)
-# START: READABLE_ADMIN_DOCUMENTATION_VIEWS
+# FILE: aurora/admin.py (PATCH 1 OF 5)
+# START: COMPONENT_REGISTRY_ADMIN
 # ======================================================================
 from django.contrib import admin
 from django.utils.safestring import mark_safe
@@ -10,8 +10,11 @@ from aurora.models import (
     ComponentRegistry,
     DeltaDirectives,
     DeltaNotesEntry,
+    Initiative,
     PendingCodeChange,
+    Phase,
     StaticContent,
+    Step,
 )
 
 
@@ -131,8 +134,14 @@ class ComponentRegistryAdmin(admin.ModelAdmin):
     display_stakeholder_docs.short_description = (
         "Stakeholder Business Translation"
     )
+# ======================================================================
+# END: COMPONENT_REGISTRY_ADMIN (PATCH 1 OF 5)
+# ======================================================================
 
-
+# ======================================================================
+# FILE: aurora/admin.py (PATCH 2 OF 5)
+# START: CONTENT_AND_DIRECTIVES_ADMIN
+# ======================================================================
 @admin.register(StaticContent)
 class StaticContentAdmin(admin.ModelAdmin):
     """Management grid for standalone informational content."""
@@ -195,14 +204,8 @@ class StaticContentAdmin(admin.ModelAdmin):
         return obj.created_by_id or "-"
 
     display_user_uuid.short_description = "Creator UUID Token"
-# ======================================================================
-# END: READABLE_ADMIN_DOCUMENTATION_VIEWS (PATCH 1 OF 2)
-# ======================================================================
 
-# ======================================================================
-# FILE: aurora/admin.py (PATCH 2 OF 2)
-# START: DELTA_DIRECTIVES_AND_NOTES_ADMIN_SHELL
-# ======================================================================
+
 @admin.register(DeltaDirectives)
 class DeltaDirectivesAdmin(admin.ModelAdmin):
     """Management grid for AI directive and constraint configuration."""
@@ -264,8 +267,14 @@ class DeltaDirectivesAdmin(admin.ModelAdmin):
         return obj.created_by_id or "-"
 
     display_user_uuid.short_description = "Author UUID Token"
+# ======================================================================
+# END: CONTENT_AND_DIRECTIVES_ADMIN (PATCH 2 OF 5)
+# ======================================================================
 
-
+# ======================================================================
+# FILE: aurora/admin.py (PATCH 3 OF 5)
+# START: NOTES_LEDGER_AND_REVIEW_ADMIN
+# ======================================================================
 @admin.register(DeltaNotesEntry)
 class DeltaNotesEntryAdmin(admin.ModelAdmin):
     """Management grid for developer intentions and session logs."""
@@ -471,5 +480,262 @@ class PendingCodeChangeAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 # ======================================================================
-# END: DELTA_DIRECTIVES_AND_NOTES_ADMIN_SHELL (PATCH 2 OF 2)
+# END: NOTES_LEDGER_AND_REVIEW_ADMIN (PATCH 3 OF 5)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/admin.py (PATCH 4 OF 5)
+# START: INITIATIVE_AND_PHASE_ADMIN
+# ======================================================================
+@admin.register(Initiative)
+class InitiativeAdmin(admin.ModelAdmin):
+    """Management view for top-level Aurora execution initiatives."""
+
+    list_display = (
+        'position',
+        'title',
+        'status',
+        'created_by',
+        'phase_count',
+        'created_at',
+        'updated_at',
+        'completed_at',
+    )
+    search_fields = (
+        'title',
+        'description',
+        'created_by__username',
+        'created_by__email',
+    )
+    list_filter = (
+        'status',
+        'created_at',
+        'updated_at',
+        'completed_at',
+        'created_by',
+    )
+    readonly_fields = (
+        'created_at',
+        'updated_at',
+        'completed_at',
+        'phase_count',
+    )
+    ordering = (
+        'position',
+        'created_at',
+    )
+    list_select_related = ('created_by',)
+
+    fieldsets = (
+        ('Initiative Identity', {
+            'fields': (
+                'title',
+                'description',
+            ),
+        }),
+        ('Execution State', {
+            'fields': (
+                'status',
+                'position',
+                'phase_count',
+            ),
+        }),
+        ('Ownership', {
+            'fields': ('created_by',),
+        }),
+        ('Lifecycle History', {
+            'fields': (
+                'created_at',
+                'updated_at',
+                'completed_at',
+            ),
+        }),
+    )
+
+    def phase_count(self, obj):
+        """Displays the number of phases assigned to the initiative."""
+        return obj.phases.count()
+
+    phase_count.short_description = "Phases"
+
+
+@admin.register(Phase)
+class PhaseAdmin(admin.ModelAdmin):
+    """Management view for ordered initiative milestones."""
+
+    list_display = (
+        'position',
+        'title',
+        'initiative',
+        'status',
+        'step_count',
+        'created_at',
+        'updated_at',
+        'completed_at',
+    )
+    search_fields = (
+        'title',
+        'description',
+        'initiative__title',
+    )
+    list_filter = (
+        'status',
+        'initiative',
+        'created_at',
+        'updated_at',
+        'completed_at',
+    )
+    readonly_fields = (
+        'created_at',
+        'updated_at',
+        'completed_at',
+        'step_count',
+    )
+    ordering = (
+        'initiative__position',
+        'initiative',
+        'position',
+        'created_at',
+    )
+    list_select_related = ('initiative',)
+
+    fieldsets = (
+        ('Phase Identity', {
+            'fields': (
+                'initiative',
+                'title',
+                'description',
+            ),
+        }),
+        ('Execution State', {
+            'fields': (
+                'status',
+                'position',
+                'step_count',
+            ),
+        }),
+        ('Lifecycle History', {
+            'fields': (
+                'created_at',
+                'updated_at',
+                'completed_at',
+            ),
+        }),
+    )
+
+    def step_count(self, obj):
+        """Displays the number of implementation steps in the phase."""
+        return obj.steps.count()
+
+    step_count.short_description = "Steps"
+# ======================================================================
+# END: INITIATIVE_AND_PHASE_ADMIN (PATCH 4 OF 5)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/admin.py (PATCH 5 OF 5)
+# START: STEP_ADMIN
+# ======================================================================
+@admin.register(Step)
+class StepAdmin(admin.ModelAdmin):
+    """Management view for individual implementation steps."""
+
+    list_display = (
+        'position',
+        'title',
+        'phase',
+        'initiative',
+        'status',
+        'estimated_minutes',
+        'estimate_confidence',
+        'validated_by',
+        'created_at',
+        'updated_at',
+        'completed_at',
+    )
+    search_fields = (
+        'title',
+        'description',
+        'validation_description',
+        'validation_notes',
+        'phase__title',
+        'phase__initiative__title',
+        'validated_by__username',
+        'validated_by__email',
+    )
+    list_filter = (
+        'status',
+        'estimate_confidence',
+        'phase__initiative',
+        'phase',
+        'validated_by',
+        'created_at',
+        'updated_at',
+        'completed_at',
+    )
+    readonly_fields = (
+        'created_at',
+        'updated_at',
+        'completed_at',
+        'initiative',
+    )
+    ordering = (
+        'phase__initiative__position',
+        'phase__initiative',
+        'phase__position',
+        'phase',
+        'position',
+        'created_at',
+    )
+    list_select_related = (
+        'phase',
+        'phase__initiative',
+        'validated_by',
+    )
+
+    fieldsets = (
+        ('Step Identity', {
+            'fields': (
+                'phase',
+                'initiative',
+                'title',
+                'description',
+            ),
+        }),
+        ('Execution State', {
+            'fields': (
+                'status',
+                'position',
+            ),
+        }),
+        ('Effort Estimate', {
+            'fields': (
+                'estimated_minutes',
+                'estimate_confidence',
+            ),
+        }),
+        ('Validation', {
+            'fields': (
+                'validation_description',
+                'validated_by',
+                'validation_notes',
+            ),
+        }),
+        ('Lifecycle History', {
+            'fields': (
+                'created_at',
+                'updated_at',
+                'completed_at',
+            ),
+        }),
+    )
+
+    def initiative(self, obj):
+        """Displays the initiative containing the selected step."""
+        return obj.phase.initiative
+
+    initiative.short_description = "Initiative"
+    initiative.admin_order_field = 'phase__initiative__title'
+# ======================================================================
+# END: STEP_ADMIN (PATCH 5 OF 5)
 # ======================================================================
