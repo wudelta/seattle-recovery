@@ -5,7 +5,7 @@
 from django.http import JsonResponse
 
 from aurora.api.handlers.base import BaseCommandHandler
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.generation.page_skeleton import PageSkeletonBuilder
 from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
 
 

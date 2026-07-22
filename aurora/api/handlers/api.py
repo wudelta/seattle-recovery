@@ -5,7 +5,7 @@
 from django.http import JsonResponse
 
 from aurora.api.handlers.base import BaseCommandHandler
-from aurora.utils.api_skeleton import ApiSkeletonBuilder
+from aurora.generation.api_skeleton import ApiSkeletonBuilder
 from aurora.utils.telemetry import TelemetryLogger
 from aurora.utils.workspace_synchronizer import WorkspaceSynchronizer
 

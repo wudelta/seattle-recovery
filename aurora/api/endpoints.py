@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from aurora.models import ComponentRegistry
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.generation.page_skeleton import PageSkeletonBuilder
 
 @login_required
 def delta_notes_endpoint(request):

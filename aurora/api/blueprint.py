@@ -5,7 +5,7 @@
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.generation.page_skeleton import PageSkeletonBuilder
 from aurora.api.handlers.page import PageCommandHandler
 from aurora.api.handlers.api import ApiCommandHandler
 from aurora.api.handlers.destroy import DestroyCommandHandler

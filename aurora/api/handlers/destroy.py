@@ -6,8 +6,8 @@ from django.http import JsonResponse
 
 from aurora.api.handlers.base import BaseCommandHandler
 from aurora.models import ComponentRegistry
-from aurora.utils.api_skeleton import ApiSkeletonBuilder
-from aurora.utils.page_skeleton import PageSkeletonBuilder
+from aurora.generation.api_skeleton import ApiSkeletonBuilder
+from aurora.generation.page_skeleton import PageSkeletonBuilder
 
 
 class DestroyCommandHandler(BaseCommandHandler):
