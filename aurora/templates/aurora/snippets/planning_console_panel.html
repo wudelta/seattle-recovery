@@ -4,11 +4,11 @@
 <!-- ====================================================================== -->
 <div
     id="planning-console-panel"
-    class="h-100 w-100 d-flex flex-column bg-black text-light"
+    class="planning-workspace h-100 w-100 d-flex flex-column bg-black text-light"
     style="min-height: 0;"
 >
     <div
-        class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary flex-shrink-0"
+        class="planning-toolbar d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary flex-shrink-0"
     >
         <div>
             <div
@@ -17,8 +17,29 @@
             >
                 Decision Engine
             </div>
-            <div class="small text-muted">
-                Initiative → Phase → Step execution planning
+
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <label
+                    for="planning-project-select"
+                    class="small text-muted mb-0"
+                >
+                    Project:
+                </label>
+
+                <select
+                    id="planning-project-select"
+                    class="form-select form-select-sm bg-black text-light border-secondary"
+                    style="min-width: 180px;"
+                    aria-label="Active planning project"
+                >
+                    <option value="">
+                        Loading projects...
+                    </option>
+                </select>
+            </div>
+
+            <div class="small text-muted mt-1">
+                Project → Initiative → Phase → Step execution planning
             </div>
         </div>
 
@@ -34,6 +55,7 @@
                 id="planning-create-initiative-btn"
                 type="button"
                 class="btn btn-sm btn-outline-success"
+                disabled
             >
                 New Initiative
             </button>
@@ -50,7 +72,7 @@
 
     <div
         id="planning-status-bar"
-        class="px-3 py-2 border-bottom border-secondary small text-muted flex-shrink-0"
+        class="planning-status-bar px-3 py-2 border-bottom border-secondary small text-muted flex-shrink-0"
         role="status"
         aria-live="polite"
     >
@@ -177,7 +199,7 @@
 <!-- ====================================================================== -->
     <div
         id="planning-workspace"
-        class="flex-grow-1 overflow-auto p-3"
+        class="planning-document flex-grow-1 overflow-auto p-3"
         style="min-height: 0;"
     >
         <div
@@ -217,13 +239,21 @@
                 <div class="fs-5 fw-bold mb-2">
                     No initiatives exist
                 </div>
-                <div class="text-muted mb-3">
-                    Create the first Initiative for the active project.
+
+                <div class="text-muted mb-1">
+                    The selected Project has no persisted initiatives.
                 </div>
+
+                <div
+                    id="planning-empty-project-name"
+                    class="text-info fw-bold mb-3"
+                ></div>
+
                 <button
                     id="planning-empty-create-initiative-btn"
                     type="button"
                     class="btn btn-sm btn-outline-success"
+                    disabled
                 >
                     New Initiative
                 </button>
@@ -244,20 +274,18 @@
 <!-- START: INITIATIVE_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-initiative-template">
-        <article
-            class="planning-initiative border border-secondary rounded bg-dark"
-        >
+        <article class="planning-initiative planning-paper">
             <header
-                class="d-flex justify-content-between align-items-start gap-3 p-3 border-bottom border-secondary"
+                class="planning-section d-flex justify-content-between align-items-start gap-3"
             >
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span
-                            class="planning-initiative-position badge bg-black text-secondary border border-secondary"
+                            class="planning-initiative-position planning-accent"
                         ></span>
 
                         <h2
-                            class="planning-initiative-title h5 mb-0 text-light"
+                            class="planning-initiative-title mb-0"
                         ></h2>
 
                         <span
@@ -266,12 +294,12 @@
                     </div>
 
                     <p
-                        class="planning-initiative-description text-muted small mt-2 mb-0"
+                        class="planning-initiative-description planning-text mt-2 mb-0"
                     ></p>
                 </div>
 
                 <div class="text-end flex-shrink-0">
-                    <div class="small text-muted">
+                    <div class="planning-muted small">
                         <div class="planning-initiative-owner"></div>
                         <div class="planning-initiative-updated"></div>
                     </div>
@@ -286,8 +314,7 @@
             </header>
 
             <div
-                class="planning-phase-form-panel d-none border-bottom border-secondary"
-                style="background-color: #10161a;"
+                class="planning-phase-form-panel d-none planning-rule"
             >
                 <form class="planning-phase-form p-3">
                     <div
@@ -382,7 +409,7 @@
             </div>
 
             <div
-                class="planning-phase-list p-3 d-flex flex-column gap-3"
+                class="planning-phase-list d-flex flex-column"
             ></div>
         </article>
     </template>
@@ -395,21 +422,18 @@
 <!-- START: PHASE_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-phase-template">
-        <section
-            class="planning-phase border border-secondary rounded"
-            style="background-color: #10161a;"
-        >
+        <section class="planning-phase">
             <header
-                class="d-flex justify-content-between align-items-start gap-3 px-3 py-2 border-bottom border-secondary"
+                class="d-flex justify-content-between align-items-start gap-3"
             >
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span
-                            class="planning-phase-position badge bg-black text-secondary border border-secondary"
+                            class="planning-phase-position planning-accent"
                         ></span>
 
                         <h3
-                            class="planning-phase-title h6 mb-0 text-light"
+                            class="planning-phase-title mb-0"
                         ></h3>
 
                         <span
@@ -418,13 +442,13 @@
                     </div>
 
                     <p
-                        class="planning-phase-description text-muted small mt-2 mb-0"
+                        class="planning-phase-description planning-muted mt-2 mb-0"
                     ></p>
                 </div>
 
                 <div class="d-flex align-items-start gap-3 flex-shrink-0">
                     <div
-                        class="planning-phase-summary small text-muted text-end"
+                        class="planning-phase-summary planning-muted small text-end"
                     ></div>
 
                     <button
@@ -437,8 +461,7 @@
             </header>
 
             <div
-                class="planning-step-form-panel d-none px-3 py-3 border-bottom border-secondary"
-                style="background-color: #0b1013;"
+                class="planning-step-form-panel d-none planning-rule px-3 py-3"
             >
                 <form class="planning-step-form">
                     <div
@@ -571,19 +594,14 @@
 <!-- START: STEP_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-step-template">
-        <div
-            class="planning-step d-flex align-items-start gap-3 px-3 py-3 border-bottom border-secondary"
-        >
-            <div class="flex-shrink-0">
-                <span
-                    class="planning-step-position badge bg-black text-secondary border border-secondary"
-                ></span>
-            </div>
+        <div class="planning-step">
+            <div class="planning-step-position"></div>
 
-            <div class="flex-grow-1" style="min-width: 0;">
+            <div class="planning-step-body">
+
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <h4
-                        class="planning-step-title h6 mb-0 text-light"
+                        class="planning-step-title mb-0"
                     ></h4>
 
                     <span class="planning-step-status badge"></span>
@@ -594,7 +612,7 @@
                 </div>
 
                 <p
-                    class="planning-step-description text-muted small mt-2 mb-1"
+                    class="planning-step-description planning-text mt-2 mb-1"
                 ></p>
 
                 <div
@@ -603,8 +621,9 @@
                     <span class="text-warning fw-bold">
                         Validation:
                     </span>
+
                     <span
-                        class="planning-step-validation-description text-muted"
+                        class="planning-step-validation-description planning-muted"
                     ></span>
                 </div>
 
@@ -614,13 +633,15 @@
                     <span class="text-success fw-bold">
                         Evidence:
                     </span>
+
                     <span
-                        class="planning-step-validation-notes text-muted"
+                        class="planning-step-validation-notes planning-muted"
                     ></span>
                 </div>
+
             </div>
 
-            <div class="text-end small text-muted flex-shrink-0">
+            <div class="planning-step-meta planning-muted small text-end">
                 <div class="planning-step-validator"></div>
                 <div class="planning-step-updated"></div>
             </div>

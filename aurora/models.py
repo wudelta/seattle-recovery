@@ -402,8 +402,55 @@ class EstimateConfidence(models.TextChoices):
     HIGH = "HIGH", "High"
 
 
+class RiskLevel(models.TextChoices):
+    """Potential implementation impact associated with a planning step."""
+
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
+    CRITICAL = "CRITICAL", "Critical"
+
+
+class Project(models.Model):
+    """A product, application, or engineering domain containing initiatives."""
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+
+    color = models.CharField(
+        max_length=32,
+        blank=True,
+        help_text="Optional presentation color for planning interfaces.",
+    )
+
+    icon = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Optional icon identifier for planning interfaces.",
+    )
+
+    position = models.PositiveIntegerField(default=0)
+    active = models.BooleanField(default=True, db_index=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["position", "title"]
+
+    def __str__(self):
+        return self.title
+
+
 class Initiative(models.Model):
-    """A top-level engineering objective."""
+    """A top-level engineering objective within a Project."""
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.PROTECT,
+        related_name="initiatives",
+    )
 
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -429,9 +476,10 @@ class Initiative(models.Model):
 
     class Meta:
         ordering = ["position", "created_at"]
+        unique_together = [("project", "position")]
 
     def __str__(self):
-        return self.title
+        return f"{self.project} / {self.title}"
 
 
 class Phase(models.Model):
@@ -500,6 +548,19 @@ class Step(models.Model):
         null=True,
         blank=True,
         help_text="Confidence in the current implementation estimate.",
+    )
+
+    risk_level = models.CharField(
+        max_length=10,
+        choices=RiskLevel.choices,
+        default=RiskLevel.LOW,
+        db_index=True,
+        help_text="Potential impact if this implementation step fails.",
+    )
+
+    risk_description = models.TextField(
+        blank=True,
+        help_text="Reason this step carries implementation or operational risk.",
     )
 
     validation_description = models.TextField(

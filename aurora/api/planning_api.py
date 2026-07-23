@@ -10,7 +10,13 @@ from django.db.models import Max, Prefetch
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from aurora.models import ExecutionStatus, Initiative, Phase, Step
+from aurora.models import (
+    ExecutionStatus,
+    Initiative,
+    Phase,
+    Project,
+    Step,
+)
 
 
 def serialize_user(user):
@@ -24,6 +30,22 @@ def serialize_user(user):
         "id": str(user.pk),
         "username": user.get_username(),
         "display_name": full_name or user.get_username(),
+    }
+
+
+def serialize_project(project):
+    """Serializes one selectable Decision Engine project."""
+    return {
+        "id": project.pk,
+        "title": project.title,
+        "slug": project.slug,
+        "description": project.description,
+        "color": project.color,
+        "icon": project.icon,
+        "position": project.position,
+        "active": project.active,
+        "created_at": project.created_at.isoformat(),
+        "updated_at": project.updated_at.isoformat(),
     }
 
 
@@ -43,6 +65,9 @@ def serialize_step(step):
             if step.estimate_confidence
             else None
         ),
+        "risk_level": step.risk_level,
+        "risk_level_label": step.get_risk_level_display(),
+        "risk_description": step.risk_description,
         "validation_description": step.validation_description,
         "validated_by": serialize_user(step.validated_by),
         "validation_notes": step.validation_notes,
@@ -88,6 +113,8 @@ def serialize_initiative(initiative):
 
     return {
         "id": initiative.pk,
+        "project_id": initiative.project_id,
+        "project_slug": initiative.project.slug,
         "title": initiative.title,
         "description": initiative.description,
         "status": initiative.status,
@@ -115,8 +142,47 @@ def serialize_initiative(initiative):
 # FILE: aurora/api/planning_api.py (PATCH 2 OF 7)
 # START: PLANNING_HIERARCHY_QUERY
 # ======================================================================
-def build_planning_payload():
-    """Builds the complete persisted planning hierarchy."""
+def build_planning_payload(project_slug=None):
+    """Builds the persisted planning hierarchy for one active Project."""
+    projects = list(
+        Project.objects
+        .filter(active=True)
+        .order_by("position", "title")
+    )
+
+    active_project = None
+
+    if project_slug:
+        active_project = next(
+            (
+                project
+                for project in projects
+                if project.slug == project_slug
+            ),
+            None,
+        )
+
+    if active_project is None and projects:
+        active_project = projects[0]
+
+    project_payload = [
+        serialize_project(project)
+        for project in projects
+    ]
+
+    if active_project is None:
+        return {
+            "status": "success",
+            "projects": project_payload,
+            "active_project": None,
+            "summary": {
+                "initiative_count": 0,
+                "phase_count": 0,
+                "step_count": 0,
+            },
+            "initiatives": [],
+        }
+
     step_queryset = (
         Step.objects
         .select_related("validated_by")
@@ -136,7 +202,8 @@ def build_planning_payload():
 
     initiatives = (
         Initiative.objects
-        .select_related("created_by")
+        .filter(project=active_project)
+        .select_related("project", "created_by")
         .order_by("position", "created_at")
         .prefetch_related(
             Prefetch(
@@ -164,6 +231,8 @@ def build_planning_payload():
 
     return {
         "status": "success",
+        "projects": project_payload,
+        "active_project": serialize_project(active_project),
         "summary": {
             "initiative_count": len(initiative_payload),
             "phase_count": phase_count,
@@ -273,7 +342,40 @@ def validate_status(payload, record_label):
 # START: INITIATIVE_CREATION_API
 # ======================================================================
 def create_initiative(request, payload):
-    """Validates and persists one new Initiative."""
+    """Validates and persists one new Initiative beneath a Project."""
+    project_slug = str(
+        payload.get("project_slug", "")
+    ).strip()
+
+    if not project_slug:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Project is required.",
+                "field_errors": {
+                    "project_slug": "Select a Project.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        project = Project.objects.get(
+            slug=project_slug,
+            active=True,
+        )
+    except Project.DoesNotExist:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Project does not exist.",
+                "field_errors": {
+                    "project_slug": "Select a valid active Project.",
+                },
+            },
+            status=404,
+        )
+
     title, error_response = validate_title(
         payload,
         "Initiative",
@@ -295,11 +397,13 @@ def create_initiative(request, payload):
     with transaction.atomic():
         highest_position = (
             Initiative.objects
+            .filter(project=project)
             .aggregate(highest=Max("position"))
             .get("highest")
         )
 
         initiative = Initiative.objects.create(
+            project=project,
             title=title,
             description=description,
             status=status,
@@ -571,7 +675,15 @@ def create_step(payload):
 def planning_endpoint(request):
     """Reads the hierarchy or performs a supported planning operation."""
     if request.method == "GET":
-        return JsonResponse(build_planning_payload())
+        project_slug = str(
+            request.GET.get("project", "")
+        ).strip()
+
+        return JsonResponse(
+            build_planning_payload(
+                project_slug=project_slug or None,
+            )
+        )
 
     payload, error_response = parse_json_request(request)
 

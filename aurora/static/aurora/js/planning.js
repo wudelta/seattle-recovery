@@ -11,6 +11,7 @@
     let initiativeRequest = null;
     let phaseRequest = null;
     let stepRequest = null;
+    let activeProjectSlug = null;
 
     const STATUS_CLASSES = {
         PLANNED: "bg-secondary text-light",
@@ -60,6 +61,57 @@
         }
 
         return decodeURIComponent(cookie.split("=")[1]);
+    }
+
+    function renderProjectSelector(projects, activeProject) {
+        const $projectSelect = $("#planning-project-select");
+
+        $projectSelect.empty();
+
+        if (!Array.isArray(projects) || !projects.length) {
+            activeProjectSlug = null;
+
+            $projectSelect
+                .append(
+                    $("<option>", {
+                        value: "",
+                        text: "No active projects",
+                    })
+                )
+                .prop("disabled", true);
+
+            $(
+                "#planning-create-initiative-btn, "
+                + "#planning-empty-create-initiative-btn"
+            ).prop("disabled", true);
+
+            return;
+        }
+
+        projects.forEach(function(project) {
+            $projectSelect.append(
+                $("<option>", {
+                    value: project.slug,
+                    text: project.title,
+                })
+            );
+        });
+
+        activeProjectSlug = (
+            activeProject
+            && activeProject.slug
+        )
+            ? activeProject.slug
+            : projects[0].slug;
+
+        $projectSelect
+            .val(activeProjectSlug)
+            .prop("disabled", false);
+
+        $(
+            "#planning-create-initiative-btn, "
+            + "#planning-empty-create-initiative-btn"
+        ).prop("disabled", false);
     }
 // ======================================================================
 // END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 7)
@@ -347,9 +399,13 @@
     }
 
     function renderPlanningPayload(payload) {
+        const projects = payload.projects || [];
+        const activeProject = payload.active_project || null;
         const initiatives = payload.initiatives || [];
         const summary = payload.summary || {};
         const $initiativeList = $("#planning-initiative-list");
+
+        renderProjectSelector(projects, activeProject);
 
         $("#planning-error-state").addClass("d-none");
 
@@ -358,6 +414,12 @@
             .removeClass("d-flex");
 
         $initiativeList.empty();
+
+        $("#planning-empty-project-name").text(
+            activeProject
+                ? activeProject.title
+                : ""
+        );
 
         if (!initiatives.length) {
             showEmptyState();
@@ -373,6 +435,9 @@
         const initiativeCount = summary.initiative_count || 0;
         const phaseCount = summary.phase_count || 0;
         const stepCount = summary.step_count || 0;
+        const projectTitle = activeProject
+            ? activeProject.title
+            : "No Project";
 
         $("#planning-summary-badge")
             .removeClass("text-danger text-info")
@@ -390,7 +455,7 @@
             .removeClass("text-danger text-muted")
             .addClass("text-success")
             .text(
-                `Decision Engine synchronized at `
+                `${projectTitle} synchronized at `
                 + `${new Date().toLocaleTimeString()}.`
             );
     }
@@ -402,8 +467,13 @@
 // FILE: aurora/static/aurora/js/planning.js (PATCH 4 OF 7)
 // START: PLANNING_DATA_LOADER
 // ======================================================================
-    function loadPlanningData() {
+    function loadPlanningData(projectSlug) {
         const endpoint = planningEndpoints.planning_endpoint;
+        const requestedProjectSlug = (
+            projectSlug
+            || activeProjectSlug
+            || ""
+        );
 
         if (!endpoint) {
             showError(
@@ -433,6 +503,11 @@
             url: endpoint,
             method: "GET",
             dataType: "json",
+            data: requestedProjectSlug
+                ? {
+                    project: requestedProjectSlug,
+                }
+                : {},
         })
             .done(function(response) {
                 if (!response || response.status !== "success") {
@@ -513,6 +588,13 @@
     }
 
     function openInitiativeForm() {
+        if (!activeProjectSlug) {
+            showError(
+                "Select an active Project before creating an Initiative."
+            );
+            return;
+        }
+
         resetInitiativeForm();
 
         $("#planning-initiative-form-panel")
@@ -554,6 +636,13 @@
             return;
         }
 
+        if (!activeProjectSlug) {
+            showInitiativeFormError(
+                "Select an active Project before creating an Initiative."
+            );
+            return;
+        }
+
         if (!title) {
             showInitiativeFormError(
                 "Initiative title is required.",
@@ -581,6 +670,8 @@
                 "X-CSRFToken": getCsrfToken(),
             },
             data: JSON.stringify({
+                operation: "create_initiative",
+                project_slug: activeProjectSlug,
                 title: title,
                 description: $("#planning-initiative-description")
                     .val()
@@ -597,7 +688,7 @@
                 }
 
                 closeInitiativeForm();
-                loadPlanningData();
+                loadPlanningData(activeProjectSlug);
             })
             .fail(function(xhr) {
                 const response = xhr.responseJSON || {};
@@ -1018,10 +1109,19 @@
 // START: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API
 // ======================================================================
     function bindPlanningEvents() {
+        $("#planning-project-select")
+            .off("change.planning")
+            .on("change.planning", function() {
+                activeProjectSlug = $(this).val() || null;
+
+                closeInitiativeForm();
+                loadPlanningData(activeProjectSlug);
+            });
+
         $("#planning-refresh-btn")
             .off("click.planning")
             .on("click.planning", function() {
-                loadPlanningData();
+                loadPlanningData(activeProjectSlug);
             });
 
         $(
@@ -1173,9 +1273,7 @@
             );
     }
 
-    window.initPlanningConsole = function(
-        systemEndpoints
-    ) {
+    window.initPlanningConsole = function(systemEndpoints) {
         planningEndpoints = systemEndpoints || {};
 
         if (!planningInitialized) {
@@ -1183,7 +1281,7 @@
             planningInitialized = true;
         }
 
-        loadPlanningData();
+        loadPlanningData(activeProjectSlug);
     };
 
     window.refreshPlanningConsole = function() {
@@ -1191,7 +1289,7 @@
             return;
         }
 
-        loadPlanningData();
+        loadPlanningData(activeProjectSlug);
     };
 })(window, jQuery);
 // ======================================================================
