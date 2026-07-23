@@ -17,12 +17,17 @@
     <!-- COLUMN 2: CENTER EDITOR CODE VIEWPORT -->
     <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
         
-        <!-- FIXED: Refactored header bar into a flex row container housing the one-click copy button -->
+        <!-- FIXED: Refactored header bar into a flex row container housing the one-click copy buttons -->
         <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
             <div id="active-file-indicator" class="text-warning small text-truncate flex-grow-1" title="No file active">No file active</div>
             
-            <!-- FIXED: Injected direct path clipboard target trigger element with no inline scripts -->
-            <div class="flex-shrink-0 ms-2">
+            <!-- FIXED: Injected direct clipboard target trigger elements with no inline scripts -->
+            <div class="d-flex flex-shrink-0 gap-1 ms-2">
+                <button id="anamod-copy-file-btn" class="btn btn-outline-secondary font-monospace"
+                        style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
+                        title="Copy the complete active file contents to clipboard">
+                    📄 Copy File
+                </button>
                 <button id="anamod-copy-path-btn" class="btn btn-outline-secondary font-monospace" 
                         style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
                         title="Copy file path location directly to clipboard">
@@ -67,8 +72,9 @@
     </div>
 
     <!-- NEW DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FOLDERS -->
-    <div id="anamod-folder-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 160px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
+    <div id="anamod-folder-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 190px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
         <button id="ctx-add-file-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">➕ Add New File Here</button>
+        <button id="ctx-add-directory-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">📁 Add New Directory Here</button>
     </div>
 
 </div>

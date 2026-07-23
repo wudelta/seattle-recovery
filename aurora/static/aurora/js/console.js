@@ -36,7 +36,7 @@ $(document).ready(function() {
     $viewSelector.on('change', function() {
         const viewMode = $(this).val();
         $('.workspace-viewport .workspace-section').addClass('d-none').removeClass('active-pane');
-        
+
         if (viewMode === 'delta_notes') {
             $('#delta-notes-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['delta_notes']);
@@ -44,6 +44,9 @@ $(document).ready(function() {
             // FIXED: Added view frame integration tracking for Wu's Orchestrator Window
             $('#wu_chat-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['wu_chat']);
+        } else if (viewMode === 'planning') {
+            $('#planning-workspace-container').removeClass('d-none').addClass('active-pane');
+            $(document).trigger('aurora:view_changed', ['planning']);
         } else if (viewMode === 'blueprint') {
             $('#ai-blueprint-workspace-container').removeClass('d-none').addClass('active-pane');
             $(document).trigger('aurora:view_changed', ['blueprint']);

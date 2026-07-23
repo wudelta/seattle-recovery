@@ -38,11 +38,11 @@ INSTALLED_APPS = [
 ]
 
 # Structural Split Invariant: Only load the domain app relevant to this running node container
-CURRENT_CONTAINER_TARGET = os.getenv('DB_NAME')
+CURRENT_CONTAINER_TARGET = os.getenv('APP_MODE')
 
-if CURRENT_CONTAINER_TARGET == 'hopehub_db':
+if CURRENT_CONTAINER_TARGET == 'HOPEHUB':
     INSTALLED_APPS.append('hopehub')
-elif CURRENT_CONTAINER_TARGET == 'aurora_db':
+elif CURRENT_CONTAINER_TARGET == 'AURORA':
     INSTALLED_APPS.append('aurora')
 else:
     # Local fallback/management command environment catch
@@ -187,7 +187,17 @@ CHANNEL_LAYERS = {
     },
 }
 
+# ==============================================================================
+# AI PROVIDER CONFIGURATION
+# ==============================================================================
+
+AI_PROVIDER = env("AI_PROVIDER", default="openai")
+
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+OPENAI_MODEL = env("OPENAI_MODEL", default="gpt-5.5")
+
 GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
+GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-2.5-flash")
 
 # Register the custom UUID user model globally across the monorepo
 AUTH_USER_MODEL = 'users.CustomUser'

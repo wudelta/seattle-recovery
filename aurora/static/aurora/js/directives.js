@@ -79,7 +79,7 @@ function clearWorkspaceForm() {
     activeAssetId = null;
     $('#dc-field-id').val('');
     $('#dc-field-name').val('');
-    $('#dc-field-constraints').val('{\n  "model": "llama-3.1-8b-instant",\n  "temperature": 0.3\n}');
+    $('#dc-field-constraints').val('{\n  "model_profile": "medium",\n  "temperature": 0.3\n}');
     $('#dc-field-active').prop('checked', true);
     $('#dc-rich-editor').html('');
     $('#dc-active-asset-indicator').text('🆕 COMPOSING NEW MASTER MINION PROMPT DIRECTIVE').addClass('text-warning').removeClass('text-info');

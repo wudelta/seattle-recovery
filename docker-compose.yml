@@ -71,7 +71,9 @@ services:
   django_aurora:
     build: .
     container_name: seattle_django_aurora
-    user: "root"
+    user: "${HOST_UID}:${HOST_GID}"
+    group_add:
+      - "${DOCKER_GID}"
     command: daphne -b 0.0.0.0 -p 9000 core_logic.asgi:application
     ports:
       - "9000:9000"
@@ -103,7 +105,9 @@ services:
   django_hopehub:
     build: .
     container_name: seattle_django_hopehub
-    user: "root"
+    user: "${HOST_UID}:${HOST_GID}"
+    group_add:
+      - "${DOCKER_GID}"
     command: daphne -b 0.0.0.0 -p 8000 core_logic.asgi:application
     ports:
       - "8000:8000"

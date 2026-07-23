@@ -1,0 +1,206 @@
+# ======================================================================
+
+# Aurora Project State
+
+# ======================================================================
+
+project:
+name: Aurora
+version: 2
+
+targets:
+aurora_baseline:
+status: achieved
+
+hopehub_beta_prototype:
+target_date: 2026-08-15
+
+development:
+current_phase: >
+Decision Engine Planning MVP
+
+objective: >
+Complete the remaining CRUD operations for the Project, Initiative,
+Phase, and Step planning hierarchy so Aurora can serve as the
+authoritative workspace for defining and maintaining engineering plans.
+
+architecture:
+
+ai_platform:
+provider_abstraction: complete
+execution_platform: complete
+telemetry: complete
+
+workspace:
+deterministic_repository_projection: complete
+component_registry: complete
+graph_projection: complete
+ai_description_pipeline: complete
+
+planning:
+project_model: complete
+initiative_model: complete
+phase_model: complete
+step_model: complete
+hierarchy: complete
+persistence: complete
+project_scoping: complete
+console_integration: complete
+project_selector: complete
+document_layout: phase_1
+create_operations: complete
+update_operations: in_progress
+delete_operations: planned
+ordering_operations: planned
+status_propagation: planned
+
+artifact_lifecycle:
+page_generation: validated
+api_generation: validated
+repository_synchronization: validated
+
+editing:
+workspace_editor: validated
+monaco_review_workflow: validated
+
+subsystem_boundaries:
+
+wu:
+status: complete
+summary: >
+Wu-specific execution context, workspace context resolution,
+and patch parsing reside in aurora/wu.
+
+minions:
+status: refined
+summary: >
+Minions represent shared AI execution infrastructure rather
+than all AI-related modules.
+
+generation:
+status: planned
+
+workspace:
+status: planned
+
+validation:
+
+django_system_checks: complete
+javascript_syntax_check: complete
+provider_routing: complete
+structured_patch_generation: complete
+structured_patch_parsing: complete
+repository_synchronization: complete
+component_registry_validation: complete
+project_switching: complete
+project_scoped_initiative_creation: complete
+planning_console_browser_validation: complete
+
+current_initiative:
+
+name: decision_engine_planning_mvp
+
+status: active
+
+goal: >
+Establish a database-backed, project-aware planning system that allows
+Delta and Wu to define, organize, revise, and track engineering work
+through the Project, Initiative, Phase, and Step hierarchy inside
+Aurora Console.
+
+completed:
+
+```
+- Implemented the Project planning model.
+- Implemented Initiative, Phase, and Step planning models.
+- Established the Project → Initiative → Phase → Step hierarchy.
+- Added Project ownership to Initiatives.
+- Added Step risk level and risk description fields.
+- Created the initial Aurora and HopeHub Project records.
+- Added Project-aware planning payloads to the Planning API.
+- Added Project selection to the Planning Console.
+- Added Project-aware Initiative creation.
+- Preserved Phase and Step creation behavior.
+- Added Project-aware refresh behavior.
+- Added Project-specific empty-state messaging.
+- Integrated planning.css into Aurora Console.
+- Refined the visual hierarchy so Phase headings stand apart from Steps.
+- Passed JavaScript syntax validation.
+- Passed Django system checks.
+- Completed browser validation of the Project-aware planning workspace.
+```
+
+next_step: >
+Implement the remaining CRUD operations in the Planning Console,
+beginning with update operations for Initiative, Phase, and Step.
+Continue with guarded deletion, ordering controls, and hierarchical
+status propagation after update behavior is validated.
+
+planned_work:
+
+immediate:
+
+```
+- Add Initiative update operations.
+- Add Phase update operations.
+- Add Step update operations.
+- Add guarded Initiative deletion.
+- Add guarded Phase deletion.
+- Add guarded Step deletion.
+- Add Phase and Step ordering controls.
+- Add Step-to-Phase-to-Initiative status propagation.
+```
+
+later:
+
+```
+- generation_subsystem_extraction
+- workspace_subsystem_extraction
+- decision_engine_project_dashboard
+- hopehub_mobile_api_transition
+```
+
+principles:
+
+* Package boundaries represent subsystem ownership.
+* Deterministic versus AI behavior is not an architectural boundary.
+* Builders perform deterministic mutation only.
+* WorkspaceSynchronizer remains the authority for repository synchronization.
+* AI enriches deterministic outputs rather than replacing them.
+* Execution state remains distinct from durable project planning.
+* Every milestone must provide independent value.
+* Preserve deterministic, reversible workflows.
+* Engineering planning should read like project documentation rather than a dashboard.
+* Project selection determines the planning hierarchy being viewed and modified.
+* Destructive planning operations require explicit safeguards.
+
+status:
+
+repository_state: stable_with_uncommitted_session_updates
+architecture_state: decision_engine_planning_mvp
+production_readiness: approaching_hopehub
+
+last_verified:
+
+date: 2026-07-23
+
+checks:
+- JavaScript syntax check passed for planning.js.
+- Django system check passed with no issues.
+- Aurora and HopeHub appeared in the Project selector.
+- Project switching loaded the correct planning hierarchy.
+- Project-specific empty-state messaging worked.
+- Initiative creation used the selected Project.
+- Planning refresh preserved the selected Project.
+- Phase and Step creation continued to work.
+- Updated Phase typography was validated in the browser.
+
+notes: >
+The Project-aware foundation of the Decision Engine Planning MVP is
+complete and browser validated. Aurora Console can now switch between
+Aurora and HopeHub planning trees, create Initiatives within the selected
+Project, and display the Project → Initiative → Phase → Step hierarchy
+using the document-oriented planning layout. The next session should
+continue directly with the remaining update, delete, ordering, and status
+operations. Detailed implementation history and session-level decisions
+remain in SESSION_LOG.md.

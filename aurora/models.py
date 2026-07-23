@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 7)
+# FILE: aurora/models.py (PATCH 1 OF 8)
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,15 +7,16 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 7)
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 7)
+# FILE: aurora/models.py (PATCH 2 OF 8)
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
     """Tabular schema tracking application metadata, safety locks, and audience visibility rules."""
+
     PERSONA_CHOICES = [
         ('Core Vectors', [
             ('ENTRY_POINT', 'Entry Point / Execution Vector'),
@@ -43,6 +44,16 @@ class ComponentRegistry(models.Model):
         ('PUBLIC', 'Public Access Node'),
         ('PRIVATE', 'Private Protected Node'),
     ]
+    ANALYSIS_STATUS_CHOICES = [
+        ('PENDING', 'Pending Analysis'),
+        ('COMPLETE', 'Analysis Complete'),
+        ('FAILED', 'Analysis Failed'),
+    ]
+    GRAPH_SYNC_STATUS_CHOICES = [
+        ('PENDING', 'Pending Graph Synchronization'),
+        ('COMPLETE', 'Graph Synchronization Complete'),
+        ('FAILED', 'Graph Synchronization Failed'),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
@@ -50,9 +61,8 @@ class ComponentRegistry(models.Model):
     persona = models.CharField(max_length=30, choices=PERSONA_CHOICES, default='COMPILER_MODULE')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ACTIVE')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='PRIVATE')
-    locked = models.BooleanField(default=False)
-    
-    # Fix: Overwrite 'User' with 'settings.AUTH_USER_MODEL' to resolve the scope break created_by = models.ForeignKey(
+    locked = models.BooleanField(default=True)
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -61,6 +71,57 @@ class ComponentRegistry(models.Model):
     )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
+    source_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="SHA-256 digest from the most recently observed source content.",
+    )
+    last_observed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent reconciliation timestamp at which the file was observed.",
+    )
+    last_analyzed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent successful or failed AI enrichment attempt.",
+    )
+    analysis_status = models.CharField(
+        max_length=20,
+        choices=ANALYSIS_STATUS_CHOICES,
+        default='PENDING',
+        help_text="Current incremental documentation analysis state.",
+    )
+    analysis_version = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        help_text="Analyzer contract version used for the stored documentation.",
+    )
+    graph_sync_status = models.CharField(
+        max_length=20,
+        choices=GRAPH_SYNC_STATUS_CHOICES,
+        default='PENDING',
+        db_index=True,
+        help_text="Current PostgreSQL-to-Neo4j projection state.",
+    )
+    graph_sync_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text="Source hash most recently projected successfully into Neo4j.",
+    )
+    graph_synced_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Most recent successful Neo4j projection timestamp.",
+    )
+    graph_sync_error = models.TextField(
+        blank=True,
+        default='',
+        help_text="Most recent graph synchronization failure details.",
+    )
     description = models.TextField(
         blank=True, help_text="Primary unified summary of what this component module executes."
     )
@@ -82,39 +143,44 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 7)
+# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 7)
+# FILE: aurora/models.py (PATCH 3 OF 8)
 # START: STATIC_CONTENT_SCHEMA
 # ======================================================================
 class StaticContent(models.Model):
     """Stores the HTML content for informational pages."""
+
     class ApplicationChoices(models.TextChoices):
         AURORA = 'aurora', 'Aurora'
         HOPEHUB = 'hopehub', 'HopeHub'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.CharField(
-        max_length=10, choices=ApplicationChoices.choices, default=ApplicationChoices.AURORA
+        max_length=10,
+        choices=ApplicationChoices.choices,
+        default=ApplicationChoices.AURORA,
     )
     title = models.CharField(max_length=255)
     html_content = models.TextField()
-    
-    # Fix: Point relation to the active swapped settings model
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+    )
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"StaticContent: {self.title} [{self.application}] (ID: {self.id})"
 # ======================================================================
-# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 7)
+# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 4 OF 7)
+# FILE: aurora/models.py (PATCH 4 OF 8)
 # START: PERSISTENT_CHAT_LEDGER_SCHEMA
 # ======================================================================
 class ChatLedgerEntry(models.Model):
@@ -122,18 +188,23 @@ class ChatLedgerEntry(models.Model):
     Lightweight, index-optimized conversational transaction table.
     Enforces a low-footprint sliding history window to prevent context bloat.
     """
+
     ROLE_CHOICES = (
         ('user', 'User Input Prompt'),
         ('model', 'Model Assistant Response'),
     )
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name='chat_ledger_entries',
         help_text="The authenticated user operating the active workspace session thread."
     )
-    session_id = models.CharField(max_length=255, db_index=True, help_text="Unique workspace thread isolation tracker token.")
+    session_id = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="Unique workspace thread isolation tracker token.",
+    )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, db_index=True)
     text = models.TextField(help_text="Raw conversational data chunk payload.")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -141,13 +212,18 @@ class ChatLedgerEntry(models.Model):
     class Meta:
         verbose_name = "Chat Ledger Entry"
         verbose_name_plural = "Chat Ledger Entries"
-        # FIXED: Upgraded legacy index_together syntax to modern Django 5.x indices array blocks
         indexes = [
-            models.Index(fields=['session_id', 'created_at'], name='aurora_chat_ledger_idx')
+            models.Index(
+                fields=['session_id', 'created_at'],
+                name='aurora_chat_ledger_idx',
+            ),
         ]
 
     def __str__(self):
-        return f"[{self.session_id}] {self.role.upper()} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        return (
+            f"[{self.session_id}] {self.role.upper()} - "
+            f"{self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        )
 
     def save(self, *args, **kwargs):
         """
@@ -155,21 +231,21 @@ class ChatLedgerEntry(models.Model):
         surgically deletes surplus old rows past the 20-row history limit.
         """
         super().save(*args, **kwargs)
-        
-        # Pull entry ID list past the rolling 20-message row buffer limit
+
         excess_entries = ChatLedgerEntry.objects.filter(
             session_id=self.session_id
         ).order_by('-created_at')[20:]
-        
+
         if excess_entries:
-            # Batch erase old records inside a single SQL deletion execution pass
-            ChatLedgerEntry.objects.filter(id__in=[entry.id for entry in excess_entries]).delete()
+            ChatLedgerEntry.objects.filter(
+                id__in=[entry.id for entry in excess_entries]
+            ).delete()
 # ======================================================================
-# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 7)
+# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 5 OF 7)
+# FILE: aurora/models.py (PATCH 5 OF 8)
 # START: DIRECTIVES_SCHEMA
 # ======================================================================
 class DeltaDirectives(models.Model):
@@ -177,12 +253,13 @@ class DeltaDirectives(models.Model):
     Standalone configuration engine storing system instructions, prompts, and 
     model processing boundaries for your AI minion fleet.
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     directive_name = models.CharField(max_length=255, unique=True, db_index=True)
     instructions = models.TextField()
     constraints = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
-    
+
     # Fix: Point relation to the active swapped settings model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -192,66 +269,22 @@ class DeltaDirectives(models.Model):
         verbose_name = "Delta Directive Profile"
         verbose_name_plural = "Delta Directive Profiles"
 
-    @classmethod
-    def provision_standard_minions(cls, author_user) -> int:
-        """Programmatically seeds the database with default settings for the core minion fleet."""
-        minion_fleet = {
-            "minion_wu": {
-                "instructions": "Act as the master project orchestrator. Parse complex multi-step tasks, evaluate repo requirements, and delegate isolated tasks down to the specialized 8B fleet.",
-                "constraints": {"model": "llama-3.3-70b-versatile", "temperature": 0.1}
-            },
-            "minion_UI_layout": {
-                "instructions": "Generate structural layouts. Produce clean, well-formed HTML skeleton layout blocks based on context.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.4}
-            },
-            "minion_UI_style": {
-                "instructions": "Generate interface style themes. Output clean utility or custom CSS styling rules.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.3}
-            },
-            "minion_UI_logic": {
-                "instructions": "Generate client interactivity. Output pure modern JavaScript block strings code blocks.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.2}
-            },
-            "minion_anamod": {
-                "instructions": "Analyze existing repository code modules. Propose clean code modifications or file patches safely.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.1}
-            },
-            "minion_AI_writer": {
-                "instructions": "Refactor raw text blocks. Polish clarity, style, documentation records, and structural layout phrasing.",
-                "constraints": {"model": "llama-3.1-8b-instant", "temperature": 0.6}
-            }
-        }
-        seeded_count = 0
-        for name, data in minion_fleet.items():
-            obj, created = cls.objects.get_or_create(
-                directive_name=name,
-                defaults={
-                    "instructions": data["instructions"],
-                    "constraints": data["constraints"],
-                    "is_active": True,
-                    "created_by": author_user
-                }
-            )
-            if created:
-                seeded_count += 1
-        return seeded_count
-
     def __str__(self):
         return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: DIRECTIVES_SCHEMA (PATCH 5 OF 7)
+# END: DIRECTIVES_SCHEMA (PATCH 5 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 6 OF 7)
+# FILE: aurora/models.py (PATCH 6 OF 8)
 # START: DELTA_NOTES_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
     """
-    Tracks daily developer intentions, active task execution blocks, and 
+    Tracks daily developer intentions, active task execution blocks, and
     accumulated focus time per session window.
     """
-    # Fix: Point relation to the active swapped settings model
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -263,10 +296,13 @@ class DeltaNotesEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     processed = models.BooleanField(default=False)
     total_seconds_logged = models.PositiveIntegerField(
-        default=0, help_text="Total accumulated active focus time recorded in seconds."
+        default=0,
+        help_text="Total accumulated active focus time recorded in seconds."
     )
     last_started_at = models.DateTimeField(
-        null=True, blank=True, help_text="Timestamp when the active session timer toggle was engaged."
+        null=True,
+        blank=True,
+        help_text="Timestamp when the active session timer toggle was engaged."
     )
 
     class Meta:
@@ -275,50 +311,286 @@ class DeltaNotesEntry(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"DeltaNote {self.id} - User: {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
+        return (
+            f"DeltaNote {self.id} - "
+            f"User: {self.user.username} "
+            f"({self.created_at.strftime('%Y-%m-%d')})"
+        )
 # ======================================================================
-# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 7)
+# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 8)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 7 OF 7)
-# START: AUTOMATION_APPROVALS_TRACKING_SCHEMA
+# FILE: aurora/models.py (PATCH 7 OF 8)
+# START: CODE_CHANGE_REVIEW_SCHEMA
 # ======================================================================
-class WorkspaceTransaction(models.Model):
-    """Tracks a cluster of slash commands generated by an orchestrator session."""
+class PendingCodeChange(models.Model):
+    """Stores one validated Wu code proposal awaiting developer review."""
+
     STATUS_CHOICES = [
         ('PENDING', 'Pending Developer Review'),
-        ('EXECUTED', 'Executed and Locked'),
-        ('ROLLED_BACK', 'Destroyed and Rolled Back'),
-        ('REJECTED', 'Rejected by User')
+        ('APPLIED', 'Approved and Applied'),
+        ('REJECTED', 'Rejected by Developer'),
+        ('CONFLICT', 'Source Changed Before Approval'),
     ]
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # Fix: Point relation to the active swapped settings model
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workspace_transactions'
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
     )
-    prompt_context = models.TextField(help_text="The original delta_notes that triggered this request.")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pending_code_changes',
+    )
+    file_path = models.CharField(
+        max_length=500,
+        db_index=True,
+        help_text="Validated repository-relative path targeted by the proposal.",
+    )
+    original_content = models.TextField(
+        help_text="Source content loaded when the proposal was generated.",
+    )
+    proposed_content = models.TextField(
+        help_text="Replacement content returned by Wu and shown for review.",
+    )
+    original_sha256 = models.CharField(
+        max_length=64,
+        help_text="Checksum used to detect source changes before approval.",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING',
+        db_index=True,
+    )
     date_created = models.DateTimeField(auto_now_add=True)
-    date_modified = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Transaction #{self.id} ({self.status}) - {self.user.username}"
-
-class TrackedCommand(models.Model):
-    """Surgically details individual slash commands and logs the file paths they touched."""
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    transaction = models.ForeignKey(WorkspaceTransaction, on_delete=models.CASCADE, related_name='commands')
-    macro = models.CharField(max_length=50, help_text="e.g., /page, /api, /bind")
-    arguments = models.JSONField(help_text="Array of string variables passed to the handler.")
-    affected_files = models.JSONField(default=list, help_text="List of file paths created or mutated.")
-    execution_order = models.PositiveIntegerField(default=0)
+    date_reviewed = models.DateTimeField(null=True, blank=True)
+    date_applied = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['execution_order']
+        verbose_name = "Pending Code Change"
+        verbose_name_plural = "Pending Code Changes"
+        ordering = ['-date_created']
 
     def __str__(self):
-        return f"{self.macro} {' '.join(self.arguments)} [Tx #{self.transaction.id}]"
+        return f"{self.file_path} [{self.status}]"
 # ======================================================================
-# END: AUTOMATION_APPROVALS_TRACKING_SCHEMA (PATCH 7 OF 7)
+# END: CODE_CHANGE_REVIEW_SCHEMA (PATCH 7 OF 8)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/models.py (PATCH 8 OF 8)
+# START: EXECUTION_PLAN_SCHEMA
+# ======================================================================
+class ExecutionStatus(models.TextChoices):
+    """Shared lifecycle states for execution planning."""
+
+    PLANNED = "PLANNED", "Planned"
+    ACTIVE = "ACTIVE", "Active"
+    PAUSED = "PAUSED", "Paused"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class EstimateConfidence(models.TextChoices):
+    """Confidence levels for implementation effort estimates."""
+
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
+
+
+class RiskLevel(models.TextChoices):
+    """Potential implementation impact associated with a planning step."""
+
+    LOW = "LOW", "Low"
+    MEDIUM = "MEDIUM", "Medium"
+    HIGH = "HIGH", "High"
+    CRITICAL = "CRITICAL", "Critical"
+
+
+class Project(models.Model):
+    """A product, application, or engineering domain containing initiatives."""
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+
+    color = models.CharField(
+        max_length=32,
+        blank=True,
+        help_text="Optional presentation color for planning interfaces.",
+    )
+
+    icon = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Optional icon identifier for planning interfaces.",
+    )
+
+    position = models.PositiveIntegerField(default=0)
+    active = models.BooleanField(default=True, db_index=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["position", "title"]
+
+    def __str__(self):
+        return self.title
+
+
+class Initiative(models.Model):
+    """A top-level engineering objective within a Project."""
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.PROTECT,
+        related_name="initiatives",
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
+    position = models.PositiveIntegerField(default=0)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="initiatives_created",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+        unique_together = [("project", "position")]
+
+    def __str__(self):
+        return f"{self.project} / {self.title}"
+
+
+class Phase(models.Model):
+    """A milestone within an Initiative."""
+
+    initiative = models.ForeignKey(
+        Initiative,
+        on_delete=models.CASCADE,
+        related_name="phases",
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
+    position = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+        unique_together = [("initiative", "position")]
+
+    def __str__(self):
+        return f"{self.initiative} / {self.title}"
+
+
+class Step(models.Model):
+    """A single validated implementation task within a Phase."""
+
+    phase = models.ForeignKey(
+        Phase,
+        on_delete=models.CASCADE,
+        related_name="steps",
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
+    position = models.PositiveIntegerField(default=0)
+
+    estimated_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Estimated implementation effort in minutes.",
+    )
+
+    estimate_confidence = models.CharField(
+        max_length=10,
+        choices=EstimateConfidence.choices,
+        null=True,
+        blank=True,
+        help_text="Confidence in the current implementation estimate.",
+    )
+
+    risk_level = models.CharField(
+        max_length=10,
+        choices=RiskLevel.choices,
+        default=RiskLevel.LOW,
+        db_index=True,
+        help_text="Potential impact if this implementation step fails.",
+    )
+
+    risk_description = models.TextField(
+        blank=True,
+        help_text="Reason this step carries implementation or operational risk.",
+    )
+
+    validation_description = models.TextField(
+        blank=True,
+        help_text="Deterministic evidence required to validate this step.",
+    )
+
+    validated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="validated_steps",
+    )
+
+    validation_notes = models.TextField(
+        blank=True,
+        help_text="Observed validation results and supporting evidence.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
+        unique_together = [("phase", "position")]
+
+    def __str__(self):
+        return f"{self.phase} / {self.title}"
+# ======================================================================
+# END: EXECUTION_PLAN_SCHEMA (PATCH 8 OF 8)
 # ======================================================================

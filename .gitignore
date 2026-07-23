@@ -1,18 +1,24 @@
 venv/
 .venv/
+
 __pycache__/
-*.pyc
+*.py[cod]
+
 .env
 db.sqlite3
+
 dead_ends/
 .idea/
 .spyproject/
 staticfiles/
 workspace_telemetry.log
+
 # Strict Blacklist for Automated Container Backups
+
 database_backups/
 
 # Monaco Vendor Exclusions
+
 node_modules/
 package/
 static/js/vs/
