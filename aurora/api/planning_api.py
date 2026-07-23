@@ -107,6 +107,18 @@ def serialize_phase(phase):
     }
 
 
+def serialize_initiative_option(initiative):
+    """Serializes one Initiative for the workspace selector."""
+    return {
+        "id": initiative.pk,
+        "project_id": initiative.project_id,
+        "title": initiative.title,
+        "status": initiative.status,
+        "status_label": initiative.get_status_display(),
+        "position": initiative.position,
+    }
+
+
 def serialize_initiative(initiative):
     """Serializes one initiative and its complete planning hierarchy."""
     phases = list(initiative.phases.all())
@@ -142,8 +154,11 @@ def serialize_initiative(initiative):
 # FILE: aurora/api/planning_api.py (PATCH 2 OF 7)
 # START: PLANNING_HIERARCHY_QUERY
 # ======================================================================
-def build_planning_payload(project_slug=None):
-    """Builds the persisted planning hierarchy for one active Project."""
+def build_planning_payload(
+    project_slug=None,
+    initiative_id=None,
+):
+    """Builds the focused planning workspace for one active Project."""
     projects = list(
         Project.objects
         .filter(active=True)
@@ -175,70 +190,104 @@ def build_planning_payload(project_slug=None):
             "status": "success",
             "projects": project_payload,
             "active_project": None,
+            "initiative_options": [],
+            "active_initiative": None,
             "summary": {
                 "initiative_count": 0,
                 "phase_count": 0,
                 "step_count": 0,
             },
-            "initiatives": [],
         }
 
-    step_queryset = (
-        Step.objects
-        .select_related("validated_by")
-        .order_by("position", "created_at")
-    )
-
-    phase_queryset = (
-        Phase.objects
-        .order_by("position", "created_at")
-        .prefetch_related(
-            Prefetch(
-                "steps",
-                queryset=step_queryset,
-            )
-        )
-    )
-
-    initiatives = (
+    initiative_options = list(
         Initiative.objects
         .filter(project=active_project)
-        .select_related("project", "created_by")
+        .select_related("project")
         .order_by("position", "created_at")
-        .prefetch_related(
-            Prefetch(
-                "phases",
-                queryset=phase_queryset,
-            )
-        )
     )
 
-    initiative_payload = [
-        serialize_initiative(initiative)
-        for initiative in initiatives
-    ]
+    active_initiative = None
 
-    phase_count = sum(
-        initiative["phase_count"]
-        for initiative in initiative_payload
+    if initiative_id not in (None, ""):
+        requested_initiative_id = str(initiative_id)
+
+        active_initiative = next(
+            (
+                initiative
+                for initiative in initiative_options
+                if str(initiative.pk) == requested_initiative_id
+            ),
+            None,
+        )
+
+    if active_initiative is None and initiative_options:
+        active_initiative = initiative_options[0]
+
+    active_initiative_payload = None
+
+    if active_initiative is not None:
+        step_queryset = (
+            Step.objects
+            .select_related("validated_by")
+            .order_by("position", "created_at")
+        )
+
+        phase_queryset = (
+            Phase.objects
+            .order_by("position", "created_at")
+            .prefetch_related(
+                Prefetch(
+                    "steps",
+                    queryset=step_queryset,
+                )
+            )
+        )
+
+        active_initiative = (
+            Initiative.objects
+            .select_related("project", "created_by")
+            .prefetch_related(
+                Prefetch(
+                    "phases",
+                    queryset=phase_queryset,
+                )
+            )
+            .get(pk=active_initiative.pk)
+        )
+
+        active_initiative_payload = serialize_initiative(
+            active_initiative
+        )
+
+    phase_count = (
+        active_initiative_payload["phase_count"]
+        if active_initiative_payload
+        else 0
     )
 
     step_count = sum(
         phase["step_count"]
-        for initiative in initiative_payload
-        for phase in initiative["phases"]
+        for phase in (
+            active_initiative_payload["phases"]
+            if active_initiative_payload
+            else []
+        )
     )
 
     return {
         "status": "success",
         "projects": project_payload,
         "active_project": serialize_project(active_project),
+        "initiative_options": [
+            serialize_initiative_option(initiative)
+            for initiative in initiative_options
+        ],
+        "active_initiative": active_initiative_payload,
         "summary": {
-            "initiative_count": len(initiative_payload),
+            "initiative_count": len(initiative_options),
             "phase_count": phase_count,
             "step_count": step_count,
         },
-        "initiatives": initiative_payload,
     }
 # ======================================================================
 # END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 7)
@@ -246,95 +295,57 @@ def build_planning_payload(project_slug=None):
 
 # ======================================================================
 # FILE: aurora/api/planning_api.py (PATCH 3 OF 7)
-# START: PLANNING_REQUEST_VALIDATION
+# START: PLANNING_API_ENDPOINT
 # ======================================================================
-def parse_json_request(request):
-    """Returns a decoded JSON object or a structured validation error."""
+@login_required
+@require_http_methods(["GET", "POST"])
+def planning_api(request):
+    """Reads or creates Decision Engine planning records."""
+    if request.method == "GET":
+        project_slug = request.GET.get("project")
+        initiative_id = request.GET.get("initiative")
+
+        return JsonResponse(
+            build_planning_payload(
+                project_slug=project_slug,
+                initiative_id=initiative_id,
+            )
+        )
+
     try:
-        payload = json.loads(request.body or b"{}")
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return None, JsonResponse(
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse(
             {
                 "status": "error",
-                "message": "The request body must contain valid JSON.",
+                "message": "Request body must contain valid JSON.",
             },
             status=400,
         )
 
-    if not isinstance(payload, dict):
-        return None, JsonResponse(
-            {
-                "status": "error",
-                "message": "The request body must be a JSON object.",
-            },
-            status=400,
-        )
+    operation = payload.get("operation")
 
-    return payload, None
+    if operation == "create_initiative":
+        return create_initiative(request, payload)
 
+    if operation == "create_phase":
+        return create_phase(payload)
 
-def valid_execution_statuses():
-    """Returns the persisted lifecycle values accepted by planning records."""
-    return {
-        choice.value
-        for choice in ExecutionStatus
-    }
+    if operation == "create_step":
+        return create_step(payload)
 
-
-def validate_title(payload, record_label):
-    """Validates a required planning-record title."""
-    title = str(payload.get("title", "")).strip()
-
-    if not title:
-        return None, JsonResponse(
-            {
-                "status": "error",
-                "message": f"{record_label} title is required.",
-                "field_errors": {
-                    "title": f"Enter a {record_label} title.",
-                },
-            },
-            status=400,
-        )
-
-    if len(title) > 255:
-        return None, JsonResponse(
-            {
-                "status": "error",
-                "message": (
-                    f"{record_label} title must not exceed 255 characters."
-                ),
-                "field_errors": {
-                    "title": "Use 255 characters or fewer.",
-                },
-            },
-            status=400,
-        )
-
-    return title, None
-
-
-def validate_status(payload, record_label):
-    """Validates an optional execution status."""
-    status = str(
-        payload.get("status", ExecutionStatus.PLANNED)
-    ).strip().upper()
-
-    if status not in valid_execution_statuses():
-        return None, JsonResponse(
-            {
-                "status": "error",
-                "message": f"{record_label} status is invalid.",
-                "field_errors": {
-                    "status": f"Select a valid {record_label} status.",
-                },
-            },
-            status=400,
-        )
-
-    return status, None
+    return JsonResponse(
+        {
+            "status": "error",
+            "message": (
+                "operation must be create_initiative, "
+                "create_phase, or create_step."
+            ),
+        },
+        status=400,
+    )
 # ======================================================================
-# END: PLANNING_REQUEST_VALIDATION (PATCH 3 OF 7)
+# END: PLANNING_API_ENDPOINT (PATCH 3 OF 7)
 # ======================================================================
 
 # ======================================================================
@@ -376,23 +387,44 @@ def create_initiative(request, payload):
             status=404,
         )
 
-    title, error_response = validate_title(
-        payload,
-        "Initiative",
-    )
+    title = str(payload.get("title", "")).strip()
 
-    if error_response is not None:
-        return error_response
+    if not title:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Initiative title is required.",
+                "field_errors": {
+                    "title": "Enter an Initiative title.",
+                },
+            },
+            status=400,
+        )
 
-    status, error_response = validate_status(
-        payload,
-        "Initiative",
-    )
+    status = str(
+        payload.get("status", ExecutionStatus.PLANNED)
+    ).strip().upper()
 
-    if error_response is not None:
-        return error_response
+    valid_statuses = {
+        choice.value
+        for choice in ExecutionStatus
+    }
 
-    description = str(payload.get("description", "")).strip()
+    if status not in valid_statuses:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Initiative status is invalid.",
+                "field_errors": {
+                    "status": "Select a valid Initiative status.",
+                },
+            },
+            status=400,
+        )
+
+    description = str(
+        payload.get("description", "")
+    ).strip()
 
     with transaction.atomic():
         highest_position = (
@@ -461,23 +493,44 @@ def create_phase(payload):
             status=404,
         )
 
-    title, error_response = validate_title(
-        payload,
-        "Phase",
-    )
+    title = str(payload.get("title", "")).strip()
 
-    if error_response is not None:
-        return error_response
+    if not title:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Phase title is required.",
+                "field_errors": {
+                    "title": "Enter a Phase title.",
+                },
+            },
+            status=400,
+        )
 
-    status, error_response = validate_status(
-        payload,
-        "Phase",
-    )
+    status = str(
+        payload.get("status", ExecutionStatus.PLANNED)
+    ).strip().upper()
 
-    if error_response is not None:
-        return error_response
+    valid_statuses = {
+        choice.value
+        for choice in ExecutionStatus
+    }
 
-    description = str(payload.get("description", "")).strip()
+    if status not in valid_statuses:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Phase status is invalid.",
+                "field_errors": {
+                    "status": "Select a valid Phase status.",
+                },
+            },
+            status=400,
+        )
+
+    description = str(
+        payload.get("description", "")
+    ).strip()
 
     with transaction.atomic():
         highest_position = (
@@ -509,7 +562,7 @@ def create_phase(payload):
         status=201,
     )
 # ======================================================================
-# END: PHASE_CREATION_API (PATCH 5 OF 6)
+# END: PHASE_CREATION_API (PATCH 5 OF 7)
 # ======================================================================
 
 # ======================================================================
@@ -679,19 +732,30 @@ def planning_endpoint(request):
             request.GET.get("project", "")
         ).strip()
 
+        initiative_id = str(
+            request.GET.get("initiative", "")
+        ).strip()
+
         return JsonResponse(
             build_planning_payload(
                 project_slug=project_slug or None,
+                initiative_id=initiative_id or None,
             )
         )
 
-    payload, error_response = parse_json_request(request)
-
-    if error_response is not None:
-        return error_response
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Request body must contain valid JSON.",
+            },
+            status=400,
+        )
 
     operation = str(
-        payload.get("operation", "create_initiative")
+        payload.get("operation", "")
     ).strip().lower()
 
     if operation == "create_initiative":

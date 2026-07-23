@@ -462,7 +462,9 @@
     function renderPlanningPayload(payload) {
         const projects = payload.projects || [];
         const activeProject = payload.active_project || null;
-        const initiatives = payload.initiatives || [];
+        const initiativeOptions = payload.initiative_options || [];
+        const activeInitiative = payload.active_initiative || null;
+        const summary = payload.summary || {};
         const $initiativeList = $("#planning-initiative-list");
 
         renderProjectSelector(projects, activeProject);
@@ -481,35 +483,26 @@
                 : ""
         );
 
-        if (!initiatives.length) {
+        if (!initiativeOptions.length || !activeInitiative) {
             renderInitiativeSelector([], null);
             showEmptyState();
             return;
         }
 
-        const selectedInitiative = renderInitiativeSelector(
-            initiatives,
+        activeInitiativeId = activeInitiative.id;
+
+        renderInitiativeSelector(
+            initiativeOptions,
             activeInitiativeId
         );
 
-        if (!selectedInitiative) {
-            showEmptyState();
-            return;
-        }
-
         $initiativeList.append(
-            renderInitiative(selectedInitiative)
+            renderInitiative(activeInitiative)
         );
 
-        const initiativeCount = initiatives.length;
-        const phaseCount = selectedInitiative.phase_count || 0;
-        const stepCount = (selectedInitiative.phases || []).reduce(
-            function(total, phase) {
-                return total + (phase.step_count || 0);
-            },
-            0
-        );
-
+        const initiativeCount = initiativeOptions.length;
+        const phaseCount = summary.phase_count || 0;
+        const stepCount = summary.step_count || 0;
         const projectTitle = activeProject
             ? activeProject.title
             : "No Project";
@@ -531,7 +524,7 @@
                 `${projectTitle} · `
                 + `${initiativeCount} initiative`
                 + `${initiativeCount === 1 ? "" : "s"} · `
-                + `showing ${selectedInitiative.title}.`
+                + `showing ${activeInitiative.title}.`
             );
     }
 // ======================================================================
@@ -542,19 +535,33 @@
 // FILE: aurora/static/aurora/js/planning.js (PATCH 4 OF 7)
 // START: PLANNING_DATA_LOADER
 // ======================================================================
-    function loadPlanningData(projectSlug) {
+    function loadPlanningData(projectSlug, initiativeId) {
         const endpoint = planningEndpoints.planning_endpoint;
         const requestedProjectSlug = (
             projectSlug
             || activeProjectSlug
             || ""
         );
+        const requestedInitiativeId = (
+            initiativeId
+            || activeInitiativeId
+            || ""
+        );
+        const requestData = {};
 
         if (!endpoint) {
             showError(
                 "The planning endpoint was not supplied by Aurora Console."
             );
             return;
+        }
+
+        if (requestedProjectSlug) {
+            requestData.project = requestedProjectSlug;
+        }
+
+        if (requestedInitiativeId) {
+            requestData.initiative = requestedInitiativeId;
         }
 
         if (planningRequest) {
@@ -572,17 +579,13 @@
         $("#planning-status-bar")
             .removeClass("text-danger text-success")
             .addClass("text-muted")
-            .text("Loading persisted execution plans...");
+            .text("Loading persisted execution plan...");
 
         planningRequest = $.ajax({
             url: endpoint,
             method: "GET",
             dataType: "json",
-            data: requestedProjectSlug
-                ? {
-                    project: requestedProjectSlug,
-                }
-                : {},
+            data: requestData,
         })
             .done(function(response) {
                 if (!response || response.status !== "success") {
@@ -762,8 +765,22 @@
                     return;
                 }
 
+                const createdInitiative = (
+                    response.initiative
+                    || response.active_initiative
+                    || null
+                );
+
+                if (createdInitiative && createdInitiative.id) {
+                    activeInitiativeId = createdInitiative.id;
+                }
+
                 closeInitiativeForm();
-                loadPlanningData(activeProjectSlug);
+
+                loadPlanningData(
+                    activeProjectSlug,
+                    activeInitiativeId
+                );
             })
             .fail(function(xhr) {
                 const response = xhr.responseJSON || {};
