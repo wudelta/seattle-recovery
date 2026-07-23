@@ -3,15 +3,7 @@
    START: PLANNING_DOCUMENT_HIERARCHY
    ====================================================================== */
 
-/*
- * The Planning workspace uses a document-oriented visual language.
- *
- * Initiative = document heading
- * Phase      = major section
- * Step       = subordinate outline entry
- */
-
-#planning-workspace-container {
+#planning-console-panel {
     --planning-paper: #15191c;
     --planning-section: #111518;
     --planning-rule: #46515a;
@@ -19,13 +11,193 @@
     --planning-text: #e5e7e9;
     --planning-muted: #9da6ad;
     --planning-accent: #8fb8c7;
+    --planning-navigator-width: 15rem;
+}
+
+/* ----------------------------------------------------------------------
+   Workspace shell
+   ---------------------------------------------------------------------- */
+
+#planning-console-panel .planning-workspace-shell {
+    background-color: #0d1012;
+}
+
+#planning-console-panel .planning-navigator {
+    width: var(--planning-navigator-width);
+    min-width: var(--planning-navigator-width);
+    background-color: #101416;
+    border-color: var(--planning-rule) !important;
+}
+
+#planning-console-panel .planning-navigator-header,
+#planning-console-panel .planning-workbench-header {
+    background-color: #12171a;
+    border-color: var(--planning-rule) !important;
+}
+
+#planning-console-panel .planning-navigator-body {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+#planning-console-panel .planning-navigator-section {
+    padding: 0.5rem;
+}
+
+#planning-console-panel .planning-navigator-section + .planning-navigator-section {
+    padding-top: 0;
+}
+
+#planning-console-panel .planning-navigator-section-label {
+    padding: 0 0.35rem 0.35rem;
+    color: var(--planning-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+#planning-console-panel .planning-navigator-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+#planning-console-panel .planning-navigator-item {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.5rem 0.55rem;
+    background: transparent;
+    color: var(--planning-text);
+    border: 1px solid transparent;
+    border-radius: 0.3rem;
+}
+
+#planning-console-panel .planning-navigator-item:not(:disabled) {
+    cursor: pointer;
+}
+
+#planning-console-panel .planning-navigator-item:not(:disabled):hover,
+#planning-console-panel .planning-navigator-item:focus-visible {
+    background-color: rgba(143, 184, 199, 0.08);
+    border-color: rgba(143, 184, 199, 0.3);
+    outline: none;
+}
+
+#planning-console-panel .planning-navigator-item.is-active {
+    background-color: rgba(143, 184, 199, 0.14);
+    border-color: rgba(143, 184, 199, 0.55);
+}
+
+#planning-console-panel .planning-navigator-marker {
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+    border: 1px solid var(--planning-guide);
+    border-radius: 50%;
+}
+
+#planning-console-panel .planning-navigator-item.is-active
+.planning-navigator-marker {
+    background-color: var(--planning-accent);
+    border-color: var(--planning-accent);
+}
+
+#planning-console-panel .planning-navigator-item-body {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+#planning-console-panel .planning-navigator-item-title {
+    overflow: hidden;
+    color: var(--planning-text);
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#planning-console-panel .planning-navigator-item-meta {
+    overflow: hidden;
+    margin-top: 0.1rem;
+    color: var(--planning-muted);
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#planning-console-panel .planning-navigator-placeholder {
+    padding: 0.5rem;
+    color: var(--planning-muted);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+#planning-console-panel .planning-navigator-depth-1 {
+    padding-left: 1.35rem;
+}
+
+#planning-console-panel .planning-navigator-depth-2 {
+    padding-left: 2rem;
+}
+
+#planning-console-panel .planning-workbench {
+    background-color: #0d1012;
+}
+
+#planning-console-panel .planning-workbench-header {
+    min-height: auto;
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+}
+
+#planning-console-panel .planning-workbench-title {
+    color: var(--planning-text);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+#planning-console-panel .planning-workbench-context {
+    color: var(--planning-muted) !important;
+}
+
+#planning-console-panel .planning-workbench-content {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+/* ----------------------------------------------------------------------
+   Initiative creation form
+   ---------------------------------------------------------------------- */
+
+#planning-console-panel #planning-initiative-form-panel {
+    max-height: calc(100vh - 12rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+#planning-console-panel #planning-initiative-form {
+    padding-bottom: 1rem;
+}
+
+#planning-console-panel #planning-initiative-form-panel:focus-within {
+    border-color: var(--planning-accent) !important;
 }
 
 /* ----------------------------------------------------------------------
    Phase sections
    ---------------------------------------------------------------------- */
 
-#planning-workspace-container .planning-phase {
+#planning-console-panel .planning-phase {
     position: relative;
     overflow: hidden;
     background-color: var(--planning-section) !important;
@@ -33,19 +205,19 @@
     border-radius: 0.25rem !important;
 }
 
-#planning-workspace-container .planning-phase > header {
+#planning-console-panel .planning-phase > header {
     background-color: var(--planning-paper);
     border-bottom-color: var(--planning-rule) !important;
 }
 
-#planning-workspace-container .planning-phase-title {
+#planning-console-panel .planning-phase-title {
     color: var(--planning-text) !important;
     font-size: 1.125rem;
     font-weight: 600;
     letter-spacing: 0.015em;
 }
 
-#planning-workspace-container .planning-phase-description {
+#planning-console-panel .planning-phase-description {
     color: var(--planning-muted) !important;
     line-height: 1.5;
 }
@@ -54,13 +226,13 @@
    Step outline
    ---------------------------------------------------------------------- */
 
-#planning-workspace-container .planning-step-list {
+#planning-console-panel .planning-step-list {
     position: relative;
     padding: 0.35rem 1rem 0.75rem 2.75rem;
     background-color: var(--planning-section);
 }
 
-#planning-workspace-container .planning-step-list:not(:empty)::before {
+#planning-console-panel .planning-step-list:not(:empty)::before {
     content: "";
     position: absolute;
     top: 0;
@@ -70,7 +242,7 @@
     background-color: var(--planning-guide);
 }
 
-#planning-workspace-container .planning-step {
+#planning-console-panel .planning-step {
     position: relative;
     min-height: 4rem;
     padding: 0.9rem 0.75rem 0.9rem 1rem !important;
@@ -78,11 +250,11 @@
     border-bottom: 1px solid rgba(157, 166, 173, 0.22) !important;
 }
 
-#planning-workspace-container .planning-step:last-child {
+#planning-console-panel .planning-step:last-child {
     border-bottom: 0 !important;
 }
 
-#planning-workspace-container .planning-step::before {
+#planning-console-panel .planning-step::before {
     content: "";
     position: absolute;
     top: 1.55rem;
@@ -92,7 +264,7 @@
     background-color: var(--planning-guide);
 }
 
-#planning-workspace-container .planning-step::after {
+#planning-console-panel .planning-step::after {
     content: "";
     position: absolute;
     top: 1.35rem;
@@ -104,7 +276,7 @@
     background-color: var(--planning-section);
 }
 
-#planning-workspace-container .planning-step-position {
+#planning-console-panel .planning-step-position {
     min-width: 2rem;
     padding: 0.25rem 0.4rem;
     background: transparent !important;
@@ -113,33 +285,33 @@
     font-weight: 500;
 }
 
-#planning-workspace-container .planning-step-title {
+#planning-console-panel .planning-step-title {
     color: var(--planning-text) !important;
     font-size: 0.95rem;
     font-weight: 600;
 }
 
-#planning-workspace-container .planning-step-description {
+#planning-console-panel .planning-step-description {
     max-width: 72rem;
     color: var(--planning-muted) !important;
     line-height: 1.5;
 }
 
-#planning-workspace-container .planning-step-validation,
-#planning-workspace-container .planning-step-validation-result {
+#planning-console-panel .planning-step-validation,
+#planning-console-panel .planning-step-validation-result {
     max-width: 72rem;
     padding-left: 0.75rem;
     border-left: 2px solid rgba(143, 184, 199, 0.45);
     line-height: 1.45;
 }
 
-#planning-workspace-container .planning-step-validation-description,
-#planning-workspace-container .planning-step-validation-notes {
+#planning-console-panel .planning-step-validation-description,
+#planning-console-panel .planning-step-validation-notes {
     color: var(--planning-muted) !important;
 }
 
-#planning-workspace-container .planning-step-validator,
-#planning-workspace-container .planning-step-updated {
+#planning-console-panel .planning-step-validator,
+#planning-console-panel .planning-step-updated {
     color: var(--planning-muted);
     white-space: nowrap;
 }
@@ -148,7 +320,7 @@
    Step creation form remains attached to its Phase
    ---------------------------------------------------------------------- */
 
-#planning-workspace-container .planning-step-form-panel {
+#planning-console-panel .planning-step-form-panel {
     margin-left: 1.65rem;
     background-color: var(--planning-section) !important;
     border-left: 1px solid var(--planning-guide);
@@ -160,24 +332,32 @@
    ---------------------------------------------------------------------- */
 
 @media (max-width: 900px) {
-    #planning-workspace-container .planning-step-list {
+    #planning-console-panel {
+        --planning-navigator-width: 13rem;
+    }
+
+    #planning-console-panel #planning-initiative-form-panel {
+        max-height: calc(100vh - 8rem);
+    }
+
+    #planning-console-panel .planning-step-list {
         padding-left: 2rem;
     }
 
-    #planning-workspace-container .planning-step-list:not(:empty)::before {
+    #planning-console-panel .planning-step-list:not(:empty)::before {
         left: 1rem;
     }
 
-    #planning-workspace-container .planning-step {
+    #planning-console-panel .planning-step {
         flex-wrap: wrap;
     }
 
-    #planning-workspace-container .planning-step::before {
+    #planning-console-panel .planning-step::before {
         left: -1rem;
         width: 1rem;
     }
 
-    #planning-workspace-container .planning-step > .text-end {
+    #planning-console-panel .planning-step > .text-end {
         width: 100%;
         padding-left: 3rem;
         text-align: left !important;

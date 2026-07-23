@@ -82,16 +82,6 @@
                 )
                 .prop("disabled", true);
 
-            $("#planning-initiative-select")
-                .empty()
-                .append(
-                    $("<option>", {
-                        value: "",
-                        text: "Create a Project first",
-                    })
-                )
-                .prop("disabled", true);
-
             $(
                 "#planning-create-initiative-btn, "
                 + "#planning-empty-create-initiative-btn"
@@ -125,59 +115,6 @@
             + "#planning-empty-create-initiative-btn"
         ).prop("disabled", false);
     }
-
-    function renderInitiativeSelector(
-        initiatives,
-        preferredInitiativeId
-    ) {
-        const $initiativeSelect = $("#planning-initiative-select");
-
-        $initiativeSelect.empty();
-
-        if (!Array.isArray(initiatives) || !initiatives.length) {
-            activeInitiativeId = null;
-
-            $initiativeSelect
-                .append(
-                    $("<option>", {
-                        value: "",
-                        text: "No initiatives",
-                    })
-                )
-                .prop("disabled", true);
-
-            return null;
-        }
-
-        initiatives.forEach(function(initiative) {
-            $initiativeSelect.append(
-                $("<option>", {
-                    value: String(initiative.id),
-                    text: initiative.title || "Untitled initiative",
-                })
-            );
-        });
-
-        const preferredId = preferredInitiativeId !== null
-            && preferredInitiativeId !== undefined
-            ? String(preferredInitiativeId)
-            : null;
-
-        const selectedInitiative = initiatives.find(
-            function(initiative) {
-                return preferredId !== null
-                    && String(initiative.id) === preferredId;
-            }
-        ) || initiatives[0];
-
-        activeInitiativeId = selectedInitiative.id;
-
-        $initiativeSelect
-            .val(String(activeInitiativeId))
-            .prop("disabled", false);
-
-        return selectedInitiative;
-    }
 // ======================================================================
 // END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 7)
 // ======================================================================
@@ -186,6 +123,165 @@
 // FILE: aurora/static/aurora/js/planning.js (PATCH 2 OF 7)
 // START: PLANNING_WORKSPACE_STATE
 // ======================================================================
+    function setWorkbenchHeader(title, context, status) {
+        $("#planning-workbench-title").text(
+            title || "Decision Engine"
+        );
+
+        $("#planning-workbench-context").text(
+            context || "Select a Project and Initiative to begin."
+        );
+
+        const $status = $("#planning-workbench-status");
+
+        $status.empty();
+
+        if (status) {
+            $status.append(
+                $("<span>", {
+                    class: `badge ${statusClass(status.value)}`,
+                    text: status.label || status.value,
+                })
+            );
+        }
+    }
+
+    function navigatorItem(options) {
+        const $button = $("<button>", {
+            type: "button",
+            class: "planning-navigator-item text-start",
+        });
+
+        if (options.id) {
+            $button.attr("data-record-id", options.id);
+        }
+
+        if (options.itemType) {
+            $button.attr("data-item-type", options.itemType);
+        }
+
+        if (options.isActive) {
+            $button.addClass("is-active");
+        }
+
+        if (options.disabled) {
+            $button.prop("disabled", true);
+        }
+
+        const $body = $("<span>", {
+            class: "planning-navigator-item-body",
+        });
+
+        $body.append(
+            $("<span>", {
+                class: "planning-navigator-item-title",
+                text: options.title || "Untitled",
+            })
+        );
+
+        if (options.meta) {
+            $body.append(
+                $("<span>", {
+                    class: "planning-navigator-item-meta",
+                    text: options.meta,
+                })
+            );
+        }
+
+        $button.append(
+            $("<span>", {
+                class: "planning-navigator-marker",
+            }),
+            $body
+        );
+
+        return $button;
+    }
+
+    function renderNavigatorProject(project, initiativeCount) {
+        const $projectButton = $("#planning-navigator-project");
+
+        if (!project) {
+            $projectButton
+                .removeClass("is-active")
+                .prop("disabled", true);
+
+            $("#planning-navigator-project-title")
+                .text("No active Project");
+
+            $("#planning-navigator-project-meta")
+                .text("Create or activate a Project to begin");
+
+            return;
+        }
+
+        $("#planning-navigator-project-title")
+            .text(project.title || "Untitled Project");
+
+        $("#planning-navigator-project-meta")
+            .text(
+                `${initiativeCount} initiative`
+                + `${initiativeCount === 1 ? "" : "s"}`
+            );
+
+        $projectButton
+            .addClass("is-active")
+            .prop("disabled", false);
+    }
+
+    function renderNavigatorInitiatives(
+        initiatives,
+        selectedInitiativeId
+    ) {
+        const $list = $("#planning-navigator-initiative-list");
+
+        $list.empty();
+
+        if (!Array.isArray(initiatives) || !initiatives.length) {
+            $list.append(
+                $("<div>", {
+                    class: "planning-navigator-placeholder",
+                    text: "This Project has no Initiatives.",
+                })
+            );
+
+            return;
+        }
+
+        initiatives.forEach(function(initiative) {
+            const initiativeId = String(initiative.id);
+            const selectedId = selectedInitiativeId !== null
+                && selectedInitiativeId !== undefined
+                ? String(selectedInitiativeId)
+                : null;
+
+            $list.append(
+                navigatorItem({
+                    id: initiative.id,
+                    itemType: "initiative",
+                    title: initiative.title || "Untitled Initiative",
+                    meta: (
+                        initiative.status_label
+                        || initiative.status
+                        || "Unknown status"
+                    ),
+                    isActive: initiativeId === selectedId,
+                })
+            );
+        });
+    }
+
+    function resetNavigator() {
+        renderNavigatorProject(null, 0);
+        renderNavigatorInitiatives([], null);
+
+        setWorkbenchHeader(
+            "Decision Engine",
+            "Select a Project and Initiative to begin.",
+            null
+        );
+    }
+
     function setLoadingState(isLoading) {
         const $loadingState = $("#planning-loading-state");
         const $refreshButton = $("#planning-refresh-btn");
@@ -219,6 +315,12 @@
             .removeClass("text-info text-success")
             .addClass("text-danger")
             .text("Load failed");
+
+        setWorkbenchHeader(
+            "Decision Engine unavailable",
+            message || "Planning data could not be loaded.",
+            null
+        );
     }
 
     function showEmptyState() {
@@ -238,6 +340,12 @@
             .removeClass("text-danger text-success")
             .addClass("text-info")
             .text("0 initiatives");
+
+        setWorkbenchHeader(
+            "No active Initiative",
+            "Create an Initiative for the selected Project.",
+            null
+        );
     }
 // ======================================================================
 // END: PLANNING_WORKSPACE_STATE (PATCH 2 OF 7)
@@ -361,7 +469,9 @@
             $description.addClass("d-none");
         }
 
-        const stepCount = phase.step_count || 0;
+        const stepCount = Array.isArray(phase.steps)
+            ? phase.steps.length
+            : phase.step_count || 0;
 
         $fragment
             .find(".planning-phase-summary")
@@ -469,6 +579,11 @@
 
         renderProjectSelector(projects, activeProject);
 
+        renderNavigatorProject(
+            activeProject,
+            initiativeOptions.length
+        );
+
         $("#planning-error-state").addClass("d-none");
 
         $("#planning-empty-state")
@@ -484,14 +599,17 @@
         );
 
         if (!initiativeOptions.length || !activeInitiative) {
-            renderInitiativeSelector([], null);
+            activeInitiativeId = null;
+
+            renderNavigatorInitiatives([], null);
+
             showEmptyState();
             return;
         }
 
         activeInitiativeId = activeInitiative.id;
 
-        renderInitiativeSelector(
+        renderNavigatorInitiatives(
             initiativeOptions,
             activeInitiativeId
         );
@@ -506,6 +624,28 @@
         const projectTitle = activeProject
             ? activeProject.title
             : "No Project";
+
+        const initiativeStatus = activeInitiative.status
+            ? {
+                value: activeInitiative.status,
+                label: (
+                    activeInitiative.status_label
+                    || activeInitiative.status
+                ),
+            }
+            : null;
+
+        setWorkbenchHeader(
+            activeInitiative.title || "Untitled Initiative",
+            (
+                `${projectTitle} · `
+                + `${phaseCount} phase`
+                + `${phaseCount === 1 ? "" : "s"} · `
+                + `${stepCount} step`
+                + `${stepCount === 1 ? "" : "s"}`
+            ),
+            initiativeStatus
+        );
 
         $("#planning-summary-badge")
             .removeClass("text-danger text-info")
@@ -580,6 +720,16 @@
             .removeClass("text-danger text-success")
             .addClass("text-muted")
             .text("Loading persisted execution plan...");
+
+        setWorkbenchHeader(
+            "Loading Decision Engine",
+            (
+                requestedProjectSlug
+                    ? `Opening ${requestedProjectSlug}...`
+                    : "Resolving active Project context..."
+            ),
+            null
+        );
 
         planningRequest = $.ajax({
             url: endpoint,
@@ -675,8 +825,14 @@
 
         resetInitiativeForm();
 
+        $("#planning-workspace")
+            .addClass("d-none");
+
         $("#planning-initiative-form-panel")
-            .removeClass("d-none");
+            .removeClass("d-none flex-shrink-0")
+            .addClass("flex-grow-1 overflow-auto")
+            .css("min-height", 0)
+            .scrollTop(0);
 
         $("#planning-initiative-title").trigger("focus");
     }
@@ -685,9 +841,15 @@
         resetInitiativeForm();
 
         $("#planning-initiative-form-panel")
-            .addClass("d-none");
-    }
+            .addClass("d-none")
+            .removeClass("flex-grow-1 overflow-auto")
+            .addClass("flex-shrink-0")
+            .css("min-height", "");
 
+        $("#planning-workspace")
+            .removeClass("d-none");
+    }
+    
     function setInitiativeSaveState(isSaving) {
         $("#planning-save-initiative-btn")
             .prop("disabled", isSaving)
@@ -1211,24 +1373,42 @@
                 loadPlanningData(activeProjectSlug);
             });
 
-        $("#planning-initiative-select")
-            .off("change.planning")
-            .on("change.planning", function() {
-                const selectedValue = $(this).val();
-
-                activeInitiativeId = selectedValue
-                    ? Number(selectedValue)
-                    : null;
-
-                closeInitiativeForm();
-                loadPlanningData(activeProjectSlug);
-            });
-
         $("#planning-refresh-btn")
             .off("click.planning")
             .on("click.planning", function() {
-                loadPlanningData(activeProjectSlug);
+                loadPlanningData(
+                    activeProjectSlug,
+                    activeInitiativeId
+                );
             });
+
+        $("#planning-navigator-initiative-list")
+            .off("click.planningNavigator")
+            .on(
+                "click.planningNavigator",
+                ".planning-navigator-item[data-item-type='initiative']",
+                function() {
+                    const selectedInitiativeId = Number(
+                        $(this).attr("data-record-id")
+                    );
+
+                    if (
+                        !selectedInitiativeId
+                        || selectedInitiativeId === activeInitiativeId
+                    ) {
+                        return;
+                    }
+
+                    activeInitiativeId = selectedInitiativeId;
+
+                    closeInitiativeForm();
+
+                    loadPlanningData(
+                        activeProjectSlug,
+                        activeInitiativeId
+                    );
+                }
+            );
 
         $(
             "#planning-create-initiative-btn, "
@@ -1383,11 +1563,15 @@
         planningEndpoints = systemEndpoints || {};
 
         if (!planningInitialized) {
+            resetNavigator();
             bindPlanningEvents();
             planningInitialized = true;
         }
 
-        loadPlanningData(activeProjectSlug);
+        loadPlanningData(
+            activeProjectSlug,
+            activeInitiativeId
+        );
     };
 
     window.refreshPlanningConsole = function() {
@@ -1395,7 +1579,10 @@
             return;
         }
 
-        loadPlanningData(activeProjectSlug);
+        loadPlanningData(
+            activeProjectSlug,
+            activeInitiativeId
+        );
     };
 })(window, jQuery);
 // ======================================================================
