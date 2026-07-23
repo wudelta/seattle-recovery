@@ -12,6 +12,7 @@
     let phaseRequest = null;
     let stepRequest = null;
     let activeProjectSlug = null;
+    let activeInitiativeId = null;
 
     const STATUS_CLASSES = {
         PLANNED: "bg-secondary text-light",
@@ -70,12 +71,23 @@
 
         if (!Array.isArray(projects) || !projects.length) {
             activeProjectSlug = null;
+            activeInitiativeId = null;
 
             $projectSelect
                 .append(
                     $("<option>", {
                         value: "",
                         text: "No active projects",
+                    })
+                )
+                .prop("disabled", true);
+
+            $("#planning-initiative-select")
+                .empty()
+                .append(
+                    $("<option>", {
+                        value: "",
+                        text: "Create a Project first",
                     })
                 )
                 .prop("disabled", true);
@@ -112,6 +124,59 @@
             "#planning-create-initiative-btn, "
             + "#planning-empty-create-initiative-btn"
         ).prop("disabled", false);
+    }
+
+    function renderInitiativeSelector(
+        initiatives,
+        preferredInitiativeId
+    ) {
+        const $initiativeSelect = $("#planning-initiative-select");
+
+        $initiativeSelect.empty();
+
+        if (!Array.isArray(initiatives) || !initiatives.length) {
+            activeInitiativeId = null;
+
+            $initiativeSelect
+                .append(
+                    $("<option>", {
+                        value: "",
+                        text: "No initiatives",
+                    })
+                )
+                .prop("disabled", true);
+
+            return null;
+        }
+
+        initiatives.forEach(function(initiative) {
+            $initiativeSelect.append(
+                $("<option>", {
+                    value: String(initiative.id),
+                    text: initiative.title || "Untitled initiative",
+                })
+            );
+        });
+
+        const preferredId = preferredInitiativeId !== null
+            && preferredInitiativeId !== undefined
+            ? String(preferredInitiativeId)
+            : null;
+
+        const selectedInitiative = initiatives.find(
+            function(initiative) {
+                return preferredId !== null
+                    && String(initiative.id) === preferredId;
+            }
+        ) || initiatives[0];
+
+        activeInitiativeId = selectedInitiative.id;
+
+        $initiativeSelect
+            .val(String(activeInitiativeId))
+            .prop("disabled", false);
+
+        return selectedInitiative;
     }
 // ======================================================================
 // END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 7)
@@ -306,10 +371,6 @@
             phase.steps.forEach(function(step) {
                 $stepList.append(renderStep(step));
             });
-
-            $stepList
-                .children(".planning-step:last")
-                .removeClass("border-bottom");
         } else {
             $stepList.append(
                 $("<div>", {
@@ -402,7 +463,6 @@
         const projects = payload.projects || [];
         const activeProject = payload.active_project || null;
         const initiatives = payload.initiatives || [];
-        const summary = payload.summary || {};
         const $initiativeList = $("#planning-initiative-list");
 
         renderProjectSelector(projects, activeProject);
@@ -422,19 +482,34 @@
         );
 
         if (!initiatives.length) {
+            renderInitiativeSelector([], null);
             showEmptyState();
             return;
         }
 
-        initiatives.forEach(function(initiative) {
-            $initiativeList.append(
-                renderInitiative(initiative)
-            );
-        });
+        const selectedInitiative = renderInitiativeSelector(
+            initiatives,
+            activeInitiativeId
+        );
 
-        const initiativeCount = summary.initiative_count || 0;
-        const phaseCount = summary.phase_count || 0;
-        const stepCount = summary.step_count || 0;
+        if (!selectedInitiative) {
+            showEmptyState();
+            return;
+        }
+
+        $initiativeList.append(
+            renderInitiative(selectedInitiative)
+        );
+
+        const initiativeCount = initiatives.length;
+        const phaseCount = selectedInitiative.phase_count || 0;
+        const stepCount = (selectedInitiative.phases || []).reduce(
+            function(total, phase) {
+                return total + (phase.step_count || 0);
+            },
+            0
+        );
+
         const projectTitle = activeProject
             ? activeProject.title
             : "No Project";
@@ -443,9 +518,7 @@
             .removeClass("text-danger text-info")
             .addClass("text-success")
             .text(
-                `${initiativeCount} initiative`
-                + `${initiativeCount === 1 ? "" : "s"} · `
-                + `${phaseCount} phase`
+                `${phaseCount} phase`
                 + `${phaseCount === 1 ? "" : "s"} · `
                 + `${stepCount} step`
                 + `${stepCount === 1 ? "" : "s"}`
@@ -455,8 +528,10 @@
             .removeClass("text-danger text-muted")
             .addClass("text-success")
             .text(
-                `${projectTitle} synchronized at `
-                + `${new Date().toLocaleTimeString()}.`
+                `${projectTitle} · `
+                + `${initiativeCount} initiative`
+                + `${initiativeCount === 1 ? "" : "s"} · `
+                + `showing ${selectedInitiative.title}.`
             );
     }
 // ======================================================================
@@ -1113,6 +1188,20 @@
             .off("change.planning")
             .on("change.planning", function() {
                 activeProjectSlug = $(this).val() || null;
+                activeInitiativeId = null;
+
+                closeInitiativeForm();
+                loadPlanningData(activeProjectSlug);
+            });
+
+        $("#planning-initiative-select")
+            .off("change.planning")
+            .on("change.planning", function() {
+                const selectedValue = $(this).val();
+
+                activeInitiativeId = selectedValue
+                    ? Number(selectedValue)
+                    : null;
 
                 closeInitiativeForm();
                 loadPlanningData(activeProjectSlug);
