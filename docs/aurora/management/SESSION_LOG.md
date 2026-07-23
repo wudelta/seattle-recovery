@@ -893,3 +893,224 @@ with generation rather than the later workspace subsystem.
 After generation, evaluate the larger workspace subsystem containing component
 policy, dependency analysis, documentation, registry synchronization, graph
 synchronization, reconciliation, and workspace synchronization.
+
+## 2026-07-22 — Decision Engine MVP & Planning Workspace Foundation
+
+### Summary
+
+Today's work established the first complete implementation of Aurora's Decision Engine planning system and began transforming the Project panel from a traditional CRUD interface into an engineering planning workspace.
+
+This work represents the beginning of Aurora's long-term project management subsystem rather than a standalone feature.
+
+---
+
+## Decision Engine
+
+Completed the first functional planning hierarchy:
+
+```
+Initiative
+    Phase
+        Step
+```
+
+Implemented complete persistence for:
+
+* Initiatives
+* Phases
+* Steps
+
+including:
+
+* ordering
+* status
+* ownership
+* descriptions
+* effort estimates
+* estimate confidence
+* validation requirements
+
+Creation workflow was validated end-to-end inside Aurora Console.
+
+---
+
+## Console Integration
+
+Integrated the Decision Engine into Aurora Console.
+
+Completed:
+
+* Initiative creation
+* Phase creation
+* Step creation
+* nested rendering
+* AJAX persistence
+* hierarchy refresh
+* validation feedback
+
+The planning hierarchy is now fully operational inside the Project panel.
+
+---
+
+## Planning Workspace Redesign (Phase 1)
+
+Made the architectural decision that Aurora's planning interface should resemble engineering documentation rather than a dashboard.
+
+Design goals established:
+
+* document-oriented hierarchy
+* typography-driven organization
+* outline presentation
+* printable layout
+* minimal visual noise
+* long-form engineering readability
+
+The planning workspace should feel like:
+
+* an engineering notebook
+* a design binder
+* project documentation
+
+rather than:
+
+* a dashboard
+* a collection of Bootstrap cards
+* an administrative CRUD interface
+
+---
+
+## Initial Styling
+
+Created:
+
+```
+aurora/static/aurora/css/planning.css
+```
+
+Introduced the initial planning presentation layer.
+
+Added document-oriented classes including:
+
+* planning-workspace
+* planning-document
+* planning-paper
+* planning-section
+* planning-rule
+* planning-guide
+* planning-text
+* planning-muted
+* planning-accent
+
+These classes decouple planning presentation from Bootstrap card styling.
+
+---
+
+## Template Refactoring
+
+Refactored the Planning templates to support document-style rendering while preserving JavaScript compatibility.
+
+Completed:
+
+* planning workspace wrapper
+* toolbar semantics
+* document viewport
+* Initiative template conversion
+* Phase template conversion
+* Step template conversion
+
+Existing JavaScript bindings and element identifiers were intentionally preserved to avoid behavioral regressions.
+
+---
+
+## Engineering Lessons
+
+A placeholder patch was accidentally delivered during development, replacing a valid anchored region with instructional comments.
+
+The issue was immediately identified before any additional dependent work proceeded.
+
+Recovery consisted of restoring the original template from Git and rebuilding the structural patches from the actual source rather than reconstructed placeholders.
+
+This reinforced the purpose of Aurora's Patch Safety Kernel:
+
+* anchored regions must always be complete;
+* placeholders must never appear inside replacement patches;
+* structural changes must always be generated from the current repository state.
+
+---
+
+## Current Status
+
+Decision Engine planning is now operational.
+
+The Project workspace has begun its transition toward Aurora's long-term engineering planning interface.
+
+Visual refinement remains iterative, but the architectural direction has been established and validated.
+
+---
+
+## Next Session
+
+Resume subsystem consolidation.
+
+Primary engineering objective:
+
+```
+generation
+    ↓
+workspace
+```
+
+Continue extracting cohesive architectural subsystems while incrementally refining the Decision Engine planning experience.
+
+No additional Planning functionality is required before generation subsystem extraction begins.
+
+## 2026-07-23 — Decision Engine Planning MVP: Project-Aware Planning Workspace
+
+### Summary
+
+Completed the Project-aware foundation of the Decision Engine Planning MVP. Aurora Planning now supports multiple engineering projects through a Project → Initiative → Phase → Step hierarchy while preserving the single-workspace experience inside Aurora Console.
+
+### Major Accomplishments
+
+* Introduced the `Project` planning model.
+* Added `Initiative.project` ownership.
+* Added `Step.risk_level` and `Step.risk_description`.
+* Created initial `Aurora` and `HopeHub` Project records during migration.
+* Added Project-aware Planning API payloads.
+* Added Project selector to the Planning Console.
+* Added Project-aware Initiative creation.
+* Updated refresh behavior to preserve the selected Project.
+* Updated empty-state messaging to reflect the active Project.
+* Integrated `planning.css` into Aurora Console.
+* Refined the document-oriented Planning UI by increasing Phase heading prominence while preserving the Initiative → Phase → Step visual hierarchy.
+
+### Validation
+
+* JavaScript syntax validation passed.
+* Django system check passed with no issues.
+* Browser validation completed successfully.
+* Verified:
+
+  * Aurora and HopeHub Project selection.
+  * Project switching.
+  * Project-aware Initiative creation.
+  * Refresh behavior.
+  * Existing Phase and Step creation.
+  * Updated Planning document styling.
+
+### Architectural Outcome
+
+The Decision Engine has evolved from a single planning tree into a project-aware planning system capable of supporting multiple long-lived engineering efforts from one integrated workspace. The Project abstraction establishes the foundation for Aurora, HopeHub, and future products to coexist within a common planning architecture.
+
+### Next Session
+
+Continue the Decision Engine Planning MVP by implementing the remaining CRUD operations:
+
+1. Edit Initiative.
+2. Edit Phase.
+3. Edit Step.
+4. Guarded deletion for all hierarchy levels.
+5. Phase and Step ordering controls.
+6. Hierarchical status propagation (Step → Phase → Initiative).
+
+This completes the Project-aware planning foundation. The next milestone focuses on making the Planning Console the authoritative engineering planning environment for Aurora.
