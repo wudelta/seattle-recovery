@@ -599,21 +599,40 @@ def create_step(payload):
             status=404,
         )
 
-    title, error_response = validate_title(
-        payload,
-        "Step",
-    )
+    title = str(payload.get("title", "")).strip()
 
-    if error_response is not None:
-        return error_response
+    if not title:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Step title is required.",
+                "field_errors": {
+                    "title": "Enter a Step title.",
+                },
+            },
+            status=400,
+        )
 
-    status, error_response = validate_status(
-        payload,
-        "Step",
-    )
+    status = str(
+        payload.get("status", ExecutionStatus.PLANNED)
+    ).strip().upper()
 
-    if error_response is not None:
-        return error_response
+    valid_statuses = {
+        choice.value
+        for choice in ExecutionStatus
+    }
+
+    if status not in valid_statuses:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Step status is invalid.",
+                "field_errors": {
+                    "status": "Select a valid Step status.",
+                },
+            },
+            status=400,
+        )
 
     estimated_minutes_value = payload.get("estimated_minutes")
 
