@@ -1,0 +1,114 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/planning/initiative_form.html -->
+<!-- START: INITIATIVE_CREATION_FORM -->
+<!-- ====================================================================== -->
+<div
+    id="planning-initiative-form-panel"
+    class="d-none flex-shrink-0 border-bottom border-secondary bg-dark"
+>
+    <form id="planning-initiative-form" class="p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="fw-bold text-light">
+                    Create Initiative
+                </div>
+
+                <div class="small text-muted">
+                    Define the highest-level engineering objective.
+                </div>
+            </div>
+
+            <button
+                id="planning-cancel-initiative-btn"
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+            >
+                Cancel
+            </button>
+        </div>
+
+        <div
+            id="planning-initiative-form-error"
+            class="d-none alert alert-danger py-2"
+            role="alert"
+        ></div>
+
+        <div class="row g-3">
+            <div class="col-12 col-lg-9">
+                <label
+                    for="planning-initiative-title"
+                    class="form-label small text-light"
+                >
+                    Title
+                </label>
+
+                <input
+                    id="planning-initiative-title"
+                    name="title"
+                    type="text"
+                    class="form-control form-control-sm bg-black text-light border-secondary"
+                    maxlength="255"
+                    required
+                >
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label
+                    for="planning-initiative-status"
+                    class="form-label small text-light"
+                >
+                    Status
+                </label>
+
+                <select
+                    id="planning-initiative-status"
+                    name="status"
+                    class="form-select form-select-sm bg-black text-light border-secondary"
+                >
+                    <option value="PLANNED" selected>Planned</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="PAUSED">Paused</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label
+                    for="planning-initiative-description"
+                    class="form-label small text-light"
+                >
+                    Description
+                </label>
+
+                <textarea
+                    id="planning-initiative-description"
+                    name="description"
+                    class="form-control form-control-sm bg-black text-light border-secondary"
+                    rows="4"
+                    placeholder="Describe the objective, scope, constraints, and expected outcome."
+                ></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button
+                type="reset"
+                class="btn btn-sm btn-outline-secondary"
+            >
+                Clear
+            </button>
+
+            <button
+                id="planning-save-initiative-btn"
+                type="submit"
+                class="btn btn-sm btn-success"
+            >
+                Save Initiative
+            </button>
+        </div>
+    </form>
+</div>
+<!-- ====================================================================== -->
+<!-- END: INITIATIVE_CREATION_FORM -->
+<!-- ====================================================================== -->

@@ -1,0 +1,78 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/planning/console_layout.html -->
+<!-- START: PLANNING_CONSOLE_LAYOUT -->
+<!-- ====================================================================== -->
+<div
+    id="planning-console-panel"
+    class="planning-workspace h-100 w-100 d-flex flex-column bg-black text-light"
+    style="min-height: 0;"
+>
+    <div
+        class="planning-toolbar d-flex align-items-center gap-3 px-3 py-2 border-bottom border-secondary flex-shrink-0"
+    >
+        <div
+            class="text-uppercase fw-bold flex-shrink-0"
+            style="letter-spacing: 1px;"
+        >
+            Decision Engine
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <label
+                for="planning-project-select"
+                class="small text-muted mb-0"
+            >
+                Project
+            </label>
+
+            <select
+                id="planning-project-select"
+                class="form-select form-select-sm bg-black text-light border-secondary"
+                style="min-width: 180px;"
+                aria-label="Active planning project"
+            >
+                <option value="">
+                    Loading projects...
+                </option>
+            </select>
+
+            <button
+                id="planning-create-project-btn"
+                type="button"
+                class="btn btn-sm btn-outline-success"
+                aria-label="Create Project"
+                title="Create Project"
+            >
+                +
+            </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
+            <span
+                id="planning-summary-badge"
+                class="badge bg-dark border border-secondary text-info"
+            >
+                Not loaded
+            </span>
+
+            <button
+                id="planning-refresh-btn"
+                type="button"
+                class="btn btn-sm btn-outline-info"
+            >
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <div
+        id="planning-status-bar"
+        class="planning-status-bar px-3 py-1 border-bottom border-secondary small text-muted flex-shrink-0"
+        role="status"
+        aria-live="polite"
+    >
+        Open the Project panel to load persisted execution plans.
+    </div>
+<!-- ====================================================================== -->
+<!-- END: PLANNING_CONSOLE_LAYOUT -->
+<!-- ====================================================================== -->
