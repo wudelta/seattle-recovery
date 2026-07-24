@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 1 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 1 OF 8)
 // START: PLANNING_STATE_AND_SHARED_UTILITIES
 // ======================================================================
 (function(window, $) {
@@ -13,6 +13,7 @@
     let stepRequest = null;
     let activeProjectSlug = null;
     let activeInitiativeId = null;
+    let activeInitiative = null;
 
     const STATUS_CLASSES = {
         PLANNED: "bg-secondary text-light",
@@ -72,6 +73,7 @@
         if (!Array.isArray(projects) || !projects.length) {
             activeProjectSlug = null;
             activeInitiativeId = null;
+            activeInitiative = null;
 
             $projectSelect
                 .append(
@@ -116,11 +118,11 @@
         ).prop("disabled", false);
     }
 // ======================================================================
-// END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 7)
+// END: PLANNING_STATE_AND_SHARED_UTILITIES (PATCH 1 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 2 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 2 OF 8)
 // START: PLANNING_WORKSPACE_STATE
 // ======================================================================
     function setWorkbenchHeader(title, context, status) {
@@ -348,11 +350,11 @@
         );
     }
 // ======================================================================
-// END: PLANNING_WORKSPACE_STATE (PATCH 2 OF 7)
+// END: PLANNING_WORKSPACE_STATE (PATCH 2 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 3 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 3 OF 8)
 // START: PLANNING_HIERARCHY_RENDERERS
 // ======================================================================
     function renderStep(step) {
@@ -360,6 +362,7 @@
         const $step = $fragment.find(".planning-step");
 
         $step.attr("data-step-id", step.id);
+        $step.data("step", step);
 
         $fragment
             .find(".planning-step-position")
@@ -445,6 +448,7 @@
         const $stepList = $fragment.find(".planning-step-list");
 
         $phase.attr("data-phase-id", phase.id);
+        $phase.data("phase", phase);
 
         $fragment
             .find(".planning-phase-position")
@@ -573,7 +577,7 @@
         const projects = payload.projects || [];
         const activeProject = payload.active_project || null;
         const initiativeOptions = payload.initiative_options || [];
-        const activeInitiative = payload.active_initiative || null;
+        const renderedInitiative = payload.active_initiative || null;
         const summary = payload.summary || {};
         const $initiativeList = $("#planning-initiative-list");
 
@@ -598,8 +602,9 @@
                 : ""
         );
 
-        if (!initiativeOptions.length || !activeInitiative) {
+        if (!initiativeOptions.length || !renderedInitiative) {
             activeInitiativeId = null;
+            activeInitiative = null;
 
             renderNavigatorInitiatives([], null);
 
@@ -607,7 +612,8 @@
             return;
         }
 
-        activeInitiativeId = activeInitiative.id;
+        activeInitiativeId = renderedInitiative.id;
+        activeInitiative = renderedInitiative;
 
         renderNavigatorInitiatives(
             initiativeOptions,
@@ -615,7 +621,7 @@
         );
 
         $initiativeList.append(
-            renderInitiative(activeInitiative)
+            renderInitiative(renderedInitiative)
         );
 
         const initiativeCount = initiativeOptions.length;
@@ -625,18 +631,18 @@
             ? activeProject.title
             : "No Project";
 
-        const initiativeStatus = activeInitiative.status
+        const initiativeStatus = renderedInitiative.status
             ? {
-                value: activeInitiative.status,
+                value: renderedInitiative.status,
                 label: (
-                    activeInitiative.status_label
-                    || activeInitiative.status
+                    renderedInitiative.status_label
+                    || renderedInitiative.status
                 ),
             }
             : null;
 
         setWorkbenchHeader(
-            activeInitiative.title || "Untitled Initiative",
+            renderedInitiative.title || "Untitled Initiative",
             (
                 `${projectTitle} · `
                 + `${phaseCount} phase`
@@ -664,15 +670,15 @@
                 `${projectTitle} · `
                 + `${initiativeCount} initiative`
                 + `${initiativeCount === 1 ? "" : "s"} · `
-                + `showing ${activeInitiative.title}.`
+                + `showing ${renderedInitiative.title}.`
             );
     }
 // ======================================================================
-// END: PLANNING_HIERARCHY_RENDERERS (PATCH 3 OF 7)
+// END: PLANNING_HIERARCHY_RENDERERS (PATCH 3 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 4 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 4 OF 8)
 // START: PLANNING_DATA_LOADER
 // ======================================================================
     function loadPlanningData(projectSlug, initiativeId) {
@@ -771,11 +777,11 @@
             });
     }
 // ======================================================================
-// END: PLANNING_DATA_LOADER (PATCH 4 OF 7)
+// END: PLANNING_DATA_LOADER (PATCH 4 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 5 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 5 OF 8)
 // START: INITIATIVE_CREATION_CONTROLLER
 // ======================================================================
     function clearInitiativeFormError() {
@@ -811,11 +817,14 @@
             form.reset();
         }
 
+        $("#planning-initiative-form")
+            .removeAttr("data-initiative-id");
+
         $("#planning-initiative-status").val("PLANNED");
         clearInitiativeFormError();
     }
 
-    function openInitiativeForm() {
+    function openInitiativeForm(initiative) {
         if (!activeProjectSlug) {
             showError(
                 "Select an active Project before creating an Initiative."
@@ -824,6 +833,20 @@
         }
 
         resetInitiativeForm();
+
+        if (initiative && initiative.id) {
+            $("#planning-initiative-form")
+                .attr("data-initiative-id", initiative.id);
+
+            $("#planning-initiative-title")
+                .val(initiative.title || "");
+
+            $("#planning-initiative-description")
+                .val(initiative.description || "");
+
+            $("#planning-initiative-status")
+                .val(initiative.status || "PLANNED");
+        }
 
         $("#planning-workspace")
             .addClass("d-none");
@@ -849,7 +872,7 @@
         $("#planning-workspace")
             .removeClass("d-none");
     }
-    
+
     function setInitiativeSaveState(isSaving) {
         $("#planning-save-initiative-btn")
             .prop("disabled", isSaving)
@@ -863,9 +886,16 @@
             .prop("disabled", isSaving);
     }
 
-    function createInitiative() {
+    function saveInitiative() {
         const endpoint = planningEndpoints.planning_endpoint;
-        const title = $("#planning-initiative-title").val().trim();
+        const initiativeId = Number(
+            $("#planning-initiative-form")
+                .attr("data-initiative-id")
+        ) || null;
+
+        const title = $("#planning-initiative-title")
+            .val()
+            .trim();
 
         clearInitiativeFormError();
 
@@ -878,7 +908,7 @@
 
         if (!activeProjectSlug) {
             showInitiativeFormError(
-                "Select an active Project before creating an Initiative."
+                "Select an active Project before saving an Initiative."
             );
             return;
         }
@@ -910,7 +940,8 @@
                 "X-CSRFToken": getCsrfToken(),
             },
             data: JSON.stringify({
-                operation: "create_initiative",
+                operation: "save_initiative",
+                initiative_id: initiativeId,
                 project_slug: activeProjectSlug,
                 title: title,
                 description: $("#planning-initiative-description")
@@ -927,14 +958,14 @@
                     return;
                 }
 
-                const createdInitiative = (
+                const savedInitiative = (
                     response.initiative
                     || response.active_initiative
                     || null
                 );
 
-                if (createdInitiative && createdInitiative.id) {
-                    activeInitiativeId = createdInitiative.id;
+                if (savedInitiative && savedInitiative.id) {
+                    activeInitiativeId = savedInitiative.id;
                 }
 
                 closeInitiativeForm();
@@ -958,12 +989,12 @@
             });
     }
 // ======================================================================
-// END: INITIATIVE_CREATION_CONTROLLER (PATCH 5 OF 7)
+// END: INITIATIVE_CREATION_CONTROLLER (PATCH 5 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 6 OF 7)
-// START: PHASE_AND_STEP_CREATION_CONTROLLERS
+// FILE: aurora/static/aurora/js/planning.js (PATCH 6 OF 8)
+// START: PHASE_CREATION_CONTROLLER
 // ======================================================================
     function clearPhaseFormError($initiative) {
         $initiative
@@ -996,22 +1027,31 @@
     }
 
     function resetPhaseForm($initiative) {
-        const form = $initiative
-            .find(".planning-phase-form")
-            .get(0);
+        const $form = $initiative.find(".planning-phase-form");
+        const form = $form.get(0);
 
         if (form) {
             form.reset();
         }
 
+        $form.attr("data-phase-id", "");
+
         $initiative
             .find(".planning-phase-form-status")
             .val("PLANNED");
 
+        $initiative
+            .find(".planning-phase-form-heading")
+            .text("Create Phase");
+
+        $initiative
+            .find(".planning-phase-form-guidance")
+            .text("Add an ordered milestone to this Initiative.");
+
         clearPhaseFormError($initiative);
     }
 
-    function openPhaseForm($initiative) {
+    function openPhaseForm($initiative, phase) {
         $(".planning-initiative").each(function() {
             const $otherInitiative = $(this);
 
@@ -1021,6 +1061,32 @@
         });
 
         resetPhaseForm($initiative);
+
+        if (phase) {
+            $initiative
+                .find(".planning-phase-form")
+                .attr("data-phase-id", phase.id);
+
+            $initiative
+                .find(".planning-phase-form-title")
+                .val(phase.title || "");
+
+            $initiative
+                .find(".planning-phase-form-description")
+                .val(phase.description || "");
+
+            $initiative
+                .find(".planning-phase-form-status")
+                .val(phase.status || "PLANNED");
+
+            $initiative
+                .find(".planning-phase-form-heading")
+                .text("Edit Phase");
+
+            $initiative
+                .find(".planning-phase-form-guidance")
+                .text("Revise this milestone and save the changes.");
+        }
 
         $initiative
             .find(".planning-phase-form-panel")
@@ -1055,9 +1121,12 @@
             .prop("disabled", isSaving);
     }
 
-    function createPhase($initiative) {
+    function savePhase($initiative) {
         const endpoint = planningEndpoints.planning_endpoint;
         const initiativeId = $initiative.data("initiative-id");
+        const phaseId = $initiative
+            .find(".planning-phase-form")
+            .attr("data-phase-id");
 
         const title = $initiative
             .find(".planning-phase-form-title")
@@ -1113,8 +1182,9 @@
                 "X-CSRFToken": getCsrfToken(),
             },
             data: JSON.stringify({
-                operation: "create_phase",
+                operation: "save_phase",
                 initiative_id: initiativeId,
+                phase_id: phaseId || null,
                 title: title,
                 description: $initiative
                     .find(".planning-phase-form-description")
@@ -1151,7 +1221,14 @@
                 setPhaseSaveState($initiative, false);
             });
     }
+// ======================================================================
+// END: PHASE_CREATION_CONTROLLER (PATCH 6 OF 8)
+// ======================================================================
 
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning.js (PATCH 7 OF 8)
+// START: STEP_CREATION_CONTROLLER
+// ======================================================================
     function clearStepFormError($phase) {
         $phase
             .find(".planning-step-form-error")
@@ -1183,13 +1260,14 @@
     }
 
     function resetStepForm($phase) {
-        const form = $phase
-            .find(".planning-step-form")
-            .get(0);
+        const $form = $phase.find(".planning-step-form");
+        const form = $form.get(0);
 
         if (form) {
             form.reset();
         }
+
+        $form.attr("data-step-id", "");
 
         $phase
             .find(".planning-step-form-status")
@@ -1202,7 +1280,7 @@
         clearStepFormError($phase);
     }
 
-    function openStepForm($phase) {
+    function openStepForm($phase, step) {
         $(".planning-phase").each(function() {
             const $otherPhase = $(this);
 
@@ -1212,6 +1290,41 @@
         });
 
         resetStepForm($phase);
+
+        if (step) {
+            $phase
+                .find(".planning-step-form")
+                .attr("data-step-id", step.id);
+
+            $phase
+                .find(".planning-step-form-title")
+                .val(step.title || "");
+
+            $phase
+                .find(".planning-step-form-description")
+                .val(step.description || "");
+
+            $phase
+                .find(".planning-step-form-status")
+                .val(step.status || "PLANNED");
+
+            $phase
+                .find(".planning-step-form-estimated-minutes")
+                .val(
+                    step.estimated_minutes === null
+                        || step.estimated_minutes === undefined
+                        ? ""
+                        : step.estimated_minutes
+                );
+
+            $phase
+                .find(".planning-step-form-estimate-confidence")
+                .val(step.estimate_confidence || "");
+
+            $phase
+                .find(".planning-step-form-validation-description")
+                .val(step.validation_description || "");
+        }
 
         $phase
             .find(".planning-step-form-panel")
@@ -1246,9 +1359,12 @@
             .prop("disabled", isSaving);
     }
 
-    function createStep($phase) {
+    function saveStep($phase) {
         const endpoint = planningEndpoints.planning_endpoint;
         const phaseId = $phase.data("phase-id");
+        const stepId = $phase
+            .find(".planning-step-form")
+            .attr("data-step-id");
 
         const title = $phase
             .find(".planning-step-form-title")
@@ -1304,8 +1420,9 @@
                 "X-CSRFToken": getCsrfToken(),
             },
             data: JSON.stringify({
-                operation: "create_step",
+                operation: "save_step",
                 phase_id: phaseId,
+                step_id: stepId || null,
                 title: title,
                 description: $phase
                     .find(".planning-step-form-description")
@@ -1355,11 +1472,11 @@
             });
     }
 // ======================================================================
-// END: PHASE_AND_STEP_CREATION_CONTROLLERS (PATCH 6 OF 7)
+// END: STEP_CREATION_CONTROLLER (PATCH 7 OF 8)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning.js (PATCH 7 OF 7)
+// FILE: aurora/static/aurora/js/planning.js (PATCH 8 OF 8)
 // START: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API
 // ======================================================================
     function bindPlanningEvents() {
@@ -1368,6 +1485,7 @@
             .on("change.planning", function() {
                 activeProjectSlug = $(this).val() || null;
                 activeInitiativeId = null;
+                activeInitiative = null;
 
                 closeInitiativeForm();
                 loadPlanningData(activeProjectSlug);
@@ -1400,6 +1518,7 @@
                     }
 
                     activeInitiativeId = selectedInitiativeId;
+                    activeInitiative = null;
 
                     closeInitiativeForm();
 
@@ -1416,7 +1535,7 @@
         )
             .off("click.planning")
             .on("click.planning", function() {
-                openInitiativeForm();
+                openInitiativeForm(null);
             });
 
         $("#planning-cancel-initiative-btn")
@@ -1429,7 +1548,7 @@
             .off("submit.planning")
             .on("submit.planning", function(event) {
                 event.preventDefault();
-                createInitiative();
+                saveInitiative();
             })
             .off("reset.planning")
             .on("reset.planning", function() {
@@ -1444,13 +1563,38 @@
             .off("click.planningPhase")
             .on(
                 "click.planningPhase",
+                ".planning-edit-initiative-btn",
+                function() {
+                    openInitiativeForm(activeInitiative);
+                }
+            )
+            .on(
+                "click.planningPhase",
                 ".planning-new-phase-btn",
                 function() {
                     const $initiative = $(this).closest(
                         ".planning-initiative"
                     );
 
-                    openPhaseForm($initiative);
+                    openPhaseForm($initiative, null);
+                }
+            )
+            .on(
+                "click.planningPhase",
+                ".planning-edit-phase-btn",
+                function() {
+                    const $phase = $(this).closest(
+                        ".planning-phase"
+                    );
+
+                    const $initiative = $phase.closest(
+                        ".planning-initiative"
+                    );
+
+                    openPhaseForm(
+                        $initiative,
+                        $phase.data("phase")
+                    );
                 }
             )
             .on(
@@ -1475,7 +1619,7 @@
                         ".planning-initiative"
                     );
 
-                    createPhase($initiative);
+                    savePhase($initiative);
                 }
             )
             .off("reset.planningPhase")
@@ -1505,7 +1649,25 @@
                         ".planning-phase"
                     );
 
-                    openStepForm($phase);
+                    openStepForm($phase, null);
+                }
+            )
+            .on(
+                "click.planningStep",
+                ".planning-edit-step-btn",
+                function() {
+                    const $step = $(this).closest(
+                        ".planning-step"
+                    );
+
+                    const $phase = $step.closest(
+                        ".planning-phase"
+                    );
+
+                    openStepForm(
+                        $phase,
+                        $step.data("step")
+                    );
                 }
             )
             .on(
@@ -1530,7 +1692,7 @@
                         ".planning-phase"
                     );
 
-                    createStep($phase);
+                    saveStep($phase);
                 }
             )
             .off("reset.planningStep")
@@ -1586,5 +1748,5 @@
     };
 })(window, jQuery);
 // ======================================================================
-// END: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API (PATCH 7 OF 7)
+// END: PLANNING_EVENT_BINDINGS_AND_PUBLIC_API (PATCH 8 OF 8)
 // ======================================================================

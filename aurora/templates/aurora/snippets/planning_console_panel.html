@@ -411,27 +411,44 @@
                         <div class="planning-initiative-updated"></div>
                     </div>
 
-                    <button
-                        type="button"
-                        class="planning-new-phase-btn btn btn-sm btn-outline-success mt-2"
-                    >
-                        New Phase
-                    </button>
+                    <div class="d-flex justify-content-end gap-2 mt-2">
+                        <button
+                            type="button"
+                            class="planning-edit-initiative-btn btn btn-sm btn-outline-primary"
+                        >
+                            Edit Initiative
+                        </button>
+
+                        <button
+                            type="button"
+                            class="planning-new-phase-btn btn btn-sm btn-outline-success"
+                        >
+                            New Phase
+                        </button>
+                    </div>
                 </div>
             </header>
 
             <div
                 class="planning-phase-form-panel d-none planning-rule"
             >
-                <form class="planning-phase-form p-3">
+                <form
+                    class="planning-phase-form p-3"
+                    data-phase-id=""
+                >
                     <div
                         class="d-flex justify-content-between align-items-center mb-3"
                     >
                         <div>
-                            <div class="fw-bold text-light">
+                            <div
+                                class="planning-phase-form-heading fw-bold text-light"
+                            >
                                 Create Phase
                             </div>
-                            <div class="small text-muted">
+
+                            <div
+                                class="planning-phase-form-guidance small text-muted"
+                            >
                                 Add an ordered milestone to this Initiative.
                             </div>
                         </div>
@@ -558,19 +575,31 @@
                         class="planning-phase-summary planning-muted small text-end"
                     ></div>
 
-                    <button
-                        type="button"
-                        class="planning-new-step-btn btn btn-outline-info btn-sm"
-                    >
-                        New Step
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button
+                            type="button"
+                            class="planning-edit-phase-btn btn btn-outline-secondary btn-sm"
+                        >
+                            Edit Phase
+                        </button>
+
+                        <button
+                            type="button"
+                            class="planning-new-step-btn btn btn-outline-info btn-sm"
+                        >
+                            New Step
+                        </button>
+                    </div>
                 </div>
             </header>
 
             <div
                 class="planning-step-form-panel d-none planning-rule px-3 py-3"
             >
-                <form class="planning-step-form">
+                <form
+                    class="planning-step-form"
+                    data-step-id=""
+                >
                     <div
                         class="planning-step-form-error alert alert-danger py-2 px-3 small d-none"
                         role="alert"
@@ -749,6 +778,13 @@
             </div>
 
             <div class="planning-step-meta planning-muted small text-end">
+                <button
+                    type="button"
+                    class="planning-edit-step-btn btn btn-outline-secondary btn-sm mb-2"
+                >
+                    Edit Step
+                </button>
+
                 <div class="planning-step-validator"></div>
                 <div class="planning-step-updated"></div>
             </div>

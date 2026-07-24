@@ -352,8 +352,26 @@ def planning_api(request):
 # FILE: aurora/api/planning_api.py (PATCH 4 OF 9)
 # START: INITIATIVE_CREATION_API
 # ======================================================================
-def create_initiative(request, payload):
-    """Validates and persists one new Initiative beneath a Project."""
+def save_initiative(request, payload):
+    """Creates or updates one Initiative beneath a Project."""
+    initiative_id = payload.get("initiative_id")
+    initiative = None
+
+    if initiative_id not in (None, ""):
+        try:
+            initiative = Initiative.objects.get(pk=initiative_id)
+        except (Initiative.DoesNotExist, TypeError, ValueError):
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "The selected Initiative does not exist.",
+                    "field_errors": {
+                        "initiative_id": "Select a valid Initiative.",
+                    },
+                },
+                status=404,
+            )
+
     project_slug = str(
         payload.get("project_slug", "")
     ).strip()
@@ -426,35 +444,55 @@ def create_initiative(request, payload):
         payload.get("description", "")
     ).strip()
 
-    with transaction.atomic():
-        highest_position = (
-            Initiative.objects
-            .filter(project=project)
-            .aggregate(highest=Max("position"))
-            .get("highest")
-        )
+    created = initiative is None
+    project_changed = (
+        initiative is not None
+        and initiative.project_id != project.pk
+    )
 
-        initiative = Initiative.objects.create(
-            project=project,
-            title=title,
-            description=description,
-            status=status,
-            position=(
+    with transaction.atomic():
+        if created:
+            initiative = Initiative(
+                created_by=request.user,
+            )
+
+        if created or project_changed:
+            highest_position = (
+                Initiative.objects
+                .filter(project=project)
+                .aggregate(highest=Max("position"))
+                .get("highest")
+            )
+
+            initiative.position = (
                 highest_position + 1
                 if highest_position is not None
                 else 0
-            ),
-            created_by=request.user,
-        )
+            )
+
+        initiative.project = project
+        initiative.title = title
+        initiative.description = description
+        initiative.status = status
+        initiative.save()
 
     return JsonResponse(
         {
             "status": "success",
-            "message": "Initiative created.",
+            "message": (
+                "Initiative created."
+                if created
+                else "Initiative updated."
+            ),
             "initiative": serialize_initiative(initiative),
         },
-        status=201,
+        status=201 if created else 200,
     )
+
+
+def create_initiative(request, payload):
+    """Compatibility wrapper for Initiative creation."""
+    return save_initiative(request, payload)
 # ======================================================================
 # END: INITIATIVE_CREATION_API (PATCH 4 OF 9)
 # ======================================================================
@@ -980,8 +1018,11 @@ def planning_endpoint(request):
         payload.get("operation", "create_initiative")
     ).strip().lower()
 
-    if operation == "create_initiative":
-        return create_initiative(request, payload)
+    if operation in {
+        "create_initiative",
+        "save_initiative",
+    }:
+        return save_initiative(request, payload)
 
     if operation in {
         "create_phase",
