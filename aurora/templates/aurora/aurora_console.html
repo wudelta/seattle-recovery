@@ -188,7 +188,7 @@
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 2 OF 2) -->
+<!-- FILE: aurora/templates/aurora/aurora_console.html -->
 <!-- START: MASTER_WORKSPACE_CONSOLE_SCRIPT_ORCHESTRATOR -->
 <!-- ====================================================================== -->
 {% block extra_js %}
@@ -197,7 +197,24 @@
 <script src="{% static 'aurora/js/blueprint.js' %}"></script>
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
-<script src="{% static 'aurora/js/planning.js' %}"></script>
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/aurora_console.html -->
+<!-- START: PLANNING_MODULE_SCRIPT_LOADERS -->
+<!-- ====================================================================== -->
+<script src="{% static 'aurora/js/planning/state.js' %}"></script>
+<script src="{% static 'aurora/js/planning/utilities.js' %}"></script>
+<script src="{% static 'aurora/js/planning/workspace.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers.js' %}"></script>
+<script src="{% static 'aurora/js/planning/data.js' %}"></script>
+<script src="{% static 'aurora/js/planning/initiatives.js' %}"></script>
+<script src="{% static 'aurora/js/planning/phases.js' %}"></script>
+<script src="{% static 'aurora/js/planning/steps.js' %}"></script>
+<script src="{% static 'aurora/js/planning/events.js' %}"></script>
+<!-- ====================================================================== -->
+<!-- END: PLANNING_MODULE_SCRIPT_LOADERS -->
+<!-- ====================================================================== -->
+
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>
 
