@@ -226,6 +226,17 @@
             )
             .on(
                 "click.planningStep",
+                ".planning-delete-step-btn",
+                function() {
+                    steps.delete(
+                        $(this).closest(
+                            ".planning-step"
+                        )
+                    );
+                }
+            )
+            .on(
+                "click.planningStep",
                 ".planning-cancel-step-btn",
                 function() {
                     steps.closeForm(

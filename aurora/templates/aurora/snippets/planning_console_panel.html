@@ -1,5 +1,5 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 1 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: PLANNING_CONSOLE_LAYOUT -->
 <!-- ====================================================================== -->
 <div
@@ -74,11 +74,11 @@
         Open the Project panel to load persisted execution plans.
     </div>
 <!-- ====================================================================== -->
-<!-- END: PLANNING_CONSOLE_LAYOUT (PATCH 1 OF 6) -->
+<!-- END: PLANNING_CONSOLE_LAYOUT -->
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 2 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: INITIATIVE_CREATION_FORM -->
 <!-- ====================================================================== -->
     <div
@@ -185,11 +185,11 @@
         </form>
     </div>
 <!-- ====================================================================== -->
-<!-- END: INITIATIVE_CREATION_FORM (PATCH 2 OF 6) -->
+<!-- END: INITIATIVE_CREATION_FORM -->
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 3 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: PLANNING_WORKSPACE_STATES -->
 <!-- ====================================================================== -->
     <div
@@ -373,11 +373,11 @@
         </main>
     </div>
 <!-- ====================================================================== -->
-<!-- END: PLANNING_WORKSPACE_STATES (PATCH 3 OF 6) -->
+<!-- END: PLANNING_WORKSPACE_STATES -->
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 4 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: INITIATIVE_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-initiative-template">
@@ -538,11 +538,11 @@
         </article>
     </template>
 <!-- ====================================================================== -->
-<!-- END: INITIATIVE_TEMPLATE (PATCH 4 OF 6) -->
+<!-- END: INITIATIVE_TEMPLATE -->
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 5 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: PHASE_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-phase-template">
@@ -722,11 +722,11 @@
         </section>
     </template>
 <!-- ====================================================================== -->
-<!-- END: PHASE_TEMPLATE (PATCH 5 OF 6) -->
+<!-- END: PHASE_TEMPLATE -->
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html (PATCH 6 OF 6) -->
+<!-- FILE: aurora/templates/aurora/snippets/planning_console_panel.html -->
 <!-- START: STEP_TEMPLATE -->
 <!-- ====================================================================== -->
     <template id="planning-step-template">
@@ -778,12 +778,21 @@
             </div>
 
             <div class="planning-step-meta planning-muted small text-end">
-                <button
-                    type="button"
-                    class="planning-edit-step-btn btn btn-outline-secondary btn-sm mb-2"
-                >
-                    Edit Step
-                </button>
+                <div class="d-flex flex-column gap-2 mb-2">
+                    <button
+                        type="button"
+                        class="planning-edit-step-btn btn btn-outline-secondary btn-sm"
+                    >
+                        Edit Step
+                    </button>
+
+                    <button
+                        type="button"
+                        class="planning-delete-step-btn btn btn-outline-danger btn-sm"
+                    >
+                        Delete Step
+                    </button>
+                </div>
 
                 <div class="planning-step-validator"></div>
                 <div class="planning-step-updated"></div>
@@ -792,5 +801,5 @@
     </template>
 </div>
 <!-- ====================================================================== -->
-<!-- END: STEP_TEMPLATE (PATCH 6 OF 6) -->
+<!-- END: STEP_TEMPLATE -->
 <!-- ====================================================================== -->

@@ -150,6 +150,17 @@
             .prop("disabled", isSaving);
     }
 
+    function setStepDeleteState($step, isDeleting) {
+        $step
+            .find(".planning-delete-step-btn")
+            .prop("disabled", isDeleting)
+            .text(isDeleting ? "Deleting..." : "Delete");
+
+        $step
+            .find(".planning-edit-step-btn")
+            .prop("disabled", isDeleting);
+    }
+
     function saveStep($phase) {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
@@ -278,11 +289,99 @@
         state.setRequest("step", request);
     }
 
+    function deleteStep($step) {
+        const endpoints = state.getEndpoints();
+        const endpoint = endpoints.planning_endpoint;
+        const step = $step.data("step") || {};
+        const stepId = step.id || $step.data("step-id");
+        const stepTitle = step.title || "this Step";
+        const $phase = $step.closest(".planning-phase");
+
+        clearStepFormError($phase);
+
+        if (!endpoint) {
+            showStepFormError(
+                $phase,
+                "The planning endpoint was not supplied by Aurora Console."
+            );
+            return;
+        }
+
+        if (!stepId) {
+            showStepFormError(
+                $phase,
+                "The selected Step could not be identified."
+            );
+            return;
+        }
+
+        if (
+            !window.confirm(
+                `Delete "${stepTitle}"? This cannot be undone.`
+            )
+        ) {
+            return;
+        }
+
+        if (state.getRequest("step")) {
+            return;
+        }
+
+        setStepDeleteState($step, true);
+
+        const request = $.ajax({
+            url: endpoint,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            headers: {
+                "X-CSRFToken": utilities.getCsrfToken(),
+            },
+            data: JSON.stringify({
+                operation: "delete_step",
+                step_id: stepId,
+            }),
+        })
+            .done(function(response) {
+                if (
+                    !response
+                    || response.status !== "success"
+                ) {
+                    showStepFormError(
+                        $phase,
+                        "The planning endpoint returned an invalid response."
+                    );
+                    return;
+                }
+
+                data.loadPlanningData(
+                    state.getActiveProjectSlug(),
+                    state.getActiveInitiativeId()
+                );
+            })
+            .fail(function(xhr) {
+                const response = xhr.responseJSON || {};
+
+                showStepFormError(
+                    $phase,
+                    response.message || "The Step deletion failed.",
+                    response.field_errors
+                );
+            })
+            .always(function() {
+                state.setRequest("step", null);
+                setStepDeleteState($step, false);
+            });
+
+        state.setRequest("step", request);
+    }
+
     Planning.steps = {
         clearFormError: clearStepFormError,
         openForm: openStepForm,
         closeForm: closeStepForm,
         save: saveStep,
+        delete: deleteStep,
     };
 })(window, jQuery);
 // ======================================================================

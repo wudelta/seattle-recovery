@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/steps.py 
+# FILE: aurora/subsystems/planning/api/steps.py
 # START: STEP_PERSISTENCE
 # ======================================================================
 from django.db import transaction
@@ -290,9 +290,61 @@ def save_step(payload):
     )
 
 
+def delete_step(payload):
+    """Deletes an existing Step and returns its hierarchy context."""
+    step_id = payload.get("step_id")
+
+    if step_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Step is required.",
+                "field_errors": {
+                    "step_id": "Select a Step.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        step = (
+            Step.objects
+            .select_related("phase")
+            .get(pk=step_id)
+        )
+    except (Step.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Step does not exist.",
+                "field_errors": {
+                    "step_id": "Select a valid Step.",
+                },
+            },
+            status=404,
+        )
+
+    deleted_step_id = step.pk
+    phase_id = step.phase_id
+    initiative_id = step.phase.initiative_id
+
+    with transaction.atomic():
+        step.delete()
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Step deleted.",
+            "step_id": deleted_step_id,
+            "phase_id": phase_id,
+            "initiative_id": initiative_id,
+        }
+    )
+
+
 def create_step(payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
     return save_step(payload)
 # ======================================================================
-# END: STEP_PERSISTENCE 
+# END: STEP_PERSISTENCE
 # ======================================================================

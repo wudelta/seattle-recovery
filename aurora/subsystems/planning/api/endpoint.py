@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/endpoint.py 
+# FILE: aurora/subsystems/planning/api/endpoint.py
 # START: PLANNING_ENDPOINT_ROUTER
 # ======================================================================
 import json
@@ -11,7 +11,7 @@ from django.views.decorators.http import require_http_methods
 from aurora.subsystems.planning.api.initiatives import save_initiative
 from aurora.subsystems.planning.api.payload import build_planning_payload
 from aurora.subsystems.planning.api.phases import save_phase
-from aurora.subsystems.planning.api.steps import save_step
+from aurora.subsystems.planning.api.steps import delete_step, save_step
 
 
 @login_required
@@ -67,6 +67,9 @@ def planning_endpoint(request):
     }:
         return save_step(payload)
 
+    if operation == "delete_step":
+        return delete_step(payload)
+
     return JsonResponse(
         {
             "status": "error",
@@ -75,5 +78,5 @@ def planning_endpoint(request):
         status=400,
     )
 # ======================================================================
-# END: PLANNING_ENDPOINT_ROUTER 
+# END: PLANNING_ENDPOINT_ROUTER
 # ======================================================================
