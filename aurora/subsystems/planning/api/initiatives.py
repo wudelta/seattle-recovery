@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/initiatives.py 
+# FILE: aurora/subsystems/planning/api/initiatives.py
 # START: INITIATIVE_PERSISTENCE
 # ======================================================================
 from django.db import transaction
@@ -150,9 +150,59 @@ def save_initiative(request, payload):
     )
 
 
+def delete_initiative(payload):
+    """Deletes an Initiative and its dependent Phases and Steps."""
+    initiative_id = payload.get("initiative_id")
+
+    if initiative_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Initiative is required.",
+                "field_errors": {
+                    "initiative_id": "Select an Initiative.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        initiative = (
+            Initiative.objects
+            .select_related("project")
+            .get(pk=initiative_id)
+        )
+    except (Initiative.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Initiative does not exist.",
+                "field_errors": {
+                    "initiative_id": "Select a valid Initiative.",
+                },
+            },
+            status=404,
+        )
+
+    deleted_initiative_id = initiative.pk
+    project_slug = initiative.project.slug
+
+    with transaction.atomic():
+        initiative.delete()
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Initiative deleted.",
+            "initiative_id": deleted_initiative_id,
+            "project_slug": project_slug,
+        }
+    )
+
+
 def create_initiative(request, payload):
     """Compatibility wrapper for Initiative creation."""
     return save_initiative(request, payload)
 # ======================================================================
-# END: INITIATIVE_PERSISTENCE 
+# END: INITIATIVE_PERSISTENCE
 # ======================================================================

@@ -117,6 +117,16 @@
             .prop("disabled", isSaving);
     }
 
+    function setInitiativeDeleteState(isDeleting) {
+        $(".planning-delete-initiative-btn")
+            .prop("disabled", isDeleting)
+            .text(
+                isDeleting
+                    ? "Deleting..."
+                    : "Delete Initiative"
+            );
+    }
+
     function saveInitiative() {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
@@ -231,11 +241,95 @@
         state.setRequest("initiative", request);
     }
 
+    function deleteInitiative(initiative) {
+        const endpoints = state.getEndpoints();
+        const endpoint = endpoints.planning_endpoint;
+        const initiativeId = Number(
+            initiative && initiative.id
+        );
+
+        if (!endpoint) {
+            workspace.showError(
+                "The planning endpoint was not supplied by Aurora Console."
+            );
+            return;
+        }
+
+        if (!initiativeId) {
+            workspace.showError(
+                "The selected Initiative could not be identified."
+            );
+            return;
+        }
+
+        if (
+            !window.confirm(
+                "Delete this Initiative and all of its Phases and Steps?"
+            )
+        ) {
+            return;
+        }
+
+        if (state.getRequest("initiative")) {
+            return;
+        }
+
+        setInitiativeDeleteState(true);
+
+        const request = $.ajax({
+            url: endpoint,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            headers: {
+                "X-CSRFToken": utilities.getCsrfToken(),
+            },
+            data: JSON.stringify({
+                operation: "delete_initiative",
+                initiative_id: initiativeId,
+            }),
+        })
+            .done(function(response) {
+                if (
+                    !response
+                    || response.status !== "success"
+                ) {
+                    workspace.showError(
+                        "The planning endpoint returned an invalid response."
+                    );
+                    return;
+                }
+
+                state.clearActiveInitiative();
+
+                closeInitiativeForm();
+
+                data.loadPlanningData(
+                    state.getActiveProjectSlug()
+                );
+            })
+            .fail(function(xhr) {
+                const response = xhr.responseJSON || {};
+
+                workspace.showError(
+                    response.message
+                    || "The Initiative delete request failed."
+                );
+            })
+            .always(function() {
+                state.setRequest("initiative", null);
+                setInitiativeDeleteState(false);
+            });
+
+        state.setRequest("initiative", request);
+    }
+
     Planning.initiatives = {
         clearFormError: clearInitiativeFormError,
         openForm: openInitiativeForm,
         closeForm: closeInitiativeForm,
         save: saveInitiative,
+        delete: deleteInitiative,
     };
 })(window, jQuery);
 // ======================================================================

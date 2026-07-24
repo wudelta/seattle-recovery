@@ -122,6 +122,15 @@
             )
             .on(
                 "click.planningPhase",
+                ".planning-delete-initiative-btn",
+                function() {
+                    initiatives.delete(
+                        state.getActiveInitiative()
+                    );
+                }
+            )
+            .on(
+                "click.planningPhase",
                 ".planning-new-phase-btn",
                 function() {
                     const $initiative = $(this).closest(
