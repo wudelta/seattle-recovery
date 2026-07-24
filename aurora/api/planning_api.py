@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 1 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 1 OF 9)
 # START: PLANNING_SERIALIZATION
 # ======================================================================
 import json
@@ -147,11 +147,11 @@ def serialize_initiative(initiative):
         ),
     }
 # ======================================================================
-# END: PLANNING_SERIALIZATION (PATCH 1 OF 7)
+# END: PLANNING_SERIALIZATION (PATCH 1 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 2 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 2 OF 9)
 # START: PLANNING_HIERARCHY_QUERY
 # ======================================================================
 def build_planning_payload(
@@ -290,11 +290,11 @@ def build_planning_payload(
         },
     }
 # ======================================================================
-# END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 7)
+# END: PLANNING_HIERARCHY_QUERY (PATCH 2 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 3 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 3 OF 9)
 # START: PLANNING_API_ENDPOINT
 # ======================================================================
 @login_required
@@ -345,11 +345,11 @@ def planning_api(request):
         status=400,
     )
 # ======================================================================
-# END: PLANNING_API_ENDPOINT (PATCH 3 OF 7)
+# END: PLANNING_API_ENDPOINT (PATCH 3 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 4 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 4 OF 9)
 # START: INITIATIVE_CREATION_API
 # ======================================================================
 def create_initiative(request, payload):
@@ -456,16 +456,41 @@ def create_initiative(request, payload):
         status=201,
     )
 # ======================================================================
-# END: INITIATIVE_CREATION_API (PATCH 4 OF 7)
+# END: INITIATIVE_CREATION_API (PATCH 4 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 5 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 5 OF 9)
 # START: PHASE_CREATION_API
 # ======================================================================
-def create_phase(payload):
-    """Validates and persists one Phase beneath an Initiative."""
-    initiative_id = payload.get("initiative_id")
+def save_phase(payload):
+    """Validates and persists a new or existing Phase."""
+    phase_id = payload.get("phase_id")
+    phase = None
+
+    if phase_id not in (None, ""):
+        try:
+            phase = (
+                Phase.objects
+                .select_related("initiative")
+                .get(pk=phase_id)
+            )
+        except (Phase.DoesNotExist, TypeError, ValueError):
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "The selected Phase does not exist.",
+                    "field_errors": {
+                        "phase_id": "Select a valid Phase.",
+                    },
+                },
+                status=404,
+            )
+
+    initiative_id = payload.get(
+        "initiative_id",
+        phase.initiative_id if phase else None,
+    )
 
     if initiative_id in (None, ""):
         return JsonResponse(
@@ -508,7 +533,10 @@ def create_phase(payload):
         )
 
     status = str(
-        payload.get("status", ExecutionStatus.PLANNED)
+        payload.get(
+            "status",
+            phase.status if phase else ExecutionStatus.PLANNED,
+        )
     ).strip().upper()
 
     valid_statuses = {
@@ -529,52 +557,122 @@ def create_phase(payload):
         )
 
     description = str(
-        payload.get("description", "")
+        payload.get(
+            "description",
+            phase.description if phase else "",
+        )
     ).strip()
 
     with transaction.atomic():
-        highest_position = (
-            Phase.objects
-            .filter(initiative=initiative)
-            .aggregate(highest=Max("position"))
-            .get("highest")
-        )
+        if phase is None:
+            highest_position = (
+                Phase.objects
+                .filter(initiative=initiative)
+                .aggregate(highest=Max("position"))
+                .get("highest")
+            )
 
-        phase = Phase.objects.create(
-            initiative=initiative,
-            title=title,
-            description=description,
-            status=status,
-            position=(
-                highest_position + 1
-                if highest_position is not None
-                else 0
-            ),
-        )
+            phase = Phase.objects.create(
+                initiative=initiative,
+                title=title,
+                description=description,
+                status=status,
+                position=(
+                    highest_position + 1
+                    if highest_position is not None
+                    else 0
+                ),
+            )
+
+            response_status = 201
+            message = "Phase created."
+        else:
+            if phase.initiative_id != initiative.pk:
+                highest_position = (
+                    Phase.objects
+                    .filter(initiative=initiative)
+                    .aggregate(highest=Max("position"))
+                    .get("highest")
+                )
+
+                phase.initiative = initiative
+                phase.position = (
+                    highest_position + 1
+                    if highest_position is not None
+                    else 0
+                )
+
+            phase.title = title
+            phase.description = description
+            phase.status = status
+
+            phase.save(
+                update_fields=[
+                    "initiative",
+                    "title",
+                    "description",
+                    "status",
+                    "position",
+                    "updated_at",
+                ]
+            )
+
+            response_status = 200
+            message = "Phase updated."
 
     return JsonResponse(
         {
             "status": "success",
-            "message": "Phase created.",
+            "message": message,
             "phase": serialize_phase(phase),
             "initiative_id": initiative.pk,
         },
-        status=201,
+        status=response_status,
     )
+
+
+def create_phase(payload):
+    """Compatibility wrapper until endpoint dispatch uses save operations."""
+    return save_phase(payload)
 # ======================================================================
-# END: PHASE_CREATION_API (PATCH 5 OF 7)
+# END: PHASE_CREATION_API (PATCH 5 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 6 OF 7)
-# START: STEP_CREATION_API
+# FILE: aurora/api/planning_api.py (PATCH 6 OF 9)
+# START: STEP_SAVE_CONTEXT
 # ======================================================================
-def create_step(payload):
-    """Validates and persists one Step beneath a Phase."""
-    phase_id = payload.get("phase_id")
+def resolve_step_save_context(payload):
+    """Resolves and validates the Step, parent Phase, title, and status."""
+    step_id = payload.get("step_id")
+    step = None
+
+    if step_id not in (None, ""):
+        try:
+            step = (
+                Step.objects
+                .select_related("phase")
+                .get(pk=step_id)
+            )
+        except (Step.DoesNotExist, TypeError, ValueError):
+            return None, JsonResponse(
+                {
+                    "status": "error",
+                    "message": "The selected Step does not exist.",
+                    "field_errors": {
+                        "step_id": "Select a valid Step.",
+                    },
+                },
+                status=404,
+            )
+
+    phase_id = payload.get(
+        "phase_id",
+        step.phase_id if step else None,
+    )
 
     if phase_id in (None, ""):
-        return JsonResponse(
+        return None, JsonResponse(
             {
                 "status": "error",
                 "message": "Phase is required.",
@@ -588,7 +686,7 @@ def create_step(payload):
     try:
         phase = Phase.objects.get(pk=phase_id)
     except (Phase.DoesNotExist, TypeError, ValueError):
-        return JsonResponse(
+        return None, JsonResponse(
             {
                 "status": "error",
                 "message": "The selected Phase does not exist.",
@@ -602,7 +700,7 @@ def create_step(payload):
     title = str(payload.get("title", "")).strip()
 
     if not title:
-        return JsonResponse(
+        return None, JsonResponse(
             {
                 "status": "error",
                 "message": "Step title is required.",
@@ -614,7 +712,10 @@ def create_step(payload):
         )
 
     status = str(
-        payload.get("status", ExecutionStatus.PLANNED)
+        payload.get(
+            "status",
+            step.status if step else ExecutionStatus.PLANNED,
+        )
     ).strip().upper()
 
     valid_statuses = {
@@ -623,7 +724,7 @@ def create_step(payload):
     }
 
     if status not in valid_statuses:
-        return JsonResponse(
+        return None, JsonResponse(
             {
                 "status": "error",
                 "message": "Step status is invalid.",
@@ -634,7 +735,26 @@ def create_step(payload):
             status=400,
         )
 
-    estimated_minutes_value = payload.get("estimated_minutes")
+    return {
+        "step": step,
+        "phase": phase,
+        "title": title,
+        "status": status,
+    }, None
+# ======================================================================
+# END: STEP_SAVE_CONTEXT (PATCH 6 OF 9)
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 7 OF 9)
+# START: STEP_SAVE_DETAILS
+# ======================================================================
+def resolve_step_save_details(payload, step):
+    """Validates and normalizes optional Step planning details."""
+    estimated_minutes_value = payload.get(
+        "estimated_minutes",
+        step.estimated_minutes if step else None,
+    )
 
     if estimated_minutes_value in (None, ""):
         estimated_minutes = None
@@ -642,7 +762,7 @@ def create_step(payload):
         try:
             estimated_minutes = int(estimated_minutes_value)
         except (TypeError, ValueError):
-            return JsonResponse(
+            return None, JsonResponse(
                 {
                     "status": "error",
                     "message": "Step estimate is invalid.",
@@ -656,7 +776,7 @@ def create_step(payload):
             )
 
         if estimated_minutes < 0:
-            return JsonResponse(
+            return None, JsonResponse(
                 {
                     "status": "error",
                     "message": "Step estimate is invalid.",
@@ -669,8 +789,13 @@ def create_step(payload):
                 status=400,
             )
 
+    confidence_value = payload.get(
+        "estimate_confidence",
+        step.estimate_confidence if step else "",
+    )
+
     estimate_confidence = str(
-        payload.get("estimate_confidence", "")
+        confidence_value or ""
     ).strip().upper()
 
     if not estimate_confidence:
@@ -680,7 +805,7 @@ def create_step(payload):
         "MEDIUM",
         "HIGH",
     }:
-        return JsonResponse(
+        return None, JsonResponse(
             {
                 "status": "error",
                 "message": "Step estimate confidence is invalid.",
@@ -694,52 +819,130 @@ def create_step(payload):
         )
 
     description = str(
-        payload.get("description", "")
+        payload.get(
+            "description",
+            step.description if step else "",
+        )
     ).strip()
 
     validation_description = str(
-        payload.get("validation_description", "")
+        payload.get(
+            "validation_description",
+            step.validation_description if step else "",
+        )
     ).strip()
 
-    with transaction.atomic():
-        highest_position = (
-            Step.objects
-            .filter(phase=phase)
-            .aggregate(highest=Max("position"))
-            .get("highest")
-        )
+    return {
+        "description": description,
+        "estimated_minutes": estimated_minutes,
+        "estimate_confidence": estimate_confidence,
+        "validation_description": validation_description,
+    }, None
+# ======================================================================
+# END: STEP_SAVE_DETAILS (PATCH 7 OF 9)
+# ======================================================================
 
-        step = Step.objects.create(
-            phase=phase,
-            title=title,
-            description=description,
-            status=status,
-            position=(
-                highest_position + 1
-                if highest_position is not None
-                else 0
-            ),
-            estimated_minutes=estimated_minutes,
-            estimate_confidence=estimate_confidence,
-            validation_description=validation_description,
-        )
+# ======================================================================
+# FILE: aurora/api/planning_api.py (PATCH 8 OF 9)
+# START: STEP_CREATION_API
+# ======================================================================
+def save_step(payload):
+    """Validates and persists a new or existing Step."""
+    context, error_response = resolve_step_save_context(payload)
+
+    if error_response:
+        return error_response
+
+    step = context["step"]
+    phase = context["phase"]
+
+    details, error_response = resolve_step_save_details(
+        payload,
+        step,
+    )
+
+    if error_response:
+        return error_response
+
+    with transaction.atomic():
+        if step is None:
+            highest_position = (
+                Step.objects
+                .filter(phase=phase)
+                .aggregate(highest=Max("position"))
+                .get("highest")
+            )
+
+            step = Step.objects.create(
+                phase=phase,
+                title=context["title"],
+                description=details["description"],
+                status=context["status"],
+                position=(
+                    highest_position + 1
+                    if highest_position is not None
+                    else 0
+                ),
+                estimated_minutes=details["estimated_minutes"],
+                estimate_confidence=details["estimate_confidence"],
+                validation_description=(
+                    details["validation_description"]
+                ),
+            )
+
+            response_status = 201
+            message = "Step created."
+        else:
+            if step.phase_id != phase.pk:
+                highest_position = (
+                    Step.objects
+                    .filter(phase=phase)
+                    .aggregate(highest=Max("position"))
+                    .get("highest")
+                )
+
+                step.phase = phase
+                step.position = (
+                    highest_position + 1
+                    if highest_position is not None
+                    else 0
+                )
+
+            step.title = context["title"]
+            step.description = details["description"]
+            step.status = context["status"]
+            step.estimated_minutes = details["estimated_minutes"]
+            step.estimate_confidence = details["estimate_confidence"]
+            step.validation_description = (
+                details["validation_description"]
+            )
+
+            step.save()
+
+            response_status = 200
+            message = "Step updated."
 
     return JsonResponse(
         {
             "status": "success",
-            "message": "Step created.",
+            "message": message,
             "step": serialize_step(step),
             "phase_id": phase.pk,
             "initiative_id": phase.initiative_id,
         },
-        status=201,
+        status=response_status,
     )
+
+
+def create_step(payload):
+    """Compatibility wrapper until endpoint dispatch uses save operations."""
+    return save_step(payload)
 # ======================================================================
-# END: STEP_CREATION_API (PATCH 6 OF 7)
+# END: STEP_CREATION_API (PATCH 8 OF 9)
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/planning_api.py (PATCH 7 OF 7)
+# FILE: aurora/api/planning_api.py (PATCH 9 OF 9)
 # START: PLANNING_ENDPOINT_ROUTER
 # ======================================================================
 @login_required
@@ -774,17 +977,23 @@ def planning_endpoint(request):
         )
 
     operation = str(
-        payload.get("operation", "")
+        payload.get("operation", "create_initiative")
     ).strip().lower()
 
     if operation == "create_initiative":
         return create_initiative(request, payload)
 
-    if operation == "create_phase":
-        return create_phase(payload)
+    if operation in {
+        "create_phase",
+        "save_phase",
+    }:
+        return save_phase(payload)
 
-    if operation == "create_step":
-        return create_step(payload)
+    if operation in {
+        "create_step",
+        "save_step",
+    }:
+        return save_step(payload)
 
     return JsonResponse(
         {
@@ -794,5 +1003,5 @@ def planning_endpoint(request):
         status=400,
     )
 # ======================================================================
-# END: PLANNING_ENDPOINT_ROUTER (PATCH 7 OF 7)
+# END: PLANNING_ENDPOINT_ROUTER (PATCH 9 OF 9)
 # ======================================================================

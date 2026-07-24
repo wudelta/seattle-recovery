@@ -448,7 +448,7 @@ class Initiative(models.Model):
 
     project = models.ForeignKey(
         Project,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="initiatives",
     )
 
