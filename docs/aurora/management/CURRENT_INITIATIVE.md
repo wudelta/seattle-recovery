@@ -12,6 +12,33 @@ Aurora exists to allow the human architect to think about systems while Aurora m
 
 ---
 
+# Current Status
+
+## Phase 1 — Planning (Completed)
+
+Aurora now supports database-backed planning using the hierarchy:
+
+```text
+Project
+    Initiative
+        Phase
+            Step
+```
+
+The planning console provides full CRUD operations for:
+
+* Initiatives
+* Phases
+* Steps
+
+The interface allows planning work to be created, revised, organized, and persisted without leaving Aurora Console.
+
+Planning is now considered the authoritative source of engineering intent.
+
+Execution automation has not yet been enabled.
+
+---
+
 # Core Philosophy
 
 The human should spend as little time as possible asking:
@@ -80,31 +107,58 @@ Each Step records:
 
 * description
 * estimated effort
+* confidence
 * assumptions
-* related repository artifacts
 * validation requirements
 
-The plan becomes the authoritative source of engineering work.
+Future revisions will associate Steps with repository artifacts and engineering discussions.
+
+The persisted plan becomes the authoritative source of engineering work.
+
+**Current Aurora Status**
+
+Implemented:
+
+* database persistence
+* Project → Initiative → Phase → Step hierarchy
+* create/edit workflows
+* planning workspace
+* initiative navigator
+* workbench context
+* AJAX-based editing
+
+Planned:
+
+* delete operations
+* ordering and reprioritization
+* repository relationships
+* dependency tracking
+* AI-assisted planning
 
 ---
 
 ## 4. Execute
 
-Exactly one Step is active.
+Exactly one Step should eventually become active.
 
-Aurora provides:
+Execution mode has not yet been implemented.
+
+The Decision Engine will eventually provide:
 
 * current context
 * related files
-* previous decisions
+* previous architectural decisions
 * implementation history
 * validation requirements
+* implementation notes
 
-Execution remains tightly focused.
+Execution should remain tightly focused.
 
 No searching.
 
 No rebuilding context.
+
+Only the information required for the current Step should be surfaced.
 
 ---
 
@@ -114,23 +168,32 @@ A Step is not complete because code was written.
 
 A Step is complete only after validation succeeds.
 
-Validation evidence is recorded.
+Validation evidence will be recorded with the Step.
 
-Only then does the Decision Engine advance to the next Step.
+Future versions will support:
+
+* validation notes
+* reviewer
+* completion timestamps
+* automated validation workflows
+
+Only then should the Decision Engine advance to the next Step.
 
 ---
 
 ## 6. Complete
 
-When every Step is validated:
+Ultimately:
 
-* the Phase completes automatically.
+When every Step has been validated:
 
-When every Phase completes:
+* the Phase should complete automatically.
 
-* the Initiative completes automatically.
+When every Phase has been completed:
 
-Project progress is always derived from validated work.
+* the Initiative should complete automatically.
+
+Project progress should always be derived from validated work rather than manual percentages.
 
 ---
 
@@ -150,11 +213,13 @@ Examples include:
 
 Each workspace contributes information to the active Initiative rather than existing in isolation.
 
+The user should feel like they are working inside one continuously evolving engineering environment rather than switching between unrelated tools.
+
 ---
 
 # Workspace Pattern
 
-Every major Aurora workspace follows a consistent structure.
+Every major Aurora workspace follows the same structure.
 
 ## Navigator
 
@@ -167,11 +232,31 @@ Examples:
 * Files
 * Components
 
+The Navigator answers:
+
+> Where am I?
+
+---
+
 ## Workbench
 
 Provides focused work.
 
 Only one primary activity should occupy the workbench at a time.
+
+Examples include:
+
+* planning
+* implementation
+* repository exploration
+* documentation
+* code review
+
+The Workbench answers:
+
+> What am I doing?
+
+---
 
 ## Context
 
@@ -184,7 +269,16 @@ Examples:
 * active Phase
 * active Step
 
-The user should never wonder where they are.
+Eventually additional context should include:
+
+* related files
+* active discussions
+* assumptions
+* validation status
+
+The Context panel answers:
+
+> Why am I doing this?
 
 ---
 
@@ -197,18 +291,23 @@ Responsible for:
 * vision
 * architecture
 * priorities
+* engineering judgment
 * final decisions
+
+---
 
 ## Decision Engine
 
 Responsible for:
 
-* preserving context
+* preserving engineering context
 * organizing work
 * maintaining progress
 * sequencing execution
 * recording validation
-* surfacing the next action
+* identifying the next action
+
+---
 
 ## Wu
 
@@ -217,12 +316,39 @@ Responsible for:
 * planning assistance
 * implementation guidance
 * repository reasoning
-* code generation
 * architectural discussion
+* generation of proposed execution plans
+
+Wu assists.
+
+Wu does not become the source of truth.
+
+The Decision Engine remains the authoritative engineering memory.
+
+---
 
 ## Minions
 
-Responsible for deterministic execution within clearly defined boundaries.
+Responsible for deterministic execution inside clearly defined boundaries.
+
+Minions perform implementation work.
+
+The Decision Engine coordinates that work.
+
+---
+
+# Near-Term Roadmap
+
+The next implementation milestones are:
+
+1. Delete operations
+2. Reordering of Phases and Steps
+3. Automatic lifecycle progression
+4. Repository artifact relationships
+5. Execution Mode
+6. AI-generated implementation plans
+7. Validation recording
+8. Automatic advancement through engineering work
 
 ---
 
@@ -232,18 +358,20 @@ Aurora succeeds when the user no longer has to manage engineering context manual
 
 Instead of asking:
 
-"What should I do next?"
+> What should I do next?
 
-Aurora should always be able to answer:
+Aurora should always answer:
 
+* Here is the current Project.
 * Here is the current Initiative.
 * Here is the current Phase.
 * Here is the current Step.
 * Here is why it matters.
-* Here are the related artifacts.
+* Here are the related repository artifacts.
+* Here are the assumptions.
 * Here is what must be validated.
 * Here is what comes next.
 
-At that point, Aurora becomes more than a development environment.
+At that point, the Decision Engine is no longer a planning tool.
 
-It becomes the operating system for the engineering process itself.
+It becomes the persistent operating system for the engineering process itself.

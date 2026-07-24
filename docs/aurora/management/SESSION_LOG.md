@@ -1114,3 +1114,70 @@ Continue the Decision Engine Planning MVP by implementing the remaining CRUD ope
 6. Hierarchical status propagation (Step → Phase → Initiative).
 
 This completes the Project-aware planning foundation. The next milestone focuses on making the Planning Console the authoritative engineering planning environment for Aurora.
+
+## 2026-07-23 — Decision Engine Planning CRUD Complete
+
+### Summary
+
+Completed the first fully functional milestone of the Aurora Decision Engine.
+
+The planning workspace now supports complete database-backed CRUD operations for the engineering planning hierarchy:
+
+```text
+Project
+    Initiative
+        Phase
+            Step
+```
+
+### Accomplishments
+
+* Completed Initiative create/edit workflow.
+* Completed Phase create/edit workflow.
+* Completed Step create/edit workflow.
+* Added save-oriented API operations (`save_initiative`, `save_phase`, `save_step`) supporting both creation and editing.
+* Updated planning console templates to support edit mode.
+* Refactored `planning.js` into cohesive controller sections:
+
+  * Planning state
+  * Workspace state
+  * Hierarchy renderers
+  * Data loader
+  * Initiative controller
+  * Phase controller
+  * Step controller
+  * Event bindings/public API
+* Added renderer-backed object caching (`$phase.data("phase")` and `$step.data("step")`) to enable edit operations without additional server requests.
+* Verified end-to-end AJAX workflow for all planning entities.
+
+### Validation
+
+Successfully validated:
+
+* ✅ Create Initiative
+* ✅ Edit Initiative
+* ✅ Create Phase
+* ✅ Edit Phase
+* ✅ Create Step
+* ✅ Edit Step
+
+No JavaScript errors were encountered during validation, and the planning hierarchy refreshes correctly after each operation.
+
+### Architectural Outcome
+
+Aurora now possesses a persistent engineering planning model rather than a transient chat-based planning process.
+
+Planning data is stored in PostgreSQL and can be revisited, modified, and expanded independently of any AI conversation.
+
+This represents the completion of the **Planning** milestone for the Decision Engine.
+
+### Next Session
+
+Priority order:
+
+1. Implement delete operations for Initiative, Phase, and Step.
+2. Support reordering of Phases and Steps.
+3. Add automatic lifecycle/status propagation.
+4. Associate Steps with repository artifacts.
+5. Begin Execution Mode so the Decision Engine becomes the authoritative engineering work queue.
+6. Integrate Wu so implementation plans can be generated directly into the persisted planning hierarchy.
