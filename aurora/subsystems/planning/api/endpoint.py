@@ -10,8 +10,14 @@ from django.views.decorators.http import require_http_methods
 
 from aurora.subsystems.planning.api.initiatives import save_initiative
 from aurora.subsystems.planning.api.payload import build_planning_payload
-from aurora.subsystems.planning.api.phases import save_phase
-from aurora.subsystems.planning.api.steps import delete_step, save_step
+from aurora.subsystems.planning.api.phases import (
+    delete_phase,
+    save_phase,
+)
+from aurora.subsystems.planning.api.steps import (
+    delete_step,
+    save_step,
+)
 
 
 @login_required
@@ -60,6 +66,9 @@ def planning_endpoint(request):
         "save_phase",
     }:
         return save_phase(payload)
+
+    if operation == "delete_phase":
+        return delete_phase(payload)
 
     if operation in {
         "create_step",

@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/phases.py 
+# FILE: aurora/subsystems/planning/api/phases.py
 # START: PHASE_PERSISTENCE
 # ======================================================================
 from django.db import transaction
@@ -178,9 +178,59 @@ def save_phase(payload):
     )
 
 
+def delete_phase(payload):
+    """Deletes an existing Phase and its dependent Steps."""
+    phase_id = payload.get("phase_id")
+
+    if phase_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Phase is required.",
+                "field_errors": {
+                    "phase_id": "Select a Phase.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        phase = (
+            Phase.objects
+            .select_related("initiative")
+            .get(pk=phase_id)
+        )
+    except (Phase.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Phase does not exist.",
+                "field_errors": {
+                    "phase_id": "Select a valid Phase.",
+                },
+            },
+            status=404,
+        )
+
+    deleted_phase_id = phase.pk
+    initiative_id = phase.initiative_id
+
+    with transaction.atomic():
+        phase.delete()
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "message": "Phase deleted.",
+            "phase_id": deleted_phase_id,
+            "initiative_id": initiative_id,
+        }
+    )
+
+
 def create_phase(payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
     return save_phase(payload)
 # ======================================================================
-# END: PHASE_PERSISTENCE 
+# END: PHASE_PERSISTENCE
 # ======================================================================

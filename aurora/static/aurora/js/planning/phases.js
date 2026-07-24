@@ -145,6 +145,20 @@
             .prop("disabled", isSaving);
     }
 
+    function setPhaseDeleteState($phase, isDeleting) {
+        $phase
+            .find(".planning-delete-phase-btn")
+            .prop("disabled", isDeleting)
+            .text(isDeleting ? "Deleting..." : "Delete Phase");
+
+        $phase
+            .find(
+                ".planning-edit-phase-btn, "
+                + ".planning-new-step-btn"
+            )
+            .prop("disabled", isDeleting);
+    }
+
     function savePhase($initiative) {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
@@ -257,11 +271,102 @@
         state.setRequest("phase", request);
     }
 
+    function deletePhase($phase) {
+        const endpoints = state.getEndpoints();
+        const endpoint = endpoints.planning_endpoint;
+        const phase = $phase.data("phase") || {};
+        const phaseId = phase.id || $phase.data("phase-id");
+        const phaseTitle = phase.title || "this Phase";
+        const $initiative = $phase.closest(
+            ".planning-initiative"
+        );
+
+        clearPhaseFormError($initiative);
+
+        if (!endpoint) {
+            showPhaseFormError(
+                $initiative,
+                "The planning endpoint was not supplied by Aurora Console."
+            );
+            return;
+        }
+
+        if (!phaseId) {
+            showPhaseFormError(
+                $initiative,
+                "The selected Phase could not be identified."
+            );
+            return;
+        }
+
+        if (
+            !window.confirm(
+                `Delete "${phaseTitle}" and all of its Steps? `
+                + "This cannot be undone."
+            )
+        ) {
+            return;
+        }
+
+        if (state.getRequest("phase")) {
+            return;
+        }
+
+        setPhaseDeleteState($phase, true);
+
+        const request = $.ajax({
+            url: endpoint,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            headers: {
+                "X-CSRFToken": utilities.getCsrfToken(),
+            },
+            data: JSON.stringify({
+                operation: "delete_phase",
+                phase_id: phaseId,
+            }),
+        })
+            .done(function(response) {
+                if (
+                    !response
+                    || response.status !== "success"
+                ) {
+                    showPhaseFormError(
+                        $initiative,
+                        "The planning endpoint returned an invalid response."
+                    );
+                    return;
+                }
+
+                data.loadPlanningData(
+                    state.getActiveProjectSlug(),
+                    state.getActiveInitiativeId()
+                );
+            })
+            .fail(function(xhr) {
+                const response = xhr.responseJSON || {};
+
+                showPhaseFormError(
+                    $initiative,
+                    response.message || "The Phase deletion failed.",
+                    response.field_errors
+                );
+            })
+            .always(function() {
+                state.setRequest("phase", null);
+                setPhaseDeleteState($phase, false);
+            });
+
+        state.setRequest("phase", request);
+    }
+
     Planning.phases = {
         clearFormError: clearPhaseFormError,
         openForm: openPhaseForm,
         closeForm: closePhaseForm,
         save: savePhase,
+        delete: deletePhase,
     };
 })(window, jQuery);
 // ======================================================================

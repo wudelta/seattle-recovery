@@ -151,6 +151,17 @@
             )
             .on(
                 "click.planningPhase",
+                ".planning-delete-phase-btn",
+                function() {
+                    phases.delete(
+                        $(this).closest(
+                            ".planning-phase"
+                        )
+                    );
+                }
+            )
+            .on(
+                "click.planningPhase",
                 ".planning-cancel-phase-btn",
                 function() {
                     const $initiative = $(this).closest(
