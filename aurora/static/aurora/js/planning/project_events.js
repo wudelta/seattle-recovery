@@ -38,6 +38,18 @@
                 projects.openForm(null);
             });
 
+        $("#planning-edit-project-btn")
+            .off("click.planningProject")
+            .on("click.planningProject", function() {
+                const activeProject = state.getActiveProject();
+
+                if (!activeProject) {
+                    return;
+                }
+
+                projects.openForm(activeProject);
+            });
+
         $("#planning-cancel-project-btn")
             .off("click.planningProject")
             .on("click.planningProject", function() {

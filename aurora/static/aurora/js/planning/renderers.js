@@ -294,6 +294,8 @@
             "#planning-initiative-list"
         );
 
+        state.setActiveProject(activeProject);
+
         workspace.renderProjectSelector(
             projects,
             activeProject

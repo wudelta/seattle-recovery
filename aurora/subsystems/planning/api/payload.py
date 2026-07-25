@@ -1,8 +1,8 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/payload.py 
+# FILE: aurora/subsystems/planning/api/payload.py
 # START: PLANNING_HIERARCHY_PAYLOAD
 # ======================================================================
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 
 from aurora.models import Initiative, Phase, Project, Step
 from aurora.subsystems.planning.api.serializers import (
@@ -20,6 +20,20 @@ def build_planning_payload(
     projects = list(
         Project.objects
         .filter(active=True)
+        .annotate(
+            initiative_count=Count(
+                "initiatives",
+                distinct=True,
+            ),
+            project_phase_count=Count(
+                "initiatives__phases",
+                distinct=True,
+            ),
+            project_step_count=Count(
+                "initiatives__phases__steps",
+                distinct=True,
+            ),
+        )
         .order_by("position", "title")
     )
 
@@ -56,6 +70,27 @@ def build_planning_payload(
                 "step_count": 0,
             },
         }
+
+    active_project_payload = serialize_project(
+        active_project
+    )
+
+    active_project_payload.update(
+        {
+            "initiative_count": (
+                active_project.initiative_count
+            ),
+            "phase_count": (
+                active_project.project_phase_count
+            ),
+            "step_count": (
+                active_project.project_step_count
+            ),
+            "can_delete": (
+                active_project.initiative_count == 0
+            ),
+        }
+    )
 
     initiative_options = list(
         Initiative.objects
@@ -135,7 +170,7 @@ def build_planning_payload(
     return {
         "status": "success",
         "projects": project_payload,
-        "active_project": serialize_project(active_project),
+        "active_project": active_project_payload,
         "initiative_options": [
             serialize_initiative_option(initiative)
             for initiative in initiative_options
@@ -148,5 +183,5 @@ def build_planning_payload(
         },
     }
 # ======================================================================
-# END: PLANNING_HIERARCHY_PAYLOAD 
+# END: PLANNING_HIERARCHY_PAYLOAD
 # ======================================================================

@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/state.js
+// FILE: aurora/static/aurora/js/planning/state.js 
 // START: PLANNING_SHARED_STATE
 // ======================================================================
 (function(window) {
@@ -14,11 +14,13 @@
         endpoints: {},
         requests: {
             planning: null,
+            project: null,
             initiative: null,
             phase: null,
             step: null,
         },
         activeProjectSlug: null,
+        activeProject: null,
         activeInitiativeId: null,
         activeInitiative: null,
     };
@@ -65,6 +67,24 @@
             state.activeProjectSlug = projectSlug || null;
         },
 
+        getActiveProject: function() {
+            return state.activeProject;
+        },
+
+        setActiveProject: function(project) {
+            state.activeProject = project || null;
+            state.activeProjectSlug = (
+                project && project.slug
+                ? project.slug
+                : null
+            );
+        },
+
+        clearActiveProject: function() {
+            state.activeProjectSlug = null;
+            state.activeProject = null;
+        },
+
         getActiveInitiativeId: function() {
             return state.activeInitiativeId;
         },
@@ -88,5 +108,5 @@
     };
 })(window);
 // ======================================================================
-// END: PLANNING_SHARED_STATE
+// END: PLANNING_SHARED_STATE 
 // ======================================================================

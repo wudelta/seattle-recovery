@@ -52,6 +52,11 @@
 
         $("#planning-project-active").prop("checked", true);
 
+        $("#planning-delete-project-btn")
+            .addClass("d-none")
+            .prop("disabled", false)
+            .text("Delete Project");
+
         clearProjectFormError();
     }
 
@@ -84,6 +89,9 @@
                 .text(
                     "Update this Project without changing its internal slug."
                 );
+
+            $("#planning-delete-project-btn")
+                .removeClass("d-none");
         } else {
             $("#planning-project-form-heading")
                 .text("Create Project");
@@ -143,6 +151,31 @@
                     ? "Deleting..."
                     : "Delete Project"
             );
+    }
+
+    function projectDeleteBlockedMessage(project) {
+        const initiativeCount = Number(
+            project.initiative_count || 0
+        );
+
+        const phaseCount = Number(
+            project.phase_count || 0
+        );
+
+        const stepCount = Number(
+            project.step_count || 0
+        );
+
+        return (
+            "This Project cannot be deleted because it contains "
+            + `${initiativeCount} Initiative`
+            + `${initiativeCount === 1 ? "" : "s"}, `
+            + `${phaseCount} Phase`
+            + `${phaseCount === 1 ? "" : "s"}, and `
+            + `${stepCount} Step`
+            + `${stepCount === 1 ? "" : "s"}. `
+            + "Delete its children before deleting the Project."
+        );
     }
 
     function saveProject() {
@@ -256,6 +289,7 @@
     function deleteProject(project) {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
+        const activeProject = state.getActiveProject();
 
         const projectSlug = String(
             project && project.slug
@@ -263,16 +297,29 @@
             || ""
         ).trim();
 
+        clearProjectFormError();
+
         if (!endpoint) {
-            workspace.showError(
+            showProjectFormError(
                 "The planning endpoint was not supplied by Aurora Console."
             );
             return;
         }
 
         if (!projectSlug) {
-            workspace.showError(
+            showProjectFormError(
                 "The selected Project could not be identified."
+            );
+            return;
+        }
+
+        if (
+            activeProject
+            && activeProject.slug === projectSlug
+            && activeProject.can_delete === false
+        ) {
+            window.alert(
+                projectDeleteBlockedMessage(activeProject)
             );
             return;
         }
@@ -309,13 +356,13 @@
                     !response
                     || response.status !== "success"
                 ) {
-                    workspace.showError(
+                    showProjectFormError(
                         "The planning endpoint returned an invalid response."
                     );
                     return;
                 }
 
-                state.setActiveProjectSlug(null);
+                state.clearActiveProject();
                 state.clearActiveInitiative();
 
                 closeProjectForm();
@@ -325,9 +372,10 @@
             .fail(function(xhr) {
                 const response = xhr.responseJSON || {};
 
-                workspace.showError(
+                showProjectFormError(
                     response.message
-                    || "The Project delete request failed."
+                    || "The Project delete request failed.",
+                    response.field_errors
                 );
             })
             .always(function() {
