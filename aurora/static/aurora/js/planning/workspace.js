@@ -143,11 +143,14 @@
 
     function renderNavigatorProject(project, initiativeCount) {
         const $projectButton = $("#planning-navigator-project");
+        const $editButton = $("#planning-edit-project-btn");
 
         if (!project) {
             $projectButton
                 .removeClass("is-active")
                 .prop("disabled", true);
+
+            $editButton.prop("disabled", true);
 
             $("#planning-navigator-project-title")
                 .text("No active Project");
@@ -170,6 +173,8 @@
         $projectButton
             .addClass("is-active")
             .prop("disabled", false);
+
+        $editButton.prop("disabled", false);
     }
 
     function renderNavigatorInitiatives(

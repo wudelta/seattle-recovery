@@ -204,13 +204,37 @@ def delete_project(payload):
     initiative_count = project.initiatives.count()
 
     if initiative_count:
+        phase_count = project.initiatives.aggregate(
+            count=Max("phases__position")
+        )
+
+        phase_count = (
+            project.initiatives
+            .filter(phases__isnull=False)
+            .values("phases__pk")
+            .distinct()
+            .count()
+        )
+
+        step_count = (
+            project.initiatives
+            .filter(phases__steps__isnull=False)
+            .values("phases__steps__pk")
+            .distinct()
+            .count()
+        )
+
         return JsonResponse(
             {
                 "status": "error",
                 "message": (
-                    "Delete all Initiatives before deleting this Project."
+                    "This Project cannot be deleted because it "
+                    "contains planning work."
                 ),
                 "initiative_count": initiative_count,
+                "phase_count": phase_count,
+                "step_count": step_count,
+                "can_delete": False,
             },
             status=409,
         )
