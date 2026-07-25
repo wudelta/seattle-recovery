@@ -60,7 +60,7 @@ def save_project(request, payload):
     del request
 
     project_slug = str(
-        payload.get("project_slug", "")
+        payload.get("project_slug") or ""
     ).strip()
 
     project = None
@@ -170,7 +170,7 @@ def save_project(request, payload):
 def delete_project(payload):
     """Deletes an empty Project."""
     project_slug = str(
-        payload.get("project_slug", "")
+        payload.get("project_slug") or ""
     ).strip()
 
     if not project_slug:

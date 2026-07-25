@@ -12,26 +12,13 @@
     const state = Planning.state;
     const workspace = Planning.workspace;
     const data = Planning.data;
+    const projectEvents = Planning.projectEvents;
     const initiatives = Planning.initiatives;
     const phases = Planning.phases;
     const steps = Planning.steps;
 
     function bindPlanningEvents() {
-        $("#planning-project-select")
-            .off("change.planning")
-            .on("change.planning", function() {
-                state.setActiveProjectSlug(
-                    $(this).val() || null
-                );
-
-                state.clearActiveInitiative();
-
-                initiatives.closeForm();
-
-                data.loadPlanningData(
-                    state.getActiveProjectSlug()
-                );
-            });
+        projectEvents.bind();
 
         $("#planning-refresh-btn")
             .off("click.planning")
@@ -116,15 +103,6 @@
                 ".planning-edit-initiative-btn",
                 function() {
                     initiatives.openForm(
-                        state.getActiveInitiative()
-                    );
-                }
-            )
-            .on(
-                "click.planningPhase",
-                ".planning-delete-initiative-btn",
-                function() {
-                    initiatives.delete(
                         state.getActiveInitiative()
                     );
                 }
