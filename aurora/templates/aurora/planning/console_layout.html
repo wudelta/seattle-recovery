@@ -17,18 +17,19 @@
             Decision Engine
         </div>
 
-        <div class="d-flex align-items-center gap-2">
+        <div
+            class="planning-project-controls d-flex align-items-center gap-2 flex-grow-1"
+        >
             <label
                 for="planning-project-select"
-                class="small text-muted mb-0"
+                class="visually-hidden"
             >
-                Project
+                Active Project
             </label>
 
             <select
                 id="planning-project-select"
-                class="form-select form-select-sm bg-black text-light border-secondary"
-                style="min-width: 180px;"
+                class="planning-project-select form-select bg-black text-light border-secondary"
                 aria-label="Active planning project"
             >
                 <option value="">
@@ -37,17 +38,30 @@
             </select>
 
             <button
+                id="planning-edit-project-btn"
+                type="button"
+                class="planning-icon-btn planning-edit-action flex-shrink-0"
+                aria-label="Edit Project"
+                title="Edit Project"
+                disabled
+            >
+                <span aria-hidden="true">✎</span>
+            </button>
+
+            <button
                 id="planning-create-project-btn"
                 type="button"
-                class="btn btn-sm btn-outline-success"
+                class="planning-icon-btn planning-create-action flex-shrink-0"
                 aria-label="Create Project"
                 title="Create Project"
             >
-                +
+                <span aria-hidden="true">+</span>
             </button>
         </div>
 
-        <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
+        <div
+            class="planning-toolbar-summary d-flex align-items-center gap-2 ms-auto flex-shrink-0"
+        >
             <span
                 id="planning-summary-badge"
                 class="badge bg-dark border border-secondary text-info"
@@ -63,15 +77,6 @@
                 Refresh
             </button>
         </div>
-    </div>
-
-    <div
-        id="planning-status-bar"
-        class="planning-status-bar px-3 py-1 border-bottom border-secondary small text-muted flex-shrink-0"
-        role="status"
-        aria-live="polite"
-    >
-        Open the Project panel to load persisted execution plans.
     </div>
 <!-- ====================================================================== -->
 <!-- END: PLANNING_CONSOLE_LAYOUT -->

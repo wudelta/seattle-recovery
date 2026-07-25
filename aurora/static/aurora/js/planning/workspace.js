@@ -10,33 +10,10 @@
     );
 
     const state = Planning.state;
-    const utilities = Planning.utilities;
-
-    function setWorkbenchHeader(title, context, status) {
-        $("#planning-workbench-title").text(
-            title || "Decision Engine"
-        );
-
-        $("#planning-workbench-context").text(
-            context || "Select a Project and Initiative to begin."
-        );
-
-        const $status = $("#planning-workbench-status");
-
-        $status.empty();
-
-        if (status) {
-            $status.append(
-                $("<span>", {
-                    class: `badge ${utilities.statusClass(status.value)}`,
-                    text: status.label || status.value,
-                })
-            );
-        }
-    }
 
     function renderProjectSelector(projects, activeProject) {
         const $projectSelect = $("#planning-project-select");
+        const $editProjectButton = $("#planning-edit-project-btn");
 
         $projectSelect.empty();
 
@@ -52,6 +29,8 @@
                     })
                 )
                 .prop("disabled", true);
+
+            $editProjectButton.prop("disabled", true);
 
             $(
                 "#planning-create-initiative-btn, "
@@ -82,6 +61,8 @@
         $projectSelect
             .val(projectSlug)
             .prop("disabled", false);
+
+        $editProjectButton.prop("disabled", false);
 
         $(
             "#planning-create-initiative-btn, "
@@ -141,42 +122,6 @@
         return $button;
     }
 
-    function renderNavigatorProject(project, initiativeCount) {
-        const $projectButton = $("#planning-navigator-project");
-        const $editButton = $("#planning-edit-project-btn");
-
-        if (!project) {
-            $projectButton
-                .removeClass("is-active")
-                .prop("disabled", true);
-
-            $editButton.prop("disabled", true);
-
-            $("#planning-navigator-project-title")
-                .text("No active Project");
-
-            $("#planning-navigator-project-meta")
-                .text("Create or activate a Project to begin");
-
-            return;
-        }
-
-        $("#planning-navigator-project-title")
-            .text(project.title || "Untitled Project");
-
-        $("#planning-navigator-project-meta")
-            .text(
-                `${initiativeCount} initiative`
-                + `${initiativeCount === 1 ? "" : "s"}`
-            );
-
-        $projectButton
-            .addClass("is-active")
-            .prop("disabled", false);
-
-        $editButton.prop("disabled", false);
-    }
-
     function renderNavigatorInitiatives(
         initiatives,
         selectedInitiativeId
@@ -222,14 +167,7 @@
     }
 
     function resetNavigator() {
-        renderNavigatorProject(null, 0);
         renderNavigatorInitiatives([], null);
-
-        setWorkbenchHeader(
-            "Decision Engine",
-            "Select a Project and Initiative to begin.",
-            null
-        );
     }
 
     function setLoadingState(isLoading) {
@@ -256,21 +194,10 @@
 
         $("#planning-error-state").removeClass("d-none");
 
-        $("#planning-status-bar")
-            .removeClass("text-muted text-success")
-            .addClass("text-danger")
-            .text("Decision Engine data failed to load.");
-
         $("#planning-summary-badge")
             .removeClass("text-info text-success")
             .addClass("text-danger")
             .text("Load failed");
-
-        setWorkbenchHeader(
-            "Decision Engine unavailable",
-            message || "Planning data could not be loaded.",
-            null
-        );
     }
 
     function showEmptyState() {
@@ -281,27 +208,14 @@
             .removeClass("d-none")
             .addClass("d-flex");
 
-        $("#planning-status-bar")
-            .removeClass("text-danger text-success")
-            .addClass("text-muted")
-            .text("No persisted initiatives were returned.");
-
         $("#planning-summary-badge")
             .removeClass("text-danger text-success")
             .addClass("text-info")
-            .text("0 initiatives");
-
-        setWorkbenchHeader(
-            "No active Initiative",
-            "Create an Initiative for the selected Project.",
-            null
-        );
+            .text("0 initiatives · 0 phases · 0 steps");
     }
 
     Planning.workspace = {
-        setWorkbenchHeader: setWorkbenchHeader,
         renderProjectSelector: renderProjectSelector,
-        renderNavigatorProject: renderNavigatorProject,
         renderNavigatorInitiatives: renderNavigatorInitiatives,
         resetNavigator: resetNavigator,
         setLoadingState: setLoadingState,

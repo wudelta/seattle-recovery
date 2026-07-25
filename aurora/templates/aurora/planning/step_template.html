@@ -6,22 +6,54 @@
     <div class="planning-step">
         <div class="planning-step-position"></div>
 
-        <div class="planning-step-body">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <h4
-                    class="planning-step-title mb-0"
-                ></h4>
+        <div class="planning-step-body flex-grow-1 min-w-0">
+            <div
+                class="d-flex justify-content-between align-items-start gap-3"
+            >
+                <div class="flex-grow-1 min-w-0">
+                    <div
+                        class="d-flex align-items-center gap-2 flex-wrap"
+                    >
+                        <h4
+                            class="planning-step-title mb-0"
+                        ></h4>
 
-                <span class="planning-step-status badge"></span>
+                        <span
+                            class="planning-step-status badge"
+                        ></span>
 
-                <span
-                    class="planning-step-estimate badge bg-black text-info border border-secondary"
-                ></span>
+                        <span
+                            class="planning-step-estimate badge bg-black text-info border border-secondary"
+                        ></span>
+                    </div>
+
+                    <p
+                        class="planning-step-description planning-text mt-2 mb-1"
+                    ></p>
+                </div>
+
+                <div
+                    class="planning-header-actions d-flex align-items-center gap-1 flex-shrink-0"
+                >
+                    <button
+                        type="button"
+                        class="planning-edit-step-btn planning-icon-btn planning-edit-action"
+                        aria-label="Edit Step"
+                        title="Edit Step"
+                    >
+                        <span aria-hidden="true">✎</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="planning-delete-step-btn planning-icon-btn planning-delete-action"
+                        aria-label="Delete Step"
+                        title="Delete Step"
+                    >
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
             </div>
-
-            <p
-                class="planning-step-description planning-text mt-2 mb-1"
-            ></p>
 
             <div
                 class="planning-step-validation small mt-2"
@@ -46,27 +78,18 @@
                     class="planning-step-validation-notes planning-muted"
                 ></span>
             </div>
-        </div>
 
-        <div class="planning-step-meta planning-muted small text-end">
-            <div class="d-flex flex-column gap-2 mb-2">
-                <button
-                    type="button"
-                    class="planning-edit-step-btn btn btn-outline-secondary btn-sm"
-                >
-                    Edit Step
-                </button>
+            <div
+                class="planning-step-footer planning-muted small d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2"
+            >
+                <div
+                    class="planning-step-validator"
+                ></div>
 
-                <button
-                    type="button"
-                    class="planning-delete-step-btn btn btn-outline-danger btn-sm"
-                >
-                    Delete Step
-                </button>
+                <div
+                    class="planning-step-updated"
+                ></div>
             </div>
-
-            <div class="planning-step-validator"></div>
-            <div class="planning-step-updated"></div>
         </div>
     </div>
 </template>

@@ -2,23 +2,24 @@
 <!-- FILE: aurora/templates/aurora/planning/phase_template.html -->
 <!-- START: PHASE_TEMPLATE -->
 <!-- ====================================================================== -->
-    <template id="planning-phase-template">
-        <section class="planning-phase">
-            <header
+<template id="planning-phase-template">
+    <section class="planning-phase">
+        <header class="planning-phase-header">
+            <div
                 class="d-flex justify-content-between align-items-start gap-3"
             >
-                <div class="flex-grow-1">
+                <div class="flex-grow-1 min-w-0">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span
-                            class="planning-phase-position planning-accent"
-                        ></span>
-
                         <h3
                             class="planning-phase-title mb-0"
                         ></h3>
 
                         <span
                             class="planning-phase-status badge"
+                        ></span>
+
+                        <span
+                            class="planning-phase-summary planning-muted small"
                         ></span>
                     </div>
 
@@ -27,164 +28,167 @@
                     ></p>
                 </div>
 
-                <div class="d-flex align-items-start gap-3 flex-shrink-0">
-                    <div
-                        class="planning-phase-summary planning-muted small text-end"
-                    ></div>
+                <div
+                    class="planning-header-actions d-flex align-items-center gap-1 flex-shrink-0"
+                >
+                    <button
+                        type="button"
+                        class="planning-edit-phase-btn planning-icon-btn planning-edit-action"
+                        aria-label="Edit Phase"
+                        title="Edit Phase"
+                    >
+                        <span aria-hidden="true">✎</span>
+                    </button>
 
-                    <div class="d-flex gap-2">
-                        <button
-                            type="button"
-                            class="planning-edit-phase-btn btn btn-outline-secondary btn-sm"
-                        >
-                            Edit Phase
-                        </button>
+                    <button
+                        type="button"
+                        class="planning-new-step-btn planning-icon-btn planning-create-action"
+                        aria-label="Create Step"
+                        title="Create Step"
+                    >
+                        <span aria-hidden="true">+</span>
+                    </button>
 
-                        <button
-                            type="button"
-                            class="planning-delete-phase-btn btn btn-outline-danger btn-sm"
-                        >
-                            Delete Phase
-                        </button>
+                    <button
+                        type="button"
+                        class="planning-delete-phase-btn planning-icon-btn planning-delete-action"
+                        aria-label="Delete Phase"
+                        title="Delete Phase"
+                    >
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            </div>
+        </header>
 
-                        <button
-                            type="button"
-                            class="planning-new-step-btn btn btn-outline-info btn-sm"
+        <div
+            class="planning-step-form-panel d-none planning-rule px-3 py-3"
+        >
+            <form
+                class="planning-step-form"
+                data-step-id=""
+            >
+                <div
+                    class="planning-step-form-error alert alert-danger py-2 px-3 small d-none"
+                    role="alert"
+                ></div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-8">
+                        <label
+                            class="form-label small text-secondary"
                         >
-                            New Step
-                        </button>
+                            Step title
+                        </label>
+
+                        <input
+                            type="text"
+                            class="planning-step-form-title form-control form-control-sm bg-black text-light border-secondary"
+                            maxlength="255"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <label
+                            class="form-label small text-secondary"
+                        >
+                            Status
+                        </label>
+
+                        <select
+                            class="planning-step-form-status form-select form-select-sm bg-black text-light border-secondary"
+                        >
+                            <option value="PLANNED">Planned</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="PAUSED">Paused</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-lg-2">
+                        <label
+                            class="form-label small text-secondary"
+                        >
+                            Estimate
+                        </label>
+
+                        <input
+                            type="number"
+                            class="planning-step-form-estimated-minutes form-control form-control-sm bg-black text-light border-secondary"
+                            min="0"
+                            step="1"
+                            placeholder="Minutes"
+                        >
+                    </div>
+
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label
+                            class="form-label small text-secondary"
+                        >
+                            Confidence
+                        </label>
+
+                        <select
+                            class="planning-step-form-estimate-confidence form-select form-select-sm bg-black text-light border-secondary"
+                        >
+                            <option value="">Not estimated</option>
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label
+                            class="form-label small text-secondary"
+                        >
+                            Description
+                        </label>
+
+                        <textarea
+                            class="planning-step-form-description form-control form-control-sm bg-black text-light border-secondary"
+                            rows="2"
+                        ></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label
+                            class="form-label small text-secondary"
+                        >
+                            Validation requirement
+                        </label>
+
+                        <textarea
+                            class="planning-step-form-validation-description form-control form-control-sm bg-black text-light border-secondary"
+                            rows="2"
+                            placeholder="Describe the deterministic evidence required to validate this step."
+                        ></textarea>
                     </div>
                 </div>
-            </header>
 
-            <div
-                class="planning-step-form-panel d-none planning-rule px-3 py-3"
-            >
-                <form
-                    class="planning-step-form"
-                    data-step-id=""
-                >
-                    <div
-                        class="planning-step-form-error alert alert-danger py-2 px-3 small d-none"
-                        role="alert"
-                    ></div>
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button
+                        type="reset"
+                        class="planning-cancel-step-btn btn btn-outline-secondary btn-sm"
+                    >
+                        Cancel
+                    </button>
 
-                    <div class="row g-3">
-                        <div class="col-12 col-lg-8">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Step title
-                            </label>
+                    <button
+                        type="submit"
+                        class="planning-save-step-btn btn btn-info btn-sm"
+                    >
+                        Save Step
+                    </button>
+                </div>
+            </form>
+        </div>
 
-                            <input
-                                type="text"
-                                class="planning-step-form-title form-control form-control-sm bg-black text-light border-secondary"
-                                maxlength="255"
-                                required
-                            >
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-2">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Status
-                            </label>
-
-                            <select
-                                class="planning-step-form-status form-select form-select-sm bg-black text-light border-secondary"
-                            >
-                                <option value="PLANNED">Planned</option>
-                                <option value="ACTIVE">Active</option>
-                                <option value="PAUSED">Paused</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="CANCELLED">Cancelled</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-2">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Estimate
-                            </label>
-
-                            <input
-                                type="number"
-                                class="planning-step-form-estimated-minutes form-control form-control-sm bg-black text-light border-secondary"
-                                min="0"
-                                step="1"
-                                placeholder="Minutes"
-                            >
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Confidence
-                            </label>
-
-                            <select
-                                class="planning-step-form-estimate-confidence form-select form-select-sm bg-black text-light border-secondary"
-                            >
-                                <option value="">Not estimated</option>
-                                <option value="LOW">Low</option>
-                                <option value="MEDIUM">Medium</option>
-                                <option value="HIGH">High</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Description
-                            </label>
-
-                            <textarea
-                                class="planning-step-form-description form-control form-control-sm bg-black text-light border-secondary"
-                                rows="2"
-                            ></textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <label
-                                class="form-label small text-secondary"
-                            >
-                                Validation requirement
-                            </label>
-
-                            <textarea
-                                class="planning-step-form-validation-description form-control form-control-sm bg-black text-light border-secondary"
-                                rows="2"
-                                placeholder="Describe the deterministic evidence required to validate this step."
-                            ></textarea>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button
-                            type="reset"
-                            class="planning-cancel-step-btn btn btn-outline-secondary btn-sm"
-                        >
-                            Cancel
-                        </button>
-
-                        <button
-                            type="submit"
-                            class="planning-save-step-btn btn btn-info btn-sm"
-                        >
-                            Save Step
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="planning-step-list"></div>
-        </section>
-    </template>
+        <div class="planning-step-list"></div>
+    </section>
+</template>
 <!-- ====================================================================== -->
 <!-- END: PHASE_TEMPLATE -->
 <!-- ====================================================================== -->

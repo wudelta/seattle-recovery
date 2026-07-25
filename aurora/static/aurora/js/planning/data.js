@@ -60,21 +60,6 @@
             .addClass("d-none")
             .removeClass("d-flex");
 
-        $("#planning-status-bar")
-            .removeClass("text-danger text-success")
-            .addClass("text-muted")
-            .text("Loading persisted execution plan...");
-
-        workspace.setWorkbenchHeader(
-            "Loading Decision Engine",
-            (
-                requestedProjectSlug
-                    ? `Opening ${requestedProjectSlug}...`
-                    : "Resolving active Project context..."
-            ),
-            null
-        );
-
         const request = $.ajax({
             url: endpoint,
             method: "GET",

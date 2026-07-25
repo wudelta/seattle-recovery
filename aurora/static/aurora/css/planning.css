@@ -1,5 +1,5 @@
 /* ======================================================================
-   FILE: aurora/static/aurora/css/planning.css (PATCH 1 OF 1)
+   FILE: aurora/static/aurora/css/planning.css
    START: PLANNING_DOCUMENT_HIERARCHY
    ====================================================================== */
 
@@ -12,6 +12,115 @@
     --planning-muted: #9da6ad;
     --planning-accent: #8fb8c7;
     --planning-navigator-width: 15rem;
+}
+
+/* ----------------------------------------------------------------------
+   Project toolbar
+   ---------------------------------------------------------------------- */
+
+#planning-console-panel .planning-toolbar {
+    min-height: 3.25rem;
+    background-color: #12171a;
+    border-color: var(--planning-rule) !important;
+}
+
+#planning-console-panel .planning-project-controls {
+    min-width: 0;
+    max-width: 42rem;
+}
+
+#planning-console-panel .planning-project-select {
+    width: 100%;
+    min-width: 16rem;
+    max-width: 34rem;
+    min-height: 2.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+#planning-console-panel .planning-toolbar-summary {
+    color: var(--planning-muted);
+}
+
+#planning-console-panel #planning-summary-badge {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+#planning-console-panel .planning-icon-btn {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--planning-rule);
+    border-radius: 0.3rem;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease;
+}
+
+#planning-console-panel .planning-icon-btn:not(:disabled) {
+    cursor: pointer;
+}
+
+#planning-console-panel .planning-icon-btn:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+#planning-console-panel .planning-icon-btn:focus-visible {
+    outline: 2px solid rgba(143, 184, 199, 0.55);
+    outline-offset: 2px;
+}
+
+#planning-console-panel .planning-icon-btn svg {
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+#planning-console-panel .planning-edit-action {
+    color: var(--planning-accent);
+}
+
+#planning-console-panel .planning-edit-action:not(:disabled):hover {
+    background-color: rgba(143, 184, 199, 0.12);
+    border-color: var(--planning-accent);
+}
+
+#planning-console-panel .planning-create-action {
+    color: #72c98e;
+}
+
+#planning-console-panel .planning-create-action:not(:disabled):hover {
+    background-color: rgba(114, 201, 142, 0.12);
+    border-color: #72c98e;
+}
+
+#planning-console-panel .planning-delete-action,
+#planning-console-panel .planning-delete-initiative-btn,
+#planning-console-panel .planning-delete-phase-btn,
+#planning-console-panel .planning-delete-step-btn {
+    color: #ff9b9b !important;
+    border-color: rgba(255, 112, 112, 0.72) !important;
+}
+
+#planning-console-panel .planning-delete-action:not(:disabled):hover,
+#planning-console-panel .planning-delete-initiative-btn:not(:disabled):hover,
+#planning-console-panel .planning-delete-phase-btn:not(:disabled):hover,
+#planning-console-panel .planning-delete-step-btn:not(:disabled):hover {
+    color: #ffffff !important;
+    background-color: rgba(185, 40, 40, 0.72) !important;
+    border-color: #ff8b8b !important;
 }
 
 /* ----------------------------------------------------------------------
@@ -29,8 +138,8 @@
     border-color: var(--planning-rule) !important;
 }
 
-#planning-console-panel .planning-navigator-header,
-#planning-console-panel .planning-workbench-header {
+#planning-console-panel .planning-navigator-header {
+    min-height: 2.7rem;
     background-color: #12171a;
     border-color: var(--planning-rule) !important;
 }
@@ -42,19 +151,6 @@
 
 #planning-console-panel .planning-navigator-section {
     padding: 0.5rem;
-}
-
-#planning-console-panel .planning-navigator-section + .planning-navigator-section {
-    padding-top: 0;
-}
-
-#planning-console-panel .planning-navigator-section-label {
-    padding: 0 0.35rem 0.35rem;
-    color: var(--planning-muted);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
 }
 
 #planning-console-panel .planning-navigator-list {
@@ -139,38 +235,48 @@
     line-height: 1.45;
 }
 
-#planning-console-panel .planning-navigator-depth-1 {
-    padding-left: 1.35rem;
-}
-
-#planning-console-panel .planning-navigator-depth-2 {
-    padding-left: 2rem;
-}
-
 #planning-console-panel .planning-workbench {
     background-color: #0d1012;
-}
-
-#planning-console-panel .planning-workbench-header {
-    min-height: auto;
-    padding-top: 0.55rem !important;
-    padding-bottom: 0.55rem !important;
-}
-
-#planning-console-panel .planning-workbench-title {
-    color: var(--planning-text);
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-}
-
-#planning-console-panel .planning-workbench-context {
-    color: var(--planning-muted) !important;
 }
 
 #planning-console-panel .planning-workbench-content {
     scrollbar-gutter: stable;
     overscroll-behavior: contain;
+}
+
+/* ----------------------------------------------------------------------
+   Initiative
+   ---------------------------------------------------------------------- */
+
+#planning-console-panel .planning-initiative {
+    overflow: hidden;
+    background-color: var(--planning-paper);
+    border-color: var(--planning-rule) !important;
+    border-radius: 0.3rem !important;
+}
+
+#planning-console-panel .planning-initiative > header {
+    padding: 0.65rem 0.85rem !important;
+    background-color: #171c1f;
+    border-bottom-color: var(--planning-rule) !important;
+}
+
+#planning-console-panel .planning-initiative-title {
+    color: var(--planning-text) !important;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+#planning-console-panel .planning-initiative-position,
+#planning-console-panel .planning-initiative-owner,
+#planning-console-panel .planning-initiative-updated {
+    color: var(--planning-muted) !important;
+    font-size: 0.72rem;
+}
+
+#planning-console-panel .planning-initiative-description {
+    color: var(--planning-muted) !important;
+    line-height: 1.45;
 }
 
 /* ----------------------------------------------------------------------
@@ -197,6 +303,10 @@
    Phase sections
    ---------------------------------------------------------------------- */
 
+#planning-console-panel .planning-phase-list {
+    gap: 0.65rem !important;
+}
+
 #planning-console-panel .planning-phase {
     position: relative;
     overflow: hidden;
@@ -206,20 +316,27 @@
 }
 
 #planning-console-panel .planning-phase > header {
+    padding: 0.55rem 0.75rem !important;
     background-color: var(--planning-paper);
     border-bottom-color: var(--planning-rule) !important;
 }
 
 #planning-console-panel .planning-phase-title {
     color: var(--planning-text) !important;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
-    letter-spacing: 0.015em;
+    letter-spacing: 0.01em;
+}
+
+#planning-console-panel .planning-phase-position,
+#planning-console-panel .planning-phase-summary {
+    color: var(--planning-muted) !important;
+    font-size: 0.72rem;
 }
 
 #planning-console-panel .planning-phase-description {
     color: var(--planning-muted) !important;
-    line-height: 1.5;
+    line-height: 1.45;
 }
 
 /* ----------------------------------------------------------------------
@@ -228,7 +345,7 @@
 
 #planning-console-panel .planning-step-list {
     position: relative;
-    padding: 0.35rem 1rem 0.75rem 2.75rem;
+    padding: 0.2rem 0.75rem 0.45rem 2.35rem;
     background-color: var(--planning-section);
 }
 
@@ -236,16 +353,16 @@
     content: "";
     position: absolute;
     top: 0;
-    bottom: 1rem;
-    left: 1.65rem;
+    bottom: 0.7rem;
+    left: 1.4rem;
     width: 1px;
     background-color: var(--planning-guide);
 }
 
 #planning-console-panel .planning-step {
     position: relative;
-    min-height: 4rem;
-    padding: 0.9rem 0.75rem 0.9rem 1rem !important;
+    min-height: 3rem;
+    padding: 0.65rem 0.55rem 0.65rem 0.8rem !important;
     background: transparent;
     border-bottom: 1px solid rgba(157, 166, 173, 0.22) !important;
 }
@@ -257,9 +374,9 @@
 #planning-console-panel .planning-step::before {
     content: "";
     position: absolute;
-    top: 1.55rem;
-    left: -1.1rem;
-    width: 1.1rem;
+    top: 1.25rem;
+    left: -0.95rem;
+    width: 0.95rem;
     height: 1px;
     background-color: var(--planning-guide);
 }
@@ -267,7 +384,7 @@
 #planning-console-panel .planning-step::after {
     content: "";
     position: absolute;
-    top: 1.35rem;
+    top: 1.05rem;
     left: -0.15rem;
     width: 0.4rem;
     height: 0.4rem;
@@ -278,23 +395,24 @@
 
 #planning-console-panel .planning-step-position {
     min-width: 2rem;
-    padding: 0.25rem 0.4rem;
+    padding: 0.2rem 0.35rem;
     background: transparent !important;
     color: var(--planning-muted) !important;
     border-color: var(--planning-guide) !important;
+    font-size: 0.7rem;
     font-weight: 500;
 }
 
 #planning-console-panel .planning-step-title {
     color: var(--planning-text) !important;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
 #planning-console-panel .planning-step-description {
     max-width: 72rem;
     color: var(--planning-muted) !important;
-    line-height: 1.5;
+    line-height: 1.45;
 }
 
 #planning-console-panel .planning-step-validation,
@@ -302,7 +420,7 @@
     max-width: 72rem;
     padding-left: 0.75rem;
     border-left: 2px solid rgba(143, 184, 199, 0.45);
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
 #planning-console-panel .planning-step-validation-description,
@@ -321,7 +439,7 @@
    ---------------------------------------------------------------------- */
 
 #planning-console-panel .planning-step-form-panel {
-    margin-left: 1.65rem;
+    margin-left: 1.4rem;
     background-color: var(--planning-section) !important;
     border-left: 1px solid var(--planning-guide);
     border-bottom-color: var(--planning-rule) !important;
@@ -334,6 +452,25 @@
 @media (max-width: 900px) {
     #planning-console-panel {
         --planning-navigator-width: 13rem;
+    }
+
+    #planning-console-panel .planning-toolbar {
+        flex-wrap: wrap;
+    }
+
+    #planning-console-panel .planning-project-controls {
+        min-width: 18rem;
+        max-width: none;
+    }
+
+    #planning-console-panel .planning-project-select {
+        min-width: 12rem;
+        max-width: none;
+    }
+
+    #planning-console-panel .planning-toolbar-summary {
+        width: 100%;
+        margin-left: 0 !important;
     }
 
     #planning-console-panel #planning-initiative-form-panel {
@@ -365,5 +502,5 @@
 }
 
 /* ======================================================================
-   END: PLANNING_DOCUMENT_HIERARCHY (PATCH 1 OF 1)
+   END: PLANNING_DOCUMENT_HIERARCHY
    ====================================================================== */

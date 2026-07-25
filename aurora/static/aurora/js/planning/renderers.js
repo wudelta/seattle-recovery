@@ -301,11 +301,6 @@
             activeProject
         );
 
-        workspace.renderNavigatorProject(
-            activeProject,
-            initiativeOptions.length
-        );
-
         $("#planning-error-state").addClass("d-none");
 
         $("#planning-empty-state")
@@ -355,53 +350,17 @@
         const initiativeCount = initiativeOptions.length;
         const phaseCount = summary.phase_count || 0;
         const stepCount = summary.step_count || 0;
-        const projectTitle = activeProject
-            ? activeProject.title
-            : "No Project";
-
-        const initiativeStatus = renderedInitiative.status
-            ? {
-                value: renderedInitiative.status,
-                label: (
-                    renderedInitiative.status_label
-                    || renderedInitiative.status
-                ),
-            }
-            : null;
-
-        workspace.setWorkbenchHeader(
-            (
-                renderedInitiative.title
-                || "Untitled Initiative"
-            ),
-            (
-                `${projectTitle} · `
-                + `${phaseCount} phase`
-                + `${phaseCount === 1 ? "" : "s"} · `
-                + `${stepCount} step`
-                + `${stepCount === 1 ? "" : "s"}`
-            ),
-            initiativeStatus
-        );
 
         $("#planning-summary-badge")
             .removeClass("text-danger text-info")
             .addClass("text-success")
             .text(
-                `${phaseCount} phase`
+                `${initiativeCount} initiative`
+                + `${initiativeCount === 1 ? "" : "s"} · `
+                + `${phaseCount} phase`
                 + `${phaseCount === 1 ? "" : "s"} · `
                 + `${stepCount} step`
                 + `${stepCount === 1 ? "" : "s"}`
-            );
-
-        $("#planning-status-bar")
-            .removeClass("text-danger text-muted")
-            .addClass("text-success")
-            .text(
-                `${projectTitle} · `
-                + `${initiativeCount} initiative`
-                + `${initiativeCount === 1 ? "" : "s"} · `
-                + `showing ${renderedInitiative.title}.`
             );
     }
 

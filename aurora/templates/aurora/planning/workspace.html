@@ -10,7 +10,7 @@
     <aside
         id="planning-navigator"
         class="planning-navigator d-flex flex-column flex-shrink-0 border-end border-secondary"
-        aria-label="Decision Engine navigator"
+        aria-label="Initiative navigator"
     >
         <header
             class="planning-navigator-header d-flex align-items-center justify-content-between gap-2 px-2 py-2 border-bottom border-secondary"
@@ -22,12 +22,12 @@
             <button
                 id="planning-create-initiative-btn"
                 type="button"
-                class="btn btn-sm btn-outline-success"
+                class="planning-icon-btn planning-create-action"
                 aria-label="Create Initiative"
                 title="Create Initiative"
                 disabled
             >
-                +
+                <span aria-hidden="true">+</span>
             </button>
         </header>
 
@@ -35,52 +35,6 @@
             class="planning-navigator-body flex-grow-1 overflow-auto"
             style="min-height: 0;"
         >
-            <section class="planning-navigator-section">
-                <div
-                    class="d-flex align-items-center justify-content-between gap-2"
-                >
-                    <div class="planning-navigator-section-label">
-                        Project
-                    </div>
-
-                    <button
-                        id="planning-edit-project-btn"
-                        type="button"
-                        class="btn btn-sm btn-outline-primary"
-                        aria-label="Edit Project"
-                        title="Edit Project"
-                        disabled
-                    >
-                        Edit
-                    </button>
-                </div>
-
-                <button
-                    id="planning-navigator-project"
-                    type="button"
-                    class="planning-navigator-item planning-navigator-project text-start"
-                    disabled
-                >
-                    <span class="planning-navigator-marker"></span>
-
-                    <span class="planning-navigator-item-body">
-                        <span
-                            id="planning-navigator-project-title"
-                            class="planning-navigator-item-title"
-                        >
-                            Loading project...
-                        </span>
-
-                        <span
-                            id="planning-navigator-project-meta"
-                            class="planning-navigator-item-meta"
-                        >
-                            Waiting for persisted context
-                        </span>
-                    </span>
-                </button>
-            </section>
-
             <section class="planning-navigator-section">
                 <div
                     id="planning-navigator-initiative-list"
@@ -99,32 +53,6 @@
         class="planning-workbench flex-grow-1 d-flex flex-column overflow-hidden"
         style="min-width: 0; min-height: 0;"
     >
-        <header
-            id="planning-workbench-header"
-            class="planning-workbench-header flex-shrink-0 border-bottom border-secondary px-3 py-2"
-        >
-            <div class="d-flex align-items-center gap-3">
-                <div
-                    id="planning-workbench-title"
-                    class="planning-workbench-title flex-grow-1 text-truncate"
-                >
-                    Decision Engine
-                </div>
-
-                <div
-                    id="planning-workbench-context"
-                    class="planning-workbench-context small text-muted text-truncate"
-                >
-                    Select an Initiative to begin.
-                </div>
-
-                <div
-                    id="planning-workbench-status"
-                    class="planning-workbench-status flex-shrink-0"
-                ></div>
-            </div>
-        </header>
-
         <div
             id="planning-workbench-content"
             class="planning-workbench-content flex-grow-1 overflow-auto p-3"
