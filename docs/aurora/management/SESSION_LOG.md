@@ -1181,3 +1181,138 @@ Priority order:
 4. Associate Steps with repository artifacts.
 5. Begin Execution Mode so the Decision Engine becomes the authoritative engineering work queue.
 6. Integrate Wu so implementation plans can be generated directly into the persisted planning hierarchy.
+
+---
+
+# Session — 2026-07-24
+
+## Objective
+
+Continue implementation of the Decision Engine Planning subsystem while evaluating a long-term architectural reorganization of Aurora.
+
+---
+
+## Decision Engine
+
+Planning hierarchy expanded to fully support:
+
+```text
+Project
+    Initiative
+        Phase
+            Step
+```
+
+Project CRUD implementation was completed.
+
+The remaining work now focuses on improving the Planning workspace user experience rather than expanding the underlying data model.
+
+---
+
+## Planning Workspace Refactor
+
+The largest accomplishment of the session was decomposing the Planning workspace into modular template components.
+
+The previous monolithic `planning_console_panel.html` (approximately 800 lines) was replaced by a composition-root architecture.
+
+New Planning template components include:
+
+```text
+aurora/templates/aurora/planning/
+
+    console_layout.html
+    project_form.html
+    initiative_form.html
+    workspace.html
+    initiative_template.html
+    phase_template.html
+    step_template.html
+```
+
+`planning_console_panel.html` now serves primarily as a composition file composed of `{% include %}` statements.
+
+Behavior was successfully validated after the refactor.
+
+This establishes the preferred template architecture for future Aurora subsystems.
+
+---
+
+## JavaScript Refactor
+
+Planning JavaScript began transitioning from a single monolithic file toward subsystem-specific modules.
+
+New modules include:
+
+* `planning/projects.js`
+
+The legacy `planning.js` was intentionally removed from active use.
+
+A temporary `planning.js.bak` backup remains outside version control until additional validation is completed.
+
+---
+
+## Architectural Direction
+
+A significant architectural realization occurred during this session.
+
+Aurora has historically followed Django's organization:
+
+```text
+templates/
+static/
+models.py
+```
+
+The preferred long-term direction is now subsystem-oriented organization.
+
+Instead of grouping files primarily by artifact type, each subsystem should eventually own its own implementation.
+
+Example:
+
+```text
+planning/
+    api/
+    models.py
+    templates/
+    static/
+    services/
+```
+
+This significantly reduces implementation complexity, localizes engineering context, and is expected to improve AI reasoning by limiting the amount of repository context required for individual implementation tasks.
+
+The Planning subsystem will serve as the reference implementation for this architectural approach.
+
+---
+
+## Workflow Evolution
+
+The Aurora implementation protocol was simplified during this session.
+
+The previous numbered patch workflow has been retired.
+
+The implementation protocol now centers around complete replacement units.
+
+Key changes:
+
+* one complete replacement unit per delivery;
+* anchored regions use only `FILE`, `START`, and `END`;
+* patch numbering has been eliminated;
+* the GO Loop remains the standard operating procedure;
+* validation follows every implementation step.
+
+This workflow proved substantially simpler while preserving deterministic engineering practices.
+
+---
+
+## Next Session
+
+Continue Planning workspace improvements.
+
+Immediate priorities:
+
+1. Project selector.
+2. Initiative selector filtered by Project.
+3. Display only the selected Initiative in the workbench.
+4. Continue decomposing the Planning subsystem into localized implementation modules where appropriate.
+
+The Planning subsystem is now positioned to evolve rapidly without reintroducing large monolithic templates or JavaScript files.
