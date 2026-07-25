@@ -17,6 +17,10 @@ from aurora.subsystems.planning.api.phases import (
     delete_phase,
     save_phase,
 )
+from aurora.subsystems.planning.api.projects import (
+    delete_project,
+    save_project,
+)
 from aurora.subsystems.planning.api.steps import (
     delete_step,
     save_step,
@@ -57,6 +61,15 @@ def planning_endpoint(request):
     operation = str(
         payload.get("operation", "create_initiative")
     ).strip().lower()
+
+    if operation in {
+        "create_project",
+        "save_project",
+    }:
+        return save_project(request, payload)
+
+    if operation == "delete_project":
+        return delete_project(payload)
 
     if operation in {
         "create_initiative",
