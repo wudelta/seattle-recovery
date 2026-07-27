@@ -198,27 +198,48 @@
 <script src="{% static 'aurora/js/delta_notes.js' %}"></script>
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
 
+
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/aurora_console.html -->
 <!-- START: PLANNING_MODULE_SCRIPT_LOADERS -->
 <!-- ====================================================================== -->
+
+<!-- Foundation -->
 <script src="{% static 'aurora/js/planning/state.js' %}"></script>
 <script src="{% static 'aurora/js/planning/utilities.js' %}"></script>
 <script src="{% static 'aurora/js/planning/workspace.js' %}"></script>
-<script src="{% static 'aurora/js/planning/step_renderer.js' %}"></script>
-<script src="{% static 'aurora/js/planning/phase_renderer.js' %}"></script>
-<script src="{% static 'aurora/js/planning/initiative_renderer.js' %}"></script>
-<script src="{% static 'aurora/js/planning/workspace_renderer.js' %}"></script>
-<script src="{% static 'aurora/js/planning/data.js' %}"></script>
-<script src="{% static 'aurora/js/planning/projects.js' %}"></script>
-<script src="{% static 'aurora/js/planning/initiatives.js' %}"></script>
-<script src="{% static 'aurora/js/planning/project_events.js' %}"></script>
-<script src="{% static 'aurora/js/planning/phases.js' %}"></script>
-<script src="{% static 'aurora/js/planning/steps.js' %}"></script>
-<script src="{% static 'aurora/js/planning/events.js' %}"></script>
+
+<!-- API -->
+<script src="{% static 'aurora/js/planning/api/planning_api.js' %}"></script>
+
+<!-- Renderers -->
+<script src="{% static 'aurora/js/planning/renderers/initiative_renderer.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers/navigator_renderer.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers/phase_renderer.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers/project_renderer.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers/step_renderer.js' %}"></script>
+<script src="{% static 'aurora/js/planning/renderers/workspace_renderer.js' %}"></script>
+
+<!-- Orchestrator -->
+<script src="{% static 'aurora/js/planning/orchestrator.js' %}"></script>
+
+<!-- Controllers -->
+<script src="{% static 'aurora/js/planning/controllers/initiatives.js' %}"></script>
+<script src="{% static 'aurora/js/planning/controllers/phases.js' %}"></script>
+<script src="{% static 'aurora/js/planning/controllers/projects.js' %}"></script>
+<script src="{% static 'aurora/js/planning/controllers/steps.js' %}"></script>
+
+<!-- Events -->
+<script src="{% static 'aurora/js/planning/events/initiative_events.js' %}"></script>
+<script src="{% static 'aurora/js/planning/events/phase_events.js' %}"></script>
+<script src="{% static 'aurora/js/planning/events/project_events.js' %}"></script>
+<script src="{% static 'aurora/js/planning/events/step_events.js' %}"></script>
+<script src="{% static 'aurora/js/planning/events/workspace_events.js' %}"></script>
+
 <!-- ====================================================================== -->
 <!-- END: PLANNING_MODULE_SCRIPT_LOADERS -->
 <!-- ====================================================================== -->
+
 
 <script src="{% static 'js/jstree.min.js' %}"></script>
 <script src="{% static 'js/vs/loader.js' %}"></script>

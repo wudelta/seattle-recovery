@@ -1,4 +1,4 @@
-# Aurora Decision Engine Workflow (Manual Mode)
+# Aurora Decision Engine Workflow
 
 ## Purpose
 
@@ -16,9 +16,9 @@ The Decision Engine is the authoritative source of engineering intent.
 
 # Current Status
 
-## Phase 1 — Planning (In Progress)
+## Phase 1 — Planning Workspace (Largely Complete)
 
-Aurora now supports database-backed planning using the hierarchy:
+Aurora now provides a database-backed Planning workspace built around the engineering hierarchy:
 
 ```text
 Project
@@ -27,67 +27,156 @@ Project
             Step
 ```
 
-Projects represent products, applications, or engineering domains.
+Planning is now the authoritative source of engineering intent.
+
+Projects represent complete engineering efforts.
 
 Each Project contains one or more Initiatives.
 
-Each Initiative is decomposed into ordered Phases.
+Each Initiative contains one or more ordered Phases.
 
-Each Phase is decomposed into ordered Steps.
+Each Phase contains one or more ordered Steps.
 
-Planning is now considered the authoritative source of engineering intent.
+The Planning workspace now supports:
 
-Execution automation has not yet been enabled.
+- database persistence
+- complete Project CRUD
+- complete Initiative CRUD
+- complete Phase CRUD
+- complete Step CRUD
+- AJAX editing
+- focused workspace navigation
+- modular subsystem architecture
+
+The next major milestone is Execution.
+
+---
+
+# Source of Truth
+
+The Decision Engine database is Aurora's authoritative engineering memory.
+
+Projects, Initiatives, Phases, and Steps define engineering intent.
+
+All exported markdown, session summaries, project status documents, and AI context should ultimately be generated from this hierarchy.
+
+Documentation becomes an output of the Decision Engine rather than its source.
+
+---
+
+# Engineering Hierarchy
+
+```text
+Project
+    Initiative
+        Phase
+            Step
+```
+
+## Project
+
+Projects represent complete engineering efforts.
+
+Examples:
+
+- Aurora
+- HopeHub
+
+A Project owns every engineering artifact beneath it.
+
+---
+
+## Initiative
+
+An Initiative represents a major engineering objective.
+
+Examples include:
+
+- Decision Engine
+- Component Registry
+- Workspace Synchronization
+
+An Initiative answers one question:
+
+> What are we trying to accomplish?
+
+---
+
+## Phase
+
+A Phase represents a logical milestone within an Initiative.
+
+Examples:
+
+- Planning
+- Execution
+- Validation
+
+A Phase answers:
+
+> What stage are we in?
+
+---
+
+## Step
+
+A Step is the smallest independently executable engineering task.
+
+Every Step should be:
+
+- understandable
+- independently executable
+- independently verifiable
+
+Each Step records information such as:
+
+- description
+- assumptions
+- estimated effort
+- confidence
+- validation requirements
+
+Future revisions will associate Steps with:
+
+- repository artifacts
+- implementation history
+- engineering discussions
+- architectural decisions
 
 ---
 
 # Current Implementation Status
 
-Implemented:
+## Implemented
 
-* Project model
-* Initiative model
-* Phase model
-* Step model
-* database persistence
-* Project CRUD
-* Initiative CRUD
-* Phase CRUD
-* Step CRUD
-* modular Planning workspace
-* AJAX-based editing
-* subsystem-oriented Planning architecture
+- Project model
+- Initiative model
+- Phase model
+- Step model
+- database persistence
+- Project CRUD
+- Initiative CRUD
+- Phase CRUD
+- Step CRUD
+- Project selector
+- focused Initiative navigation
+- AJAX editing
+- modular Planning workspace
 
-Currently in progress:
+## Current Focus
 
-* Project selector
-* Initiative selector
-* focused workspace navigation
+- subsystem-oriented repository architecture
+- Execution workspace design
+- engineering context preservation
 
-Planned:
+## Planned
 
-* drag-and-drop ordering
-* dependency tracking
-* repository relationships
-* execution mode
-* validation recording
-* AI-assisted planning
-
----
-
-# Core Philosophy
-
-The human should spend as little time as possible asking:
-
-* What was I doing?
-* Where is that file?
-* What comes next?
-* Did we already decide this?
-* Is this complete?
-
-The Decision Engine should answer those questions automatically.
-
-Every interaction with Aurora should reinforce continuity of thought.
+- drag-and-drop ordering
+- dependency relationships
+- repository artifact relationships
+- Execution workspace
+- validation recording
+- AI-assisted implementation planning
 
 ---
 
@@ -101,11 +190,11 @@ Ideas are captured with minimal friction.
 
 Sources may include:
 
-* Delta Notes
-* conversations with Wu
-* bugs
-* feature requests
-* architectural observations
+- Delta Notes
+- conversations with Wu
+- bugs
+- feature requests
+- architectural observations
 
 Captured ideas are intentionally lightweight.
 
@@ -119,13 +208,13 @@ Interesting ideas become Initiatives.
 
 An Initiative defines:
 
-* objective
-* success criteria
-* scope
-* priority
-* assumptions
+- objective
+- scope
+- success criteria
+- assumptions
+- priority
 
-An Initiative answers one question:
+An Initiative answers:
 
 > What are we trying to accomplish?
 
@@ -135,26 +224,9 @@ An Initiative answers one question:
 
 Each Initiative is decomposed into ordered Phases.
 
-Each Phase is decomposed into ordered Steps.
+Each Phase is decomposed into independently verifiable Steps.
 
-Every Step should be independently understandable and independently verifiable.
-
-Each Step records:
-
-* description
-* estimated effort
-* confidence
-* assumptions
-* validation requirements
-
-Future revisions will associate Steps with:
-
-* repository artifacts
-* architectural discussions
-* implementation history
-* engineering decisions
-
-The persisted plan becomes the authoritative engineering roadmap.
+Planning produces the authoritative engineering roadmap.
 
 ---
 
@@ -164,24 +236,18 @@ Execution focuses on exactly one active Step.
 
 Execution Mode has not yet been implemented.
 
-When implemented, the Decision Engine will automatically provide:
+When completed, Aurora will automatically surface:
 
-* current Project
-* current Initiative
-* current Phase
-* current Step
-* related repository artifacts
-* previous architectural decisions
-* validation requirements
-* implementation notes
+- active Project
+- active Initiative
+- active Phase
+- active Step
+- related repository artifacts
+- implementation history
+- architectural discussions
+- validation requirements
 
-Execution should remain tightly focused.
-
-No searching.
-
-No rebuilding context.
-
-Only the information required for the current engineering task should be surfaced.
+Execution should eliminate unnecessary context switching.
 
 ---
 
@@ -193,13 +259,13 @@ A Step is complete only after validation succeeds.
 
 Validation evidence will eventually include:
 
-* implementation notes
-* validation notes
-* reviewer
-* completion timestamp
-* automated validation results
+- implementation notes
+- validation notes
+- reviewer
+- completion timestamp
+- automated validation results
 
-Only then should the Decision Engine advance to the next Step.
+Only then should Aurora advance to the next Step.
 
 ---
 
@@ -209,42 +275,23 @@ Progress is derived from validated work.
 
 When every Step has been validated:
 
-* the Phase completes automatically.
+- the Phase completes automatically.
 
-When every Phase has been completed:
+When every Phase has completed:
 
-* the Initiative completes automatically.
+- the Initiative completes automatically.
 
-When every Initiative has been completed:
+When every Initiative has completed:
 
-* the Project completes automatically.
+- the Project completes automatically.
 
 Manual progress percentages should never be required.
 
 ---
 
-# Workspace Philosophy
+# Workspace Architecture
 
-Aurora should feel like one continuously evolving engineering environment.
-
-Every major subsystem should integrate with the Decision Engine rather than existing independently.
-
-Examples include:
-
-* Delta Notes
-* Wu
-* Anamod
-* Blueprint
-* Telemetry
-* Component Registry
-
-Each subsystem contributes information to the active engineering context.
-
----
-
-# Workspace Pattern
-
-Every Aurora workspace follows the same structure.
+Every Aurora workspace follows the same architectural pattern.
 
 ## Navigator
 
@@ -252,12 +299,12 @@ Provides orientation.
 
 Examples:
 
-* Projects
-* Initiatives
-* Files
-* Components
+- Projects
+- Initiatives
+- Files
+- Components
 
-The Navigator answers:
+Answers:
 
 > Where am I?
 
@@ -269,15 +316,15 @@ Provides focused work.
 
 Only one primary activity occupies the Workbench.
 
-Examples include:
+Examples:
 
-* planning
-* implementation
-* repository exploration
-* documentation
-* code review
+- Planning
+- Execution
+- Documentation
+- Repository exploration
+- Code review
 
-The Workbench answers:
+Answers:
 
 > What am I doing?
 
@@ -285,24 +332,24 @@ The Workbench answers:
 
 ## Context
 
-Always visible.
+Provides continuous engineering awareness.
 
-Current context should include:
+Current context includes:
 
-* active Project
-* active Initiative
-* active Phase
-* active Step
+- active Project
+- active Initiative
+- active Phase
+- active Step
 
 Future context will also include:
 
-* related repository artifacts
-* active discussions
-* assumptions
-* validation status
-* implementation history
+- repository artifacts
+- architectural discussions
+- implementation history
+- assumptions
+- validation status
 
-The Context panel answers:
+Answers:
 
 > Why am I doing this?
 
@@ -314,11 +361,11 @@ The Context panel answers:
 
 Responsible for:
 
-* vision
-* architecture
-* priorities
-* engineering judgment
-* final decisions
+- vision
+- architecture
+- priorities
+- engineering judgment
+- final decisions
 
 ---
 
@@ -326,14 +373,14 @@ Responsible for:
 
 Responsible for:
 
-* preserving engineering context
-* organizing engineering work
-* sequencing execution
-* maintaining progress
-* recording validation
-* identifying the next action
+- preserving engineering context
+- organizing engineering work
+- sequencing execution
+- maintaining progress
+- recording validation
+- identifying the next engineering action
 
-The Decision Engine is the authoritative engineering memory.
+The Decision Engine is Aurora's engineering memory.
 
 ---
 
@@ -341,15 +388,15 @@ The Decision Engine is the authoritative engineering memory.
 
 Responsible for:
 
-* planning assistance
-* implementation guidance
-* repository reasoning
-* architectural discussion
-* generation of proposed execution plans
+- planning assistance
+- implementation guidance
+- repository reasoning
+- architectural discussion
+- proposed execution plans
 
 Wu assists the engineer.
 
-Wu does not become the source of truth.
+The Decision Engine remains the source of truth.
 
 ---
 
@@ -365,9 +412,18 @@ The Decision Engine coordinates that work.
 
 # Architectural Direction
 
-Aurora is transitioning toward a subsystem-oriented architecture.
+Aurora is transitioning from a repository organized primarily by Django artifact type toward one organized by engineering subsystem.
 
-Rather than organizing primarily by Django artifact type, each subsystem should eventually own its own implementation:
+Instead of:
+
+```text
+models.py
+views.py
+templates/
+static/
+```
+
+Aurora is moving toward:
 
 ```text
 planning/
@@ -378,31 +434,38 @@ planning/
     services/
 ```
 
-This improves locality of reference, simplifies refactoring, and allows AI workers to reason about one subsystem at a time.
+Each subsystem should own its implementation.
 
-The Planning subsystem serves as the reference implementation for this architectural direction.
+This architecture:
+
+- improves locality of reference
+- reduces file size
+- simplifies refactoring
+- reduces AI context requirements
+- enables deterministic workers
+- improves long-term maintainability
+
+The Planning subsystem serves as the reference implementation for this direction.
 
 ---
 
 # Near-Term Roadmap
 
-Current implementation priorities are:
-
-1. Project selector
-2. Initiative selector
-3. Focused Planning workspace
-4. Phase and Step ordering
-5. Automatic lifecycle progression
-6. Repository artifact relationships
-7. Execution Mode
-8. Validation recording
-9. AI-generated implementation plans
+1. Repository subsystem reorganization
+2. Phase and Step ordering
+3. Automatic lifecycle progression
+4. Repository artifact relationships
+5. Execution workspace
+6. Validation workflow
+7. AI-generated implementation plans
+8. Context-aware engineering assistance
+9. Autonomous engineering minions
 
 ---
 
 # Success Criteria
 
-Aurora succeeds when the user no longer manages engineering context manually.
+Aurora succeeds when the engineer no longer manages engineering context manually.
 
 Instead of asking:
 
@@ -410,16 +473,16 @@ Instead of asking:
 
 Aurora immediately answers:
 
-* Here is the active Project.
-* Here is the active Initiative.
-* Here is the active Phase.
-* Here is the active Step.
-* Here is why it matters.
-* Here are the related repository artifacts.
-* Here are the assumptions.
-* Here is what must be validated.
-* Here is the next engineering action.
+- Here is the active Project.
+- Here is the active Initiative.
+- Here is the active Phase.
+- Here is the active Step.
+- Here is why it matters.
+- Here are the related repository artifacts.
+- Here are the assumptions.
+- Here is what must be validated.
+- Here is the next engineering action.
 
 At that point, the Decision Engine is no longer simply a planning tool.
 
-It becomes the persistent operating system for the engineering process.
+It becomes the operating system for the engineering process.

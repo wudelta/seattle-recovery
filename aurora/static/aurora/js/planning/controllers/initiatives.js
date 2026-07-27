@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/initiatives.js
+// FILE: aurora/static/aurora/js/planning/controllers/initiatives.js
 // START: INITIATIVE_CREATION_CONTROLLER
 // ======================================================================
 (function(window, $) {
@@ -12,7 +12,7 @@
     const state = Planning.state;
     const utilities = Planning.utilities;
     const workspace = Planning.workspace;
-    const data = Planning.data;
+    const orchestrator = Planning.orchestrator;
 
     function clearInitiativeFormError() {
         $("#planning-initiative-form-error")
@@ -219,7 +219,7 @@
 
                 closeInitiativeForm();
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug(),
                     state.getActiveInitiativeId()
                 );
@@ -304,7 +304,7 @@
 
                 closeInitiativeForm();
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug()
                 );
             })

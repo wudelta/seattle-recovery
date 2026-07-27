@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/project_events.js
+// FILE: aurora/static/aurora/js/planning/events/project_events.js
 // START: PROJECT_EVENT_BINDINGS
 // ======================================================================
 (function(window, $) {
@@ -10,7 +10,7 @@
     );
 
     const state = Planning.state;
-    const data = Planning.data;
+    const orchestrator = Planning.orchestrator;
     const projects = Planning.projects;
     const initiatives = Planning.initiatives;
 
@@ -27,7 +27,7 @@
                 projects.closeForm();
                 initiatives.closeForm();
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug()
                 );
             });

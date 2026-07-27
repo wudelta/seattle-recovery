@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/initiative_renderer.js
+// FILE: aurora/static/aurora/js/planning/renderers/initiative_renderer.js
 // START: PLANNING_INITIATIVE_RENDERER
 // ======================================================================
 (function(window, $) {

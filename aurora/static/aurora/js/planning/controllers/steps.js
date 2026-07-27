@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/steps.js
+// FILE: aurora/static/aurora/js/planning/controllers/steps.js
 // START: STEP_CREATION_CONTROLLER
 // ======================================================================
 (function(window, $) {
@@ -11,7 +11,7 @@
 
     const state = Planning.state;
     const utilities = Planning.utilities;
-    const data = Planning.data;
+    const orchestrator = Planning.orchestrator;
 
     function clearStepFormError($phase) {
         $phase
@@ -267,7 +267,7 @@
 
                 closeStepForm($phase);
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug(),
                     state.getActiveInitiativeId()
                 );
@@ -354,7 +354,7 @@
                     return;
                 }
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug(),
                     state.getActiveInitiativeId()
                 );

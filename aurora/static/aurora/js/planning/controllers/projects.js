@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_CONTROLLER_SETUP
 // ======================================================================
 (function(window, $) {
@@ -12,14 +12,14 @@
     const state = Planning.state;
     const utilities = Planning.utilities;
     const workspace = Planning.workspace;
-    const data = Planning.data;
+    const orchestrator = Planning.orchestrator;
 // ======================================================================
 // END: PROJECT_CONTROLLER_SETUP
 // ======================================================================
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_FORM_ERRORS
 // ======================================================================
     function clearProjectFormError() {
@@ -51,7 +51,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_FORM_LIFECYCLE
 // ======================================================================
     function renderProjectAssigneeOptions(selectedUserId) {
@@ -198,7 +198,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_REQUEST_STATES
 // ======================================================================
     function setProjectSaveState(isSaving) {
@@ -229,7 +229,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_DELETE_GUARD
 // ======================================================================
     function projectDeleteBlockedMessage(project) {
@@ -262,7 +262,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_SAVE
 // ======================================================================
     function saveProject() {
@@ -358,7 +358,7 @@
 
                 closeProjectForm();
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     response.project.slug
                 );
             })
@@ -384,7 +384,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_DELETE
 // ======================================================================
     function deleteProject(project) {
@@ -468,7 +468,7 @@
 
                 closeProjectForm();
 
-                data.loadPlanningData();
+                orchestrator.loadPlanningData();
             })
             .fail(function(xhr) {
                 const response = xhr.responseJSON || {};
@@ -492,7 +492,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/projects.js
+// FILE: aurora/static/aurora/js/planning/controllers/projects.js
 // START: PROJECT_CONTROLLER_PUBLIC_API
 // ======================================================================
     Planning.projects = {

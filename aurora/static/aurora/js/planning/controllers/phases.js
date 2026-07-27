@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/phases.js
+// FILE: aurora/static/aurora/js/planning/controllers/phases.js
 // START: PHASE_CREATION_CONTROLLER
 // ======================================================================
 (function(window, $) {
@@ -11,7 +11,7 @@
 
     const state = Planning.state;
     const utilities = Planning.utilities;
-    const data = Planning.data;
+    const orchestrator = Planning.orchestrator;
 
     function clearPhaseFormError($initiative) {
         $initiative
@@ -249,7 +249,7 @@
 
                 closePhaseForm($initiative);
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug(),
                     state.getActiveInitiativeId()
                 );
@@ -339,7 +339,7 @@
                     return;
                 }
 
-                data.loadPlanningData(
+                orchestrator.loadPlanningData(
                     state.getActiveProjectSlug(),
                     state.getActiveInitiativeId()
                 );

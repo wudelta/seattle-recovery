@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/renderers.js
+// FILE: aurora/static/aurora/js/planning/renderers/workspace_renderer.js
 // START: PLANNING_RENDERER_SETUP
 // ======================================================================
 (function(window, $) {
@@ -10,7 +10,6 @@
     );
 
     const state = Planning.state;
-    const utilities = Planning.utilities;
     const workspace = Planning.workspace;
 // ======================================================================
 // END: PLANNING_RENDERER_SETUP
@@ -18,7 +17,7 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/renderers.js
+// FILE: aurora/static/aurora/js/planning/renderers/workspace_renderer.js
 // START: PLANNING_PAYLOAD_RENDERER
 // ======================================================================
     function renderPlanningPayload(payload) {
@@ -42,7 +41,7 @@
         state.setUsers(users);
         state.setActiveProject(activeProject);
 
-        workspace.renderProjectSelector(
+        Planning.renderers.project.renderSelector(
             projects,
             activeProject
         );
@@ -67,7 +66,7 @@
         ) {
             state.clearActiveInitiative();
 
-            workspace.renderNavigatorInitiatives(
+            Planning.renderers.navigator.renderInitiatives(
                 [],
                 null
             );
@@ -84,7 +83,7 @@
             renderedInitiative
         );
 
-        workspace.renderNavigatorInitiatives(
+        Planning.renderers.navigator.renderInitiatives(
             initiativeOptions,
             renderedInitiative.id
         );
@@ -117,14 +116,14 @@
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/renderers.js
+// FILE: aurora/static/aurora/js/planning/renderers/workspace_renderer.js
 // START: PLANNING_RENDERER_PUBLIC_API
 // ======================================================================
     Planning.renderers = Planning.renderers || {};
 
-    Planning.renderers.renderPlanningPayload = (
-        renderPlanningPayload
-    );
+    Planning.renderers.workspace = {
+        renderPayload: renderPlanningPayload,
+    };
 })(window, jQuery);
 // ======================================================================
 // END: PLANNING_RENDERER_PUBLIC_API

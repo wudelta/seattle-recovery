@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/phase_renderer.js 
+// FILE: aurora/static/aurora/js/planning/renderers/phase_renderer.js
 // START: PLANNING_PHASE_RENDERER
 // ======================================================================
 (function(window, $) {
