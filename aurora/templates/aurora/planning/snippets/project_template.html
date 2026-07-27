@@ -1,0 +1,48 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/planning/snippets/project_template.html -->
+<!-- START: PROJECT_TEMPLATE -->
+<!-- ====================================================================== -->
+<div
+    class="planning-project-controls d-flex align-items-center gap-2 flex-grow-1"
+>
+    <label
+        for="planning-project-select"
+        class="visually-hidden"
+    >
+        Active Project
+    </label>
+
+    <select
+        id="planning-project-select"
+        class="planning-project-select form-select bg-black text-light border-secondary"
+        aria-label="Active planning project"
+    >
+        <option value="">
+            Loading projects...
+        </option>
+    </select>
+
+    <button
+        id="planning-edit-project-btn"
+        type="button"
+        class="planning-icon-btn planning-edit-action flex-shrink-0"
+        aria-label="Edit Project"
+        title="Edit Project"
+        disabled
+    >
+        <span aria-hidden="true">✎</span>
+    </button>
+
+    <button
+        id="planning-create-project-btn"
+        type="button"
+        class="planning-icon-btn planning-create-action flex-shrink-0"
+        aria-label="Create Project"
+        title="Create Project"
+    >
+        <span aria-hidden="true">+</span>
+    </button>
+</div>
+<!-- ====================================================================== -->
+<!-- END: PROJECT_TEMPLATE -->
+<!-- ====================================================================== -->
