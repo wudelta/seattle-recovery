@@ -2,12 +2,22 @@
 # FILE: aurora/subsystems/planning/api/projects.py
 # START: PROJECT_PERSISTENCE
 # ======================================================================
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse
 from django.utils.text import slugify
 
-from aurora.models import Project
+from aurora.models import ExecutionStatus, Project
+
+
+User = get_user_model()
+
+
+def _user_display_name(user):
+    """Returns a stable human-readable label for one user."""
+    return user.get_full_name().strip() or user.username
 
 
 def _serialize_project(project):
@@ -19,8 +29,17 @@ def _serialize_project(project):
         "description": project.description,
         "color": project.color,
         "icon": project.icon,
+        "status": project.status,
         "position": project.position,
         "active": project.active,
+        "created_by_id": str(project.created_by_id),
+        "created_by_name": _user_display_name(
+            project.created_by
+        ),
+        "assigned_to_id": str(project.assigned_to_id),
+        "assigned_to_name": _user_display_name(
+            project.assigned_to
+        ),
         "created_at": project.created_at.isoformat(),
         "updated_at": project.updated_at.isoformat(),
     }
@@ -55,10 +74,94 @@ def _parse_active(value):
     return None
 
 
+def _resolve_assigned_user(payload, project):
+    """Resolves an assignee UUID or preserves the existing assignee."""
+    assigned_to_id = str(
+        payload.get("assigned_to_id") or ""
+    ).strip()
+
+    if not assigned_to_id:
+        if project is not None:
+            return project.assigned_to, None
+
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "Project assignment is required.",
+                "field_errors": {
+                    "assigned_to_id": (
+                        "Select a user to assign this Project."
+                    ),
+                },
+            },
+            status=400,
+        )
+
+    try:
+        assigned_to = User.objects.get(
+            pk=assigned_to_id,
+        )
+    except (User.DoesNotExist, ValidationError, ValueError):
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected assignee does not exist.",
+                "field_errors": {
+                    "assigned_to_id": (
+                        "Select a valid user. The assigned_to_id "
+                        "value must be the user's UUID."
+                    ),
+                },
+            },
+            status=400,
+        )
+
+    return assigned_to, None
+
+
+def _parse_project_status(payload, project):
+    """Returns a valid lifecycle status or a field error response."""
+    default_status = (
+        project.status
+        if project is not None
+        else ExecutionStatus.PLANNED
+    )
+
+    status_value = str(
+        payload.get("status") or default_status
+    ).strip().upper()
+
+    if status_value not in ExecutionStatus.values:
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "Project status is invalid.",
+                "field_errors": {
+                    "status": "Select a valid Project status.",
+                },
+            },
+            status=400,
+        )
+
+    return status_value, None
+
+
+def _active_project_conflict(project):
+    """Returns whether another Project already has ACTIVE status."""
+    active_projects = Project.objects.filter(
+        status=ExecutionStatus.ACTIVE,
+    )
+
+    if project is not None:
+        active_projects = active_projects.exclude(
+            pk=project.pk,
+        )
+
+    return active_projects.exists()
+
+
 def save_project(request, payload):
     """Creates or updates one Project."""
-    del request
-
     project_slug = str(
         payload.get("project_slug") or ""
     ).strip()
@@ -74,15 +177,21 @@ def save_project(request, payload):
             return JsonResponse(
                 {
                     "status": "error",
-                    "message": "The selected Project does not exist.",
+                    "message": (
+                        "The selected Project does not exist."
+                    ),
                     "field_errors": {
-                        "project_slug": "Select a valid Project.",
+                        "project_slug": (
+                            "Select a valid Project."
+                        ),
                     },
                 },
                 status=404,
             )
 
-    title = str(payload.get("title", "")).strip()
+    title = str(
+        payload.get("title") or ""
+    ).strip()
 
     if not title:
         return JsonResponse(
@@ -97,16 +206,24 @@ def save_project(request, payload):
         )
 
     description = str(
-        payload.get("description", "")
+        payload.get("description") or ""
     ).strip()
 
     color = str(
-        payload.get("color", "")
+        payload.get("color") or ""
     ).strip()
 
     icon = str(
-        payload.get("icon", "")
+        payload.get("icon") or ""
     ).strip()
+
+    status_value, status_error = _parse_project_status(
+        payload,
+        project,
+    )
+
+    if status_error is not None:
+        return status_error
 
     active = _parse_active(
         payload.get(
@@ -121,10 +238,38 @@ def save_project(request, payload):
                 "status": "error",
                 "message": "Project active state is invalid.",
                 "field_errors": {
-                    "active": "Select a valid active state.",
+                    "active": (
+                        "Select a valid active state."
+                    ),
                 },
             },
             status=400,
+        )
+
+    assigned_to, assignment_error = _resolve_assigned_user(
+        payload,
+        project,
+    )
+
+    if assignment_error is not None:
+        return assignment_error
+
+    if (
+        status_value == ExecutionStatus.ACTIVE
+        and _active_project_conflict(project)
+    ):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Another Project is already active.",
+                "field_errors": {
+                    "status": (
+                        "Pause or complete the active Project "
+                        "before activating this one."
+                    ),
+                },
+            },
+            status=409,
         )
 
     created = project is None
@@ -144,13 +289,16 @@ def save_project(request, payload):
                     if highest_position is not None
                     else 0
                 ),
+                created_by=request.user,
             )
 
         project.title = title
         project.description = description
         project.color = color
         project.icon = icon
+        project.status = status_value
         project.active = active
+        project.assigned_to = assigned_to
         project.save()
 
     return JsonResponse(
@@ -193,9 +341,13 @@ def delete_project(payload):
         return JsonResponse(
             {
                 "status": "error",
-                "message": "The selected Project does not exist.",
+                "message": (
+                    "The selected Project does not exist."
+                ),
                 "field_errors": {
-                    "project_slug": "Select a valid Project.",
+                    "project_slug": (
+                        "Select a valid Project."
+                    ),
                 },
             },
             status=404,
@@ -204,10 +356,6 @@ def delete_project(payload):
     initiative_count = project.initiatives.count()
 
     if initiative_count:
-        phase_count = project.initiatives.aggregate(
-            count=Max("phases__position")
-        )
-
         phase_count = (
             project.initiatives
             .filter(phases__isnull=False)

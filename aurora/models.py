@@ -381,7 +381,7 @@ class PendingCodeChange(models.Model):
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 8 OF 8)
+# FILE: aurora/models.py
 # START: EXECUTION_PLAN_SCHEMA
 # ======================================================================
 class ExecutionStatus(models.TextChoices):
@@ -430,14 +430,48 @@ class Project(models.Model):
         help_text="Optional icon identifier for planning interfaces.",
     )
 
+    status = models.CharField(
+        max_length=20,
+        choices=ExecutionStatus.choices,
+        default=ExecutionStatus.PLANNED,
+        db_index=True,
+    )
+
     position = models.PositiveIntegerField(default=0)
-    active = models.BooleanField(default=True, db_index=True)
+
+    active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text=(
+            "Whether this project remains available for normal engineering work."
+        ),
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="projects_created",
+    )
+
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="projects_assigned",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["position", "title"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["status"],
+                condition=models.Q(status=ExecutionStatus.ACTIVE),
+                name="unique_active_project",
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -470,13 +504,29 @@ class Initiative(models.Model):
         related_name="initiatives_created",
     )
 
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="initiatives_assigned",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["position", "created_at"]
-        unique_together = [("project", "position")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "position"],
+                name="unique_initiative_position_per_project",
+            ),
+            models.UniqueConstraint(
+                fields=["project", "status"],
+                condition=models.Q(status=ExecutionStatus.ACTIVE),
+                name="unique_active_initiative_per_project",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.project} / {self.title}"
@@ -503,13 +553,35 @@ class Phase(models.Model):
 
     position = models.PositiveIntegerField(default=0)
 
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="phases_created",
+    )
+
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="phases_assigned",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["position", "created_at"]
-        unique_together = [("initiative", "position")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["initiative", "position"],
+                name="unique_phase_position_per_initiative",
+            ),
+            models.UniqueConstraint(
+                fields=["initiative", "status"],
+                condition=models.Q(status=ExecutionStatus.ACTIVE),
+                name="unique_active_phase_per_initiative",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.initiative} / {self.title}"
@@ -568,6 +640,18 @@ class Step(models.Model):
         help_text="Deterministic evidence required to validate this step.",
     )
 
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="steps_created",
+    )
+
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="steps_assigned",
+    )
+
     validated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -587,10 +671,20 @@ class Step(models.Model):
 
     class Meta:
         ordering = ["position", "created_at"]
-        unique_together = [("phase", "position")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["phase", "position"],
+                name="unique_step_position_per_phase",
+            ),
+            models.UniqueConstraint(
+                fields=["phase", "status"],
+                condition=models.Q(status=ExecutionStatus.ACTIVE),
+                name="unique_active_step_per_phase",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.phase} / {self.title}"
 # ======================================================================
-# END: EXECUTION_PLAN_SCHEMA (PATCH 8 OF 8)
+# END: EXECUTION_PLAN_SCHEMA
 # ======================================================================
