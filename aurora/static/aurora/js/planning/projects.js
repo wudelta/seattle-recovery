@@ -1,6 +1,6 @@
 // ======================================================================
 // FILE: aurora/static/aurora/js/planning/projects.js
-// START: PROJECT_PERSISTENCE_CONTROLLER
+// START: PROJECT_CONTROLLER_SETUP
 // ======================================================================
 (function(window, $) {
     "use strict";
@@ -13,7 +13,15 @@
     const utilities = Planning.utilities;
     const workspace = Planning.workspace;
     const data = Planning.data;
+// ======================================================================
+// END: PROJECT_CONTROLLER_SETUP
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_FORM_ERRORS
+// ======================================================================
     function clearProjectFormError() {
         $("#planning-project-form-error")
             .addClass("d-none")
@@ -37,6 +45,46 @@
                     : message || "The Project could not be saved."
             );
     }
+// ======================================================================
+// END: PROJECT_FORM_ERRORS
+// ======================================================================
+
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_FORM_LIFECYCLE
+// ======================================================================
+    function renderProjectAssigneeOptions(selectedUserId) {
+        const users = state.getUsers();
+        const selectedValue = (
+            selectedUserId === null
+            || selectedUserId === undefined
+        )
+            ? ""
+            : String(selectedUserId);
+
+        const $assignedTo = $("#planning-project-assigned-to");
+
+        $assignedTo.empty();
+
+        $assignedTo.append(
+            $("<option>", {
+                value: "",
+                text: "Unassigned",
+            })
+        );
+
+        users.forEach(function(user) {
+            $assignedTo.append(
+                $("<option>", {
+                    value: user.id,
+                    text: user.display_name || `User ${user.id}`,
+                })
+            );
+        });
+
+        $assignedTo.val(selectedValue);
+    }
 
     function resetProjectForm() {
         const form = document.getElementById(
@@ -49,6 +97,11 @@
 
         $("#planning-project-form")
             .removeAttr("data-project-slug");
+
+        $("#planning-project-status").val("PLANNED");
+        $("#planning-project-created-by").val("");
+
+        renderProjectAssigneeOptions(null);
 
         $("#planning-project-active").prop("checked", true);
 
@@ -78,6 +131,16 @@
 
             $("#planning-project-icon")
                 .val(project.icon || "");
+
+            $("#planning-project-status")
+                .val(project.status || "PLANNED");
+
+            renderProjectAssigneeOptions(
+                project.assigned_to_id
+            );
+
+            $("#planning-project-created-by")
+                .val(project.created_by_name || "");
 
             $("#planning-project-active")
                 .prop("checked", project.active !== false);
@@ -129,7 +192,15 @@
         $("#planning-workspace")
             .removeClass("d-none");
     }
+// ======================================================================
+// END: PROJECT_FORM_LIFECYCLE
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_REQUEST_STATES
+// ======================================================================
     function setProjectSaveState(isSaving) {
         $("#planning-save-project-btn")
             .prop("disabled", isSaving)
@@ -152,7 +223,15 @@
                     : "Delete Project"
             );
     }
+// ======================================================================
+// END: PROJECT_REQUEST_STATES
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_DELETE_GUARD
+// ======================================================================
     function projectDeleteBlockedMessage(project) {
         const initiativeCount = Number(
             project.initiative_count || 0
@@ -177,7 +256,15 @@
             + "Delete its children before deleting the Project."
         );
     }
+// ======================================================================
+// END: PROJECT_DELETE_GUARD
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_SAVE
+// ======================================================================
     function saveProject() {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
@@ -191,6 +278,10 @@
         const title = $("#planning-project-title")
             .val()
             .trim();
+
+        const assignedToValue = (
+            $("#planning-project-assigned-to").val() || ""
+        ).trim();
 
         clearProjectFormError();
 
@@ -240,6 +331,8 @@
                 icon: $("#planning-project-icon")
                     .val()
                     .trim(),
+                status: $("#planning-project-status").val(),
+                assigned_to_id: assignedToValue || null,
                 active: $("#planning-project-active")
                     .prop("checked"),
             }),
@@ -285,7 +378,15 @@
 
         state.setRequest("project", request);
     }
+// ======================================================================
+// END: PROJECT_SAVE
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_DELETE
+// ======================================================================
     function deleteProject(project) {
         const endpoints = state.getEndpoints();
         const endpoint = endpoints.planning_endpoint;
@@ -385,7 +486,15 @@
 
         state.setRequest("project", request);
     }
+// ======================================================================
+// END: PROJECT_DELETE
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/projects.js
+// START: PROJECT_CONTROLLER_PUBLIC_API
+// ======================================================================
     Planning.projects = {
         clearFormError: clearProjectFormError,
         openForm: openProjectForm,
@@ -395,5 +504,5 @@
     };
 })(window, jQuery);
 // ======================================================================
-// END: PROJECT_PERSISTENCE_CONTROLLER
+// END: PROJECT_CONTROLLER_PUBLIC_API
 // ======================================================================

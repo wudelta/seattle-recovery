@@ -94,6 +94,67 @@
                 >
             </div>
 
+            <div class="col-12 col-md-6">
+                <label
+                    for="planning-project-status"
+                    class="form-label small text-light"
+                >
+                    Status
+                </label>
+
+                <select
+                    id="planning-project-status"
+                    name="status"
+                    class="form-select form-select-sm bg-black text-light border-secondary"
+                    required
+                >
+                    <option value="PLANNED">Planned</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="PAUSED">Paused</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label
+                    for="planning-project-assigned-to"
+                    class="form-label small text-light"
+                >
+                    Assigned To
+                </label>
+
+                <select
+                    id="planning-project-assigned-to"
+                    name="assigned_to_id"
+                    class="form-select form-select-sm bg-black text-light border-secondary"
+                    required
+                >
+                    <option value="">Select a user</option>
+                </select>
+            </div>
+
+            <div
+                id="planning-project-created-by-field"
+                class="col-12 col-md-6 d-none"
+            >
+                <label
+                    for="planning-project-created-by"
+                    class="form-label small text-light"
+                >
+                    Created By
+                </label>
+
+                <input
+                    id="planning-project-created-by"
+                    name="created_by_name"
+                    type="text"
+                    class="form-control form-control-sm bg-black text-muted border-secondary"
+                    readonly
+                    aria-readonly="true"
+                >
+            </div>
+
             <div class="col-12">
                 <label
                     for="planning-project-description"
@@ -125,8 +186,14 @@
                         for="planning-project-active"
                         class="form-check-label small text-light"
                     >
-                        Active Project
+                        Available in Planning
                     </label>
+                </div>
+
+                <div class="small text-muted mt-1">
+                    This controls whether the Project appears in normal
+                    planning navigation. Lifecycle state is managed separately
+                    through Status.
                 </div>
             </div>
         </div>

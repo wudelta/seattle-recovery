@@ -1,6 +1,6 @@
 // ======================================================================
 // FILE: aurora/static/aurora/js/planning/renderers.js
-// START: PLANNING_HIERARCHY_RENDERERS
+// START: PLANNING_RENDERER_SETUP
 // ======================================================================
 (function(window, $) {
     "use strict";
@@ -12,7 +12,15 @@
     const state = Planning.state;
     const utilities = Planning.utilities;
     const workspace = Planning.workspace;
+// ======================================================================
+// END: PLANNING_RENDERER_SETUP
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/renderers.js
+// START: STEP_RENDERER
+// ======================================================================
     function renderStep(step) {
         const $fragment = utilities.cloneTemplate(
             "planning-step-template"
@@ -114,7 +122,15 @@
 
         return $fragment;
     }
+// ======================================================================
+// END: STEP_RENDERER
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/renderers.js
+// START: PHASE_RENDERER
+// ======================================================================
     function renderPhase(phase) {
         const $fragment = utilities.cloneTemplate(
             "planning-phase-template"
@@ -186,7 +202,15 @@
 
         return $fragment;
     }
+// ======================================================================
+// END: PHASE_RENDERER
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/renderers.js
+// START: INITIATIVE_RENDERER
+// ======================================================================
     function renderInitiative(initiative) {
         const $fragment = utilities.cloneTemplate(
             "planning-initiative-template"
@@ -278,9 +302,18 @@
 
         return $fragment;
     }
+// ======================================================================
+// END: INITIATIVE_RENDERER
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/renderers.js
+// START: PLANNING_PAYLOAD_RENDERER
+// ======================================================================
     function renderPlanningPayload(payload) {
         const projects = payload.projects || [];
+        const users = payload.users || [];
         const activeProject = payload.active_project || null;
         const initiativeOptions = (
             payload.initiative_options || []
@@ -294,6 +327,7 @@
             "#planning-initiative-list"
         );
 
+        state.setUsers(users);
         state.setActiveProject(activeProject);
 
         workspace.renderProjectSelector(
@@ -363,7 +397,15 @@
                 + `${stepCount === 1 ? "" : "s"}`
             );
     }
+// ======================================================================
+// END: PLANNING_PAYLOAD_RENDERER
+// ======================================================================
 
+
+// ======================================================================
+// FILE: aurora/static/aurora/js/planning/renderers.js
+// START: PLANNING_RENDERER_PUBLIC_API
+// ======================================================================
     Planning.renderers = {
         renderStep: renderStep,
         renderPhase: renderPhase,
@@ -372,5 +414,5 @@
     };
 })(window, jQuery);
 // ======================================================================
-// END: PLANNING_HIERARCHY_RENDERERS
+// END: PLANNING_RENDERER_PUBLIC_API
 // ======================================================================

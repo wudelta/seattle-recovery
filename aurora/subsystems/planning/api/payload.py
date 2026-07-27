@@ -2,6 +2,7 @@
 # FILE: aurora/subsystems/planning/api/payload.py
 # START: PLANNING_HIERARCHY_PAYLOAD
 # ======================================================================
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch
 
 from aurora.models import Initiative, Phase, Project, Step
@@ -12,14 +13,47 @@ from aurora.subsystems.planning.api.serializers import (
 )
 
 
+User = get_user_model()
+
+
+def _user_display_name(user):
+    """Returns a stable human-readable label for one user."""
+    return user.get_full_name().strip() or user.username
+
+
+def _serialize_user_option(user):
+    """Serializes one user for planning assignment controls."""
+    return {
+        "id": str(user.pk),
+        "display_name": _user_display_name(user),
+    }
+
+
 def build_planning_payload(
     project_slug=None,
     initiative_id=None,
 ):
     """Builds the focused planning workspace for one active Project."""
+    users = [
+        _serialize_user_option(user)
+        for user in (
+            User.objects
+            .filter(is_active=True)
+            .order_by(
+                "first_name",
+                "last_name",
+                "username",
+            )
+        )
+    ]
+
     projects = list(
         Project.objects
         .filter(active=True)
+        .select_related(
+            "created_by",
+            "assigned_to",
+        )
         .annotate(
             initiative_count=Count(
                 "initiatives",
@@ -60,6 +94,7 @@ def build_planning_payload(
     if active_project is None:
         return {
             "status": "success",
+            "users": users,
             "projects": project_payload,
             "active_project": None,
             "initiative_options": [],
@@ -95,7 +130,11 @@ def build_planning_payload(
     initiative_options = list(
         Initiative.objects
         .filter(project=active_project)
-        .select_related("project")
+        .select_related(
+            "project",
+            "created_by",
+            "assigned_to",
+        )
         .order_by("position", "created_at")
     )
 
@@ -121,12 +160,20 @@ def build_planning_payload(
     if active_initiative is not None:
         step_queryset = (
             Step.objects
-            .select_related("validated_by")
+            .select_related(
+                "created_by",
+                "assigned_to",
+                "validated_by",
+            )
             .order_by("position", "created_at")
         )
 
         phase_queryset = (
             Phase.objects
+            .select_related(
+                "created_by",
+                "assigned_to",
+            )
             .order_by("position", "created_at")
             .prefetch_related(
                 Prefetch(
@@ -138,7 +185,11 @@ def build_planning_payload(
 
         active_initiative = (
             Initiative.objects
-            .select_related("project", "created_by")
+            .select_related(
+                "project",
+                "created_by",
+                "assigned_to",
+            )
             .prefetch_related(
                 Prefetch(
                     "phases",
@@ -169,6 +220,7 @@ def build_planning_payload(
 
     return {
         "status": "success",
+        "users": users,
         "projects": project_payload,
         "active_project": active_project_payload,
         "initiative_options": [

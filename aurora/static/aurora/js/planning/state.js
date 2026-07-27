@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/planning/state.js 
+// FILE: aurora/static/aurora/js/planning/state.js
 // START: PLANNING_SHARED_STATE
 // ======================================================================
 (function(window) {
@@ -19,6 +19,7 @@
             phase: null,
             step: null,
         },
+        users: [],
         activeProjectSlug: null,
         activeProject: null,
         activeInitiativeId: null,
@@ -57,6 +58,16 @@
             }
 
             state.requests[requestName] = request || null;
+        },
+
+        getUsers: function() {
+            return state.users.slice();
+        },
+
+        setUsers: function(users) {
+            state.users = Array.isArray(users)
+                ? users.slice()
+                : [];
         },
 
         getActiveProjectSlug: function() {
@@ -108,5 +119,5 @@
     };
 })(window);
 // ======================================================================
-// END: PLANNING_SHARED_STATE 
+// END: PLANNING_SHARED_STATE
 // ======================================================================

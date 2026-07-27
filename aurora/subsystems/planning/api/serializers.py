@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/serializers.py 
+# FILE: aurora/subsystems/planning/api/serializers.py
 # START: PLANNING_SERIALIZERS
 # ======================================================================
 from aurora.models import Initiative
@@ -21,6 +21,9 @@ def serialize_user(user):
 
 def serialize_project(project):
     """Serializes one selectable Decision Engine project."""
+    created_by = serialize_user(project.created_by)
+    assigned_to = serialize_user(project.assigned_to)
+
     return {
         "id": project.pk,
         "title": project.title,
@@ -28,8 +31,27 @@ def serialize_project(project):
         "description": project.description,
         "color": project.color,
         "icon": project.icon,
+        "status": project.status,
+        "status_label": project.get_status_display(),
         "position": project.position,
         "active": project.active,
+        "created_by": created_by,
+        "created_by_name": (
+            created_by["display_name"]
+            if created_by
+            else ""
+        ),
+        "assigned_to": assigned_to,
+        "assigned_to_id": (
+            str(project.assigned_to_id)
+            if project.assigned_to_id
+            else None
+        ),
+        "assigned_to_name": (
+            assigned_to["display_name"]
+            if assigned_to
+            else ""
+        ),
         "created_at": project.created_at.isoformat(),
         "updated_at": project.updated_at.isoformat(),
     }
@@ -133,5 +155,5 @@ def serialize_initiative(initiative: Initiative):
         ),
     }
 # ======================================================================
-# END: PLANNING_SERIALIZERS 
+# END: PLANNING_SERIALIZERS
 # ======================================================================
