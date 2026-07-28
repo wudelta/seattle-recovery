@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/endpoint.py
+# FILE: aurora/subsystems/planning/api/endpoint.py 
 # START: PLANNING_ENDPOINT_ROUTER
 # ======================================================================
 import json
@@ -93,7 +93,7 @@ def planning_endpoint(request):
         "create_step",
         "save_step",
     }:
-        return save_step(payload)
+        return save_step(request, payload)
 
     if operation == "delete_step":
         return delete_step(payload)
@@ -106,5 +106,5 @@ def planning_endpoint(request):
         status=400,
     )
 # ======================================================================
-# END: PLANNING_ENDPOINT_ROUTER
+# END: PLANNING_ENDPOINT_ROUTER 
 # ======================================================================

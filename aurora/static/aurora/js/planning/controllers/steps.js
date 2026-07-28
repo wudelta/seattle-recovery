@@ -43,6 +43,51 @@
             );
     }
 
+    function populateStepAssignees(
+        $phase,
+        selectedUserId
+    ) {
+        const $select = $phase.find(
+            ".planning-step-form-assigned-to"
+        );
+
+        const users = state.getUsers() || [];
+
+        $select
+            .empty()
+            .append(
+                $("<option>", {
+                    value: "",
+                    text: "Select a user",
+                })
+            );
+
+        users.forEach(function(user) {
+            const userId = user.id;
+
+            const label = (
+                user.display_name
+                || user.username
+                || user.email
+                || `User ${userId}`
+            );
+
+            $select.append(
+                $("<option>", {
+                    value: userId,
+                    text: label,
+                })
+            );
+        });
+
+        $select.val(
+            selectedUserId === null
+            || selectedUserId === undefined
+                ? ""
+                : String(selectedUserId)
+        );
+    }
+
     function resetStepForm($phase) {
         const $form = $phase.find(
             ".planning-step-form"
@@ -64,6 +109,7 @@
             .find(".planning-step-form-estimate-confidence")
             .val("");
 
+        populateStepAssignees($phase, null);
         clearStepFormError($phase);
     }
 
@@ -77,6 +123,11 @@
         });
 
         resetStepForm($phase);
+
+        populateStepAssignees(
+            $phase,
+            step ? step.assigned_to_id : null
+        );
 
         if (step) {
             $phase
@@ -175,6 +226,10 @@
             .val()
             .trim();
 
+        const assignedToId = $phase
+            .find(".planning-step-form-assigned-to")
+            .val();
+
         clearStepFormError($phase);
 
         if (!endpoint) {
@@ -209,6 +264,22 @@
             return;
         }
 
+        if (!assignedToId) {
+            showStepFormError(
+                $phase,
+                "Step assignee is required.",
+                {
+                    assigned_to_id: "Select a user.",
+                }
+            );
+
+            $phase
+                .find(".planning-step-form-assigned-to")
+                .trigger("focus");
+
+            return;
+        }
+
         if (state.getRequest("step")) {
             return;
         }
@@ -228,6 +299,7 @@
                 phase_id: phaseId,
                 step_id: stepId || null,
                 title: title,
+                assigned_to_id: assignedToId,
                 description: $phase
                     .find(".planning-step-form-description")
                     .val()

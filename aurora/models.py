@@ -465,13 +465,6 @@ class Project(models.Model):
 
     class Meta:
         ordering = ["position", "title"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["status"],
-                condition=models.Q(status=ExecutionStatus.ACTIVE),
-                name="unique_active_project",
-            ),
-        ]
 
     def __str__(self):
         return self.title
@@ -520,11 +513,6 @@ class Initiative(models.Model):
             models.UniqueConstraint(
                 fields=["project", "position"],
                 name="unique_initiative_position_per_project",
-            ),
-            models.UniqueConstraint(
-                fields=["project", "status"],
-                condition=models.Q(status=ExecutionStatus.ACTIVE),
-                name="unique_active_initiative_per_project",
             ),
         ]
 
@@ -575,11 +563,6 @@ class Phase(models.Model):
             models.UniqueConstraint(
                 fields=["initiative", "position"],
                 name="unique_phase_position_per_initiative",
-            ),
-            models.UniqueConstraint(
-                fields=["initiative", "status"],
-                condition=models.Q(status=ExecutionStatus.ACTIVE),
-                name="unique_active_phase_per_initiative",
             ),
         ]
 
@@ -676,15 +659,82 @@ class Step(models.Model):
                 fields=["phase", "position"],
                 name="unique_step_position_per_phase",
             ),
-            models.UniqueConstraint(
-                fields=["phase", "status"],
-                condition=models.Q(status=ExecutionStatus.ACTIVE),
-                name="unique_active_step_per_phase",
-            ),
         ]
 
     def __str__(self):
         return f"{self.phase} / {self.title}"
+
+
+class UserPosition(models.Model):
+    """The current planning hierarchy position selected by a user."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="planning_position",
+    )
+
+    project = models.ForeignKey(
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="user_positions",
+    )
+
+    initiative = models.ForeignKey(
+        Initiative,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="user_positions",
+    )
+
+    phase = models.ForeignKey(
+        Phase,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="user_positions",
+    )
+
+    step = models.ForeignKey(
+        Step,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="user_positions",
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} planning position"
+
+
+class TimeEntry(models.Model):
+    """A period of time spent by a user working on a planning step."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="planning_time_entries",
+    )
+
+    step = models.ForeignKey(
+        Step,
+        on_delete=models.PROTECT,
+        related_name="time_entries",
+    )
+
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-started_at"]
+
+    def __str__(self):
+        return f"{self.user} / {self.step} / {self.started_at}"
 # ======================================================================
 # END: EXECUTION_PLAN_SCHEMA
 # ======================================================================

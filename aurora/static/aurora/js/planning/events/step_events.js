@@ -89,20 +89,6 @@
                     );
 
                     steps.clearFormError($phase);
-
-                    window.setTimeout(function() {
-                        $phase
-                            .find(
-                                ".planning-step-form-status"
-                            )
-                            .val("PLANNED");
-
-                        $phase
-                            .find(
-                                ".planning-step-form-estimate-confidence"
-                            )
-                            .val("");
-                    }, 0);
                 }
             );
     }

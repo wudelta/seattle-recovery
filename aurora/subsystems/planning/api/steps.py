@@ -1,7 +1,8 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/steps.py
+# FILE: aurora/subsystems/planning/api/steps.py (PATCH 2 OF 5)
 # START: STEP_PERSISTENCE
 # ======================================================================
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse
@@ -103,11 +104,45 @@ def resolve_step_save_context(payload):
             status=400,
         )
 
+    assigned_to_id = payload.get(
+        "assigned_to_id",
+        step.assigned_to_id if step else None,
+    )
+
+    if assigned_to_id in (None, ""):
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "Step assignee is required.",
+                "field_errors": {
+                    "assigned_to_id": "Select a user.",
+                },
+            },
+            status=400,
+        )
+
+    User = get_user_model()
+
+    try:
+        assigned_to = User.objects.get(pk=assigned_to_id)
+    except (User.DoesNotExist, TypeError, ValueError):
+        return None, JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected Step assignee does not exist.",
+                "field_errors": {
+                    "assigned_to_id": "Select a valid user.",
+                },
+            },
+            status=404,
+        )
+
     return {
         "step": step,
         "phase": phase,
         "title": title,
         "status": status,
+        "assigned_to": assigned_to,
     }, None
 
 
@@ -202,7 +237,7 @@ def resolve_step_save_details(payload, step):
     }, None
 
 
-def save_step(payload):
+def save_step(request, payload):
     """Validates and persists a new or existing Step."""
     context, error_response = resolve_step_save_context(payload)
 
@@ -244,6 +279,8 @@ def save_step(payload):
                 validation_description=(
                     details["validation_description"]
                 ),
+                created_by=request.user,
+                assigned_to=context["assigned_to"],
             )
 
             response_status = 201
@@ -272,6 +309,7 @@ def save_step(payload):
             step.validation_description = (
                 details["validation_description"]
             )
+            step.assigned_to = context["assigned_to"]
 
             step.save()
 
@@ -342,9 +380,9 @@ def delete_step(payload):
     )
 
 
-def create_step(payload):
+def create_step(request, payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
-    return save_step(payload)
+    return save_step(request, payload)
 # ======================================================================
-# END: STEP_PERSISTENCE
+# END: STEP_PERSISTENCE (PATCH 2 OF 5)
 # ======================================================================
