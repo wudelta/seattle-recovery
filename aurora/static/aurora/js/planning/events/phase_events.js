@@ -89,14 +89,6 @@
                     );
 
                     phases.clearFormError($initiative);
-
-                    window.setTimeout(function() {
-                        $initiative
-                            .find(
-                                ".planning-phase-form-status"
-                            )
-                            .val("PLANNED");
-                    }, 0);
                 }
             );
     }

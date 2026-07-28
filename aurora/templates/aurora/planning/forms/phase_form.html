@@ -40,7 +40,7 @@
         ></div>
 
         <div class="row g-3">
-            <div class="col-12 col-lg-9">
+            <div class="col-12 col-lg-6">
                 <label class="form-label small text-light">
                     Title
                 </label>
@@ -56,6 +56,22 @@
 
             <div class="col-12 col-lg-3">
                 <label class="form-label small text-light">
+                    Assigned To
+                </label>
+
+                <select
+                    name="assigned_to_id"
+                    class="planning-phase-form-assigned-to form-select form-select-sm bg-black text-light border-secondary"
+                    required
+                >
+                    <option value="">
+                        Select an assignee
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-3">
+                <label class="form-label small text-light">
                     Status
                 </label>
 
@@ -63,7 +79,7 @@
                     name="status"
                     class="planning-phase-form-status form-select form-select-sm bg-black text-light border-secondary"
                 >
-                    <option value="PLANNED" selected>
+                    <option value="PLANNED">
                         Planned
                     </option>
                     <option value="ACTIVE">Active</option>

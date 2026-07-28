@@ -43,6 +43,49 @@
             );
     }
 
+    function populatePhaseAssignees(
+        $initiative,
+        selectedUserId
+    ) {
+        const users = state.getUsers() || [];
+
+        const $select = $initiative.find(
+            ".planning-phase-form-assigned-to"
+        );
+
+        $select.empty().append(
+            $("<option>", {
+                value: "",
+                text: "Select an assignee",
+            })
+        );
+
+        users.forEach(function(user) {
+            const userId = user.id;
+
+            const userName = (
+                user.display_name
+                || user.name
+                || user.username
+                || user.email
+                || `User ${userId}`
+            );
+
+            $select.append(
+                $("<option>", {
+                    value: userId,
+                    text: userName,
+                })
+            );
+        });
+
+        $select.val(
+            selectedUserId
+                ? String(selectedUserId)
+                : ""
+        );
+    }
+
     function resetPhaseForm($initiative) {
         const $form = $initiative.find(
             ".planning-phase-form"
@@ -55,6 +98,8 @@
         }
 
         $form.attr("data-phase-id", "");
+
+        populatePhaseAssignees($initiative, null);
 
         $initiative
             .find(".planning-phase-form-status")
@@ -98,6 +143,11 @@
             $initiative
                 .find(".planning-phase-form-status")
                 .val(phase.status || "PLANNED");
+
+            populatePhaseAssignees(
+                $initiative,
+                phase.assigned_to_id
+            );
 
             $initiative
                 .find(".planning-phase-form-heading")
@@ -173,6 +223,10 @@
             .val()
             .trim();
 
+        const assignedToId = $initiative
+            .find(".planning-phase-form-assigned-to")
+            .val();
+
         clearPhaseFormError($initiative);
 
         if (!endpoint) {
@@ -207,6 +261,22 @@
             return;
         }
 
+        if (!assignedToId) {
+            showPhaseFormError(
+                $initiative,
+                "Assigned To is required.",
+                {
+                    assigned_to_id: "Select an assignee.",
+                }
+            );
+
+            $initiative
+                .find(".planning-phase-form-assigned-to")
+                .trigger("focus");
+
+            return;
+        }
+
         if (state.getRequest("phase")) {
             return;
         }
@@ -226,6 +296,7 @@
                 initiative_id: initiativeId,
                 phase_id: phaseId || null,
                 title: title,
+                assigned_to_id: assignedToId,
                 description: $initiative
                     .find(".planning-phase-form-description")
                     .val()
@@ -277,6 +348,7 @@
         const phase = $phase.data("phase") || {};
         const phaseId = phase.id || $phase.data("phase-id");
         const phaseTitle = phase.title || "this Phase";
+
         const $initiative = $phase.closest(
             ".planning-initiative"
         );

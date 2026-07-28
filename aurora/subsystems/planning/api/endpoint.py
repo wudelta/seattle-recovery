@@ -84,7 +84,7 @@ def planning_endpoint(request):
         "create_phase",
         "save_phase",
     }:
-        return save_phase(payload)
+        return save_phase(request, payload)
 
     if operation == "delete_phase":
         return delete_phase(payload)

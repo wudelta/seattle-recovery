@@ -2,6 +2,7 @@
 # FILE: aurora/subsystems/planning/api/phases.py
 # START: PHASE_PERSISTENCE
 # ======================================================================
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse
@@ -10,7 +11,10 @@ from aurora.models import ExecutionStatus, Initiative, Phase
 from aurora.subsystems.planning.api.serializers import serialize_phase
 
 
-def save_phase(payload):
+User = get_user_model()
+
+
+def save_phase(request, payload):
     """Validates and persists a new or existing Phase."""
     phase_id = payload.get("phase_id")
     phase = None
@@ -19,7 +23,11 @@ def save_phase(payload):
         try:
             phase = (
                 Phase.objects
-                .select_related("initiative")
+                .select_related(
+                    "initiative",
+                    "created_by",
+                    "assigned_to",
+                )
                 .get(pk=phase_id)
             )
         except (Phase.DoesNotExist, TypeError, ValueError):
@@ -60,6 +68,37 @@ def save_phase(payload):
                 "message": "The selected Initiative does not exist.",
                 "field_errors": {
                     "initiative_id": "Select a valid Initiative.",
+                },
+            },
+            status=404,
+        )
+
+    assigned_to_id = payload.get("assigned_to_id")
+
+    if assigned_to_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Assigned To is required.",
+                "field_errors": {
+                    "assigned_to_id": "Select an assignee.",
+                },
+            },
+            status=400,
+        )
+
+    try:
+        assigned_to = User.objects.get(
+            pk=assigned_to_id,
+            is_active=True,
+        )
+    except (User.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected assignee does not exist.",
+                "field_errors": {
+                    "assigned_to_id": "Select a valid assignee.",
                 },
             },
             status=404,
@@ -129,6 +168,8 @@ def save_phase(payload):
                     if highest_position is not None
                     else 0
                 ),
+                created_by=request.user,
+                assigned_to=assigned_to,
             )
 
             response_status = 201
@@ -152,6 +193,7 @@ def save_phase(payload):
             phase.title = title
             phase.description = description
             phase.status = status
+            phase.assigned_to = assigned_to
 
             phase.save(
                 update_fields=[
@@ -160,6 +202,7 @@ def save_phase(payload):
                     "description",
                     "status",
                     "position",
+                    "assigned_to",
                     "updated_at",
                 ]
             )
@@ -228,9 +271,9 @@ def delete_phase(payload):
     )
 
 
-def create_phase(payload):
+def create_phase(request, payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
-    return save_phase(payload)
+    return save_phase(request, payload)
 # ======================================================================
 # END: PHASE_PERSISTENCE
 # ======================================================================
