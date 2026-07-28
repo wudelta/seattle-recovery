@@ -38,6 +38,25 @@
             );
     }
 
+    function populateInitiativeAssignees() {
+        const users = state.getUsers();
+        const field = $("#planning-initiative-assigned-to");
+
+        field.empty();
+
+        $("<option>", {
+            value: "",
+            text: "Select a user",
+        }).appendTo(field);
+
+        users.forEach(function(user) {
+            $("<option>", {
+                value: user.id,
+                text: user.display_name,
+            }).appendTo(field);
+        });
+    }
+
     function resetInitiativeForm() {
         const form = document.getElementById(
             "planning-initiative-form"
@@ -52,6 +71,8 @@
 
         $("#planning-initiative-status").val("PLANNED");
 
+        $("#planning-initiative-assigned-to").val("");
+
         clearInitiativeFormError();
     }
 
@@ -64,6 +85,7 @@
         }
 
         resetInitiativeForm();
+        populateInitiativeAssignees();
 
         if (initiative && initiative.id) {
             $("#planning-initiative-form")
@@ -77,6 +99,16 @@
 
             $("#planning-initiative-status")
                 .val(initiative.status || "PLANNED");
+
+            $("#planning-initiative-assigned-to")
+                .val(
+                    initiative.assigned_to_id
+                    || (
+                        initiative.assigned_to
+                        && initiative.assigned_to.id
+                    )
+                    || ""
+                );
         }
 
         $("#planning-workspace")
@@ -141,6 +173,11 @@
             .val()
             .trim();
 
+        const assignedToId = (
+            $("#planning-initiative-assigned-to").val()
+            || ""
+        ).trim();
+
         clearInitiativeFormError();
 
         if (!endpoint) {
@@ -169,6 +206,22 @@
             return;
         }
 
+        if (!assignedToId) {
+            showInitiativeFormError(
+                "Initiative assignee is required.",
+                {
+                    assigned_to_id: (
+                        "Select a user to assign this Initiative."
+                    ),
+                }
+            );
+
+            $("#planning-initiative-assigned-to")
+                .trigger("focus");
+
+            return;
+        }
+
         if (state.getRequest("initiative")) {
             return;
         }
@@ -192,6 +245,7 @@
                     .val()
                     .trim(),
                 status: $("#planning-initiative-status").val(),
+                assigned_to_id: assignedToId,
             }),
         })
             .done(function(response) {

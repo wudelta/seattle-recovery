@@ -34,7 +34,7 @@
         ></div>
 
         <div class="row g-3">
-            <div class="col-12 col-lg-9">
+            <div class="col-12 col-lg-6">
                 <label
                     for="planning-initiative-title"
                     class="form-label small text-light"
@@ -52,7 +52,7 @@
                 >
             </div>
 
-            <div class="col-12 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-3">
                 <label
                     for="planning-initiative-status"
                     class="form-label small text-light"
@@ -64,12 +64,33 @@
                     id="planning-initiative-status"
                     name="status"
                     class="form-select form-select-sm bg-black text-light border-secondary"
+                    required
                 >
-                    <option value="PLANNED" selected>Planned</option>
+                    <option value="PLANNED">Planned</option>
                     <option value="ACTIVE">Active</option>
                     <option value="PAUSED">Paused</option>
                     <option value="COMPLETED">Completed</option>
                     <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <label
+                    for="planning-initiative-assigned-to"
+                    class="form-label small text-light"
+                >
+                    Assigned To
+                </label>
+
+                <select
+                    id="planning-initiative-assigned-to"
+                    name="assigned_to_id"
+                    class="form-select form-select-sm bg-black text-light border-secondary"
+                    required
+                >
+                    <option value="">
+                        Select a user
+                    </option>
                 </select>
             </div>
 

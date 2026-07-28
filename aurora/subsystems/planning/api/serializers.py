@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/serializers.py
+# FILE: aurora/subsystems/planning/api/serializers.py 
 # START: PLANNING_SERIALIZERS
 # ======================================================================
 from aurora.models import Initiative
@@ -59,6 +59,9 @@ def serialize_project(project):
 
 def serialize_step(step):
     """Serializes one implementation step for the planning workspace."""
+    created_by = serialize_user(step.created_by)
+    assigned_to = serialize_user(step.assigned_to)
+
     return {
         "id": step.pk,
         "title": step.title,
@@ -77,6 +80,23 @@ def serialize_step(step):
         "risk_level_label": step.get_risk_level_display(),
         "risk_description": step.risk_description,
         "validation_description": step.validation_description,
+        "created_by": created_by,
+        "created_by_name": (
+            created_by["display_name"]
+            if created_by
+            else ""
+        ),
+        "assigned_to": assigned_to,
+        "assigned_to_id": (
+            str(step.assigned_to_id)
+            if step.assigned_to_id
+            else None
+        ),
+        "assigned_to_name": (
+            assigned_to["display_name"]
+            if assigned_to
+            else ""
+        ),
         "validated_by": serialize_user(step.validated_by),
         "validation_notes": step.validation_notes,
         "created_at": step.created_at.isoformat(),
@@ -92,6 +112,8 @@ def serialize_step(step):
 def serialize_phase(phase):
     """Serializes one ordered phase and its implementation steps."""
     steps = list(phase.steps.all())
+    created_by = serialize_user(phase.created_by)
+    assigned_to = serialize_user(phase.assigned_to)
 
     return {
         "id": phase.pk,
@@ -101,6 +123,23 @@ def serialize_phase(phase):
         "status_label": phase.get_status_display(),
         "position": phase.position,
         "step_count": len(steps),
+        "created_by": created_by,
+        "created_by_name": (
+            created_by["display_name"]
+            if created_by
+            else ""
+        ),
+        "assigned_to": assigned_to,
+        "assigned_to_id": (
+            str(phase.assigned_to_id)
+            if phase.assigned_to_id
+            else None
+        ),
+        "assigned_to_name": (
+            assigned_to["display_name"]
+            if assigned_to
+            else ""
+        ),
         "steps": [
             serialize_step(step)
             for step in steps
@@ -130,6 +169,8 @@ def serialize_initiative_option(initiative):
 def serialize_initiative(initiative: Initiative):
     """Serializes one initiative and its complete planning hierarchy."""
     phases = list(initiative.phases.all())
+    created_by = serialize_user(initiative.created_by)
+    assigned_to = serialize_user(initiative.assigned_to)
 
     return {
         "id": initiative.pk,
@@ -140,7 +181,23 @@ def serialize_initiative(initiative: Initiative):
         "status": initiative.status,
         "status_label": initiative.get_status_display(),
         "position": initiative.position,
-        "created_by": serialize_user(initiative.created_by),
+        "created_by": created_by,
+        "created_by_name": (
+            created_by["display_name"]
+            if created_by
+            else ""
+        ),
+        "assigned_to": assigned_to,
+        "assigned_to_id": (
+            str(initiative.assigned_to_id)
+            if initiative.assigned_to_id
+            else None
+        ),
+        "assigned_to_name": (
+            assigned_to["display_name"]
+            if assigned_to
+            else ""
+        ),
         "phase_count": len(phases),
         "phases": [
             serialize_phase(phase)
@@ -155,5 +212,5 @@ def serialize_initiative(initiative: Initiative):
         ),
     }
 # ======================================================================
-# END: PLANNING_SERIALIZERS
+# END: PLANNING_SERIALIZERS 
 # ======================================================================

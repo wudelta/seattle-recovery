@@ -2,6 +2,7 @@
 # FILE: aurora/subsystems/planning/api/initiatives.py
 # START: INITIATIVE_PERSISTENCE
 # ======================================================================
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse
@@ -10,6 +11,9 @@ from aurora.models import ExecutionStatus, Initiative, Project
 from aurora.subsystems.planning.api.serializers import (
     serialize_initiative,
 )
+
+
+User = get_user_model()
 
 
 def save_initiative(request, payload):
@@ -79,8 +83,52 @@ def save_initiative(request, payload):
             status=400,
         )
 
+    assigned_to_id = payload.get("assigned_to_id")
+
+    if assigned_to_id in (None, ""):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Initiative assignee is required.",
+                "field_errors": {
+                    "assigned_to_id": (
+                        "Select a user to assign this Initiative."
+                    ),
+                },
+            },
+            status=400,
+        )
+
+    try:
+        assigned_to = User.objects.get(
+            pk=assigned_to_id,
+            is_active=True,
+        )
+    except (User.DoesNotExist, TypeError, ValueError):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The selected assignee is invalid.",
+                "field_errors": {
+                    "assigned_to_id": (
+                        "Select a valid active user."
+                    ),
+                },
+            },
+            status=400,
+        )
+
+    created = initiative is None
+
     status = str(
-        payload.get("status", ExecutionStatus.PLANNED)
+        payload.get(
+            "status",
+            (
+                ExecutionStatus.PLANNED
+                if created
+                else initiative.status
+            ),
+        )
     ).strip().upper()
 
     valid_statuses = {
@@ -104,7 +152,6 @@ def save_initiative(request, payload):
         payload.get("description", "")
     ).strip()
 
-    created = initiative is None
     project_changed = (
         initiative is not None
         and initiative.project_id != project.pk
@@ -134,6 +181,7 @@ def save_initiative(request, payload):
         initiative.title = title
         initiative.description = description
         initiative.status = status
+        initiative.assigned_to = assigned_to
         initiative.save()
 
     return JsonResponse(

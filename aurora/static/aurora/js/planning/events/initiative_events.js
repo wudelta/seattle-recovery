@@ -74,11 +74,6 @@
             .off("reset.planningInitiative")
             .on("reset.planningInitiative", function() {
                 initiatives.clearFormError();
-
-                window.setTimeout(function() {
-                    $("#planning-initiative-status")
-                        .val("PLANNED");
-                }, 0);
             });
 
         $("#planning-initiative-list")
