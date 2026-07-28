@@ -1,0 +1,307 @@
+# ======================================================================
+# FILE: docs/aurora/management/AURORA_IMPLEMENTATION_PLAN.yaml
+# START: AURORA_IMPLEMENTATION_PLAN
+# ======================================================================
+schema_version: 1
+
+project:
+  title: Aurora
+  slug: aurora
+  description: >
+    Aurora is the local-first engineering console and AI orchestration
+    environment used to design, build, validate, and maintain HopeHub and
+    related software projects.
+  status: ACTIVE
+  position: 1
+  active: true
+
+  initiatives:
+    - title: Decision Engine Planning MVP
+      description: >
+        Create a database-backed planning system that allows structured
+        engineering work to be defined, organized, estimated, revised,
+        imported, exported, and tracked through Projects, Initiatives,
+        Phases, and Steps.
+      status: ACTIVE
+      position: 1
+
+      phases:
+        - title: Planning Domain Model
+          description: >
+            Establish the persisted planning hierarchy and runtime user
+            position required by the Decision Engine.
+          status: COMPLETED
+          position: 1
+
+          steps:
+            - title: Create Project model
+              description: >
+                Add the top-level planning container used to separate Aurora,
+                HopeHub, and future projects.
+              status: COMPLETED
+              position: 1
+              estimated_minutes: 60
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                Projects can be created and retrieved with unique slugs.
+
+            - title: Associate Initiatives with Projects
+              description: >
+                Make each Initiative a child of one Project with ordered
+                sibling positions.
+              status: COMPLETED
+              position: 2
+              estimated_minutes: 45
+              estimate_confidence: HIGH
+              risk_level: MEDIUM
+              risk_description: >
+                Existing test Initiative records were intentionally disposable.
+              validation_description: >
+                Initiative queries are scoped by project.
+
+            - title: Preserve Phase and Step hierarchy
+              description: >
+                Retain ordered Phases beneath Initiatives and ordered Steps
+                beneath Phases.
+              status: COMPLETED
+              position: 3
+              estimated_minutes: 45
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                The complete Project, Initiative, Phase, and Step hierarchy
+                can be persisted.
+
+            - title: Add UserPosition navigation state
+              description: >
+                Persist the Project, Initiative, Phase, and Step currently
+                selected by each user.
+              status: COMPLETED
+              position: 4
+              estimated_minutes: 60
+              estimate_confidence: MEDIUM
+              risk_level: MEDIUM
+              validation_description: >
+                A user can retain their current planning location independently
+                of planning lifecycle statuses.
+
+        - title: Planning CRUD Interface
+          description: >
+            Provide database-backed creation and selection controls for the
+            complete planning hierarchy inside Aurora Console.
+          status: COMPLETED
+          position: 2
+
+          steps:
+            - title: Implement Project CRUD foundation
+              description: >
+                Add API and interface support for creating and selecting
+                Projects.
+              status: COMPLETED
+              position: 1
+              estimated_minutes: 90
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                A Project can be created and selected in Aurora Console.
+
+            - title: Filter Initiatives by selected Project
+              description: >
+                Populate the Initiative selector using only Initiatives that
+                belong to the selected Project.
+              status: COMPLETED
+              position: 2
+              estimated_minutes: 90
+              estimate_confidence: HIGH
+              risk_level: MEDIUM
+              validation_description: >
+                Changing Projects refreshes the Initiative selector.
+
+            - title: Display only the selected Initiative
+              description: >
+                Prevent Initiatives from accumulating in a scrolling viewport
+                and render only the selected Initiative with its child work.
+              status: COMPLETED
+              position: 3
+              estimated_minutes: 60
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                The planning viewport shows one selected Initiative.
+
+            - title: Complete Phase and Step CRUD
+              description: >
+                Add deterministic API and interface operations for the
+                remaining planning hierarchy.
+              status: COMPLETED
+              position: 4
+              estimated_minutes: 180
+              estimate_confidence: MEDIUM
+              risk_level: MEDIUM
+              validation_description: >
+                Projects, Initiatives, Phases, and Steps can all be created
+                and displayed through the planning console.
+
+        - title: Deterministic Plan Import
+          description: >
+            Import a complete versioned planning hierarchy from validated YAML
+            without allowing AI-generated content to write directly to the
+            database.
+          status: ACTIVE
+          position: 3
+
+          steps:
+            - title: Define planning I/O exceptions
+              description: >
+                Establish subsystem-specific schema, import, and export
+                exception types.
+              status: COMPLETED
+              position: 1
+              estimated_minutes: 15
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                Planning I/O failures expose explicit exception categories.
+
+            - title: Define version-one YAML schema validation
+              description: >
+                Validate fields, hierarchy, enums, positions, required text,
+                and supported schema version before database access.
+              status: COMPLETED
+              position: 2
+              estimated_minutes: 120
+              estimate_confidence: MEDIUM
+              risk_level: MEDIUM
+              validation_description: >
+                Invalid or unknown planning values are rejected with a precise
+                document path.
+
+            - title: Implement transactional hierarchy importer
+              description: >
+                Create the Project, Initiatives, Phases, and Steps in one
+                atomic transaction after successful validation.
+              status: COMPLETED
+              position: 3
+              estimated_minutes: 120
+              estimate_confidence: MEDIUM
+              risk_level: HIGH
+              risk_description: >
+                A partial hierarchy must never survive a failed import.
+              validation_description: >
+                Any creation failure rolls back the entire imported hierarchy.
+
+            - title: Add import management command
+              description: >
+                Provide explicit dry-run and apply modes with user attribution
+                and import counts.
+              status: COMPLETED
+              position: 4
+              estimated_minutes: 60
+              estimate_confidence: HIGH
+              risk_level: LOW
+              validation_description: >
+                Dry-run performs no writes and apply reports created record
+                counts.
+
+            - title: Validate the Aurora planning document
+              description: >
+                Run the importer in dry-run mode against this versioned Aurora
+                implementation plan.
+              status: ACTIVE
+              position: 5
+              estimated_minutes: 30
+              estimate_confidence: HIGH
+              risk_level: MEDIUM
+              validation_description: >
+                The command reports one Project and the expected Initiative,
+                Phase, and Step counts without writing records.
+
+            - title: Import the Aurora planning hierarchy
+              description: >
+                Apply the validated document so real Aurora work replaces the
+                disposable Test Project as the planning interface data.
+              status: PLANNED
+              position: 6
+              estimated_minutes: 30
+              estimate_confidence: HIGH
+              risk_level: HIGH
+              risk_description: >
+                The Aurora project slug must not already exist before the
+                create-only import.
+              validation_description: >
+                The complete hierarchy appears in Aurora Console and no partial
+                records exist.
+
+        - title: Planning Export
+          description: >
+            Export the canonical database hierarchy into durable,
+            version-controlled planning documentation.
+          status: PLANNED
+          position: 4
+
+          steps:
+            - title: Implement deterministic YAML export
+              description: >
+                Serialize the current planning hierarchy using the supported
+                versioned schema.
+              status: PLANNED
+              position: 1
+              estimated_minutes: 120
+              estimate_confidence: MEDIUM
+              risk_level: MEDIUM
+              validation_description: >
+                Exported YAML can pass schema validation and preserve hierarchy
+                order.
+
+            - title: Implement Markdown documentation export
+              description: >
+                Produce readable Project, Initiative, Phase, and Step
+                documentation from canonical database records.
+              status: PLANNED
+              position: 2
+              estimated_minutes: 120
+              estimate_confidence: MEDIUM
+              risk_level: LOW
+              validation_description: >
+                Exported Markdown accurately reflects the current database plan.
+
+        - title: Wu Planning Integration
+          description: >
+            Allow Wu to convert planning discussions into structured documents
+            that pass through the deterministic importer.
+          status: PLANNED
+          position: 5
+
+          steps:
+            - title: Define Wu planning document contract
+              description: >
+                Specify how Wu produces versioned planning YAML without direct
+                database authority.
+              status: PLANNED
+              position: 1
+              estimated_minutes: 90
+              estimate_confidence: MEDIUM
+              risk_level: MEDIUM
+              validation_description: >
+                Wu output can be validated without interpretation by the
+                importer.
+
+            - title: Add planning review workflow
+              description: >
+                Present generated planning changes for human review before
+                applying them to the Decision Engine.
+              status: PLANNED
+              position: 2
+              estimated_minutes: 180
+              estimate_confidence: LOW
+              risk_level: HIGH
+              risk_description: >
+                Planning proposals must remain reviewable and must not silently
+                overwrite canonical records.
+              validation_description: >
+                Delta can review and explicitly approve or reject a generated
+                plan before import.
+# ======================================================================
+# END: AURORA_IMPLEMENTATION_PLAN
+# ======================================================================
