@@ -1,0 +1,33 @@
+# ======================================================================
+# FILE: docs/aurora/planning/yaml/updates/AURORA_UPDATE_001.yaml
+# START: AURORA_UPDATE_001
+# ======================================================================
+schema_version: 1
+
+target:
+  project_slug: aurora
+
+add_initiatives: []
+
+add_phases: []
+
+add_steps:
+  - initiative_title: Decision Engine Planning MVP
+    phase_title: Deterministic Plan Import
+    steps:
+      - title: Validate append-only planning updates
+        description: >
+          Validate the planning update schema, database target resolution,
+          duplicate protection, record counting, and transactional append
+          behavior using the smallest possible update document.
+        status: ACTIVE
+        estimated_minutes: 30
+        estimate_confidence: HIGH
+        risk_level: LOW
+        risk_description: ""
+        validation_description: >
+          Dry-run reports one Step and performs no database writes. Apply
+          appends the Step to the existing Phase at the next sibling position.
+# ======================================================================
+# END: AURORA_UPDATE_001
+# ======================================================================

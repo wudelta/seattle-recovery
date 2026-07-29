@@ -52,6 +52,29 @@ STEP_FIELDS = {
     "validation_description",
 }
 
+PLANNING_UPDATE_FIELDS = {
+    "schema_version",
+    "target",
+    "add_initiatives",
+    "add_phases",
+    "add_steps",
+}
+
+UPDATE_TARGET_FIELDS = {
+    "project_slug",
+}
+
+PHASE_ADDITION_FIELDS = {
+    "initiative_title",
+    "phases",
+}
+
+STEP_ADDITION_FIELDS = {
+    "initiative_title",
+    "phase_title",
+    "steps",
+}
+
 
 def validate_planning_document(document: Any) -> dict[str, Any]:
     """Validate and normalize a version-one planning document."""
@@ -70,6 +93,50 @@ def validate_planning_document(document: Any) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "project": project,
+    }
+
+
+def validate_planning_update(document: Any) -> dict[str, Any]:
+    """Validate and normalize an append-only planning update."""
+
+    root = _require_mapping(document, "document")
+    _reject_unknown_fields(root, PLANNING_UPDATE_FIELDS, "document")
+
+    schema_version = root.get("schema_version")
+    if schema_version != SCHEMA_VERSION:
+        raise PlanningSchemaError(
+            f"document.schema_version must be {SCHEMA_VERSION}."
+        )
+
+    target = _validate_update_target(root.get("target"), "target")
+
+    add_initiatives = _validate_update_children(
+        root.get("add_initiatives", []),
+        "add_initiatives",
+        _validate_update_initiative,
+    )
+    add_phases = _validate_update_groups(
+        root.get("add_phases", []),
+        "add_phases",
+        _validate_phase_addition,
+    )
+    add_steps = _validate_update_groups(
+        root.get("add_steps", []),
+        "add_steps",
+        _validate_step_addition,
+    )
+
+    if not add_initiatives and not add_phases and not add_steps:
+        raise PlanningSchemaError(
+            "document must contain at least one planning addition."
+        )
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "target": target,
+        "add_initiatives": add_initiatives,
+        "add_phases": add_phases,
+        "add_steps": add_steps,
     }
 
 
@@ -229,6 +296,172 @@ def _validate_step(value: Any, path: str) -> dict[str, Any]:
     }
 
 
+def _validate_update_target(value: Any, path: str) -> dict[str, Any]:
+    target = _require_mapping(value, path)
+    _reject_unknown_fields(target, UPDATE_TARGET_FIELDS, path)
+
+    project_slug = _require_text(
+        target.get("project_slug"),
+        f"{path}.project_slug",
+    )
+
+    try:
+        validate_slug(project_slug)
+    except ValidationError as exc:
+        raise PlanningSchemaError(
+            f"{path}.project_slug must be a valid slug."
+        ) from exc
+
+    return {
+        "project_slug": project_slug,
+    }
+
+
+def _validate_update_initiative(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    initiative = _require_mapping(value, path)
+    _reject_unknown_fields(
+        initiative,
+        INITIATIVE_FIELDS - {"position"},
+        path,
+    )
+
+    return {
+        "title": _require_text(
+            initiative.get("title"),
+            f"{path}.title",
+        ),
+        "description": _optional_text(
+            initiative.get("description"),
+            f"{path}.description",
+        ),
+        "status": _validate_choice(
+            initiative.get("status", ExecutionStatus.PLANNED),
+            ExecutionStatus.values,
+            f"{path}.status",
+        ),
+        "phases": _validate_update_children(
+            initiative.get("phases", []),
+            f"{path}.phases",
+            _validate_update_phase,
+        ),
+    }
+
+
+def _validate_update_phase(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    phase = _require_mapping(value, path)
+    _reject_unknown_fields(
+        phase,
+        PHASE_FIELDS - {"position"},
+        path,
+    )
+
+    return {
+        "title": _require_text(
+            phase.get("title"),
+            f"{path}.title",
+        ),
+        "description": _optional_text(
+            phase.get("description"),
+            f"{path}.description",
+        ),
+        "status": _validate_choice(
+            phase.get("status", ExecutionStatus.PLANNED),
+            ExecutionStatus.values,
+            f"{path}.status",
+        ),
+        "steps": _validate_update_children(
+            phase.get("steps", []),
+            f"{path}.steps",
+            _validate_update_step,
+        ),
+    }
+
+
+def _validate_update_step(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    step = _require_mapping(value, path)
+    _reject_unknown_fields(
+        step,
+        STEP_FIELDS - {"position"},
+        path,
+    )
+
+    normalized = _validate_step(
+        {
+            **step,
+            "position": 1,
+        },
+        path,
+    )
+    normalized.pop("position")
+
+    return normalized
+
+
+def _validate_phase_addition(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    addition = _require_mapping(value, path)
+    _reject_unknown_fields(addition, PHASE_ADDITION_FIELDS, path)
+
+    phases = _validate_update_children(
+        addition.get("phases"),
+        f"{path}.phases",
+        _validate_update_phase,
+    )
+    if not phases:
+        raise PlanningSchemaError(
+            f"{path}.phases must contain at least one item."
+        )
+
+    return {
+        "initiative_title": _require_text(
+            addition.get("initiative_title"),
+            f"{path}.initiative_title",
+        ),
+        "phases": phases,
+    }
+
+
+def _validate_step_addition(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    addition = _require_mapping(value, path)
+    _reject_unknown_fields(addition, STEP_ADDITION_FIELDS, path)
+
+    steps = _validate_update_children(
+        addition.get("steps"),
+        f"{path}.steps",
+        _validate_update_step,
+    )
+    if not steps:
+        raise PlanningSchemaError(
+            f"{path}.steps must contain at least one item."
+        )
+
+    return {
+        "initiative_title": _require_text(
+            addition.get("initiative_title"),
+            f"{path}.initiative_title",
+        ),
+        "phase_title": _require_text(
+            addition.get("phase_title"),
+            f"{path}.phase_title",
+        ),
+        "steps": steps,
+    }
+
+
 def _validate_children(
     value: Any,
     path: str,
@@ -256,6 +489,42 @@ def _validate_children(
         )
 
     return children
+
+
+def _validate_update_children(
+    value: Any,
+    path: str,
+    validator: Callable[[Any, str], dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        raise PlanningSchemaError(f"{path} must be a list.")
+
+    children = [
+        validator(child, f"{path}[{index}]")
+        for index, child in enumerate(value)
+    ]
+
+    titles = [child["title"] for child in children]
+    if len(titles) != len(set(titles)):
+        raise PlanningSchemaError(
+            f"{path} contains duplicate titles."
+        )
+
+    return children
+
+
+def _validate_update_groups(
+    value: Any,
+    path: str,
+    validator: Callable[[Any, str], dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        raise PlanningSchemaError(f"{path} must be a list.")
+
+    return [
+        validator(group, f"{path}[{index}]")
+        for index, group in enumerate(value)
+    ]
 
 
 def _require_mapping(value: Any, path: str) -> Mapping[str, Any]:
