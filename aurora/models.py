@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/models.py (PATCH 1 OF 8)
+# FILE: aurora/models.py 
 # START: RUNTIME_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import uuid
@@ -7,11 +7,11 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 # ======================================================================
-# END: RUNTIME_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 8)
+# END: RUNTIME_IMPORTS_AND_DEPENDENCIES 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 2 OF 8)
+# FILE: aurora/models.py 
 # START: COMPONENT_REGISTRY_CORE_SCHEMA
 # ======================================================================
 class ComponentRegistry(models.Model):
@@ -143,11 +143,11 @@ class ComponentRegistry(models.Model):
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
 # ======================================================================
-# END: COMPONENT_REGISTRY_CORE_SCHEMA (PATCH 2 OF 8)
+# END: COMPONENT_REGISTRY_CORE_SCHEMA 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 3 OF 8)
+# FILE: aurora/models.py 
 # START: STATIC_CONTENT_SCHEMA
 # ======================================================================
 class StaticContent(models.Model):
@@ -176,11 +176,11 @@ class StaticContent(models.Model):
     def __str__(self):
         return f"StaticContent: {self.title} [{self.application}] (ID: {self.id})"
 # ======================================================================
-# END: STATIC_CONTENT_SCHEMA (PATCH 3 OF 8)
+# END: STATIC_CONTENT_SCHEMA 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 4 OF 8)
+# FILE: aurora/models.py 
 # START: PERSISTENT_CHAT_LEDGER_SCHEMA
 # ======================================================================
 class ChatLedgerEntry(models.Model):
@@ -241,11 +241,11 @@ class ChatLedgerEntry(models.Model):
                 id__in=[entry.id for entry in excess_entries]
             ).delete()
 # ======================================================================
-# END: PERSISTENT_CHAT_LEDGER_SCHEMA (PATCH 4 OF 8)
+# END: PERSISTENT_CHAT_LEDGER_SCHEMA 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 5 OF 8)
+# FILE: aurora/models.py 
 # START: DIRECTIVES_SCHEMA
 # ======================================================================
 class DeltaDirectives(models.Model):
@@ -272,11 +272,11 @@ class DeltaDirectives(models.Model):
     def __str__(self):
         return f"{self.directive_name} [Active: {self.is_active}]"
 # ======================================================================
-# END: DIRECTIVES_SCHEMA (PATCH 5 OF 8)
+# END: DIRECTIVES_SCHEMA 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 6 OF 8)
+# FILE: aurora/models.py 
 # START: DELTA_NOTES_SCHEMA
 # ======================================================================
 class DeltaNotesEntry(models.Model):
@@ -317,11 +317,11 @@ class DeltaNotesEntry(models.Model):
             f"({self.created_at.strftime('%Y-%m-%d')})"
         )
 # ======================================================================
-# END: DELTA_NOTES_SCHEMA (PATCH 6 OF 8)
+# END: DELTA_NOTES_SCHEMA 
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/models.py (PATCH 7 OF 8)
+# FILE: aurora/models.py 
 # START: CODE_CHANGE_REVIEW_SCHEMA
 # ======================================================================
 class PendingCodeChange(models.Model):
@@ -377,7 +377,7 @@ class PendingCodeChange(models.Model):
     def __str__(self):
         return f"{self.file_path} [{self.status}]"
 # ======================================================================
-# END: CODE_CHANGE_REVIEW_SCHEMA (PATCH 7 OF 8)
+# END: CODE_CHANGE_REVIEW_SCHEMA 
 # ======================================================================
 
 # ======================================================================
