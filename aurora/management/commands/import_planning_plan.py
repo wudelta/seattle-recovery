@@ -5,7 +5,6 @@
 from pathlib import Path
 from typing import Any
 
-import yaml
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
@@ -14,6 +13,10 @@ from aurora.subsystems.planning.io.exceptions import (
     PlanningSchemaError,
 )
 from aurora.subsystems.planning.io.importer import import_planning_document
+from aurora.subsystems.planning.io.loader import (
+    PlanningDocumentLoadError,
+    load_planning_document,
+)
 
 
 User = get_user_model()
@@ -55,16 +58,19 @@ class Command(BaseCommand):
         path: Path = options["path"]
         apply: bool = options["apply"]
 
-        document = self._load_document(path)
-        user = self._get_user(options["user"])
-
         try:
+            document = load_planning_document(path)
+            user = self._get_user(options["user"])
             result = import_planning_document(
                 document,
                 user=user,
                 apply=apply,
             )
-        except (PlanningSchemaError, PlanningImportError) as exc:
+        except (
+            PlanningDocumentLoadError,
+            PlanningSchemaError,
+            PlanningImportError,
+        ) as exc:
             raise CommandError(str(exc)) from exc
 
         mode = "APPLIED" if result.applied else "VALIDATED"
@@ -78,34 +84,6 @@ class Command(BaseCommand):
                 f"steps={result.steps}"
             )
         )
-
-    def _load_document(self, path: Path) -> Any:
-        if not path.exists():
-            raise CommandError(f"Planning document does not exist: {path}")
-
-        if not path.is_file():
-            raise CommandError(f"Planning document is not a file: {path}")
-
-        try:
-            raw_document = path.read_text(encoding="utf-8")
-        except OSError as exc:
-            raise CommandError(
-                f"Unable to read planning document: {path}"
-            ) from exc
-
-        try:
-            document = yaml.safe_load(raw_document)
-        except yaml.YAMLError as exc:
-            raise CommandError(
-                f"Planning document contains invalid YAML: {path}"
-            ) from exc
-
-        if document is None:
-            raise CommandError(
-                f"Planning document is empty: {path}"
-            )
-
-        return document
 
     def _get_user(self, natural_key: str) -> User:
         try:
