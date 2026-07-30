@@ -3,150 +3,276 @@
 <!-- START: AURORA_ROADMAP -->
 <!-- ====================================================================== -->
 
-# Aurora Roadmap
+# Aurora Vision Roadmap
 
-Aurora is being developed in deliberate phases. Each phase has a specific purpose and a clear stopping point. The objective is to build only what is needed to accomplish the next milestone while preserving a long-term architectural vision.
+Aurora is an AI-Assisted Engineering Management System.
 
----
+Its purpose is not simply to generate code. Its purpose is to help engineers consistently deliver successful software projects by applying proven engineering practices throughout the entire software lifecycle.
 
-# Phase 1 — Aurora Baseline
+Technology is an implementation detail.
 
-## Goal
+Engineering methodology is the product.
 
-Complete a stable, vendor-independent AI Execution Platform.
-
-The immediate objective is to validate and harden the provider abstraction, complete baseline failover, centralize model resolution, rebuild automated tests, and merge the architecture into `main`.
-
-### Completion Criteria
-
-- AI Execution Platform validated
-- Provider abstraction complete
-- Provider failover operational
-- Model resolution centralized
-- Automated regression tests restored
-- Stable merge into `main`
-
-Target:
-
-**July 15, 2026**
+Aurora exists to preserve decades of proven engineering experience while eliminating unnecessary administrative work through AI.
 
 ---
 
-# Phase 2 — HopeHub Beta
+# Vision
 
-## Goal
+Aurora assists engineers from the moment an idea is proposed until the resulting software has been validated, documented, and incorporated into the organization's engineering knowledge.
 
-Use Aurora to build and deploy the first public HopeHub beta.
+The long-term objective is to create an AI engineering partner that understands not only how software is written, but how successful software projects are planned, executed, validated, and continuously improved.
 
-During this phase, Aurora development should be limited to improvements that are:
+Aurora should encourage disciplined engineering without introducing unnecessary bureaucracy.
 
-- required to complete HopeHub;
-- reusable by both Aurora and HopeHub through `core_logic`; or
-- necessary to maintain developer productivity.
+Its philosophy is simple:
 
-Aurora becomes the internal engineering console used to design, operate, and evolve HopeHub while intentionally avoiding unrelated platform expansion.
-
-## Security & Identity
-
-Before HopeHub enters public production, Aurora and HopeHub must support shared authentication with independent authorization.
-
-Although both applications share the same user database, access to Aurora must be explicitly granted.
-
-Minimum production requirements include:
-
-- Aurora application access restricted by group membership.
-- Role-based authorization for privileged operations.
-- Separation between application authentication and authorization.
-- Administrative capabilities isolated from standard HopeHub users.
-- Security review of all Aurora endpoints prior to production deployment.
-
-The mission is to deliver a working product, not expand the platform.
-
-Target:
-
-**August 15, 2026**
+> **Automate the mechanics. Preserve the judgment.**
 
 ---
 
-# Phase 3 — Knowledge Layer
+# Engineering Lifecycle
 
-## Goal
+Aurora supports the complete engineering lifecycle.
 
-Evolve the Project Brain from a collection of Markdown documents into a persistent engineering knowledge system.
+```text
+Idea
+    ↓
+Planning
+    ↓
+Approval
+    ↓
+Implementation
+    ↓
+Validation
+    ↓
+Deployment
+    ↓
+Operation
+    ↓
+Continuous Improvement
+```
 
-Rather than relying exclusively on static documentation, Aurora should retain engineering history as structured knowledge.
-
-Candidate knowledge domains include:
-
-- Session history
-- Daily accomplishments
-- Decisions
-- Experiments
-- Failed approaches
-- Research notes
-- AI conversations
-- Design ideas
-- TODOs
-- Metrics
-- Searchable knowledge
-- Engineering patterns
-- Relationships between artifacts
-
-Repository documentation should continue describing the project's current state.
-
-The Knowledge Layer should preserve how the project arrived there.
-
-### Architectural Direction
-
-Current thinking favors:
-
-- **Neo4j** for highly connected engineering knowledge.
-- **PostgreSQL** for operational application data.
-
-This is intentionally **not** an architectural commitment. The final implementation should be informed by real development experience following the HopeHub beta rather than designed prematurely.
-
-Status:
-
-**Planned**
+Every capability within Aurora should strengthen one or more stages of this lifecycle.
 
 ---
 
-# Phase 4 — Decision Engine
+# Core Capabilities
 
-## Goal
+## Engineering Planning
 
-Teach Aurora the development methodology rather than simply generating code.
+Help engineers define work before implementation begins.
 
-The long-term objective is for Aurora to make consistent engineering decisions by combining:
+Objectives include:
 
-- architectural principles;
-- project history;
-- documented patterns;
-- accumulated engineering knowledge;
-- established development protocols; and
-- operational feedback from real-world development.
+- SMART initiative validation
+- project decomposition
+- implementation planning
+- estimation
+- risk identification
+- assumption tracking
+- success criteria
+- scheduling
+- scope definition
 
-The decision engine is expected to become Aurora's primary differentiator rather than any particular AI model or provider.
+Aurora should make it difficult to begin implementation without a clear understanding of what success looks like.
 
-Status:
+---
 
-**Vision**
+## Engineering Execution
+
+Guide implementation while preserving engineering discipline.
+
+Objectives include:
+
+- AI-assisted planning conversations
+- implementation guidance
+- coding protocol enforcement
+- repository organization
+- deterministic engineering workflows
+- progress tracking
+- implementation traceability
+
+Aurora should help engineers follow established engineering practices rather than simply generating code.
+
+---
+
+## Engineering Validation
+
+Determine whether implementation actually satisfies the original objective.
+
+Validation extends beyond automated testing.
+
+Objectives include:
+
+- implementation verification
+- success criteria validation
+- protocol compliance
+- regression validation
+- documentation verification
+- completion readiness
+
+The ultimate question is:
+
+> **Did we build what we committed to build?**
+
+---
+
+## Engineering Governance
+
+Preserve project health throughout implementation.
+
+Objectives include:
+
+- initiative management
+- scope control
+- change management
+- decision tracking
+- schedule management
+- estimation accuracy
+- engineering metrics
+
+Initiatives represent engineering commitments.
+
+Changes are expected.
+
+Uncontrolled scope expansion is not.
+
+Aurora should make the impact of proposed changes visible before implementation begins.
+
+---
+
+## Engineering Knowledge
+
+Preserve organizational engineering knowledge.
+
+Objectives include:
+
+- Component Registry
+- architecture decisions
+- engineering history
+- implementation rationale
+- lessons learned
+- estimation history
+- searchable engineering knowledge
+- relationships between engineering artifacts
+
+Repository documentation describes the current system.
+
+Engineering knowledge explains how and why the system reached its current state.
+
+---
+
+## AI Workforce
+
+Create specialized AI workers that participate in disciplined engineering.
+
+Examples include:
+
+- Wu
+- planning assistants
+- implementation assistants
+- validation assistants
+- documentation assistants
+- repository analysis assistants
+- architecture assistants
+
+Each worker should understand its role within the larger engineering process rather than operating independently.
 
 ---
 
 # Guiding Principles
 
-- Finish the current mission before expanding the platform.
-- Build capabilities when they solve demonstrated problems.
-- Keep authentication separate from authorization.
-- Automate deterministic engineering work.
-- Preserve engineering knowledge.
-- Prefer methodology over model-specific intelligence.
-- Keep the repository focused on implementation.
-- Allow the Knowledge Layer to become Aurora's long-term memory.
+## Methodology Before Technology
+
+Technology changes.
+
+Sound engineering practices endure.
+
+Aurora should be driven by engineering methodology rather than specific AI models, frameworks, or vendors.
+
+---
+
+## Automate the Mechanics
+
+AI should eliminate repetitive engineering administration.
+
+Examples include:
+
+- documentation
+- synchronization
+- impact analysis
+- estimation assistance
+- repository analysis
+- progress reporting
+
+---
+
+## Preserve Human Judgment
+
+AI should support engineering decisions.
+
+It should not replace them.
+
+Architectural decisions, scope approval, engineering tradeoffs, and project commitments remain human responsibilities.
+
+---
+
+## Initiatives Are Contracts
+
+Every Initiative represents a measurable engineering commitment.
+
+An Initiative should:
+
+- have a clear objective;
+- define measurable success;
+- establish realistic estimates;
+- identify completion criteria; and
+- be capable of being declared complete.
+
+If new capabilities are discovered during implementation, Aurora should encourage the creation of new Initiatives rather than allowing uncontrolled scope expansion.
+
+---
+
+## Make Success Measurable
+
+Every engineering activity should define how success will be evaluated before implementation begins.
+
+Completion should never be based solely on elapsed effort.
+
+It should be based on achieving clearly defined outcomes.
+
+---
+
+## Capture Engineering Knowledge
+
+Engineering knowledge is one of Aurora's most valuable assets.
+
+Aurora should continuously preserve:
+
+- decisions
+- assumptions
+- implementation history
+- change history
+- engineering patterns
+- lessons learned
+
+Future engineers—including AI—should benefit from today's experience.
+
+---
+
+## Eat the Watermelon, Spit Out the Seeds
+
+Enterprise engineering contains decades of valuable experience.
+
+Aurora should preserve the intent behind proven engineering practices while eliminating unnecessary bureaucracy.
+
+Good process should become easier through automation—not heavier.
+
+---
 
 > **Technology is not the product. Methodology is the product.**
 
 <!-- ====================================================================== -->
-<!-- END: AURORA_ROADMAP (PATCH 1 OF 1) -->
+<!-- END: AURORA_ROADMAP -->
 <!-- ====================================================================== -->

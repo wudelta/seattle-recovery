@@ -1,0 +1,267 @@
+# ======================================================================
+# FILE: docs/aurora/planning/yaml/updates/AURORA_UPDATE_002_HANSEL.yaml
+# START: HANSEL_INITIATIVE
+# ======================================================================
+
+schema_version: 1
+
+target:
+  project_slug: aurora
+
+add_initiatives:
+
+  - title: Hansel
+    description: >
+      Establish a self-documenting architecture in which Aurora subsystems
+      publish discoverable contracts that provide humans and AI workers with
+      only the task-specific knowledge they need, when they need it.
+
+      Workers follow repository-owned breadcrumbs to locate authoritative
+      subsystem responsibilities, interfaces, rules, schemas, validators,
+      and documentation instead of depending on large static prompts or
+      undocumented institutional knowledge.
+    status: PLANNED
+
+    phases:
+
+      - title: Subsystem Contract Foundation
+        description: >
+          Define the minimum contract structure every participating subsystem
+          can publish so its responsibilities and interaction rules are
+          discoverable without loading unrelated repository context.
+        status: PLANNED
+
+        steps:
+
+          - title: Define the universal contract discovery rule
+            description: >
+              Establish the rule that every AI worker must locate and read the
+              applicable subsystem contract before acting on that subsystem.
+            status: PLANNED
+            estimated_minutes: 60
+            estimate_confidence: MEDIUM
+            risk_level: LOW
+            validation_description: >
+              A concise worker-level rule exists requiring contract discovery
+              before subsystem work begins.
+
+          - title: Define missing-contract behavior
+            description: >
+              Require workers to stop and request or propose an applicable
+              contract whenever no authoritative contract can be found.
+            status: PLANNED
+            estimated_minutes: 45
+            estimate_confidence: HIGH
+            risk_level: LOW
+            validation_description: >
+              Worker instructions explicitly prohibit inventing undocumented
+              subsystem behavior when no contract exists.
+
+          - title: Define the minimum subsystem contract
+            description: >
+              Specify the smallest useful contract content, including subsystem
+              purpose, owned responsibilities, public interaction points,
+              invariants, validators, authority boundaries, and links to the
+              authoritative implementation.
+            status: PLANNED
+            estimated_minutes: 120
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              A versioned contract specification defines the required and
+              optional information published by a subsystem.
+
+      - title: Contract Discovery Architecture
+        description: >
+          Make subsystem contracts consistently located and mechanically
+          discoverable by Wu, minions, future AI workers, and human developers.
+        status: PLANNED
+
+        steps:
+
+          - title: Define contract repository placement
+            description: >
+              Establish where contracts live within subsystem-oriented
+              repository directories and how multiple contract types are named.
+            status: PLANNED
+            estimated_minutes: 60
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              A worker can determine the expected contract location from a
+              subsystem path without relying on prompt-specific knowledge.
+
+          - title: Register subsystem contracts
+            description: >
+              Extend ComponentRegistry metadata so subsystems can publish the
+              locations of their contracts, schemas, validators, APIs, events,
+              and supporting documentation.
+            status: PLANNED
+            estimated_minutes: 180
+            estimate_confidence: LOW
+            risk_level: HIGH
+            risk_description: >
+              Registry changes must preserve its existing repository inventory,
+              dependency analysis, and documentation responsibilities.
+            validation_description: >
+              ComponentRegistry can identify the authoritative contracts
+              published by a registered subsystem.
+
+          - title: Implement task-specific contract resolution
+            description: >
+              Resolve the subsystem affected by a task and retrieve only the
+              contracts applicable to the requested operation.
+            status: PLANNED
+            estimated_minutes: 180
+            estimate_confidence: LOW
+            risk_level: HIGH
+            validation_description: >
+              A worker receives the relevant subsystem contract without loading
+              unrelated contracts or broad repository instructions.
+
+      - title: Planning Subsystem Reference Implementation
+        description: >
+          Use the Planning subsystem as the first complete implementation of
+          discoverable contracts and just-in-time procedural knowledge.
+        status: PLANNED
+
+        steps:
+
+          - title: Publish the planning import contract
+            description: >
+              Document the authoritative YAML structure, required fields,
+              append-only behavior, validation rules, and management command
+              used for complete planning imports.
+            status: PLANNED
+            estimated_minutes: 90
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              Wu or a minion can create a valid initial planning document by
+              reading only the published planning import contract.
+
+          - title: Publish the planning update contract
+            description: >
+              Document the authoritative YAML structure, targeting rules,
+              append-only behavior, validation rules, and management command
+              used for planning updates.
+            status: PLANNED
+            estimated_minutes: 90
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              Wu or a minion can create a valid append-only planning update by
+              reading only the published planning update contract.
+
+          - title: Validate contract-guided planning work
+            description: >
+              Assign a worker without embedded planning-schema instructions to
+              generate and validate a planning YAML document using only
+              discoverable Planning subsystem contracts.
+            status: PLANNED
+            estimated_minutes: 120
+            estimate_confidence: LOW
+            risk_level: HIGH
+            validation_description: >
+              The generated document passes deterministic schema validation
+              without subsystem-specific prompt engineering.
+
+      - title: Worker Integration
+        description: >
+          Apply contract discovery uniformly across Wu and minions while
+          keeping worker definitions small and responsibility-focused.
+        status: PLANNED
+
+        steps:
+
+          - title: Separate worker identity from procedural knowledge
+            description: >
+              Limit worker definitions to role, responsibility, authority,
+              escalation behavior, and contract-discovery requirements while
+              moving subsystem procedures into repository-owned contracts.
+            status: PLANNED
+            estimated_minutes: 120
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              Worker definitions no longer duplicate detailed subsystem
+              procedures maintained elsewhere in the repository.
+
+          - title: Integrate contract discovery into Wu orchestration
+            description: >
+              Require Wu to resolve affected subsystems and load their
+              applicable contracts before delegating or performing work.
+            status: PLANNED
+            estimated_minutes: 180
+            estimate_confidence: LOW
+            risk_level: HIGH
+            validation_description: >
+              Wu can explain which subsystem contract governs a proposed task
+              and uses it before producing an implementation artifact.
+
+          - title: Integrate contract discovery into minion execution
+            description: >
+              Require every AI minion to retrieve applicable contracts at task
+              execution time instead of carrying duplicated procedural prompts.
+            status: PLANNED
+            estimated_minutes: 180
+            estimate_confidence: LOW
+            risk_level: HIGH
+            validation_description: >
+              Multiple minions can consume the same current subsystem contract
+              without maintaining separate copies of its instructions.
+
+      - title: Self-Documenting Architecture Validation
+        description: >
+          Demonstrate that Aurora exposes missing architectural knowledge,
+          preserves authoritative ownership, and leaves sufficient breadcrumbs
+          for future humans and AI workers.
+        status: PLANNED
+
+        steps:
+
+          - title: Detect undocumented subsystem operations
+            description: >
+              Verify that a worker stops when asked to perform an operation for
+              which the subsystem publishes no applicable contract.
+            status: PLANNED
+            estimated_minutes: 60
+            estimate_confidence: MEDIUM
+            risk_level: MEDIUM
+            validation_description: >
+              The worker identifies the missing contract and does not invent
+              undocumented behavior.
+
+          - title: Propose missing contracts for review
+            description: >
+              Allow a worker to draft a missing subsystem contract as a
+              reviewable proposal without treating it as authoritative until
+              approved.
+            status: PLANNED
+            estimated_minutes: 120
+            estimate_confidence: LOW
+            risk_level: HIGH
+            validation_description: >
+              A proposed contract remains separate from authoritative subsystem
+              behavior until explicitly reviewed and accepted.
+
+          - title: Validate provider-independent contract use
+            description: >
+              Confirm that workers using different supported AI providers can
+              follow the same repository-owned subsystem contract and produce
+              equivalent valid artifacts.
+            status: PLANNED
+            estimated_minutes: 180
+            estimate_confidence: LOW
+            risk_level: MEDIUM
+            validation_description: >
+              Contract-guided behavior remains consistent across supported AI
+              providers without provider-specific procedural prompts.
+
+add_phases: []
+
+add_steps: []
+
+# ======================================================================
+# END: HANSEL_INITIATIVE
+# ======================================================================

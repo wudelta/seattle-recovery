@@ -1,0 +1,446 @@
+{'schema_version': 1,
+ 'target': {'project_slug': 'aurora'},
+ 'add_initiatives': [{'title': 'Workspace Registry Automation',
+                      'description': 'Create one safe, memorable Aurora slash command '
+                                     'that coordinates repository reconciliation, '
+                                     'ComponentRegistry updates, new component '
+                                     'registration, graph synchronization, AI-assisted '
+                                     'documentation, and final registry-health '
+                                     'validation.\n'
+                                     'The workflow must preserve the existing '
+                                     'deterministic safety boundaries while '
+                                     'eliminating the need for Delta or Wu to remember '
+                                     'multiple management commands, command arguments, '
+                                     'execution order, or recovery procedures.\n',
+                      'status': 'PLANNED',
+                      'phases': [{'title': 'Workspace Synchronization Contract',
+                                  'description': 'Define the authoritative workflow, '
+                                                 'command interface, safety rules, '
+                                                 'execution boundaries, and completion '
+                                                 'criteria for automated '
+                                                 'ComponentRegistry maintenance.\n',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define the synchronization '
+                                                      'workflow',
+                                             'description': 'Specify the authoritative '
+                                                            'operation order for '
+                                                            'reconciliation, '
+                                                            'existing-record updates, '
+                                                            'new-record registration, '
+                                                            'graph synchronization, '
+                                                            'component documentation, '
+                                                            'and final validation.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'A versioned '
+                                                                       'workflow '
+                                                                       'contract '
+                                                                       'defines every '
+                                                                       'operation, its '
+                                                                       'order, its '
+                                                                       'inputs, and '
+                                                                       'its expected '
+                                                                       'outputs.\n'},
+                                            {'title': 'Define slash command syntax',
+                                             'description': 'Establish a concise '
+                                                            'command interface '
+                                                            'supporting full-workspace '
+                                                            'synchronization, status '
+                                                            'inspection, and optional '
+                                                            'application-root or '
+                                                            'repository-path '
+                                                            'boundaries.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The command '
+                                                                       'contract '
+                                                                       'defines '
+                                                                       'memorable '
+                                                                       'forms '
+                                                                       'including '
+                                                                       'workspace '
+                                                                       'status, full '
+                                                                       'synchronization, '
+                                                                       'root-scoped '
+                                                                       'synchronization, '
+                                                                       'and '
+                                                                       'path-scoped '
+                                                                       'synchronization.\n'},
+                                            {'title': 'Define safety and failure '
+                                                      'behavior',
+                                             'description': 'Preserve '
+                                                            'preview-before-apply '
+                                                            'behavior, explicit '
+                                                            'mutation boundaries, '
+                                                            'registration ownership '
+                                                            'requirements, visible '
+                                                            'PostgreSQL and Neo4j '
+                                                            'failures, and deliberate '
+                                                            'retry behavior.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The workflow '
+                                                                       'contract '
+                                                                       'prohibits '
+                                                                       'silent '
+                                                                       'mutation and '
+                                                                       'defines how '
+                                                                       'partial '
+                                                                       'failures are '
+                                                                       'reported, '
+                                                                       'halted, and '
+                                                                       'retried.\n'}]},
+                                 {'title': 'Deterministic Workspace Orchestration',
+                                  'description': 'Implement a reusable orchestration '
+                                                 'service that coordinates the '
+                                                 'existing deterministic '
+                                                 'reconciliation and synchronization '
+                                                 'services without depending on Wu or '
+                                                 'duplicated command-line logic.\n',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Extract reusable command '
+                                                      'orchestration',
+                                             'description': 'Introduce an application '
+                                                            'service that invokes '
+                                                            'workspace reconciliation '
+                                                            'and synchronization '
+                                                            'operations directly while '
+                                                            'keeping Django management '
+                                                            'commands as independent '
+                                                            'administrative '
+                                                            'interfaces.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Management '
+                                                                       'commands and '
+                                                                       'slash commands '
+                                                                       'use the same '
+                                                                       'authoritative '
+                                                                       'orchestration '
+                                                                       'service rather '
+                                                                       'than '
+                                                                       'duplicating '
+                                                                       'workflow '
+                                                                       'logic.\n'},
+                                            {'title': 'Implement workspace status '
+                                                      'reporting',
+                                             'description': 'Provide a read-only '
+                                                            'operation that reports '
+                                                            'KEEP, UPDATE, REGISTER, '
+                                                            'STAGE, EXCLUDE, and '
+                                                            'REVIEW classifications '
+                                                            'with optional root or '
+                                                            'path boundaries.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The '
+                                                                       'orchestration '
+                                                                       'service '
+                                                                       'produces the '
+                                                                       'same bounded '
+                                                                       'deterministic '
+                                                                       'reconciliation '
+                                                                       'results as '
+                                                                       'reconcile_workspace.\n'},
+                                            {'title': 'Implement bounded '
+                                                      'synchronization execution',
+                                             'description': 'Coordinate updates, '
+                                                            'registrations, and graph '
+                                                            'synchronization using '
+                                                            'explicit boundaries and '
+                                                            'existing '
+                                                            'WorkspaceSynchronizer '
+                                                            'safeguards.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The service '
+                                                                       'can preview '
+                                                                       'and apply each '
+                                                                       'mutation stage '
+                                                                       'without '
+                                                                       'bypassing '
+                                                                       'existing path, '
+                                                                       'limit, '
+                                                                       'ownership, or '
+                                                                       'graph '
+                                                                       'controls.\n'}]},
+                                 {'title': 'Slash Command Integration',
+                                  'description': 'Expose the workspace-maintenance '
+                                                 'orchestration through a memorable '
+                                                 'Aurora slash command that can '
+                                                 'operate before Wu becomes the '
+                                                 'primary consumer of repository '
+                                                 'contracts.\n',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Implement workspace status '
+                                                      'slash command',
+                                             'description': 'Add a read-only slash '
+                                                            'command that displays '
+                                                            'current reconciliation '
+                                                            'classifications and '
+                                                            'summarizes '
+                                                            'repository-to-registry '
+                                                            'drift.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The workspace '
+                                                                       'status command '
+                                                                       'reports '
+                                                                       'registry drift '
+                                                                       'without '
+                                                                       'modifying '
+                                                                       'PostgreSQL, '
+                                                                       'Neo4j, or '
+                                                                       'repository '
+                                                                       'files.\n'},
+                                            {'title': 'Implement workspace sync slash '
+                                                      'command',
+                                             'description': 'Add a slash command that '
+                                                            'coordinates the approved '
+                                                            'synchronization workflow '
+                                                            'and clearly separates '
+                                                            'preview results from '
+                                                            'applied changes.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'A single '
+                                                                       'memorable '
+                                                                       'command can '
+                                                                       'preview and '
+                                                                       'execute the '
+                                                                       'complete '
+                                                                       'deterministic '
+                                                                       'registry-maintenance '
+                                                                       'workflow.\n'},
+                                            {'title': 'Implement scoped '
+                                                      'synchronization',
+                                             'description': 'Allow the slash command '
+                                                            'to restrict work to an '
+                                                            'approved application root '
+                                                            'or safe '
+                                                            'repository-relative '
+                                                            'path.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Root-scoped '
+                                                                       'and '
+                                                                       'path-scoped '
+                                                                       'slash commands '
+                                                                       'affect only '
+                                                                       'matching '
+                                                                       'reconciliation '
+                                                                       'and '
+                                                                       'synchronization '
+                                                                       'candidates.\n'}]},
+                                 {'title': 'Documentation Pipeline Integration',
+                                  'description': 'Integrate component documentation '
+                                                 'after deterministic synchronization '
+                                                 'so new and changed ComponentRegistry '
+                                                 'records receive current semantic '
+                                                 'descriptions without requiring Wu to '
+                                                 'orchestrate the process.\n',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Inspect the current '
+                                                      'documentation command',
+                                             'description': 'Review document_workspace '
+                                                            'and its supporting '
+                                                            'services to identify '
+                                                            'accepted arguments, '
+                                                            'candidate-selection '
+                                                            'behavior, provider usage, '
+                                                            'mutation boundaries, and '
+                                                            'assumptions that remain '
+                                                            'valid.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The current '
+                                                                       'documentation '
+                                                                       'pipeline is '
+                                                                       'documented '
+                                                                       'accurately '
+                                                                       'before '
+                                                                       'integration or '
+                                                                       'modification '
+                                                                       'begins.\n'},
+                                            {'title': 'Expose reusable documentation '
+                                                      'orchestration',
+                                             'description': 'Make component '
+                                                            'documentation callable '
+                                                            'through an application '
+                                                            'service without '
+                                                            'duplicating '
+                                                            'management-command '
+                                                            'implementation or '
+                                                            'embedding documentation '
+                                                            'procedures in the '
+                                                            'slash-command handler.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The management '
+                                                                       'command and '
+                                                                       'workspace '
+                                                                       'slash command '
+                                                                       'invoke the '
+                                                                       'same '
+                                                                       'authoritative '
+                                                                       'documentation '
+                                                                       'service.\n'},
+                                            {'title': 'Document only eligible registry '
+                                                      'records',
+                                             'description': 'Restrict AI-assisted '
+                                                            'documentation to new, '
+                                                            'stale, missing, or '
+                                                            'explicitly selected '
+                                                            'ComponentRegistry records '
+                                                            'after deterministic '
+                                                            'synchronization '
+                                                            'completes.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Current '
+                                                                       'records are '
+                                                                       'not '
+                                                                       'unnecessarily '
+                                                                       'regenerated, '
+                                                                       'and every '
+                                                                       'eligible new '
+                                                                       'or changed '
+                                                                       'record '
+                                                                       'receives a '
+                                                                       'visible '
+                                                                       'documentation '
+                                                                       'result or '
+                                                                       'failure.\n'}]},
+                                 {'title': 'Registry Drift Recovery and Validation',
+                                  'description': 'Use the current ComponentRegistry '
+                                                 'drift as the end-to-end acceptance '
+                                                 'test for the automated workflow and '
+                                                 'leave the registry in a verified, '
+                                                 'maintainable state.\n',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Reconcile current workspace '
+                                                      'drift',
+                                             'description': 'Run the read-only '
+                                                            'workflow against the '
+                                                            'current repository and '
+                                                            'confirm the reported '
+                                                            'KEEP, UPDATE, REGISTER, '
+                                                            'STAGE, EXCLUDE, and '
+                                                            'REVIEW classifications '
+                                                            'before applying '
+                                                            'changes.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The automated '
+                                                                       'status '
+                                                                       'operation '
+                                                                       'reproduces the '
+                                                                       'known '
+                                                                       'reconciliation '
+                                                                       'baseline of '
+                                                                       '137 KEEP, 11 '
+                                                                       'UPDATE, 57 '
+                                                                       'REGISTER, 16 '
+                                                                       'STAGE, 13 '
+                                                                       'EXCLUDE, and 0 '
+                                                                       'REVIEW records '
+                                                                       'unless '
+                                                                       'repository '
+                                                                       'changes have '
+                                                                       'occurred.\n'},
+                                            {'title': 'Apply current registry '
+                                                      'synchronization',
+                                             'description': 'Update eligible existing '
+                                                            'records, register '
+                                                            'approved new records, '
+                                                            'synchronize graph '
+                                                            'projections, and report '
+                                                            'every successful, '
+                                                            'skipped, staged, '
+                                                            'excluded, or failed '
+                                                            'operation.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'risk_description': 'The repository '
+                                                                 'contains substantial '
+                                                                 'accumulated drift, '
+                                                                 'so registration '
+                                                                 'ownership, staged '
+                                                                 'files, exclusions, '
+                                                                 'PostgreSQL writes, '
+                                                                 'and Neo4j projection '
+                                                                 'must remain '
+                                                                 'explicitly '
+                                                                 'visible.\n',
+                                             'validation_description': 'All approved '
+                                                                       'UPDATE and '
+                                                                       'REGISTER '
+                                                                       'candidates are '
+                                                                       'processed '
+                                                                       'without silent '
+                                                                       'failures or '
+                                                                       'unintended '
+                                                                       'repository '
+                                                                       'mutation.\n'},
+                                            {'title': 'Validate final registry health',
+                                             'description': 'Run component '
+                                                            'documentation for '
+                                                            'eligible records and '
+                                                            'perform a final '
+                                                            'deterministic '
+                                                            'reconciliation to verify '
+                                                            'that no unexplained '
+                                                            'workspace drift '
+                                                            'remains.\n',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Final '
+                                                                       'reconciliation '
+                                                                       'reports no '
+                                                                       'unexpected '
+                                                                       'UPDATE, '
+                                                                       'REGISTER, or '
+                                                                       'REVIEW '
+                                                                       'candidates, '
+                                                                       'and every '
+                                                                       'eligible '
+                                                                       'synchronized '
+                                                                       'component has '
+                                                                       'current '
+                                                                       'documentation '
+                                                                       'or an explicit '
+                                                                       'failure '
+                                                                       'requiring '
+                                                                       'review.\n'}]}]}],
+ 'add_phases': [],
+ 'add_steps': []}
