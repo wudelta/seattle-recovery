@@ -32,9 +32,66 @@
             .first();
     }
 
+    function togglePhase($button) {
+        const $phase = $button.closest(
+            ".planning-phase"
+        );
+
+        const $body = $phase.find(
+            ".planning-phase-body"
+        ).first();
+
+        const isExpanded = (
+            $button.attr("aria-expanded") === "true"
+        );
+
+        $button
+            .attr(
+                "aria-expanded",
+                isExpanded ? "false" : "true"
+            )
+            .attr(
+                "aria-label",
+                isExpanded
+                    ? "Expand Phase"
+                    : "Collapse Phase"
+            )
+            .attr(
+                "title",
+                isExpanded
+                    ? "Expand Phase"
+                    : "Collapse Phase"
+            );
+
+        $button
+            .find(".planning-phase-toggle-icon")
+            .text(
+                isExpanded ? "▸" : "▾"
+            );
+
+        $phase.toggleClass(
+            "planning-phase-collapsed",
+            isExpanded
+        );
+
+        $body.toggleClass(
+            "d-none",
+            isExpanded
+        );
+    }
+
     function bindPhaseEvents() {
         $("#planning-workbench")
             .off(".planningPhase")
+            .on(
+                "click.planningPhase",
+                ".planning-toggle-phase-btn",
+                function() {
+                    togglePhase(
+                        $(this)
+                    );
+                }
+            )
             .on(
                 "click.planningPhase",
                 ".planning-new-phase-btn",
@@ -47,7 +104,10 @@
                         return;
                     }
 
-                    phases.openForm($initiative, null);
+                    phases.openForm(
+                        $initiative,
+                        null
+                    );
                 }
             )
             .on(
@@ -87,7 +147,9 @@
                         ".planning-initiative"
                     );
 
-                    phases.closeForm($initiative);
+                    phases.closeForm(
+                        $initiative
+                    );
                 }
             )
             .on(
@@ -111,7 +173,9 @@
                         ".planning-initiative"
                     );
 
-                    phases.clearFormError($initiative);
+                    phases.clearFormError(
+                        $initiative
+                    );
                 }
             );
     }
