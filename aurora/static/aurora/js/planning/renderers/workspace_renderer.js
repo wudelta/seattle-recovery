@@ -34,6 +34,10 @@
 
         const summary = payload.summary || {};
 
+        const $initiativeHeader = $(
+            "#planning-active-initiative-header"
+        );
+
         const $initiativeList = $(
             "#planning-initiative-list"
         );
@@ -51,6 +55,10 @@
         $("#planning-empty-state")
             .addClass("d-none")
             .removeClass("d-flex");
+
+        $initiativeHeader
+            .empty()
+            .addClass("d-none");
 
         $initiativeList.empty();
 
@@ -88,8 +96,16 @@
             renderedInitiative.id
         );
 
+        $initiativeHeader
+            .append(
+                Planning.renderers.initiative.renderHeader(
+                    renderedInitiative
+                )
+            )
+            .removeClass("d-none");
+
         $initiativeList.append(
-            Planning.renderers.initiative.render(
+            Planning.renderers.initiative.renderContent(
                 renderedInitiative
             )
         );

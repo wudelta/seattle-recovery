@@ -2,9 +2,11 @@
 <!-- FILE: aurora/templates/aurora/planning/snippets/initiative_template.html -->
 <!-- START: INITIATIVE_TEMPLATE -->
 <!-- ====================================================================== -->
-<template id="planning-initiative-template">
-    <article class="planning-initiative planning-paper">
-        <header class="planning-section planning-initiative-header">
+<template id="planning-initiative-header-template">
+    <article
+        class="planning-active-initiative planning-initiative"
+    >
+        <header class="planning-initiative-header">
             <div
                 class="d-flex justify-content-between align-items-start gap-3"
             >
@@ -23,12 +25,14 @@
                         class="planning-initiative-meta planning-muted small d-flex align-items-center gap-2 flex-wrap mt-1"
                     >
                         <span class="planning-initiative-owner"></span>
+
                         <span
                             class="planning-initiative-meta-separator"
                             aria-hidden="true"
                         >
                             ·
                         </span>
+
                         <span class="planning-initiative-updated"></span>
                     </div>
 
@@ -69,7 +73,13 @@
                 </div>
             </div>
         </header>
+    </article>
+</template>
 
+<template id="planning-initiative-content-template">
+    <article
+        class="planning-initiative planning-initiative-content"
+    >
         {% include "aurora/planning/forms/phase_form.html" %}
 
         <div

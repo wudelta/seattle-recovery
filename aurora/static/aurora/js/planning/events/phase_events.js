@@ -11,16 +11,41 @@
 
     const phases = Planning.phases;
 
+    function findInitiativeContent($source) {
+        const initiativeId = Number(
+            $source
+                .closest(".planning-initiative")
+                .attr("data-initiative-id")
+        );
+
+        if (!initiativeId) {
+            return $();
+        }
+
+        return $("#planning-initiative-list")
+            .find(".planning-initiative-content")
+            .filter(function() {
+                return Number(
+                    $(this).attr("data-initiative-id")
+                ) === initiativeId;
+            })
+            .first();
+    }
+
     function bindPhaseEvents() {
-        $("#planning-initiative-list")
-            .off("click.planningPhase")
+        $("#planning-workbench")
+            .off(".planningPhase")
             .on(
                 "click.planningPhase",
                 ".planning-new-phase-btn",
                 function() {
-                    const $initiative = $(this).closest(
-                        ".planning-initiative"
+                    const $initiative = findInitiativeContent(
+                        $(this)
                     );
+
+                    if (!$initiative.length) {
+                        return;
+                    }
 
                     phases.openForm($initiative, null);
                 }
@@ -65,7 +90,6 @@
                     phases.closeForm($initiative);
                 }
             )
-            .off("submit.planningPhase")
             .on(
                 "submit.planningPhase",
                 ".planning-phase-form",
@@ -79,7 +103,6 @@
                     );
                 }
             )
-            .off("reset.planningPhase")
             .on(
                 "reset.planningPhase",
                 ".planning-phase-form",

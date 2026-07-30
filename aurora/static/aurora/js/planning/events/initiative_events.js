@@ -76,7 +76,7 @@
                 initiatives.clearFormError();
             });
 
-        $("#planning-initiative-list")
+        $("#planning-workbench")
             .off("click.planningInitiative")
             .on(
                 "click.planningInitiative",

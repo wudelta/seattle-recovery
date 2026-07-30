@@ -1,5 +1,85 @@
 /* ======================================================================
    FILE: aurora/static/aurora/css/planning.css
+   START: ACTIVE_INITIATIVE_HEADER
+   ====================================================================== */
+
+#planning-console-panel .planning-active-initiative-header {
+    position: relative;
+    z-index: 2;
+    background-color: #11181c;
+    border-bottom: 1px solid var(--planning-rule);
+    box-shadow: 0 0.3rem 0.8rem rgba(0, 0, 0, 0.22);
+}
+
+#planning-console-panel .planning-active-initiative {
+    overflow: hidden;
+    background:
+        linear-gradient(
+            105deg,
+            rgba(143, 184, 199, 0.16),
+            rgba(143, 184, 199, 0.04) 52%,
+            transparent
+        ),
+        #172024;
+    border-left: 0.3rem solid var(--planning-accent);
+}
+
+#planning-console-panel .planning-active-initiative
+.planning-initiative-header {
+    padding: 0.9rem 1.1rem;
+}
+
+#planning-console-panel .planning-active-initiative
+.planning-initiative-title {
+    color: #f1f6f8 !important;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+#planning-console-panel .planning-active-initiative
+.planning-initiative-meta {
+    margin-top: 0.25rem !important;
+}
+
+#planning-console-panel .planning-active-initiative
+.planning-initiative-description {
+    max-width: 72rem;
+    color: #b9c5ca !important;
+    line-height: 1.5;
+}
+
+#planning-console-panel .planning-initiative-content {
+    overflow: visible;
+    background: transparent;
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+#planning-console-panel .planning-initiative-content
+.planning-phase-list {
+    gap: 0.65rem !important;
+}
+
+@media (max-width: 900px) {
+    #planning-console-panel .planning-active-initiative
+    .planning-initiative-header {
+        padding: 0.75rem 0.85rem;
+    }
+
+    #planning-console-panel .planning-active-initiative
+    .planning-initiative-title {
+        font-size: 1.12rem;
+    }
+}
+
+/* ======================================================================
+   END: ACTIVE_INITIATIVE_HEADER
+   ====================================================================== */
+
+
+/* ======================================================================
+   FILE: aurora/static/aurora/css/planning.css
    START: PLANNING_DOCUMENT_HIERARCHY
    ====================================================================== */
 
