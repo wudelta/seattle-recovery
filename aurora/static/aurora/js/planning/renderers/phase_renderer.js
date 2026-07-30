@@ -65,6 +65,35 @@
             .css("width", `${percentage}%`);
     }
 
+    function applyInitialCollapsedState(
+        $fragment,
+        phase
+    ) {
+        if (phase.status !== "COMPLETED") {
+            return;
+        }
+
+        $fragment
+            .find(".planning-phase")
+            .addClass("planning-phase-collapsed");
+
+        $fragment
+            .find(".planning-phase-body")
+            .addClass("d-none");
+
+        $fragment
+            .find(".planning-toggle-phase-btn")
+            .attr({
+                "aria-expanded": "false",
+                "aria-label": "Expand Phase",
+                title: "Expand Phase",
+            });
+
+        $fragment
+            .find(".planning-phase-toggle-icon")
+            .text("▸");
+    }
+
     function render(phase) {
         const $fragment = utilities.cloneTemplate(
             "planning-phase-template"
@@ -153,16 +182,18 @@
         } else {
             $stepList.append(
                 $("<div>", {
-                    class: (
-                        "px-3 py-3 text-muted small"
-                    ),
-                    text: (
-                        "No implementation steps are "
-                        + "defined."
-                    ),
+                    class:
+                        "px-3 py-3 text-muted small",
+                    text:
+                        "No implementation steps are defined.",
                 })
             );
         }
+
+        applyInitialCollapsedState(
+            $fragment,
+            phase
+        );
 
         return $fragment;
     }
