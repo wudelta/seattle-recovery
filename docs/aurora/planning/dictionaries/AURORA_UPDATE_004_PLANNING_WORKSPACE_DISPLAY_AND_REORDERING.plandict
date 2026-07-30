@@ -1,0 +1,491 @@
+{'schema_version': 1,
+ 'target': {'project_slug': 'aurora'},
+ 'add_initiatives': [{'title': 'Planning Workspace Display and Reordering',
+                      'description': 'Improve the Decision Engine planning workspace '
+                                     'so the Project, Initiative, Phase, and Step '
+                                     'hierarchy is visually distinct and planning '
+                                     'records can be reordered through deterministic '
+                                     'drag-and-drop interactions while preserving '
+                                     'existing CRUD and selection behavior.',
+                      'status': 'PLANNED',
+                      'phases': [{'title': 'Active Initiative Header',
+                                  'description': 'Separate the selected Initiative '
+                                                 'from the scrolling Phase viewport '
+                                                 'and present it as a fixed, visually '
+                                                 'distinct header.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define the initiative header '
+                                                      'layout',
+                                             'description': 'Establish the structural '
+                                                            'boundary between the '
+                                                            'fixed Initiative header '
+                                                            'and the scrollable Phase '
+                                                            'and Step viewport.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The approved '
+                                                                       'layout clearly '
+                                                                       'places the '
+                                                                       'Initiative '
+                                                                       'above the '
+                                                                       'scrolling '
+                                                                       'Phase '
+                                                                       'viewport.'},
+                                            {'title': 'Refactor the workspace template '
+                                                      'structure',
+                                             'description': 'Move the active '
+                                                            'Initiative header outside '
+                                                            'the scrolling workbench '
+                                                            'content while preserving '
+                                                            'existing workspace '
+                                                            'states.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The Initiative '
+                                                                       'header remains '
+                                                                       'stationary '
+                                                                       'while Phase '
+                                                                       'and Step '
+                                                                       'content '
+                                                                       'scrolls '
+                                                                       'independently.'},
+                                            {'title': 'Refactor initiative rendering',
+                                             'description': 'Populate the fixed '
+                                                            'Initiative header and '
+                                                            'render Phases into the '
+                                                            'separate scrollable '
+                                                            'viewport.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Initiative '
+                                                                       'metadata and '
+                                                                       'CRUD controls '
+                                                                       'appear in the '
+                                                                       'fixed header '
+                                                                       'without '
+                                                                       'duplicating '
+                                                                       'the Initiative '
+                                                                       'in the Phase '
+                                                                       'list.'},
+                                            {'title': 'Apply distinct initiative '
+                                                      'styling',
+                                             'description': 'Increase title prominence '
+                                                            'and apply a distinct '
+                                                            'color, background, '
+                                                            'border, or accent '
+                                                            'treatment.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The Initiative '
+                                                                       'header cannot '
+                                                                       'be confused '
+                                                                       'with a Phase '
+                                                                       'card.'},
+                                            {'title': 'Validate initiative header '
+                                                      'behavior',
+                                             'description': 'Verify scrolling, long '
+                                                            'descriptions, CRUD '
+                                                            'controls, selection '
+                                                            'changes, refresh '
+                                                            'behavior, and empty '
+                                                            'states.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Existing '
+                                                                       'Initiative '
+                                                                       'operations '
+                                                                       'work and only '
+                                                                       'Phase and Step '
+                                                                       'content '
+                                                                       'scrolls.'}]},
+                                 {'title': 'Phase Reordering',
+                                  'description': 'Allow Phases to be reordered within '
+                                                 'the active Initiative.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define the phase reorder '
+                                                      'contract',
+                                             'description': 'Specify payloads, '
+                                                            'membership validation, '
+                                                            'position semantics, '
+                                                            'transaction boundaries, '
+                                                            'and failure behavior.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The contract '
+                                                                       'requires a '
+                                                                       'complete '
+                                                                       'ordered Phase '
+                                                                       'ID list for '
+                                                                       'one Initiative '
+                                                                       'and preserves '
+                                                                       'contiguous '
+                                                                       'positions.'},
+                                            {'title': 'Implement transactional phase '
+                                                      'persistence',
+                                             'description': 'Validate Phase membership '
+                                                            'and update all affected '
+                                                            'positions inside one '
+                                                            'database transaction.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Valid reorders '
+                                                                       'persist '
+                                                                       'atomically and '
+                                                                       'invalid Phase '
+                                                                       'sets produce '
+                                                                       'no database '
+                                                                       'changes.'},
+                                            {'title': 'Add phase drag handles and drop '
+                                                      'feedback',
+                                             'description': 'Add dedicated Phase drag '
+                                                            'handles, placeholders, '
+                                                            'cursor feedback, and '
+                                                            'clear destination '
+                                                            'indicators.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Users can '
+                                                                       'identify '
+                                                                       'draggable '
+                                                                       'Phases and '
+                                                                       'intended drop '
+                                                                       'positions '
+                                                                       'without '
+                                                                       'interfering '
+                                                                       'with CRUD '
+                                                                       'controls.'},
+                                            {'title': 'Connect phase drag-and-drop to '
+                                                      'persistence',
+                                             'description': 'Submit the final Phase '
+                                                            'order, reload '
+                                                            'authoritative data on '
+                                                            'success, and restore the '
+                                                            'previous order on '
+                                                            'failure.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Successful '
+                                                                       'order survives '
+                                                                       'refresh and '
+                                                                       'failed '
+                                                                       'requests '
+                                                                       'restore the '
+                                                                       'prior order '
+                                                                       'with a visible '
+                                                                       'error.'},
+                                            {'title': 'Validate phase reordering',
+                                             'description': 'Verify compatibility with '
+                                                            'create, edit, delete, '
+                                                            'refresh, and active '
+                                                            'Initiative selection.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Phase order '
+                                                                       'remains '
+                                                                       'contiguous and '
+                                                                       'stable after '
+                                                                       'supported '
+                                                                       'operations.'}]},
+                                 {'title': 'Step Reordering',
+                                  'description': 'Allow Steps to be reordered within '
+                                                 'their current Phase.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define the step reorder '
+                                                      'contract',
+                                             'description': 'Specify complete sibling '
+                                                            'ordering within one Phase '
+                                                            'and explicitly exclude '
+                                                            'cross-Phase moves.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The contract '
+                                                                       'accepts only '
+                                                                       'the complete '
+                                                                       'ordered Step '
+                                                                       'ID set '
+                                                                       'belonging to '
+                                                                       'one Phase.'},
+                                            {'title': 'Implement transactional step '
+                                                      'persistence',
+                                             'description': 'Validate Step membership '
+                                                            'and update positions in '
+                                                            'one database transaction.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Valid reorders '
+                                                                       'persist '
+                                                                       'atomically and '
+                                                                       'invalid Step '
+                                                                       'sets are '
+                                                                       'rejected '
+                                                                       'without '
+                                                                       'mutation.'},
+                                            {'title': 'Add step drag handles and drop '
+                                                      'feedback',
+                                             'description': 'Add dedicated Step drag '
+                                                            'handles and insertion '
+                                                            'feedback while preserving '
+                                                            'metadata and CRUD '
+                                                            'controls.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Steps reorder '
+                                                                       'predictably '
+                                                                       'without '
+                                                                       'accidental '
+                                                                       'Phase dragging '
+                                                                       'or control '
+                                                                       'activation.'},
+                                            {'title': 'Connect step drag-and-drop to '
+                                                      'persistence',
+                                             'description': 'Submit final Step order, '
+                                                            'reload on success, and '
+                                                            'restore the previous '
+                                                            'order on failure.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Reordered '
+                                                                       'Steps survive '
+                                                                       'refresh and '
+                                                                       'failures '
+                                                                       'preserve '
+                                                                       'original order '
+                                                                       'and Phase '
+                                                                       'ownership.'},
+                                            {'title': 'Validate step reordering',
+                                             'description': 'Verify empty, '
+                                                            'single-Step, and '
+                                                            'multi-Step Phases and '
+                                                            'compatibility with CRUD '
+                                                            'and Phase reordering.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Every '
+                                                                       'supported Step '
+                                                                       'list remains '
+                                                                       'stable and '
+                                                                       'contiguous.'}]},
+                                 {'title': 'Initiative Navigator Reordering',
+                                  'description': 'Replace alphabetic Initiative '
+                                                 'navigation with persisted planning '
+                                                 'order and allow reordering within '
+                                                 'the active Project.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Confirm initiative ordering '
+                                                      'behavior',
+                                             'description': 'Inspect the current query '
+                                                            'and navigator rendering '
+                                                            'to identify where '
+                                                            'alphabetic ordering is '
+                                                            'introduced.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The '
+                                                                       'authoritative '
+                                                                       'backend and '
+                                                                       'frontend '
+                                                                       'ordering '
+                                                                       'sources are '
+                                                                       'documented.'},
+                                            {'title': 'Define the initiative reorder '
+                                                      'contract',
+                                             'description': 'Specify complete sibling '
+                                                            'ordering within one '
+                                                            'Project, including '
+                                                            'new-record placement and '
+                                                            'selection preservation.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The contract '
+                                                                       'defines '
+                                                                       'deterministic '
+                                                                       'order for '
+                                                                       'existing, '
+                                                                       'newly created, '
+                                                                       'and imported '
+                                                                       'Initiatives.'},
+                                            {'title': 'Implement persisted initiative '
+                                                      'ordering',
+                                             'description': 'Update retrieval and '
+                                                            'transactional reorder '
+                                                            'behavior so the navigator '
+                                                            'follows position rather '
+                                                            'than title.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'Each Project '
+                                                                       'displays its '
+                                                                       'own contiguous '
+                                                                       'Initiative '
+                                                                       'order.'},
+                                            {'title': 'Add navigator drag-and-drop',
+                                             'description': 'Add Initiative drag '
+                                                            'handles and destination '
+                                                            'feedback while preserving '
+                                                            'selection and creation '
+                                                            'behavior.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Initiatives '
+                                                                       'reorder '
+                                                                       'without '
+                                                                       'accidentally '
+                                                                       'changing the '
+                                                                       'active '
+                                                                       'Initiative '
+                                                                       'during '
+                                                                       'dragging.'},
+                                            {'title': 'Validate initiative reordering',
+                                             'description': 'Verify persistence, '
+                                                            'active selection, '
+                                                            'independent Project '
+                                                            'ordering, project '
+                                                            'switching, and imported '
+                                                            'Initiative placement.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Navigator '
+                                                                       'order survives '
+                                                                       'refresh and '
+                                                                       'remains '
+                                                                       'correct for '
+                                                                       'each '
+                                                                       'Project.'}]},
+                                 {'title': 'Active Project Header',
+                                  'description': 'Create a prominent and informative '
+                                                 'Project header that establishes the '
+                                                 'top level of the planning hierarchy.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define project header '
+                                                      'information',
+                                             'description': 'Select the Project title, '
+                                                            'slug, description, '
+                                                            'status, ownership, update '
+                                                            'metadata, counts, and '
+                                                            'actions to display.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The approved '
+                                                                       'information '
+                                                                       'set avoids '
+                                                                       'duplicating '
+                                                                       'low-value '
+                                                                       'toolbar data.'},
+                                            {'title': 'Add the project header '
+                                                      'structure',
+                                             'description': 'Introduce a dedicated '
+                                                            'Project header between '
+                                                            'the Decision Engine '
+                                                            'toolbar and Initiative '
+                                                            'workspace.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'The header '
+                                                                       'occupies the '
+                                                                       'correct '
+                                                                       'hierarchy '
+                                                                       'level without '
+                                                                       'breaking '
+                                                                       'workspace '
+                                                                       'sizing.'},
+                                            {'title': 'Render active project '
+                                                      'information',
+                                             'description': 'Populate the Project '
+                                                            'header from the planning '
+                                                            'payload and update it '
+                                                            'when the active Project '
+                                                            'changes.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'validation_description': 'Project '
+                                                                       'metadata and '
+                                                                       'counts always '
+                                                                       'match the '
+                                                                       'active '
+                                                                       'Project.'},
+                                            {'title': 'Apply distinct project styling',
+                                             'description': 'Give the Project header '
+                                                            'stronger prominence than '
+                                                            'the Initiative header '
+                                                            'while preserving usable '
+                                                            'viewport height.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'validation_description': 'The visible '
+                                                                       'hierarchy '
+                                                                       'reads clearly '
+                                                                       'as Project, '
+                                                                       'Initiative, '
+                                                                       'Phase, and '
+                                                                       'Step.'},
+                                            {'title': 'Validate the complete planning '
+                                                      'hierarchy',
+                                             'description': 'Perform end-to-end '
+                                                            'validation of both '
+                                                            'headers, all reorder '
+                                                            'operations, CRUD '
+                                                            'controls, selection '
+                                                            'state, refresh behavior, '
+                                                            'and responsive layout.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 180,
+                                             'estimate_confidence': 'LOW',
+                                             'risk_level': 'HIGH',
+                                             'validation_description': 'The hierarchy '
+                                                                       'is visually '
+                                                                       'distinct, '
+                                                                       'sibling orders '
+                                                                       'persist, and '
+                                                                       'no existing '
+                                                                       'CRUD workflow '
+                                                                       'regresses.'}]}]}],
+ 'add_phases': [],
+ 'add_steps': []}
