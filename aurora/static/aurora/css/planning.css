@@ -692,6 +692,41 @@
     line-height: 1.4;
 }
 
+#planning-console-panel .planning-step-form-file-list {
+    min-height: 2.25rem;
+}
+
+#planning-console-panel .planning-step-form-file-row {
+    background-color: rgba(21, 25, 28, 0.62);
+    border-color: rgba(157, 166, 173, 0.24) !important;
+}
+
+#planning-console-panel .planning-step-form-file-row:focus-within {
+    border-color: rgba(143, 184, 199, 0.55) !important;
+    box-shadow: 0 0 0 1px rgba(143, 184, 199, 0.14);
+}
+
+#planning-console-panel .planning-step-form-file-path {
+    min-width: 0;
+}
+
+#planning-console-panel .planning-step-form-file-reason {
+    min-height: 3.6rem;
+    resize: vertical;
+}
+
+#planning-console-panel .planning-step-form-file-empty {
+    padding: 0.55rem 0.65rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(157, 166, 173, 0.22);
+    border-radius: 0.25rem;
+}
+
+#planning-console-panel .planning-remove-step-file-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
 #planning-console-panel .planning-step-footer {
     padding-top: 0.55rem;
 }

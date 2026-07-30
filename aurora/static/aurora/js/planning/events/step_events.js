@@ -59,6 +59,150 @@
         );
     }
 
+    function updateStepFileEmptyState(
+        $phase,
+        fileKind
+    ) {
+        const $list = $phase.find(
+            `.planning-step-form-file-list[data-file-kind="${fileKind}"]`
+        );
+
+        const hasRows = (
+            $list.find(".planning-step-form-file-row").length > 0
+        );
+
+        $phase
+            .find(
+                `.planning-step-form-file-empty[data-file-kind="${fileKind}"]`
+            )
+            .toggleClass(
+                "d-none",
+                hasRows
+            );
+    }
+
+    function createStepFileRow(
+        fileKind,
+        stepFile
+    ) {
+        const file = stepFile || {};
+
+        return $("<div>", {
+            class: (
+                "planning-step-form-file-row "
+                + "border border-secondary rounded p-2"
+            ),
+            "data-file-kind": fileKind,
+        }).append(
+            $("<div>", {
+                class: "d-flex align-items-start gap-2",
+            }).append(
+                $("<div>", {
+                    class: "flex-grow-1",
+                }).append(
+                    $("<input>", {
+                        type: "text",
+                        class: (
+                            "planning-step-form-file-path "
+                            + "form-control form-control-sm "
+                            + "bg-black text-light border-secondary "
+                            + "font-monospace"
+                        ),
+                        value: file.file_path || "",
+                        placeholder: "aurora/path/to/file.py",
+                        spellcheck: "false",
+                    }),
+                    $("<textarea>", {
+                        class: (
+                            "planning-step-form-file-reason "
+                            + "form-control form-control-sm "
+                            + "bg-black text-light border-secondary "
+                            + "mt-2"
+                        ),
+                        rows: 2,
+                        placeholder: "Why will this file change?",
+                    }).val(
+                        file.reason || ""
+                    )
+                ),
+                $("<button>", {
+                    type: "button",
+                    class: (
+                        "planning-remove-step-file-btn "
+                        + "btn btn-outline-danger btn-sm"
+                    ),
+                    title: "Remove file",
+                    "aria-label": "Remove file",
+                }).text("Remove")
+            )
+        );
+    }
+
+    function addStepFileRow(
+        $phase,
+        fileKind,
+        stepFile
+    ) {
+        const $list = $phase.find(
+            `.planning-step-form-file-list[data-file-kind="${fileKind}"]`
+        );
+
+        if (!$list.length) {
+            return;
+        }
+
+        const $row = createStepFileRow(
+            fileKind,
+            stepFile
+        );
+
+        $list.append($row);
+
+        updateStepFileEmptyState(
+            $phase,
+            fileKind
+        );
+
+        $row
+            .find(".planning-step-form-file-path")
+            .trigger("focus");
+    }
+
+    function clearStepFileRows($phase) {
+        $phase
+            .find(".planning-step-form-file-list")
+            .empty();
+
+        updateStepFileEmptyState(
+            $phase,
+            "planned"
+        );
+
+        updateStepFileEmptyState(
+            $phase,
+            "actual"
+        );
+    }
+
+    function removeStepFileRow($button) {
+        const $row = $button.closest(
+            ".planning-step-form-file-row"
+        );
+
+        const fileKind = $row.data("file-kind");
+
+        const $phase = $row.closest(
+            ".planning-phase"
+        );
+
+        $row.remove();
+
+        updateStepFileEmptyState(
+            $phase,
+            fileKind
+        );
+    }
+
     function bindStepEvents() {
         $("#planning-initiative-list")
             .off(".planningStep")
@@ -116,6 +260,28 @@
             )
             .on(
                 "click.planningStep",
+                ".planning-add-step-file-btn",
+                function() {
+                    const $button = $(this);
+
+                    addStepFileRow(
+                        $button.closest(".planning-phase"),
+                        $button.data("file-kind"),
+                        null
+                    );
+                }
+            )
+            .on(
+                "click.planningStep",
+                ".planning-remove-step-file-btn",
+                function() {
+                    removeStepFileRow(
+                        $(this)
+                    );
+                }
+            )
+            .on(
+                "click.planningStep",
                 ".planning-cancel-step-btn",
                 function() {
                     steps.closeForm(
@@ -155,6 +321,8 @@
 
     Planning.stepEvents = {
         bind: bindStepEvents,
+        addFileRow: addStepFileRow,
+        clearFileRows: clearStepFileRows,
     };
 })(window, jQuery);
 // ======================================================================

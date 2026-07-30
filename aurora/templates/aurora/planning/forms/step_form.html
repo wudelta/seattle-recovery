@@ -204,38 +204,81 @@
                 </div>
 
                 <div class="small text-secondary">
-                    Enter one repository-relative file path per line.
+                    Record each repository-relative path and why the Step
+                    expects or produced the change.
                 </div>
             </div>
 
-            <div class="col-12 col-lg-6">
-                <label
-                    class="form-label small text-secondary"
+            <div class="col-12 col-xl-6">
+                <div
+                    class="d-flex align-items-center justify-content-between gap-2 mb-2"
                 >
-                    Planned files
-                </label>
+                    <div>
+                        <div class="small fw-semibold text-light">
+                            Planned files
+                        </div>
 
-                <textarea
-                    class="planning-step-form-planned-files form-control form-control-sm bg-black text-light border-secondary font-monospace"
-                    rows="4"
-                    placeholder="aurora/path/to/file.py"
-                    spellcheck="false"
-                ></textarea>
+                        <div class="small text-secondary">
+                            Files expected to change.
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="planning-add-step-file-btn btn btn-outline-info btn-sm"
+                        data-file-kind="planned"
+                    >
+                        Add Planned File
+                    </button>
+                </div>
+
+                <div
+                    class="planning-step-form-file-list planning-step-form-planned-files d-flex flex-column gap-2"
+                    data-file-kind="planned"
+                ></div>
+
+                <div
+                    class="planning-step-form-file-empty small text-secondary"
+                    data-file-kind="planned"
+                >
+                    No planned files recorded.
+                </div>
             </div>
 
-            <div class="col-12 col-lg-6">
-                <label
-                    class="form-label small text-secondary"
+            <div class="col-12 col-xl-6">
+                <div
+                    class="d-flex align-items-center justify-content-between gap-2 mb-2"
                 >
-                    Actual files
-                </label>
+                    <div>
+                        <div class="small fw-semibold text-light">
+                            Actual files
+                        </div>
 
-                <textarea
-                    class="planning-step-form-actual-files form-control form-control-sm bg-black text-light border-secondary font-monospace"
-                    rows="4"
-                    placeholder="aurora/path/to/file.py"
-                    spellcheck="false"
-                ></textarea>
+                        <div class="small text-secondary">
+                            Files changed during implementation.
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="planning-add-step-file-btn btn btn-outline-info btn-sm"
+                        data-file-kind="actual"
+                    >
+                        Add Actual File
+                    </button>
+                </div>
+
+                <div
+                    class="planning-step-form-file-list planning-step-form-actual-files d-flex flex-column gap-2"
+                    data-file-kind="actual"
+                ></div>
+
+                <div
+                    class="planning-step-form-file-empty small text-secondary"
+                    data-file-kind="actual"
+                >
+                    No actual files recorded.
+                </div>
             </div>
 
             <div class="col-12">

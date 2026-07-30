@@ -88,43 +88,82 @@
         );
     }
 
-    function formatStepFiles(files) {
-        if (!Array.isArray(files)) {
-            return "";
+    function clearStepFileRows($phase) {
+        if (
+            Planning.stepEvents
+            && Planning.stepEvents.clearFileRows
+        ) {
+            Planning.stepEvents.clearFileRows($phase);
+            return;
         }
 
-        return files
-            .map(function(stepFile) {
-                return stepFile.file_path || "";
-            })
-            .filter(function(filePath) {
-                return Boolean(filePath);
-            })
-            .join("\n");
+        $phase
+            .find(".planning-step-form-file-list")
+            .empty();
+
+        $phase
+            .find(".planning-step-form-file-empty")
+            .removeClass("d-none");
     }
 
-    function parseStepFiles(value) {
+    function populateStepFileRows(
+        $phase,
+        fileKind,
+        files
+    ) {
+        if (
+            !Planning.stepEvents
+            || !Planning.stepEvents.addFileRow
+        ) {
+            return;
+        }
+
+        (files || []).forEach(function(stepFile) {
+            Planning.stepEvents.addFileRow(
+                $phase,
+                fileKind,
+                stepFile
+            );
+        });
+    }
+
+    function collectStepFiles(
+        $phase,
+        fileKind
+    ) {
+        const files = [];
         const seenPaths = {};
 
-        return String(value || "")
-            .split(/\r?\n/)
-            .map(function(filePath) {
-                return filePath.trim();
-            })
-            .filter(function(filePath) {
+        $phase
+            .find(
+                `.planning-step-form-file-row[data-file-kind="${fileKind}"]`
+            )
+            .each(function() {
+                const $row = $(this);
+
+                const filePath = $row
+                    .find(".planning-step-form-file-path")
+                    .val()
+                    .trim();
+
+                const reason = $row
+                    .find(".planning-step-form-file-reason")
+                    .val()
+                    .trim();
+
                 if (!filePath || seenPaths[filePath]) {
-                    return false;
+                    return;
                 }
 
                 seenPaths[filePath] = true;
-                return true;
-            })
-            .map(function(filePath) {
-                return {
+
+                files.push({
                     file_path: filePath,
-                    reason: "",
-                };
+                    reason: reason,
+                });
             });
+
+        return files;
     }
 
     function resetStepForm($phase) {
@@ -148,6 +187,7 @@
             .find(".planning-step-form-estimate-confidence")
             .val("");
 
+        clearStepFileRows($phase);
         populateStepAssignees($phase, null);
         clearStepFormError($phase);
     }
@@ -233,21 +273,17 @@
                 )
                 .val(document.discussion || "");
 
-            $phase
-                .find(
-                    ".planning-step-form-planned-files"
-                )
-                .val(
-                    formatStepFiles(plannedFiles)
-                );
+            populateStepFileRows(
+                $phase,
+                "planned",
+                plannedFiles
+            );
 
-            $phase
-                .find(
-                    ".planning-step-form-actual-files"
-                )
-                .val(
-                    formatStepFiles(actualFiles)
-                );
+            populateStepFileRows(
+                $phase,
+                "actual",
+                actualFiles
+            );
 
             $phase
                 .find(
@@ -290,7 +326,7 @@
         $phase
             .find(".planning-step-form")
             .find(
-                "input, textarea, select, button[type='reset']"
+                "input, textarea, select, button"
             )
             .prop("disabled", isSaving);
     }
@@ -324,16 +360,14 @@
             .find(".planning-step-form-assigned-to")
             .val();
 
-        const plannedFiles = parseStepFiles(
-            $phase
-                .find(".planning-step-form-planned-files")
-                .val()
+        const plannedFiles = collectStepFiles(
+            $phase,
+            "planned"
         );
 
-        const actualFiles = parseStepFiles(
-            $phase
-                .find(".planning-step-form-actual-files")
-                .val()
+        const actualFiles = collectStepFiles(
+            $phase,
+            "actual"
         );
 
         clearStepFormError($phase);
