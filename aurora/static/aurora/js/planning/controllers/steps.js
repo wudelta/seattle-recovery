@@ -88,6 +88,45 @@
         );
     }
 
+    function formatStepFiles(files) {
+        if (!Array.isArray(files)) {
+            return "";
+        }
+
+        return files
+            .map(function(stepFile) {
+                return stepFile.file_path || "";
+            })
+            .filter(function(filePath) {
+                return Boolean(filePath);
+            })
+            .join("\n");
+    }
+
+    function parseStepFiles(value) {
+        const seenPaths = {};
+
+        return String(value || "")
+            .split(/\r?\n/)
+            .map(function(filePath) {
+                return filePath.trim();
+            })
+            .filter(function(filePath) {
+                if (!filePath || seenPaths[filePath]) {
+                    return false;
+                }
+
+                seenPaths[filePath] = true;
+                return true;
+            })
+            .map(function(filePath) {
+                return {
+                    file_path: filePath,
+                    reason: "",
+                };
+            });
+    }
+
     function resetStepForm($phase) {
         const $form = $phase.find(
             ".planning-step-form"
@@ -130,6 +169,11 @@
         );
 
         if (step) {
+            const document = step.document || {};
+            const validation = step.validation || {};
+            const plannedFiles = step.planned_files || [];
+            const actualFiles = step.actual_files || [];
+
             $phase
                 .find(".planning-step-form")
                 .attr("data-step-id", step.id);
@@ -161,9 +205,59 @@
 
             $phase
                 .find(
+                    ".planning-step-form-technical-design"
+                )
+                .val(document.technical_design || "");
+
+            $phase
+                .find(
+                    ".planning-step-form-dependencies"
+                )
+                .val(document.dependencies || "");
+
+            $phase
+                .find(
+                    ".planning-step-form-assumptions"
+                )
+                .val(document.assumptions || "");
+
+            $phase
+                .find(
+                    ".planning-step-form-implementation-notes"
+                )
+                .val(document.implementation_notes || "");
+
+            $phase
+                .find(
+                    ".planning-step-form-discussion"
+                )
+                .val(document.discussion || "");
+
+            $phase
+                .find(
+                    ".planning-step-form-planned-files"
+                )
+                .val(
+                    formatStepFiles(plannedFiles)
+                );
+
+            $phase
+                .find(
+                    ".planning-step-form-actual-files"
+                )
+                .val(
+                    formatStepFiles(actualFiles)
+                );
+
+            $phase
+                .find(
                     ".planning-step-form-validation-description"
                 )
-                .val(step.validation_description || "");
+                .val(
+                    validation.description
+                    || step.validation_description
+                    || ""
+                );
         }
 
         $phase
@@ -229,6 +323,18 @@
         const assignedToId = $phase
             .find(".planning-step-form-assigned-to")
             .val();
+
+        const plannedFiles = parseStepFiles(
+            $phase
+                .find(".planning-step-form-planned-files")
+                .val()
+        );
+
+        const actualFiles = parseStepFiles(
+            $phase
+                .find(".planning-step-form-actual-files")
+                .val()
+        );
 
         clearStepFormError($phase);
 
@@ -317,12 +423,48 @@
                         ".planning-step-form-estimate-confidence"
                     )
                     .val(),
-                validation_description: $phase
-                    .find(
-                        ".planning-step-form-validation-description"
-                    )
-                    .val()
-                    .trim(),
+                document: {
+                    technical_design: $phase
+                        .find(
+                            ".planning-step-form-technical-design"
+                        )
+                        .val()
+                        .trim(),
+                    dependencies: $phase
+                        .find(
+                            ".planning-step-form-dependencies"
+                        )
+                        .val()
+                        .trim(),
+                    assumptions: $phase
+                        .find(
+                            ".planning-step-form-assumptions"
+                        )
+                        .val()
+                        .trim(),
+                    implementation_notes: $phase
+                        .find(
+                            ".planning-step-form-implementation-notes"
+                        )
+                        .val()
+                        .trim(),
+                    discussion: $phase
+                        .find(
+                            ".planning-step-form-discussion"
+                        )
+                        .val()
+                        .trim(),
+                },
+                validation: {
+                    description: $phase
+                        .find(
+                            ".planning-step-form-validation-description"
+                        )
+                        .val()
+                        .trim(),
+                },
+                planned_files: plannedFiles,
+                actual_files: actualFiles,
             }),
         })
             .done(function(response) {

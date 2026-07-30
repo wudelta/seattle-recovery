@@ -1,16 +1,30 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/steps.py (PATCH 2 OF 5)
-# START: STEP_PERSISTENCE
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_IMPORTS
 # ======================================================================
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse
 
-from aurora.models import ExecutionStatus, Phase, Step
+from aurora.models import (
+    ExecutionStatus,
+    Phase,
+    Step,
+    StepDocument,
+    StepFile,
+    StepValidation,
+)
 from aurora.subsystems.planning.api.serializers import serialize_step
+# ======================================================================
+# END: STEP_IMPORTS
+# ======================================================================
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_SAVE_CONTEXT
+# ======================================================================
 def resolve_step_save_context(payload):
     """Resolves and validates the Step, parent Phase, title, and status."""
     step_id = payload.get("step_id")
@@ -144,8 +158,15 @@ def resolve_step_save_context(payload):
         "status": status,
         "assigned_to": assigned_to,
     }, None
+# ======================================================================
+# END: STEP_SAVE_CONTEXT
+# ======================================================================
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_SAVE_DETAILS
+# ======================================================================
 def resolve_step_save_details(payload, step):
     """Validates and normalizes optional Step planning details."""
     estimated_minutes_value = payload.get(
@@ -235,8 +256,324 @@ def resolve_step_save_details(payload, step):
         "estimate_confidence": estimate_confidence,
         "validation_description": validation_description,
     }, None
+# ======================================================================
+# END: STEP_SAVE_DETAILS
+# ======================================================================
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_CORE_PERSISTENCE
+# ======================================================================
+def save_step_core(
+    *,
+    request,
+    step,
+    phase,
+    context,
+    details,
+):
+    """Creates or updates the core Step record."""
+    if step is None:
+        highest_position = (
+            Step.objects
+            .filter(phase=phase)
+            .aggregate(highest=Max("position"))
+            .get("highest")
+        )
+
+        step = Step.objects.create(
+            phase=phase,
+            title=context["title"],
+            description=details["description"],
+            status=context["status"],
+            position=(
+                highest_position + 1
+                if highest_position is not None
+                else 0
+            ),
+            estimated_minutes=details["estimated_minutes"],
+            estimate_confidence=details["estimate_confidence"],
+            validation_description=(
+                details["validation_description"]
+            ),
+            created_by=request.user,
+            assigned_to=context["assigned_to"],
+        )
+
+        return step, 201, "Step created."
+
+    if step.phase_id != phase.pk:
+        highest_position = (
+            Step.objects
+            .filter(phase=phase)
+            .aggregate(highest=Max("position"))
+            .get("highest")
+        )
+
+        step.phase = phase
+        step.position = (
+            highest_position + 1
+            if highest_position is not None
+            else 0
+        )
+
+    step.title = context["title"]
+    step.description = details["description"]
+    step.status = context["status"]
+    step.estimated_minutes = details["estimated_minutes"]
+    step.estimate_confidence = details["estimate_confidence"]
+    step.validation_description = (
+        details["validation_description"]
+    )
+    step.assigned_to = context["assigned_to"]
+
+    step.save()
+
+    return step, 200, "Step updated."
+# ======================================================================
+# END: STEP_CORE_PERSISTENCE
+# ======================================================================
+
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_DOCUMENT_PERSISTENCE
+# ======================================================================
+def save_step_document(*, step, payload):
+    """Creates or updates supporting technical documentation for a Step."""
+    document_payload = payload.get("document")
+
+    if document_payload is None:
+        document_payload = {
+            field_name: payload[field_name]
+            for field_name in (
+                "technical_design",
+                "dependencies",
+                "assumptions",
+                "implementation_notes",
+                "discussion",
+            )
+            if field_name in payload
+        }
+
+    if not isinstance(document_payload, dict):
+        return
+
+    supported_fields = (
+        "technical_design",
+        "dependencies",
+        "assumptions",
+        "implementation_notes",
+        "discussion",
+    )
+
+    provided_fields = {
+        field_name: str(
+            document_payload.get(field_name, "")
+        ).strip()
+        for field_name in supported_fields
+        if field_name in document_payload
+    }
+
+    if not provided_fields:
+        return
+
+    document, _created = StepDocument.objects.update_or_create(
+        step=step,
+        defaults=provided_fields,
+    )
+
+    step.document = document
+# ======================================================================
+# END: STEP_DOCUMENT_PERSISTENCE
+# ======================================================================
+
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_VALIDATION_PERSISTENCE
+# ======================================================================
+def save_step_validation(*, step, payload):
+    """Creates or updates validation metadata for a Step."""
+    validation_payload = payload.get("validation")
+
+    if validation_payload is None:
+        validation_payload = {
+            field_name: payload[field_name]
+            for field_name in (
+                "validation_description",
+                "validation_notes",
+                "validated_by",
+                "validated_at",
+            )
+            if field_name in payload
+        }
+
+    if not isinstance(validation_payload, dict):
+        return
+
+    defaults = {}
+
+    if (
+        "validation_description" in validation_payload
+        or "description" in validation_payload
+    ):
+        defaults["description"] = str(
+            validation_payload.get(
+                "description",
+                validation_payload.get(
+                    "validation_description",
+                    "",
+                ),
+            )
+        ).strip()
+
+    if (
+        "validation_notes" in validation_payload
+        or "notes" in validation_payload
+    ):
+        defaults["notes"] = str(
+            validation_payload.get(
+                "notes",
+                validation_payload.get(
+                    "validation_notes",
+                    "",
+                ),
+            )
+        ).strip()
+
+    if "validated_at" in validation_payload:
+        defaults["validated_at"] = (
+            validation_payload.get("validated_at")
+            or None
+        )
+
+    if "validated_by" in validation_payload:
+        validated_by = validation_payload.get("validated_by")
+
+        if validated_by in (None, ""):
+            defaults["validated_by"] = None
+        else:
+            try:
+                defaults["validated_by"] = (
+                    get_user_model()
+                    .objects
+                    .get(pk=validated_by)
+                )
+            except get_user_model().DoesNotExist:
+                defaults["validated_by"] = None
+
+    if not defaults:
+        return
+
+    validation, _created = (
+        StepValidation.objects.update_or_create(
+            step=step,
+            defaults=defaults,
+        )
+    )
+
+    step.validation = validation
+# ======================================================================
+# END: STEP_VALIDATION_PERSISTENCE
+# ======================================================================
+
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_FILE_PERSISTENCE
+# ======================================================================
+def save_step_files(*, request, step, payload):
+    """Synchronizes submitted planned and actual files for a Step."""
+    files_supplied = any(
+        key in payload
+        for key in (
+            "files",
+            "planned_files",
+            "actual_files",
+        )
+    )
+
+    if not files_supplied:
+        return
+
+    file_payloads = []
+
+    legacy_files = payload.get("files")
+
+    if isinstance(legacy_files, list):
+        file_payloads.extend(legacy_files)
+
+    for role, payload_key in (
+        (StepFile.Role.PLANNED, "planned_files"),
+        (StepFile.Role.ACTUAL, "actual_files"),
+    ):
+        role_payloads = payload.get(payload_key)
+
+        if not isinstance(role_payloads, list):
+            continue
+
+        for file_payload in role_payloads:
+            if not isinstance(file_payload, dict):
+                continue
+
+            normalized_payload = dict(file_payload)
+            normalized_payload["role"] = role
+            file_payloads.append(normalized_payload)
+
+    submitted_keys = set()
+
+    for file_payload in file_payloads:
+        if not isinstance(file_payload, dict):
+            continue
+
+        file_path = str(
+            file_payload.get("file_path", "")
+        ).strip()
+
+        role = str(
+            file_payload.get("role", "")
+        ).strip().upper()
+
+        if not file_path:
+            continue
+
+        if role not in StepFile.Role.values:
+            continue
+
+        reason = str(
+            file_payload.get("reason", "")
+        ).strip()
+
+        StepFile.objects.update_or_create(
+            step=step,
+            file_path=file_path,
+            role=role,
+            defaults={
+                "reason": reason,
+                "recorded_by": request.user,
+            },
+        )
+
+        submitted_keys.add((file_path, role))
+
+    existing_files = StepFile.objects.filter(step=step)
+
+    for step_file in existing_files:
+        key = (step_file.file_path, step_file.role)
+
+        if key not in submitted_keys:
+            step_file.delete()
+# ======================================================================
+# END: STEP_FILE_PERSISTENCE
+# ======================================================================
+
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_SAVE_ORCHESTRATION
+# ======================================================================
 def save_step(request, payload):
     """Validates and persists a new or existing Step."""
     context, error_response = resolve_step_save_context(payload)
@@ -256,65 +593,29 @@ def save_step(request, payload):
         return error_response
 
     with transaction.atomic():
-        if step is None:
-            highest_position = (
-                Step.objects
-                .filter(phase=phase)
-                .aggregate(highest=Max("position"))
-                .get("highest")
-            )
+        step, response_status, message = save_step_core(
+            request=request,
+            step=step,
+            phase=phase,
+            context=context,
+            details=details,
+        )
 
-            step = Step.objects.create(
-                phase=phase,
-                title=context["title"],
-                description=details["description"],
-                status=context["status"],
-                position=(
-                    highest_position + 1
-                    if highest_position is not None
-                    else 0
-                ),
-                estimated_minutes=details["estimated_minutes"],
-                estimate_confidence=details["estimate_confidence"],
-                validation_description=(
-                    details["validation_description"]
-                ),
-                created_by=request.user,
-                assigned_to=context["assigned_to"],
-            )
+        save_step_document(
+            step=step,
+            payload=payload,
+        )
 
-            response_status = 201
-            message = "Step created."
-        else:
-            if step.phase_id != phase.pk:
-                highest_position = (
-                    Step.objects
-                    .filter(phase=phase)
-                    .aggregate(highest=Max("position"))
-                    .get("highest")
-                )
+        save_step_validation(
+            step=step,
+            payload=payload,
+        )
 
-                step.phase = phase
-                step.position = (
-                    highest_position + 1
-                    if highest_position is not None
-                    else 0
-                )
-
-            step.title = context["title"]
-            step.description = details["description"]
-            step.status = context["status"]
-            step.estimated_minutes = details["estimated_minutes"]
-            step.estimate_confidence = details["estimate_confidence"]
-            step.validation_description = (
-                details["validation_description"]
-            )
-            step.assigned_to = context["assigned_to"]
-
-            step.save()
-
-            response_status = 200
-            message = "Step updated."
+        save_step_files(
+            request=request,
+            step=step,
+            payload=payload,
+        )
 
     return JsonResponse(
         {
@@ -326,8 +627,15 @@ def save_step(request, payload):
         },
         status=response_status,
     )
+# ======================================================================
+# END: STEP_SAVE_ORCHESTRATION
+# ======================================================================
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_DELETE
+# ======================================================================
 def delete_step(payload):
     """Deletes an existing Step and returns its hierarchy context."""
     step_id = payload.get("step_id")
@@ -378,11 +686,18 @@ def delete_step(payload):
             "initiative_id": initiative_id,
         }
     )
+# ======================================================================
+# END: STEP_DELETE
+# ======================================================================
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/steps.py
+# START: STEP_COMPATIBILITY
+# ======================================================================
 def create_step(request, payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
     return save_step(request, payload)
 # ======================================================================
-# END: STEP_PERSISTENCE (PATCH 2 OF 5)
+# END: STEP_COMPATIBILITY
 # ======================================================================

@@ -11,9 +11,66 @@
 
     const steps = Planning.steps;
 
+    function toggleStep($button) {
+        const $step = $button.closest(
+            ".planning-step"
+        );
+
+        const $document = $step.find(
+            ".planning-step-document"
+        ).first();
+
+        const isExpanded = (
+            $button.attr("aria-expanded") === "true"
+        );
+
+        $button
+            .attr(
+                "aria-expanded",
+                isExpanded ? "false" : "true"
+            )
+            .attr(
+                "aria-label",
+                isExpanded
+                    ? "Expand Step"
+                    : "Collapse Step"
+            )
+            .attr(
+                "title",
+                isExpanded
+                    ? "Expand Step"
+                    : "Collapse Step"
+            );
+
+        $button
+            .find(".planning-step-toggle-icon")
+            .text(
+                isExpanded ? "▸" : "▾"
+            );
+
+        $step.toggleClass(
+            "planning-step-collapsed",
+            isExpanded
+        );
+
+        $document.toggleClass(
+            "d-none",
+            isExpanded
+        );
+    }
+
     function bindStepEvents() {
         $("#planning-initiative-list")
-            .off("click.planningStep")
+            .off(".planningStep")
+            .on(
+                "click.planningStep",
+                ".planning-toggle-step-btn",
+                function() {
+                    toggleStep(
+                        $(this)
+                    );
+                }
+            )
             .on(
                 "click.planningStep",
                 ".planning-new-step-btn",
@@ -22,7 +79,10 @@
                         ".planning-phase"
                     );
 
-                    steps.openForm($phase, null);
+                    steps.openForm(
+                        $phase,
+                        null
+                    );
                 }
             )
             .on(
@@ -65,7 +125,6 @@
                     );
                 }
             )
-            .off("submit.planningStep")
             .on(
                 "submit.planningStep",
                 ".planning-step-form",
@@ -79,7 +138,6 @@
                     );
                 }
             )
-            .off("reset.planningStep")
             .on(
                 "reset.planningStep",
                 ".planning-step-form",
@@ -88,7 +146,9 @@
                         ".planning-phase"
                     );
 
-                    steps.clearFormError($phase);
+                    steps.clearFormError(
+                        $phase
+                    );
                 }
             );
     }

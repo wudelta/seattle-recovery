@@ -164,7 +164,11 @@ def build_planning_payload(
                 "created_by",
                 "assigned_to",
                 "validated_by",
+                "document",
+                "validation",
+                "validation__validated_by",
             )
+            .prefetch_related("files")
             .order_by("position", "created_at")
         )
 

@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/subsystems/planning/api/serializers.py 
+# FILE: aurora/subsystems/planning/api/serializers.py
 # START: PLANNING_SERIALIZERS
 # ======================================================================
 from aurora.models import Initiative
@@ -57,10 +57,42 @@ def serialize_project(project):
     }
 
 
+def serialize_step_file(step_file):
+    """Serializes one planned or actual repository file."""
+    return {
+        "id": step_file.pk,
+        "file_path": step_file.file_path,
+        "role": step_file.role,
+        "role_label": step_file.get_role_display(),
+        "reason": step_file.reason,
+        "recorded_by_id": (
+            str(step_file.recorded_by_id)
+            if step_file.recorded_by_id
+            else None
+        ),
+        "created_at": step_file.created_at.isoformat(),
+        "updated_at": step_file.updated_at.isoformat(),
+    }
+
+
 def serialize_step(step):
     """Serializes one implementation step for the planning workspace."""
     created_by = serialize_user(step.created_by)
     assigned_to = serialize_user(step.assigned_to)
+
+    document = getattr(
+        step,
+        "document",
+        None,
+    )
+
+    validation = getattr(
+        step,
+        "validation",
+        None,
+    )
+
+    step_files = list(step.files.all())
 
     return {
         "id": step.pk,
@@ -79,7 +111,62 @@ def serialize_step(step):
         "risk_level": step.risk_level,
         "risk_level_label": step.get_risk_level_display(),
         "risk_description": step.risk_description,
+
+        # Legacy validation contract retained during staged migration.
         "validation_description": step.validation_description,
+        "validated_by": serialize_user(step.validated_by),
+        "validation_notes": step.validation_notes,
+
+        "document": (
+            {
+                "id": document.pk,
+                "technical_design": document.technical_design,
+                "dependencies": document.dependencies,
+                "assumptions": document.assumptions,
+                "implementation_notes": (
+                    document.implementation_notes
+                ),
+                "discussion": document.discussion,
+                "created_at": document.created_at.isoformat(),
+                "updated_at": document.updated_at.isoformat(),
+            }
+            if document
+            else None
+        ),
+        "validation": (
+            {
+                "id": validation.pk,
+                "description": validation.description,
+                "notes": validation.notes,
+                "validated_by": serialize_user(
+                    validation.validated_by
+                ),
+                "validated_by_id": (
+                    str(validation.validated_by_id)
+                    if validation.validated_by_id
+                    else None
+                ),
+                "validated_at": (
+                    validation.validated_at.isoformat()
+                    if validation.validated_at
+                    else None
+                ),
+                "created_at": validation.created_at.isoformat(),
+                "updated_at": validation.updated_at.isoformat(),
+            }
+            if validation
+            else None
+        ),
+        "planned_files": [
+            serialize_step_file(step_file)
+            for step_file in step_files
+            if step_file.role == "PLANNED"
+        ],
+        "actual_files": [
+            serialize_step_file(step_file)
+            for step_file in step_files
+            if step_file.role == "ACTUAL"
+        ],
         "created_by": created_by,
         "created_by_name": (
             created_by["display_name"]
@@ -97,8 +184,6 @@ def serialize_step(step):
             if assigned_to
             else ""
         ),
-        "validated_by": serialize_user(step.validated_by),
-        "validation_notes": step.validation_notes,
         "created_at": step.created_at.isoformat(),
         "updated_at": step.updated_at.isoformat(),
         "completed_at": (
@@ -212,5 +297,5 @@ def serialize_initiative(initiative: Initiative):
         ),
     }
 # ======================================================================
-# END: PLANNING_SERIALIZERS 
+# END: PLANNING_SERIALIZERS
 # ======================================================================

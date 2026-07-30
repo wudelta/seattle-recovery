@@ -4,83 +4,188 @@
 <!-- ====================================================================== -->
 <template id="planning-step-template">
     <div class="planning-step">
-        <div class="planning-step-position"></div>
-
-        <div class="planning-step-body flex-grow-1 min-w-0">
-            <div
-                class="d-flex justify-content-between align-items-start gap-3"
+        <div
+            class="planning-step-header d-flex align-items-start gap-2"
+        >
+            <button
+                type="button"
+                class="planning-toggle-step-btn"
+                aria-expanded="true"
+                aria-label="Collapse Step"
+                title="Collapse Step"
             >
-                <div class="flex-grow-1 min-w-0">
-                    <div
-                        class="d-flex align-items-center gap-2 flex-wrap"
-                    >
-                        <h4
-                            class="planning-step-title mb-0"
-                        ></h4>
+                <span
+                    class="planning-step-toggle-icon"
+                    aria-hidden="true"
+                >
+                    ▾
+                </span>
+            </button>
 
-                        <span
-                            class="planning-step-status badge"
-                        ></span>
+            <div class="planning-step-position"></div>
 
-                        <span
-                            class="planning-step-estimate badge bg-black text-info border border-secondary"
-                        ></span>
+            <div class="planning-step-heading flex-grow-1 min-w-0">
+                <div
+                    class="d-flex justify-content-between align-items-start gap-3"
+                >
+                    <div class="flex-grow-1 min-w-0">
+                        <div
+                            class="d-flex align-items-center gap-2 flex-wrap"
+                        >
+                            <h4
+                                class="planning-step-title mb-0"
+                            ></h4>
+
+                            <span
+                                class="planning-step-status badge"
+                            ></span>
+
+                            <span
+                                class="planning-step-estimate badge bg-black text-info border border-secondary"
+                            ></span>
+                        </div>
+
+                        <p
+                            class="planning-step-description planning-text mt-2 mb-0"
+                        ></p>
                     </div>
 
-                    <p
-                        class="planning-step-description planning-text mt-2 mb-1"
-                    ></p>
+                    <div
+                        class="planning-header-actions d-flex align-items-center gap-1 flex-shrink-0"
+                    >
+                        <button
+                            type="button"
+                            class="planning-edit-step-btn planning-icon-btn planning-edit-action"
+                            aria-label="Edit Step"
+                            title="Edit Step"
+                        >
+                            <span aria-hidden="true">✎</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="planning-delete-step-btn planning-icon-btn planning-delete-action"
+                            aria-label="Delete Step"
+                            title="Delete Step"
+                        >
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="planning-step-document">
+            <section
+                class="planning-step-section planning-step-technical-design-section"
+            >
+                <div class="planning-step-section-label">
+                    Technical Design
                 </div>
 
                 <div
-                    class="planning-header-actions d-flex align-items-center gap-1 flex-shrink-0"
-                >
-                    <button
-                        type="button"
-                        class="planning-edit-step-btn planning-icon-btn planning-edit-action"
-                        aria-label="Edit Step"
-                        title="Edit Step"
-                    >
-                        <span aria-hidden="true">✎</span>
-                    </button>
+                    class="planning-step-technical-design planning-text"
+                ></div>
+            </section>
 
-                    <button
-                        type="button"
-                        class="planning-delete-step-btn planning-icon-btn planning-delete-action"
-                        aria-label="Delete Step"
-                        title="Delete Step"
-                    >
-                        <span aria-hidden="true">×</span>
-                    </button>
+            <section
+                class="planning-step-section planning-step-dependencies-section"
+            >
+                <div class="planning-step-section-label">
+                    Dependencies
                 </div>
-            </div>
 
-            <div
-                class="planning-step-validation small mt-2"
+                <div
+                    class="planning-step-dependencies planning-muted"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-assumptions-section"
             >
-                <span class="text-warning fw-bold">
-                    Validation:
-                </span>
+                <div class="planning-step-section-label">
+                    Assumptions
+                </div>
 
-                <span
+                <div
+                    class="planning-step-assumptions planning-muted"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-implementation-notes-section"
+            >
+                <div class="planning-step-section-label">
+                    Implementation Notes
+                </div>
+
+                <div
+                    class="planning-step-implementation-notes planning-muted"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-discussion-section"
+            >
+                <div class="planning-step-section-label">
+                    Discussion
+                </div>
+
+                <div
+                    class="planning-step-discussion planning-muted"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-planned-files-section"
+            >
+                <div class="planning-step-section-label">
+                    Planned Files
+                </div>
+
+                <div
+                    class="planning-step-planned-files d-flex flex-column gap-2"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-actual-files-section"
+            >
+                <div class="planning-step-section-label">
+                    Actual Files
+                </div>
+
+                <div
+                    class="planning-step-actual-files d-flex flex-column gap-2"
+                ></div>
+            </section>
+
+            <section
+                class="planning-step-section planning-step-validation-plan-section"
+            >
+                <div class="planning-step-section-label">
+                    Validation Plan
+                </div>
+
+                <div
                     class="planning-step-validation-description planning-muted"
-                ></span>
-            </div>
+                ></div>
+            </section>
 
-            <div
-                class="planning-step-validation-result small mt-1 d-none"
+            <section
+                class="planning-step-section planning-step-validation-result d-none"
             >
-                <span class="text-success fw-bold">
-                    Evidence:
-                </span>
+                <div class="planning-step-section-label">
+                    Validation Evidence
+                </div>
 
-                <span
+                <div
                     class="planning-step-validation-notes planning-muted"
-                ></span>
-            </div>
+                ></div>
+            </section>
 
-            <div
-                class="planning-step-footer planning-muted small d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2"
+            <footer
+                class="planning-step-footer planning-muted small d-flex justify-content-between align-items-center flex-wrap gap-2"
             >
                 <div
                     class="planning-step-validator"
@@ -89,7 +194,7 @@
                 <div
                     class="planning-step-updated"
                 ></div>
-            </div>
+            </footer>
         </div>
     </div>
 </template>

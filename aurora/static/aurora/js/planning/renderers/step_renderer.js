@@ -40,6 +40,66 @@
             .text("▸");
     }
 
+    function populateDocumentSection(
+        $fragment,
+        sectionSelector,
+        valueSelector,
+        value
+    ) {
+        const $section = $fragment.find(
+            sectionSelector
+        );
+
+        if (!value) {
+            $section.addClass("d-none");
+            return;
+        }
+
+        $section
+            .find(valueSelector)
+            .text(value);
+    }
+
+    function populateFileSection(
+        $fragment,
+        sectionSelector,
+        listSelector,
+        files
+    ) {
+        const $section = $fragment.find(
+            sectionSelector
+        );
+
+        const $list = $section.find(
+            listSelector
+        );
+
+        if (!Array.isArray(files) || !files.length) {
+            $section.addClass("d-none");
+            return;
+        }
+
+        files.forEach(function(stepFile) {
+            const $entry = $("<div>", {
+                class: "planning-step-file",
+            });
+
+            $("<div>", {
+                class: "planning-step-file-path planning-text",
+                text: stepFile.file_path || "",
+            }).appendTo($entry);
+
+            if (stepFile.reason) {
+                $("<div>", {
+                    class: "planning-step-file-reason planning-muted small",
+                    text: stepFile.reason,
+                }).appendTo($entry);
+            }
+
+            $list.append($entry);
+        });
+    }
+
     function render(step) {
         const $fragment = utilities.cloneTemplate(
             "planning-step-template"
@@ -47,6 +107,29 @@
 
         const $step = $fragment.find(
             ".planning-step"
+        );
+
+        const document = step.document || {};
+        const validation = step.validation || {};
+        const plannedFiles = step.planned_files || [];
+        const actualFiles = step.actual_files || [];
+
+        const validationDescription = (
+            validation.description
+            || step.validation_description
+            || ""
+        );
+
+        const validationNotes = (
+            validation.notes
+            || step.validation_notes
+            || ""
+        );
+
+        const validatedBy = (
+            validation.validated_by
+            || step.validated_by
+            || null
         );
 
         $step.attr(
@@ -125,33 +208,69 @@
             $description.addClass("d-none");
         }
 
-        const $validationPlan = $fragment.find(
-            ".planning-step-validation-description"
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-technical-design-section",
+            ".planning-step-technical-design",
+            document.technical_design
         );
 
-        const $validationPlanSection = (
-            $validationPlan.closest(
-                ".planning-step-section"
-            )
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-dependencies-section",
+            ".planning-step-dependencies",
+            document.dependencies
         );
 
-        if (step.validation_description) {
-            $validationPlan.text(
-                step.validation_description
-            );
-        } else {
-            $validationPlanSection.addClass(
-                "d-none"
-            );
-        }
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-assumptions-section",
+            ".planning-step-assumptions",
+            document.assumptions
+        );
 
-        if (step.validation_notes) {
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-implementation-notes-section",
+            ".planning-step-implementation-notes",
+            document.implementation_notes
+        );
+
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-discussion-section",
+            ".planning-step-discussion",
+            document.discussion
+        );
+
+        populateFileSection(
+            $fragment,
+            ".planning-step-planned-files-section",
+            ".planning-step-planned-files",
+            plannedFiles
+        );
+
+        populateFileSection(
+            $fragment,
+            ".planning-step-actual-files-section",
+            ".planning-step-actual-files",
+            actualFiles
+        );
+
+        populateDocumentSection(
+            $fragment,
+            ".planning-step-validation-plan-section",
+            ".planning-step-validation-description",
+            validationDescription
+        );
+
+        if (validationNotes) {
             $fragment
                 .find(
                     ".planning-step-validation-notes"
                 )
                 .text(
-                    step.validation_notes
+                    validationNotes
                 );
 
             $fragment
@@ -166,12 +285,12 @@
         );
 
         if (
-            step.validated_by
-            && step.validated_by.display_name
+            validatedBy
+            && validatedBy.display_name
         ) {
             $validator.text(
                 "Validated by "
-                + step.validated_by.display_name
+                + validatedBy.display_name
             );
         } else {
             $validator.addClass("d-none");
@@ -200,6 +319,25 @@
         if (!hasFooterContent) {
             $fragment
                 .find(".planning-step-footer")
+                .addClass("d-none");
+        }
+
+        const hasDocumentContent = (
+            document.technical_design
+            || document.dependencies
+            || document.assumptions
+            || document.implementation_notes
+            || document.discussion
+            || plannedFiles.length
+            || actualFiles.length
+            || validationDescription
+            || validationNotes
+            || hasFooterContent
+        );
+
+        if (!hasDocumentContent) {
+            $fragment
+                .find(".planning-step-document")
                 .addClass("d-none");
         }
 
