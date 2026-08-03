@@ -20,11 +20,11 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    """Validate or apply an append-only planning dictionary update."""
+    """Validate or apply a planning dictionary update."""
 
     help = (
-        "Validate or append Initiatives, Phases, and Steps to an existing "
-        "Project from a Python-literal planning dictionary."
+        "Validate or create a Project and append Initiatives, Phases, and "
+        "Steps from a Python-literal planning dictionary."
     )
 
     def add_arguments(self, parser) -> None:
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         mode.add_argument(
             "--apply",
             action="store_true",
-            help="Validate and transactionally append the planning records.",
+            help="Validate and transactionally create the planning records.",
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
@@ -77,6 +77,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"{mode}: project={result.project_slug} "
+                f"projects={result.projects} "
                 f"initiatives={result.initiatives} "
                 f"phases={result.phases} "
                 f"steps={result.steps}"

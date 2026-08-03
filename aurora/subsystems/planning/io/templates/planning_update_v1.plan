@@ -1,0 +1,108 @@
+# ======================================================================
+# FILE: aurora/subsystems/planning/io/templates/planning_update_v1.plan
+# START: PLANNING_UPDATE_V1_TEMPLATE
+# ======================================================================
+{
+    "schema_version": 1,
+
+    "target": {
+        "project_slug": "project-slug",
+    },
+
+    "add_projects": [
+        {
+            "title": "Project title",
+            "slug": "project-slug",
+            "description": (
+                "Describe the product, application, or engineering domain "
+                "that will contain the imported planning hierarchy."
+            ),
+            "status": "PLANNED",
+            "active": True,
+        },
+    ],
+
+    "add_initiatives": [
+        {
+            "title": "Initiative title",
+            "description": (
+                "Describe the durable engineering outcome this Initiative "
+                "must produce."
+            ),
+            "status": "PLANNED",
+            "phases": [
+                {
+                    "title": "Phase title",
+                    "description": (
+                        "Describe the independently understandable and "
+                        "verifiable milestone."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Step title",
+                            "description": (
+                                "Describe one bounded implementation or "
+                                "discovery task."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "Describe deterministic evidence that proves "
+                                "this Step is complete."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Describe the intended technical approach "
+                                    "when it is known."
+                                ),
+                                "dependencies": (
+                                    "Describe required components, services, "
+                                    "decisions, or prior work."
+                                ),
+                                "assumptions": (
+                                    "Describe assumptions that influence this "
+                                    "implementation Step."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "Preserve planning discussion or design "
+                                    "history that future workers will need."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Describe deterministic evidence that "
+                                    "proves this Step is complete."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "repository/relative/path.py"
+                                    ),
+                                    "reason": (
+                                        "Explain why this file is expected "
+                                        "to be created or modified."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+
+    "add_phases": [],
+
+    "add_steps": [],
+}
+# ======================================================================
+# END: PLANNING_UPDATE_V1_TEMPLATE
+# ======================================================================

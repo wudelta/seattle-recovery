@@ -9,7 +9,15 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
 
-from aurora.models import Initiative, Phase, Project, Step
+from aurora.models import (
+    Initiative,
+    Phase,
+    Project,
+    Step,
+    StepDocument,
+    StepFile,
+    StepValidation,
+)
 from aurora.subsystems.planning.io.exceptions import PlanningImportError
 from aurora.subsystems.planning.io.schema import validate_planning_update
 
@@ -22,6 +30,7 @@ class PlanningUpdateResult:
     """Summary of a validated planning-document update."""
 
     project_slug: str
+    projects: int
     initiatives: int
     phases: int
     steps: int
@@ -34,7 +43,7 @@ def update_planning_document(
     user: User,
     apply: bool = False,
 ) -> PlanningUpdateResult:
-    """Validate and optionally append work to an existing Project."""
+    """Validate and optionally apply a planning dictionary update."""
 
     if user is None or not user.pk:
         raise PlanningImportError(
@@ -47,6 +56,7 @@ def update_planning_document(
 
     result = PlanningUpdateResult(
         project_slug=project_slug,
+        projects=counts["projects"],
         initiatives=counts["initiatives"],
         phases=counts["phases"],
         steps=counts["steps"],
@@ -54,15 +64,19 @@ def update_planning_document(
     )
 
     if not apply:
-        project = _get_project(project_slug)
+        project = _resolve_project_for_validation(
+            project_slug,
+            normalized,
+        )
         _validate_database_targets(project, normalized)
         return result
 
     try:
         with transaction.atomic():
-            project = _get_project(
+            project = _resolve_project_for_apply(
                 project_slug,
-                lock=True,
+                normalized,
+                user,
             )
             context = _validate_database_targets(
                 project,
@@ -85,24 +99,81 @@ def update_planning_document(
     return result
 
 
-def _get_project(
+def _resolve_project_for_validation(
     project_slug: str,
-    *,
-    lock: bool = False,
+    normalized: dict[str, Any],
 ) -> Project:
-    queryset = Project.objects
+    project = Project.objects.filter(slug=project_slug).first()
+    project_additions = normalized["add_projects"]
 
-    if lock:
-        queryset = queryset.select_for_update()
+    if project is not None:
+        if project_additions:
+            raise PlanningImportError(
+                f'Project "{project_slug}" already exists and cannot be added again.'
+            )
 
-    project = queryset.filter(slug=project_slug).first()
+        return project
 
-    if project is None:
+    if not project_additions:
         raise PlanningImportError(
             f'Project "{project_slug}" does not exist.'
         )
 
+    return _build_unsaved_project(project_additions[0])
+
+
+def _resolve_project_for_apply(
+    project_slug: str,
+    normalized: dict[str, Any],
+    user: User,
+) -> Project:
+    project = (
+        Project.objects
+        .select_for_update()
+        .filter(slug=project_slug)
+        .first()
+    )
+    project_additions = normalized["add_projects"]
+
+    if project is not None:
+        if project_additions:
+            raise PlanningImportError(
+                f'Project "{project_slug}" already exists and cannot be added again.'
+            )
+
+        return project
+
+    if not project_additions:
+        raise PlanningImportError(
+            f'Project "{project_slug}" does not exist.'
+        )
+
+    project = _build_unsaved_project(
+        project_additions[0],
+        user=user,
+    )
+    project.position = _next_position(Project.objects.all())
+    project.full_clean()
+    project.save()
+
     return project
+
+
+def _build_unsaved_project(
+    data: dict[str, Any],
+    *,
+    user: User | None = None,
+) -> Project:
+    return Project(
+        title=data["title"],
+        slug=data["slug"],
+        description=data["description"],
+        status=data["status"],
+        active=data["active"],
+        position=0,
+        created_by=user,
+        assigned_to=user,
+    )
 
 
 def _validate_database_targets(
@@ -112,7 +183,7 @@ def _validate_database_targets(
     initiatives = {
         initiative.title: initiative
         for initiative in Initiative.objects.filter(project=project)
-    }
+    } if project.pk else {}
     planned_initiative_titles = set(initiatives)
 
     phases: dict[tuple[str, str], Phase] = {}
@@ -358,7 +429,71 @@ def _create_step(
     step.full_clean()
     step.save()
 
+    _create_step_document(step, data["document"])
+    _create_step_validation(step, data["validation"])
+    _create_step_files(
+        step,
+        data["planned_files"],
+        StepFile.Role.PLANNED,
+        user,
+    )
+    _create_step_files(
+        step,
+        data["actual_files"],
+        StepFile.Role.ACTUAL,
+        user,
+    )
+
     return step
+
+
+def _create_step_document(
+    step: Step,
+    data: dict[str, str],
+) -> None:
+    if not any(data.values()):
+        return
+
+    document = StepDocument(
+        step=step,
+        **data,
+    )
+    document.full_clean()
+    document.save()
+
+
+def _create_step_validation(
+    step: Step,
+    data: dict[str, str],
+) -> None:
+    if not any(data.values()):
+        return
+
+    validation = StepValidation(
+        step=step,
+        description=data["description"],
+        notes=data["notes"],
+    )
+    validation.full_clean()
+    validation.save()
+
+
+def _create_step_files(
+    step: Step,
+    files: list[dict[str, str]],
+    role: str,
+    user: User,
+) -> None:
+    for file_data in files:
+        step_file = StepFile(
+            step=step,
+            file_path=file_data["file_path"],
+            role=role,
+            reason=file_data["reason"],
+            recorded_by=user,
+        )
+        step_file.full_clean()
+        step_file.save()
 
 
 def _next_position(queryset: Any) -> int:
@@ -372,6 +507,7 @@ def _next_position(queryset: Any) -> int:
 def _count_records(
     normalized: dict[str, Any],
 ) -> dict[str, int]:
+    projects = normalized["add_projects"]
     initiatives = normalized["add_initiatives"]
 
     initiative_phases = [
@@ -398,6 +534,7 @@ def _count_records(
     ]
 
     return {
+        "projects": len(projects),
         "initiatives": len(initiatives),
         "phases": len(phases),
         "steps": len(nested_steps) + len(appended_steps),

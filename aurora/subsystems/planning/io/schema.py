@@ -50,11 +50,34 @@ STEP_FIELDS = {
     "risk_level",
     "risk_description",
     "validation_description",
+    "document",
+    "validation",
+    "planned_files",
+    "actual_files",
+}
+
+STEP_DOCUMENT_FIELDS = {
+    "technical_design",
+    "dependencies",
+    "assumptions",
+    "implementation_notes",
+    "discussion",
+}
+
+STEP_VALIDATION_FIELDS = {
+    "description",
+    "notes",
+}
+
+STEP_FILE_FIELDS = {
+    "file_path",
+    "reason",
 }
 
 PLANNING_UPDATE_FIELDS = {
     "schema_version",
     "target",
+    "add_projects",
     "add_initiatives",
     "add_phases",
     "add_steps",
@@ -62,6 +85,14 @@ PLANNING_UPDATE_FIELDS = {
 
 UPDATE_TARGET_FIELDS = {
     "project_slug",
+}
+
+PROJECT_ADDITION_FIELDS = {
+    "title",
+    "slug",
+    "description",
+    "status",
+    "active",
 }
 
 PHASE_ADDITION_FIELDS = {
@@ -97,7 +128,7 @@ def validate_planning_document(document: Any) -> dict[str, Any]:
 
 
 def validate_planning_update(document: Any) -> dict[str, Any]:
-    """Validate and normalize an append-only planning update."""
+    """Validate and normalize a planning dictionary update."""
 
     root = _require_mapping(document, "document")
     _reject_unknown_fields(root, PLANNING_UPDATE_FIELDS, "document")
@@ -110,6 +141,11 @@ def validate_planning_update(document: Any) -> dict[str, Any]:
 
     target = _validate_update_target(root.get("target"), "target")
 
+    add_projects = _validate_update_groups(
+        root.get("add_projects", []),
+        "add_projects",
+        _validate_project_addition,
+    )
     add_initiatives = _validate_update_children(
         root.get("add_initiatives", []),
         "add_initiatives",
@@ -126,7 +162,26 @@ def validate_planning_update(document: Any) -> dict[str, Any]:
         _validate_step_addition,
     )
 
-    if not add_initiatives and not add_phases and not add_steps:
+    if len(add_projects) > 1:
+        raise PlanningSchemaError(
+            "document.add_projects may contain at most one Project."
+        )
+
+    if add_projects:
+        project_slug = add_projects[0]["slug"]
+
+        if project_slug != target["project_slug"]:
+            raise PlanningSchemaError(
+                "document.add_projects[0].slug must match "
+                "document.target.project_slug."
+            )
+
+    if (
+        not add_projects
+        and not add_initiatives
+        and not add_phases
+        and not add_steps
+    ):
         raise PlanningSchemaError(
             "document must contain at least one planning addition."
         )
@@ -134,6 +189,7 @@ def validate_planning_update(document: Any) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "target": target,
+        "add_projects": add_projects,
         "add_initiatives": add_initiatives,
         "add_phases": add_phases,
         "add_steps": add_steps,
@@ -260,6 +316,22 @@ def _validate_step(value: Any, path: str) -> dict[str, Any]:
             f"{path}.estimate_confidence",
         )
 
+    validation_description = _optional_text(
+        step.get("validation_description"),
+        f"{path}.validation_description",
+    )
+    document = _validate_step_document(
+        step.get("document", {}),
+        f"{path}.document",
+    )
+    validation = _validate_step_validation(
+        step.get("validation", {}),
+        f"{path}.validation",
+    )
+
+    if validation_description and not validation["description"]:
+        validation["description"] = validation_description
+
     return {
         "title": _require_text(
             step.get("title"),
@@ -289,9 +361,157 @@ def _validate_step(value: Any, path: str) -> dict[str, Any]:
             step.get("risk_description"),
             f"{path}.risk_description",
         ),
-        "validation_description": _optional_text(
-            step.get("validation_description"),
-            f"{path}.validation_description",
+        "validation_description": validation_description,
+        "document": document,
+        "validation": validation,
+        "planned_files": _validate_step_files(
+            step.get("planned_files", []),
+            f"{path}.planned_files",
+        ),
+        "actual_files": _validate_step_files(
+            step.get("actual_files", []),
+            f"{path}.actual_files",
+        ),
+    }
+
+
+
+def _validate_step_document(
+    value: Any,
+    path: str,
+) -> dict[str, str]:
+    document = _require_mapping(value, path)
+    _reject_unknown_fields(document, STEP_DOCUMENT_FIELDS, path)
+
+    return {
+        "technical_design": _optional_text(
+            document.get("technical_design"),
+            f"{path}.technical_design",
+        ),
+        "dependencies": _optional_text(
+            document.get("dependencies"),
+            f"{path}.dependencies",
+        ),
+        "assumptions": _optional_text(
+            document.get("assumptions"),
+            f"{path}.assumptions",
+        ),
+        "implementation_notes": _optional_text(
+            document.get("implementation_notes"),
+            f"{path}.implementation_notes",
+        ),
+        "discussion": _optional_text(
+            document.get("discussion"),
+            f"{path}.discussion",
+        ),
+    }
+
+
+def _validate_step_validation(
+    value: Any,
+    path: str,
+) -> dict[str, str]:
+    validation = _require_mapping(value, path)
+    _reject_unknown_fields(
+        validation,
+        STEP_VALIDATION_FIELDS,
+        path,
+    )
+
+    return {
+        "description": _optional_text(
+            validation.get("description"),
+            f"{path}.description",
+        ),
+        "notes": _optional_text(
+            validation.get("notes"),
+            f"{path}.notes",
+        ),
+    }
+
+
+def _validate_step_files(
+    value: Any,
+    path: str,
+) -> list[dict[str, str]]:
+    if not isinstance(value, list):
+        raise PlanningSchemaError(f"{path} must be a list.")
+
+    files = []
+
+    for index, item in enumerate(value):
+        item_path = f"{path}[{index}]"
+        file_data = _require_mapping(item, item_path)
+        _reject_unknown_fields(
+            file_data,
+            STEP_FILE_FIELDS,
+            item_path,
+        )
+
+        files.append(
+            {
+                "file_path": _require_text(
+                    file_data.get("file_path"),
+                    f"{item_path}.file_path",
+                ),
+                "reason": _optional_text(
+                    file_data.get("reason"),
+                    f"{item_path}.reason",
+                ),
+            }
+        )
+
+    paths = [item["file_path"] for item in files]
+
+    if len(paths) != len(set(paths)):
+        raise PlanningSchemaError(
+            f"{path} contains duplicate file paths."
+        )
+
+    return files
+
+
+def _validate_project_addition(
+    value: Any,
+    path: str,
+) -> dict[str, Any]:
+    project = _require_mapping(value, path)
+    _reject_unknown_fields(
+        project,
+        PROJECT_ADDITION_FIELDS,
+        path,
+    )
+
+    slug = _require_text(
+        project.get("slug"),
+        f"{path}.slug",
+    )
+
+    try:
+        validate_slug(slug)
+    except ValidationError as exc:
+        raise PlanningSchemaError(
+            f"{path}.slug must be a valid slug."
+        ) from exc
+
+    return {
+        "title": _require_text(
+            project.get("title"),
+            f"{path}.title",
+        ),
+        "slug": slug,
+        "description": _optional_text(
+            project.get("description"),
+            f"{path}.description",
+        ),
+        "status": _validate_choice(
+            project.get("status", ExecutionStatus.PLANNED),
+            ExecutionStatus.values,
+            f"{path}.status",
+        ),
+        "active": _validate_boolean(
+            project.get("active", True),
+            f"{path}.active",
         ),
     }
 
