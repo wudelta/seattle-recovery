@@ -36,6 +36,8 @@ A feature delivered one week later is acceptable.
 
 A fragile architecture that requires continual repair is not.
 
+Engineering decisions should favor maintainability over immediacy.
+
 ---
 
 # Cheap and Right
@@ -48,9 +50,9 @@ Engineering is constrained by three finite resources:
 
 Attention is often the most valuable of the three.
 
-Every debugging loop, unnecessary context switch, repeated explanation, or avoidable investigation consumes attention that could have been invested in better architecture.
+Every debugging loop, unnecessary context switch, repeated explanation, duplicated investigation, or avoidable uncertainty consumes attention that could have been invested in better architecture.
 
-Whenever possible:
+Whenever practical:
 
 Choose the solution that is correct and sustainable, even if implementation takes longer.
 
@@ -89,6 +91,8 @@ When modifying complex subsystems:
 
 Large changes should be decomposed into independently verifiable steps.
 
+Confidence should grow incrementally rather than all at once.
+
 ---
 
 # Understand Before Modifying
@@ -97,9 +101,10 @@ Code should not be changed until its purpose is understood.
 
 When working in unfamiliar areas:
 
-* inspect existing implementation
+* inspect the existing implementation
 * understand responsibilities
 * identify subsystem boundaries
+* locate the authoritative design
 * ask questions when intent is unclear
 
 Implementation follows understanding.
@@ -146,17 +151,17 @@ Premature implementation is avoided.
 
 Whenever software can solve a problem deterministically, software should solve it.
 
-AI should augment deterministic systems rather than replace them.
+Intelligent systems should augment deterministic systems rather than replace them.
 
-Repository discovery, validation, workflow execution, context selection, and engineering automation should be implemented as repeatable software systems whenever practical.
+Repository discovery, validation, workflow execution, context selection, engineering automation, and consistency checking should be implemented as repeatable software systems whenever practical.
 
-Intelligence should be reserved for problems that genuinely require interpretation, reasoning, creativity, or communication.
+Intelligence should be reserved for problems that genuinely require interpretation, reasoning, creativity, communication, or design.
 
-Aurora should not ask AI to remember what software can record.
+Never ask intelligence to remember what software can record.
 
-Aurora should not ask AI to infer what software can compute.
+Never ask intelligence to infer what software can compute.
 
-Aurora should not ask AI to discover what software can index.
+Never ask intelligence to discover what software can index.
 
 ---
 
@@ -164,21 +169,61 @@ Aurora should not ask AI to discover what software can index.
 
 Conversations are temporary.
 
-Documentation is durable.
+People change roles.
 
-Architectural knowledge belongs inside the repository.
+Sessions end.
 
-Important decisions should survive both AI sessions and human memory.
+Memory fades.
+
+The repository should remain.
+
+Important engineering knowledge belongs inside the repository.
+
+Every important architectural decision should have one discoverable, authoritative home.
+
+The repository should explain not only *what* the system does, but also *why* it exists and *how* it should evolve.
 
 ---
 
-# Context Is Loaded on Demand
+# No Tribal Knowledge
 
-Neither humans nor AI should carry unnecessary context.
+Engineering knowledge should never depend upon the continued availability of a particular person, conversation, or AI session.
 
-Only the information required for the current task should be loaded.
+If a competent engineer cannot discover why a subsystem exists, what it owns, how it should be modified, and where its authoritative interfaces are defined, then the repository is incomplete.
 
-This reduces complexity, improves focus, lowers AI costs, and encourages modular design.
+Aurora should continuously reduce institutional knowledge by moving important engineering understanding into discoverable, repository-owned knowledge.
+
+Knowledge should not be hidden.
+
+Knowledge should not be duplicated.
+
+Knowledge should be discoverable.
+
+The repository should become the teacher.
+
+---
+
+# Progressive Knowledge Discovery
+
+Neither humans nor intelligent systems should carry unnecessary context.
+
+Knowledge should be discovered progressively rather than delivered all at once.
+
+The objective is not to maximize available information.
+
+The objective is to maximize relevant information.
+
+Every important architectural boundary should provide discoverable guidance that answers:
+
+* What does this own?
+* What does it intentionally not own?
+* What interfaces are authoritative?
+* What rules govern modification?
+* Where should the engineer go next?
+
+Large static prompts, giant documents, and institutional memory should never become prerequisites for productive engineering.
+
+Understanding should grow naturally by following authoritative breadcrumbs.
 
 ---
 
@@ -199,6 +244,8 @@ Aurora should never depend upon extraordinary effort.
 The project should advance through repeatable engineering practices rather than heroic debugging sessions.
 
 Consistent progress is preferred over dramatic progress.
+
+The best engineering process is one that succeeds even when its original author is absent.
 
 ---
 
@@ -223,10 +270,13 @@ Every difficult debugging session should improve Aurora itself.
 When a recurring lesson is discovered:
 
 * improve the architecture
-* improve the documentation
+* improve the repository
 * improve the workflow
+* improve the engineering process
 
 The project should become easier to develop over time.
+
+Every solved problem should reduce the likelihood of solving the same problem twice.
 
 ---
 
@@ -236,15 +286,15 @@ Aurora is intended to become an engineering platform.
 
 The quality of the platform is determined as much by the way it is built as by the features it contains.
 
-The Delta Way exists to ensure that every engineering decision moves the project toward a system that is understandable, maintainable, resilient, and capable of evolving for many years.
+The Delta Way exists to ensure that every engineering decision moves the project toward a system that is understandable, maintainable, resilient, and capable of evolving for decades.
 
 Aurora should become easier to engineer with every completed engineering session.
 
-Every improvement to the platform should reduce future effort, reduce uncertainty, or increase the reliability of the engineering process itself.
+Every improvement to the platform should reduce future effort, reduce uncertainty, strengthen architectural understanding, or improve the reliability of the engineering process itself.
 
 The platform is not only the product being built.
 
-It is also the means by which future products will be built.
+It is also the means by which future products—and future engineers—will be built.
 
 ---
 
@@ -274,6 +324,10 @@ Implementation should be disciplined.
 Validation should be continuous.
 
 Documentation should preserve both decisions and their rationale.
+
+Knowledge should outlive conversations.
+
+The repository should become the teacher.
 
 Every completed session should improve not only the software, but also the process used to build it.
 

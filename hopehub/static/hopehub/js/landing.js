@@ -32,12 +32,6 @@ document.addEventListener("DOMContentLoaded", function () {
             color: "#f43f5e",
         },
         {
-            id: 6,
-            label: "Account",
-            url: "/hopehub/my_account/",
-            color: "#d946ef",
-        },
-        {
             id: 9,
             label: "Mission",
             url: "/hopehub/mission_statement/",
@@ -49,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function () {
         { from: 1, to: 2 },
         { from: 1, to: 3 },
         { from: 1, to: 5 },
-        { from: 1, to: 6 },
         { from: 1, to: 9 },
     ]);
 
