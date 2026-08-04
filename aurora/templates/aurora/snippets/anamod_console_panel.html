@@ -1,5 +1,5 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html (PATCH 1 OF 1) -->
+<!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html -->
 <!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
 {% load static %}
@@ -9,7 +9,16 @@
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
         <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
             <span>📁 Project Hierarchy</span>
-            <button id="anamod-new-file-btn" class="btn btn-link p-0 text-success text-decoration-none" title="Create New File" style="font-size: 1.1rem; line-height: 1;"> ➕ </button>
+            <button
+                id="anamod-refresh-tree-btn"
+                type="button"
+                class="btn btn-link p-0 text-info text-decoration-none"
+                title="Refresh Project Hierarchy"
+                aria-label="Refresh Project Hierarchy"
+                style="font-size: 1rem; line-height: 1;"
+            >
+                🔄
+            </button>
         </div>
         <div id="anamod-file-tree" class="flex-grow-1" style="overflow-y: auto; font-size: 0.85rem;"></div>
     </div>
@@ -17,23 +26,102 @@
     <!-- COLUMN 2: CENTER EDITOR CODE VIEWPORT -->
     <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
         
-        <!-- FIXED: Refactored header bar into a flex row container housing the one-click copy buttons -->
-        <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
-            <div id="active-file-indicator" class="text-warning small text-truncate flex-grow-1" title="No file active">No file active</div>
+        <div
+            class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark"
+            style="background-color: #141414; height: 35px;"
+        >
+            <div
+                id="active-file-indicator"
+                class="text-warning small text-truncate flex-grow-1"
+                title="No file active"
+            >
+                No file active
+            </div>
             
-            <!-- FIXED: Injected direct clipboard target trigger elements with no inline scripts -->
             <div class="d-flex flex-shrink-0 gap-1 ms-2">
-                <button id="anamod-copy-file-btn" class="btn btn-outline-secondary font-monospace"
-                        style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
-                        title="Copy the complete active file contents to clipboard">
+                <button
+                    id="anamod-copy-file-btn"
+                    type="button"
+                    class="btn btn-outline-secondary font-monospace"
+                    style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
+                    title="Copy the complete active file contents to clipboard"
+                >
                     📄 Copy File
                 </button>
-                <button id="anamod-copy-path-btn" class="btn btn-outline-secondary font-monospace" 
-                        style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
-                        title="Copy file path location directly to clipboard">
+
+                <button
+                    id="anamod-copy-path-btn"
+                    type="button"
+                    class="btn btn-outline-secondary font-monospace"
+                    style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
+                    title="Copy file path location directly to clipboard"
+                >
                     📋 Copy Path
                 </button>
+
+                <button
+                    id="anamod-load-file-btn"
+                    type="button"
+                    class="btn btn-outline-secondary font-monospace"
+                    style="font-size: 0.65rem; padding: 0.1rem 0.4rem; text-transform: uppercase; font-weight: bold; border-radius: 3px; line-height: 1.2; color: #8a9ba8; border-color: #30404d;"
+                    title="Load a file using its repository-relative path"
+                    aria-controls="anamod-load-file-panel"
+                    aria-expanded="false"
+                >
+                    📂 Load File
+                </button>
             </div>
+        </div>
+
+        <div
+            id="anamod-load-file-panel"
+            class="d-none px-3 py-2 border-bottom border-dark"
+            style="background-color: #181818;"
+        >
+            <form
+                id="anamod-load-file-form"
+                class="d-flex align-items-center gap-2"
+            >
+                <label
+                    for="anamod-load-file-path"
+                    class="visually-hidden"
+                >
+                    Repository-relative file path
+                </label>
+
+                <input
+                    id="anamod-load-file-path"
+                    name="file_path"
+                    type="text"
+                    class="form-control form-control-sm bg-dark text-light border-secondary font-monospace"
+                    placeholder="repository/relative/path/to/file.py"
+                    autocomplete="off"
+                    spellcheck="false"
+                    required
+                >
+
+                <button
+                    id="anamod-load-file-submit-btn"
+                    type="submit"
+                    class="btn btn-sm btn-outline-success font-monospace text-uppercase flex-shrink-0"
+                >
+                    Load
+                </button>
+
+                <button
+                    id="anamod-load-file-cancel-btn"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary font-monospace text-uppercase flex-shrink-0"
+                >
+                    Cancel
+                </button>
+            </form>
+
+            <div
+                id="anamod-load-file-error"
+                class="d-none small text-danger mt-1"
+                role="alert"
+            ></div>
         </div>
 
         <!-- FIXED ENFORCEMENT WRAPPER: Absolute constraints stop Monaco from pushing past the screen footprint -->
@@ -79,5 +167,5 @@
 
 </div>
 <!-- ====================================================================== -->
-<!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1) -->
+<!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
