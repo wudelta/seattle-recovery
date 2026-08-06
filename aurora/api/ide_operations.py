@@ -1,278 +1,171 @@
 # ======================================================================
-# FILE: aurora/views/ide_operations.py (PATCH 1 OF 3)
+# FILE: aurora/api/ide_operations.py
 # START: TOTAL_IDE_OPERATIONS_BACKEND_PART1
 # ======================================================================
-import os
 import json
-import docker
-import tempfile
 import subprocess
+import tempfile
+
+import docker
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-def get_file_tree(path="/app"):
-    """Scans the local filesystem to generate a hierarchical JSON structure."""
-    name = os.path.basename(path)
-    ignored = {'.git', '__pycache__', 'node_modules', '.pytest_cache', 'postgres_data', 'staticfiles', '.venv', 'venv', '.idea', '.spyproject'}
-    
-    if os.path.isdir(path):
-        try:
-            items = os.listdir(path)
-        except PermissionError:
-            return None
-            
-        children = []
-        for x in items:
-            if x in ignored:
-                continue
-            child_node = get_file_tree(os.path.join(path, x))
-            if child_node:
-                children.append(child_node)
-                
-        # Force folders to start cleanly collapsed instead of flooding the display
-        return {
-            "text": name if name else "Workspace Root",
-            "type": "folder",
-            "children": children,
-            "state": {"opened": False},
-            "data": {"path": path}  # Securely encapsulates path from jsTree ingestion
-        }
-    else:
-        # Determine explicit file extensions to handle custom layout icons
-        ext = name.split('.')[-1].lower() if '.' in name else ''
-        file_type = "file"
-        
-        if ext == 'py':
-            file_type = "python"
-        elif ext in ['html', 'htm']:
-            file_type = "html"
-        elif ext == 'css':
-            file_type = "css"
-        elif ext in ['js', 'ts']:
-            file_type = "js"
-        elif ext in ['json', 'yaml', 'yml', 'ini', 'cfg']:
-            file_type = "config"
-            
-        return {
-            "text": name,
-            "type": file_type,
-            "data": {"path": path}  # Securely encapsulates path from jsTree ingestion
-        }
+from aurora.subsystems.anamod.services.workspace_service import (
+    WorkspaceOperationError,
+    build_file_tree,
+    create_workspace_node,
+    delete_workspace_node,
+    read_workspace_file,
+    rename_workspace_node,
+    update_workspace_file,
+)
+
 
 @csrf_exempt
 def file_tree_api(request):
-    """API Endpoint returning a strict JSON array root format for jsTree."""
-    root_structure = get_file_tree("/app")
+    """Return the Anamod workspace hierarchy in jsTree root format."""
+    root_structure = build_file_tree()
+
     if root_structure:
-        return JsonResponse([root_structure], safe=False)
-    return JsonResponse([], safe=False)
+        return JsonResponse(
+            [root_structure],
+            safe=False,
+        )
+
+    return JsonResponse(
+        [],
+        safe=False,
+    )
 # ======================================================================
-# END: TOTAL_IDE_OPERATIONS_BACKEND_PART1 (PATCH 1 OF 3)
+# FILE: aurora/api/ide_operations.py
+# END: TOTAL_IDE_OPERATIONS_BACKEND_PART1
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/views/ide_operations.py (PATCH 2 OF 3)
+# FILE: aurora/api/ide_operations.py
 # START: TOTAL_IDE_OPERATIONS_BACKEND_PART2
 # ======================================================================
 @csrf_exempt
 def file_operation_api(request):
-    """Handles reading, writing, creating, renaming, and deleting workspace nodes."""
-    if request.method == 'GET':
-        file_path = request.GET.get('path')
-        if not file_path:
-            return JsonResponse({'error': 'No file path provided'}, status=400)
+    """Adapt Anamod file-operation requests to the workspace service."""
+    try:
+        if request.method == "GET":
+            file_path = request.GET.get("path")
 
-        if not file_path.startswith('/app/'):
-            file_path = os.path.join('/app', file_path.lstrip('/'))
+            if not file_path:
+                return JsonResponse(
+                    {"error": "No file path provided"},
+                    status=400,
+                )
 
-        if not os.path.exists(file_path):
-            return JsonResponse({'error': f'File not found: {file_path}'}, status=404)
-
-        binary_extensions = {
-            '.png',
-            '.jpg',
-            '.jpeg',
-            '.gif',
-            '.ico',
-            '.pyc',
-            '.pdf',
-            '.zip',
-            '.tar',
-            '.gz',
-        }
-        if any(file_path.lower().endswith(ext) for ext in binary_extensions):
-            return JsonResponse({
-                'content': '# Binary Asset detected. Contents hidden inside text viewport.'
-            })
-
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return JsonResponse({'content': f.read()})
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Could not decode file: {str(e)}'},
-                status=500,
-            )
-
-    elif request.method == 'POST':
-        data = json.loads(request.body)
-        file_path = data.get('path')
-        node_type = data.get('type', 'file')
-        content = data.get('content', '')
-
-        if not file_path:
-            return JsonResponse({'error': 'No file path provided'}, status=400)
-
-        if node_type not in {'file', 'directory'}:
-            return JsonResponse(
-                {'error': 'Unsupported workspace node type'},
-                status=400,
-            )
-
-        if not file_path.startswith('/app/'):
-            file_path = os.path.join('/app', file_path.lstrip('/'))
-
-        if os.path.exists(file_path):
-            return JsonResponse(
-                {'error': 'Workspace node already exists'},
-                status=409,
-            )
-
-        try:
-            if node_type == 'directory':
-                os.makedirs(file_path)
-                return JsonResponse({
-                    'status': 'success',
-                    'type': 'directory',
-                    'path': file_path,
-                })
-
-            parent_dir = os.path.dirname(file_path)
-            if parent_dir and not os.path.exists(parent_dir):
-                os.makedirs(parent_dir, exist_ok=True)
-
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+            content = read_workspace_file(file_path)
 
             return JsonResponse({
-                'status': 'success',
-                'type': 'file',
-                'path': file_path,
+                "content": content,
             })
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Failed to create workspace node: {str(e)}'},
-                status=500,
-            )
 
-    elif request.method == 'PATCH':
         data = json.loads(request.body)
-        file_path = data.get('path')
-        content = data.get('content')
 
-        if not file_path:
-            return JsonResponse({'error': 'No file path provided'}, status=400)
+        if request.method == "POST":
+            file_path = data.get("path")
+            node_type = data.get("type", "file")
+            content = data.get("content", "")
 
-        if content is None:
-            return JsonResponse({'error': 'No file content provided'}, status=400)
+            if not file_path:
+                return JsonResponse(
+                    {"error": "No file path provided"},
+                    status=400,
+                )
 
-        if not file_path.startswith('/app/'):
-            file_path = os.path.join('/app', file_path.lstrip('/'))
-
-        if not os.path.exists(file_path):
-            return JsonResponse(
-                {'error': 'Target file does not exist'},
-                status=404,
+            result = create_workspace_node(
+                file_path=file_path,
+                node_type=node_type,
+                content=content,
             )
 
-        if not os.path.isfile(file_path):
-            return JsonResponse(
-                {'error': 'Target path is not a file'},
-                status=400,
+            return JsonResponse(result)
+
+        if request.method == "PATCH":
+            file_path = data.get("path")
+            content = data.get("content")
+
+            if not file_path:
+                return JsonResponse(
+                    {"error": "No file path provided"},
+                    status=400,
+                )
+
+            if content is None:
+                return JsonResponse(
+                    {"error": "No file content provided"},
+                    status=400,
+                )
+
+            result = update_workspace_file(
+                file_path=file_path,
+                content=content,
             )
 
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+            return JsonResponse(result)
 
-            return JsonResponse({
-                'status': 'success',
-                'type': 'file',
-                'path': file_path,
-            })
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Failed to update workspace file: {str(e)}'},
-                status=500,
+        if request.method == "PUT":
+            file_path = data.get("path")
+            new_name = data.get("new_name")
+
+            if not file_path or not new_name:
+                return JsonResponse(
+                    {
+                        "error": (
+                            "Missing source path or new name payload"
+                        ),
+                    },
+                    status=400,
+                )
+
+            result = rename_workspace_node(
+                file_path=file_path,
+                new_name=new_name,
             )
 
-    elif request.method == 'PUT':
-        data = json.loads(request.body)
-        file_path = data.get('path')
-        new_name = data.get('new_name')
+            return JsonResponse(result)
 
-        if not file_path or not new_name:
-            return JsonResponse(
-                {'error': 'Missing source path or new name payload'},
-                status=400,
-            )
+        if request.method == "DELETE":
+            file_path = data.get("path")
 
-        if not file_path.startswith('/app/'):
-            file_path = os.path.join('/app', file_path.lstrip('/'))
+            if not file_path:
+                return JsonResponse(
+                    {
+                        "error": (
+                            "No targeting path provided for purge action"
+                        ),
+                    },
+                    status=400,
+                )
 
-        if not os.path.exists(file_path):
-            return JsonResponse(
-                {'error': 'Target file to rename does not exist'},
-                status=404,
-            )
+            result = delete_workspace_node(file_path)
 
-        try:
-            parent_dir = os.path.dirname(file_path)
-            new_file_path = os.path.join(parent_dir, new_name)
+            return JsonResponse(result)
 
-            os.rename(file_path, new_file_path)
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Rename tracking failure: {str(e)}'},
-                status=500,
-            )
+        return JsonResponse(
+            {"error": "Method not allowed"},
+            status=405,
+        )
 
-    elif request.method == 'DELETE':
-        data = json.loads(request.body)
-        file_path = data.get('path')
-
-        if not file_path:
-            return JsonResponse(
-                {'error': 'No targeting path provided for purge action'},
-                status=400,
-            )
-
-        if not file_path.startswith('/app/'):
-            file_path = os.path.join('/app', file_path.lstrip('/'))
-
-        if not os.path.exists(file_path):
-            return JsonResponse(
-                {'error': 'File already absent from disk hierarchy'},
-                status=404,
-            )
-
-        try:
-            if os.path.isdir(file_path):
-                import shutil
-                shutil.rmtree(file_path)
-            else:
-                os.remove(file_path)
-
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Purge validation routine failure: {str(e)}'},
-                status=500,
-            )
+    except WorkspaceOperationError as exc:
+        return JsonResponse(
+            {"error": exc.message},
+            status=exc.status,
+        )
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"error": "Invalid JSON request body"},
+            status=400,
+        )
 # ======================================================================
-# END: TOTAL_IDE_OPERATIONS_BACKEND_PART2 (PATCH 2 OF 3)
+# FILE: aurora/api/ide_operations.py
+# END: TOTAL_IDE_OPERATIONS_BACKEND_PART2
 # ======================================================================
+
 
 # ======================================================================
 # FILE: aurora/views/ide_operations.py (PATCH 3 OF 3)
