@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/ide_operations.py
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
 # START: TOTAL_IDE_OPERATIONS_BACKEND_PART1
 # ======================================================================
 import json
@@ -37,12 +37,13 @@ def file_tree_api(request):
         safe=False,
     )
 # ======================================================================
-# FILE: aurora/api/ide_operations.py
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART1
 # ======================================================================
 
+
 # ======================================================================
-# FILE: aurora/api/ide_operations.py
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
 # START: TOTAL_IDE_OPERATIONS_BACKEND_PART2
 # ======================================================================
 @csrf_exempt
@@ -162,13 +163,13 @@ def file_operation_api(request):
             status=400,
         )
 # ======================================================================
-# FILE: aurora/api/ide_operations.py
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
 # END: TOTAL_IDE_OPERATIONS_BACKEND_PART2
 # ======================================================================
 
 
 # ======================================================================
-# FILE: aurora/views/ide_operations.py (PATCH 3 OF 3)
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
 # START: TOTAL_IDE_OPERATIONS_BACKEND_PART3
 # ======================================================================
 @csrf_exempt
@@ -285,5 +286,6 @@ def lint_code_api(request):
             
     return JsonResponse({'errors': final_report})
 # ======================================================================
-# END: TOTAL_IDE_OPERATIONS_BACKEND_PART3 (PATCH 3 OF 3)
+# FILE: aurora/subsystems/anamod/api/ide_operations.py
+# END: TOTAL_IDE_OPERATIONS_BACKEND_PART3
 # ======================================================================

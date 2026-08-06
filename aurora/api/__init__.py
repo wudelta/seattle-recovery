@@ -26,7 +26,7 @@ from .wu_chat_api import (
 )
 
 # 2. Integrated Code Editor & Sandbox API Endpoints
-from .ide_operations import (
+from aurora.subsystems.anamod.api.ide_operations import (
     file_tree_api,
     file_operation_api,
     run_code_api,
