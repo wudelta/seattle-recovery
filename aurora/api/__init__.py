@@ -4,7 +4,7 @@
 # ====================================================================== #
 from .directives_api import directives_endpoint
 from .content_api import content_endpoint
-from .planning_api import planning_endpoint
+from aurora.subsystems.planning.api import planning_endpoint
 
 # Consolidated imports from the unified api_commands.py file layer
 from .api_commands import (
