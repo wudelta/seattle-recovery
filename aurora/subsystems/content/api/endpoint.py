@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/content_api.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/content/api/endpoint.py
 # START: CONTENT_COCKPIT_BACKEND_CONTROLLER
 # ======================================================================
 import json

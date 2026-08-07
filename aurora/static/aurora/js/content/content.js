@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/content.js (PATCH 1 OF 2)
+// FILE: aurora/static/aurora/js/content/content.js
 // START: CONTENT_PANEL_CORE_INITIALIZATION_AND_INVENTORY_PIPES
 // ======================================================================
 function initContentConsole(endpoints, csrfToken) {
@@ -73,7 +73,7 @@ function initContentConsole(endpoints, csrfToken) {
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/content.js (PATCH 2 OF 2)
+// FILE: aurora/static/aurora/js/content/content.js
 // START: CONTENT_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS
 // ======================================================================
     function clearWorkspaceForm() {

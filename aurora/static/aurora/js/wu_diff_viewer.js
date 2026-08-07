@@ -169,7 +169,7 @@
 
     function showDemo() {
         show({
-            file_path: "aurora/api/content_api.py",
+            file_path: "aurora/subsystems/content/api/endpoint.py",
             language: "python",
             original_content:
                 "def load_content():\n" +
