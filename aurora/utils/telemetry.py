@@ -1,34 +1,42 @@
 # ======================================================================
-# FILE: aurora/utils/telemetry.py (PATCH 1 OF 1)
+# FILE: aurora/utils/telemetry.py
 # START: SYSTEM_TELEMETRY_STREAM_LOGGER
 # ======================================================================
+
 import threading
+
 
 class TelemetryLogger:
     """
-    Stateless Thread-safe Console Logging Utility.
-    Isolates log capture streams from individual builders to prevent cross-app contamination.
+    Thread-local telemetry buffer for shared Aurora infrastructure.
+
+    Callers emit tracing events into the active thread's buffer and may
+    later flush the accumulated stream as a single string.
     """
+
     _storage = threading.local()
 
     @classmethod
-    def _get_buffer(cls) -> list:
+    def _get_buffer(cls) -> list[str]:
         if not hasattr(cls._storage, "logs"):
             cls._storage.logs = []
+
         return cls._storage.logs
 
     @classmethod
     def emit(cls, message: str) -> None:
-        """Appends a localized tracing event to the active thread's stream buffer."""
+        """Append one tracing event to the active thread's telemetry buffer."""
         cls._get_buffer().append(message)
 
     @classmethod
     def flush(cls) -> str:
-        """Extracts, builds, and wipes the active log stack returning a unified stream string."""
+        """Return and clear the active thread's accumulated telemetry stream."""
         buffer = cls._get_buffer()
         stream = "".join(buffer)
         buffer.clear()
+
         return stream
+
 # ======================================================================
-# END: SYSTEM_TELEMETRY_STREAM_LOGGER (PATCH 1 OF 1)
+# END: SYSTEM_TELEMETRY_STREAM_LOGGER
 # ======================================================================

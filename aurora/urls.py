@@ -27,12 +27,6 @@ path(
     name="console",
 ),
 
-path(
-    "console/run/",
-    api_endpoints.trigger_pipeline,
-    name="trigger_pipeline",
-),
-
 # 4. ANAMOD AND SANDBOX ENDPOINTS
 path(
     "api/files/tree/",

@@ -29,7 +29,7 @@ from aurora.wu.workspace_context import (
     resolve_workspace_context,
 )
 
-from aurora.api.dev_streamer_api import async_send_to_console
+from aurora.utils.console_stream import async_send_to_console
 # ======================================================================
 # END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
