@@ -28,10 +28,6 @@ html, body {
     word-break: break-all;
 }
 
-textarea#blueprint-input {
-    resize: none;
-}
-
 /* ==========================================================================
    2. RECOVERY PLATFORM COMPACT MODE OVERRIDES
    ========================================================================== */

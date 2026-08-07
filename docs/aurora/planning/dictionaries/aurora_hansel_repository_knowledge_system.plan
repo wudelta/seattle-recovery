@@ -1,0 +1,416 @@
+{
+    "schema_version": 1,
+
+    "target": {
+        "project_slug": "aurora",
+    },
+
+    "add_initiatives": [
+        {
+            "title": "Hansel Repository Knowledge System",
+            "description": (
+                "Create a deterministic, repository-owned human and machine "
+                "knowledge workflow that makes Aurora subsystems self-discoverable, "
+                "eliminates repeated repository-wide snipe hunts, and ensures every "
+                "subsystem begins with maintained architectural contracts, validation, "
+                "and an explicit next breadcrumb."
+            ),
+            "status": "ACTIVE",
+            "phases": [
+                {
+                    "title": "Hansel Standard Foundation",
+                    "description": (
+                        "Define the authoritative minimum subsystem contract standard, "
+                        "knowledge states, evidence rules, breadcrumb rules, update "
+                        "requirements, and completeness requirements that govern all "
+                        "later Hansel implementation."
+                    ),
+                    "status": "ACTIVE",
+                    "steps": [
+                        {
+                            "title": "Establish the Hansel subsystem structure",
+                            "description": (
+                                "Create the Hansel subsystem directories for contracts, "
+                                "templates, and validators without introducing runtime "
+                                "behavior."
+                            ),
+                            "status": "COMPLETED",
+                            "estimated_minutes": 20,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "The Hansel subsystem directories and package markers "
+                                "exist at the approved repository paths."
+                            ),
+                        },
+                        {
+                            "title": "Define the subsystem contract standard",
+                            "description": (
+                                "Create the authoritative SUBSYSTEM_STANDARD.md contract "
+                                "defining required files, responsibilities, knowledge "
+                                "states, evidence rules, breadcrumbs, update rules, "
+                                "anchor rules, delivery rules, and the Hansel success "
+                                "condition."
+                            ),
+                            "status": "COMPLETED",
+                            "estimated_minutes": 90,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "SUBSYSTEM_STANDARD.md exists with matching FILE, START, "
+                                "and END anchors and defines the minimum Hansel contract "
+                                "requirements."
+                            ),
+                        },
+                        {
+                            "title": "Validate Hansel against the Anamod discovery trail",
+                            "description": (
+                                "Confirm the standard reflects the evidence, ownership, "
+                                "runtime, migration, rollback, and breadcrumb lessons "
+                                "discovered while making Anamod self-discoverable."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "The Anamod contracts can be evaluated against the Hansel "
+                                "standard without requiring undocumented interpretation."
+                            ),
+                        },
+                    ],
+                },
+                {
+                    "title": "Canonical Contract Templates",
+                    "description": (
+                        "Create deterministic starter templates for every required "
+                        "Hansel contract so new subsystems begin with the same minimum "
+                        "architectural obligations."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Create the subsystem README template",
+                            "description": (
+                                "Create the canonical README.md template that identifies "
+                                "the subsystem, its durable capability, and the contract "
+                                "entry points for common tasks."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 45,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "The README template contains matching anchors, a clear "
+                                "entry point, UNKNOWN-safe placeholders, and a next "
+                                "Hansel breadcrumb."
+                            ),
+                        },
+                        {
+                            "title": "Create the required contract templates",
+                            "description": (
+                                "Create canonical templates for SUBSYSTEM.md, RUNTIME.md, "
+                                "INTERFACES.md, DEPENDENCIES.md, DECISIONS.md, and "
+                                "VALIDATION.md."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 180,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Poor template boundaries could create duplicated or "
+                                "contradictory architectural knowledge."
+                            ),
+                            "validation_description": (
+                                "Every required template satisfies the Empty Contract "
+                                "Rule, has matching anchors, identifies its knowledge "
+                                "state, and ends with a precise next breadcrumb."
+                            ),
+                        },
+                        {
+                            "title": "Create optional migration contract guidance",
+                            "description": (
+                                "Define when MIGRATION_PLAN.md is required and provide a "
+                                "canonical template for legacy subsystem reorganization."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "The migration template defines legacy mapping, target "
+                                "responsibilities, phased moves, validation gates, "
+                                "deferred scope, and rollback behavior."
+                            ),
+                        },
+                    ],
+                },
+                {
+                    "title": "Subsystem Generator",
+                    "description": (
+                        "Implement a deterministic management command that creates a new "
+                        "subsystem and its minimum Hansel contracts from the canonical "
+                        "templates."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Define generator inputs and path rules",
+                            "description": (
+                                "Specify accepted subsystem names, repository destination "
+                                "rules, collision handling, and the exact files the "
+                                "generator is authorized to create."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 75,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Generator authority must not permit unintended directory "
+                                "or file creation outside the subsystem boundary."
+                            ),
+                            "validation_description": (
+                                "The generator contract defines deterministic inputs, "
+                                "outputs, refusal conditions, and path-safety rules."
+                            ),
+                        },
+                        {
+                            "title": "Implement create_subsystem",
+                            "description": (
+                                "Create the management command that generates the "
+                                "subsystem package, README, required contracts, and "
+                                "approved starter directories from canonical templates."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 240,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Partial generation could leave a misleading or "
+                                "noncompliant subsystem scaffold."
+                            ),
+                            "validation_description": (
+                                "A dry-run reports the exact planned paths; apply creates "
+                                "the complete scaffold transactionally or leaves no "
+                                "partial output after failure."
+                            ),
+                        },
+                        {
+                            "title": "Bootstrap a test subsystem from the generator",
+                            "description": (
+                                "Generate a disposable or designated test subsystem and "
+                                "compare its structure and contracts against the standard."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 90,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "The generated subsystem contains every required file, "
+                                "valid anchors, correct paths, and no undocumented extras."
+                            ),
+                        },
+                    ],
+                },
+                {
+                    "title": "Hansel Contract Validator",
+                    "description": (
+                        "Implement deterministic validation that proves subsystem "
+                        "contracts exist, are complete, are internally consistent, and "
+                        "provide usable breadcrumbs."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Define validation rules",
+                            "description": (
+                                "Translate the Hansel standard into explicit checks for "
+                                "required files, anchors, FILE path accuracy, knowledge "
+                                "states, breadcrumbs, update triggers, and referenced "
+                                "repository paths."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Overly rigid validation could discourage accurate "
+                                "contracts or encode premature conventions."
+                            ),
+                            "validation_description": (
+                                "Each rule maps to one documented requirement in "
+                                "SUBSYSTEM_STANDARD.md and produces a deterministic error."
+                            ),
+                        },
+                        {
+                            "title": "Implement validate_subsystems",
+                            "description": (
+                                "Create a management command that validates one subsystem "
+                                "or all registered subsystems against the Hansel standard."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 240,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Validator output must remain actionable rather than "
+                                "becoming a noisy documentation linter."
+                            ),
+                            "validation_description": (
+                                "The command reports deterministic pass/fail results, "
+                                "identifies exact files and rules, and exits nonzero on "
+                                "contract violations."
+                            ),
+                        },
+                        {
+                            "title": "Validate Hansel and Anamod",
+                            "description": (
+                                "Run the validator against Hansel itself and the Anamod "
+                                "pilot subsystem, then refine only rules proven necessary."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "Hansel and Anamod either validate successfully or produce "
+                                "specific contract corrections with no ambiguous failures."
+                            ),
+                        },
+                    ],
+                },
+                {
+                    "title": "Architecture Change Guidance",
+                    "description": (
+                        "Make Hansel identify which contracts are likely affected when "
+                        "runtime files, interfaces, dependencies, ownership, or validation "
+                        "logic change."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Define contract impact mapping",
+                            "description": (
+                                "Define how categories of repository changes map to likely "
+                                "contract updates without pretending to prove semantic "
+                                "correctness automatically."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "HIGH",
+                            "risk_description": (
+                                "Naive change detection may create false confidence or "
+                                "excessive update noise."
+                            ),
+                            "validation_description": (
+                                "Representative changes produce relevant, explainable "
+                                "contract update suggestions and avoid unrelated contracts."
+                            ),
+                        },
+                        {
+                            "title": "Implement Hansel update guidance",
+                            "description": (
+                                "Add a command or repository workflow that reports modified "
+                                "files and suggests the contracts that should be reviewed."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 240,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "HIGH",
+                            "risk_description": (
+                                "This guidance must remain advisory until deterministic "
+                                "semantic validation is possible."
+                            ),
+                            "validation_description": (
+                                "The workflow clearly labels suggestions as advisory and "
+                                "shows the evidence used to produce each suggestion."
+                            ),
+                        },
+                    ],
+                },
+                {
+                    "title": "Repository Adoption",
+                    "description": (
+                        "Apply Hansel incrementally to Aurora subsystems and make the "
+                        "repository knowledge trail part of normal architecture work."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Make Anamod Hansel compliant",
+                            "description": (
+                                "Complete the required Anamod contracts, validate them, and "
+                                "use the trail to execute the subsystem migration safely."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 360,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "HIGH",
+                            "risk_description": (
+                                "Anamod is critical-path infrastructure and must remain "
+                                "operational after every migration step."
+                            ),
+                            "validation_description": (
+                                "A new worker can begin from the Anamod README, locate the "
+                                "correct authorities, implement one bounded change, and "
+                                "validate it without asking Delta to guess a file."
+                            ),
+                        },
+                        {
+                            "title": "Select the next subsystem pilot",
+                            "description": (
+                                "Choose one additional Aurora subsystem with different "
+                                "runtime characteristics to test the portability of the "
+                                "Hansel standard."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 90,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "A second pilot must reveal whether the standard is overly "
+                                "specific to browser-heavy Anamod architecture."
+                            ),
+                            "validation_description": (
+                                "The selected subsystem can adopt the required contracts "
+                                "without inventing a parallel documentation structure."
+                            ),
+                        },
+                        {
+                            "title": "Define repository-wide adoption policy",
+                            "description": (
+                                "Define when existing subsystems must become compliant and "
+                                "when new subsystem creation must be blocked until the "
+                                "Hansel scaffold exists."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Premature enforcement could disrupt active work before "
+                                "the generator and validator are proven."
+                            ),
+                            "validation_description": (
+                                "The adoption policy defines sequencing, exceptions, and "
+                                "enforcement triggers based on proven tooling."
+                            ),
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+
+    "add_phases": [],
+
+    "add_steps": [],
+}

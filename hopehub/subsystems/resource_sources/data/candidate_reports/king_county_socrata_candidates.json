@@ -1,0 +1,333 @@
+{
+  "domain": "data.kingcounty.gov",
+  "queries": [
+    "shelter",
+    "homeless",
+    "housing assistance",
+    "food assistance",
+    "food bank",
+    "human services",
+    "health clinic",
+    "mental health",
+    "substance use",
+    "recovery",
+    "social services"
+  ],
+  "query_count": 11,
+  "candidate_count": 10,
+  "candidates": [
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "yaai-7frk",
+      "name": "Lost, found, adoptable pets",
+      "description": "Animal shelter data",
+      "category": "Pets",
+      "tags": [
+        "shelter",
+        "adopt",
+        "adoptable",
+        "cats",
+        "dogs",
+        "found pets",
+        "lost pets",
+        "pets"
+      ],
+      "columns": [
+        "link",
+        "date",
+        "obfuscated_address",
+        "impound_no",
+        "age",
+        "city",
+        "animal_id",
+        "jurisdiction",
+        "animal_gender",
+        "animal_name",
+        "zip",
+        "animal_breed",
+        "obfuscated_longitude",
+        "obfuscated_latitude",
+        "data_source",
+        "animal_color",
+        "temperament",
+        "image_alt_text",
+        "record_type",
+        "animal_type",
+        "current_location",
+        "memo",
+        "image",
+        "date_type",
+        "state"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/yaai-7frk",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "shelter"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "qbmd-4t7n",
+      "name": "Best Starts for Kids Indicators",
+      "description": "These Best Starts for Kids (BSK) indicators provide important information about the health and well-being of King County children, youth, families, and communities.\r\n\r\nInformation is organized into four areas:\r\n\r\nPrenatal to 5 years: Babies are born healthy and are provided with a strong foundation for lifelong health and well-being.\r\n\r\n5 to 24 years: King County is a place where everyone has equitable opportunities to be safe and healthy as they progress through childhood, building academic and life skills to be thriving members of their communities.\r\n\r\nYouth and family homelessness prevention\r\n\r\nCommunities of Opportunity",
+      "category": "Health & Wellness",
+      "tags": [
+        "best starts for kids",
+        "community health",
+        "public health"
+      ],
+      "columns": [
+        "investment_area",
+        "area",
+        "sort",
+        "url",
+        "indicator",
+        "description"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/qbmd-4t7n",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "homeless",
+        "human services"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "mwd7-nvvc",
+      "name": "King County Metro - JARC",
+      "description": "The Job Access Reverse Commute (JARC) Transportation Program developed by the King County Department of Transportation partners with social service agencies, community based organizations, housing authorities, local jurisdictions and employers to assist with transportation issues for low income individuals",
+      "category": "Transportation & Roads",
+      "tags": [
+        "king county metro"
+      ],
+      "columns": [
+        "the_geom",
+        "name",
+        "id",
+        "address"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/mwd7-nvvc",
+      "license_name": "",
+      "matched_queries": [
+        "housing assistance",
+        "social services"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "2be9-wu5b",
+      "name": "Best Starts for Kids Funding Award Database",
+      "description": "Best Starts for Kids provides funding to community organizations, non-profits, schools and school districts, tribes and tribal organizations, and public or governmental agencies serving communities in King County. We consider our funding recipients as partners working together to achieve health and well-being for children, youth, families and communities. See where we're investing.",
+      "category": "Health & Wellness",
+      "tags": [
+        "community and human services",
+        "social services",
+        "public health",
+        "best starts for kids"
+      ],
+      "columns": [
+        "best_starts_for_kids_strategy",
+        "focus",
+        "contract_amount",
+        "project_description_name",
+        "partner",
+        "king_county_council_dist"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/2be9-wu5b",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "human services",
+        "social services"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "sep3-3pj3",
+      "name": "King County Mental Health and Substance Use-Disorder Providers",
+      "description": "All KC contracted mental health and substance use providers\n\nhttps://kingcounty.gov/en/dept/dchs/human-social-services/behavioral-health-recovery/search-services-providers",
+      "category": "Health & Wellness",
+      "tags": [
+        "services",
+        "mental health",
+        "provider",
+        "public health",
+        "substance use disorder"
+      ],
+      "columns": [
+        "notes",
+        "address_zip",
+        "involuntary",
+        "older_adults",
+        "website",
+        "address_address",
+        "substance_use",
+        ":@computed_region_ujgi_eduq",
+        ":@computed_region_pg2z_4vz6",
+        ":@computed_region_6hpt_4ha3",
+        "mental_health_and_sud",
+        "families",
+        "adults",
+        "detox",
+        "sud_residential",
+        "opioid",
+        "crisis_services",
+        "address_state",
+        "youth",
+        "mental_health",
+        "housing",
+        "address_city",
+        "mh_residential",
+        "provider",
+        "phone",
+        "locations",
+        "address"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/sep3-3pj3",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "human services",
+        "mental health",
+        "substance use",
+        "recovery",
+        "social services"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "64yn-5kas",
+      "name": "King County Metro - Solid Ground Circulator",
+      "description": "SGT’s fixed-route, 7-stop Circulator provides FREE rides for people living on low incomes and those who access health and human services in downtown Seattle.",
+      "category": "Transportation & Roads",
+      "tags": [
+        "king county metro"
+      ],
+      "columns": [
+        "the_geom",
+        "id",
+        "stopid"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/64yn-5kas",
+      "license_name": "",
+      "matched_queries": [
+        "human services"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "77e7-jbdr",
+      "name": "King County School Based Health Centers",
+      "description": "What began in 1989 as a modest pilot program at Rainier Beach High School is now a model for an effective school-based health care system, serving over 10,000 elementary, middle and high school students each year across King County (and part of a larger Washington State network).",
+      "category": "Health & Wellness",
+      "tags": [
+        "adolescent health",
+        "school based health centers",
+        "teen health"
+      ],
+      "columns": [
+        "location_1",
+        "website",
+        ":@computed_region_pg2z_4vz6",
+        ":@computed_region_ujgi_eduq",
+        "location_1_zip",
+        "location_1_city",
+        "clinic",
+        "phone",
+        "services",
+        "location",
+        "location_1_state",
+        "location_1_address"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/77e7-jbdr",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "health clinic"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "6xv5-f3hz",
+      "name": "VFC Enrollment 7.2018",
+      "description": "Vaccines for Children (VFC) was established in 1993 to remove the barriers of cost and access to attaining childhood immunizations. The program is funded by the Centers for Disease Control and Prevention (CDC) and the State of Washington, and supplies vaccines to providers across the state.\n\nMost public and private health care providers who immunize children in King County are currently enrolled. All children from birth up to the 19th birthday are eligible to receive these vaccines.\n\nhttps://kingcounty.gov/depts/health/communicable-diseases/immunization/providers/vaccines-for-children.aspx",
+      "category": "Health & Wellness",
+      "tags": [
+        "public health",
+        "health",
+        "vaccinations for children",
+        "vaccination"
+      ],
+      "columns": [
+        "location_1",
+        ":@computed_region_pg2z_4vz6",
+        ":@computed_region_6hpt_4ha3",
+        ":@computed_region_ujgi_eduq",
+        "location_1_state",
+        "location_1_address",
+        "location_1_zip",
+        "clinic",
+        "phone",
+        "location_1_city",
+        "address"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/6xv5-f3hz",
+      "license_name": "Public Domain",
+      "matched_queries": [
+        "health clinic"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "ngy6-yfbq",
+      "name": "CDC Social Vulnerability Index (CDCSVI)",
+      "description": "The Centers for Disease Control Social Vulnerability Index shows which communities are especially at risk during public health emergencies because of factors like socioeconomic status, household composition, racial composition of neighborhoods, or housing type and transportation. The CDC SVI uses 15 U.S. census variables to identify communities that may need support before, during, or after disasters. Learn more here.\n\nThe condition is the overall ranking of four social theme rankings where lower values indicate high vulnerability and high values indicate low vulnerability.\n\nQuintiles for this condition were determined for all the Census tracts in King County. Quintile 1 is the most vulnerable residents, Quintile 5 is the least vulnerable residents.\n\nData is released every 2 years following the American Community Survey release in December of the year following the Survey. The most recent data for 2018 was downloaded from the ATSDR website.",
+      "category": "Equity & Justice",
+      "tags": [
+        "king county"
+      ],
+      "columns": [
+        "weightedavgquintile",
+        "the_geom",
+        "f_total",
+        "year",
+        "name_geography",
+        "notsociallyvulnerable",
+        "shape__length",
+        "totalpopulation",
+        "featureid",
+        "geography",
+        "rpl_themes",
+        "shape__area",
+        "objectid",
+        "condition",
+        "condition_totalpop",
+        "quintile"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/ngy6-yfbq",
+      "license_name": "",
+      "matched_queries": [
+        "substance use"
+      ]
+    },
+    {
+      "domain": "data.kingcounty.gov",
+      "dataset_id": "j7f3-qjgy",
+      "name": "King County Metro - Hyde Shuttle",
+      "description": "The Hyde Shuttle program provides door-to-door van service for older adults and adults with disabilities throughout many communities in King County. Our friendly, specially-trained drivers transport riders to hot meal programs, medical appointments, senior centers, grocery stores and other local destinations. For those who have difficulty getting around, the service provides an opportunity to socialize and stay active within their communities.",
+      "category": "Transportation & Roads",
+      "tags": [
+        "king county metro"
+      ],
+      "columns": [
+        "website",
+        "phone",
+        "operator",
+        "the_geom",
+        "shuttlenam"
+      ],
+      "permalink": "https://data.kingcounty.gov/d/j7f3-qjgy",
+      "license_name": "",
+      "matched_queries": [
+        "social services"
+      ]
+    }
+  ]
+}

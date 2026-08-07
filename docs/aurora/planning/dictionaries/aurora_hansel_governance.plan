@@ -1,0 +1,149 @@
+{
+    "schema_version": 1,
+
+    "target": {
+        "project_slug": "aurora",
+    },
+
+    "add_initiatives": [],
+
+    "add_phases": [
+        {
+            "initiative_title": "Hansel Repository Knowledge System",
+            "phases": [
+                {
+                    "title": "Hansel Governance",
+                    "description": (
+                        "Integrate Hansel into Aurora's normal engineering "
+                        "workflow so new subsystems begin with a compliant "
+                        "knowledge scaffold and architectural changes remain "
+                        "connected to updated, validated repository contracts."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Define Hansel completion requirements",
+                            "description": (
+                                "Define when subsystem creation, architecture "
+                                "changes, migrations, and deprecations require "
+                                "Hansel contract creation or updates before the "
+                                "engineering work can be considered complete."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Requirements that are too broad or premature "
+                                "could add process cost before the generator and "
+                                "validator are proven."
+                            ),
+                            "validation_description": (
+                                "The governance contract maps each covered "
+                                "engineering change to the exact Hansel "
+                                "contracts and validation required for "
+                                "completion."
+                            ),
+                        },
+                        {
+                            "title": "Require the Hansel scaffold for new subsystems",
+                            "description": (
+                                "Define the enforcement point at which a new "
+                                "subsystem must be created through the approved "
+                                "Hansel generator or contain an equivalent "
+                                "validated contract scaffold."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Enforcement must not begin until "
+                                "create_subsystem produces a reliable and "
+                                "complete scaffold."
+                            ),
+                            "validation_description": (
+                                "A new subsystem without the required scaffold "
+                                "is rejected with an actionable error, while a "
+                                "generated compliant subsystem passes."
+                            ),
+                        },
+                        {
+                            "title": "Integrate Hansel validation into engineering workflows",
+                            "description": (
+                                "Add the approved validate_subsystems checks to "
+                                "the relevant Aurora development, migration, "
+                                "merge, or release workflows after the validator "
+                                "has been proven against pilot subsystems."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 180,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "HIGH",
+                            "risk_description": (
+                                "Premature or noisy enforcement could block "
+                                "valid engineering work and reduce confidence "
+                                "in Hansel."
+                            ),
+                            "validation_description": (
+                                "Covered workflows run Hansel validation, "
+                                "report exact contract violations, and permit "
+                                "compliant changes without manual exceptions."
+                            ),
+                        },
+                        {
+                            "title": "Establish contract update accountability",
+                            "description": (
+                                "Define how modified architecture is associated "
+                                "with affected contracts, how advisory update "
+                                "guidance is reviewed, and who resolves UNKNOWN, "
+                                "DEFERRED, DEPRECATED, or stale knowledge states."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 150,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Automated guidance cannot prove semantic "
+                                "correctness and must not silently rewrite "
+                                "architectural contracts."
+                            ),
+                            "validation_description": (
+                                "Representative architecture changes produce "
+                                "clear contract-review obligations, preserve "
+                                "human approval, and leave an auditable Hansel "
+                                "trail."
+                            ),
+                        },
+                        {
+                            "title": "Publish the repository-wide Hansel adoption policy",
+                            "description": (
+                                "Publish the sequencing, exceptions, pilot "
+                                "requirements, enforcement triggers, and "
+                                "rollback rules for adopting Hansel across "
+                                "existing and future Aurora subsystems."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 120,
+                            "estimate_confidence": "LOW",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Repository-wide adoption must follow evidence "
+                                "from Hansel, Anamod, and at least one "
+                                "architecturally different subsystem."
+                            ),
+                            "validation_description": (
+                                "The policy identifies when compliance is "
+                                "required, when exceptions are allowed, how "
+                                "exceptions expire, and which proven tooling "
+                                "must exist before enforcement begins."
+                            ),
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+
+    "add_steps": [],
+}

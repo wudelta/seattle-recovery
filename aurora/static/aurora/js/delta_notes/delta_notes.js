@@ -133,23 +133,6 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }
     });
 
-    // Compile markdown loop (Decoupled: Only refreshes project file context)
-    $(document).off('click', '#compile-blueprint-btn').on('click', '#compile-blueprint-btn', function() {
-        const btn = $(this);
-        btn.prop('disabled', true).text('Writing File...');
-        $.post(endpoints.endpoint_url, { 
-            action: 'compile_blueprint', 
-            csrfmiddlewaretoken: csrfToken 
-        }, function(data) {
-            alert(data.message);
-            btn.prop('disabled', false).text('Compile to project.md');
-            loadActiveQueue();
-        }).fail(function(xhr) {
-            alert("Compilation failed: " + xhr.responseText);
-            btn.prop('disabled', false).text('Compile to project.md');
-        });
-    });
-
     // Initial console populate execution pass
     loadActiveQueue();
 }

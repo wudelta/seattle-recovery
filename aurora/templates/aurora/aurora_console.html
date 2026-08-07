@@ -2,17 +2,19 @@
 <!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 1 OF 2) -->
 <!-- START: MASTER_WORKSPACE_CONSOLE_VIEWPORT_SHELL -->
 <!-- ====================================================================== -->
+
 {% extends "aurora/aurora_base.html" %}
 {% load static %}
 
 {% block title %}Aurora Control Center Cockpit{% endblock %}
 
 {% block extra_css %}
+
 <!-- Unified CSS Assets across individual modules -->
+
 <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/planning.css' %}">
-<link rel="stylesheet" href="{% static 'aurora/css/blueprint.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/directives.css' %}">
@@ -68,119 +70,113 @@
         opacity: 0.45;
     }
 </style>
+
 {% endblock %}
 
 {% block content %}
+
 <div class="d-flex flex-column h-100 w-100 p-2" style="background-color: #000000; overflow: hidden; box-sizing: border-box;">
     {% csrf_token %}
 
-    <!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
-    <div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
-        <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
+```
+<!-- COCKPIT CONTROL BAR (Absorbed & Decoupled Modular Navigation Router) -->
+<div class="row g-2 mb-2 flex-shrink-0" id="console-control-bar-container">
+    <div class="col-12 d-flex justify-content-between align-items-center bg-black p-2 rounded border border-secondary">
 
-            <!-- FIXED: Transformed from legacy dropdown selector into high-utility radio action pill row matrix -->
-            <div class="d-flex align-items-center gap-3 flex-grow-1 me-3">
-                <div id="console-view-selector-group" class="d-flex gap-1 flex-wrap flex-grow-1 matrix-selector-disabled" role="radiogroup">
+        <!-- FIXED: Transformed from legacy dropdown selector into high-utility radio action pill row matrix -->
+        <div class="d-flex align-items-center gap-3 flex-grow-1 me-3">
+            <div id="console-view-selector-group" class="d-flex gap-1 flex-wrap flex-grow-1 matrix-selector-disabled" role="radiogroup">
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="delta_notes" class="matrix-radio-pill" checked>
-                        <div class="matrix-btn-box">Delta Notes</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="delta_notes" class="matrix-radio-pill" checked>
+                    <div class="matrix-btn-box">Delta Notes</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="planning" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Project</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="planning" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Project</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="wu_chat" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Wu Chat</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="wu_chat" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Wu Chat</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="anamod" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Anamod</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="anamod" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Anamod</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="directives_panel" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Directives</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="directives_panel" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Directives</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="content_panel" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Content</div>
-                    </label>
+                <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="content_panel" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Content</div>
+                </label>
 
-                    <label class="matrix-pill-label">
-                        <input type="radio" name="console_pane_target" value="blueprint" class="matrix-radio-pill">
-                        <div class="matrix-btn-box">Blueprint</div>
-                    </label>
-
-                </div>
-
-                <!-- Hidden selector mock state to remain backwards-compatible with legacy console.js listener attachment routines -->
-                <select id="console-view-selector" class="d-none">
-                    <option value="delta_notes" selected>delta_notes</option>
-                    <option value="planning">planning</option>
-                    <option value="wu_chat">wu_chat</option>
-                    <option value="anamod">anamod</option>
-                    <option value="directives_panel">directives_panel</option>
-                    <option value="content_panel">content_panel</option>
-                    <option value="blueprint">blueprint</option>
-                </select>
             </div>
 
-            <div class="d-flex align-items-center flex-shrink-0">
-                <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
-                    <span class="text-info me-2 small">SESSION_TIME:</span>
-                    <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
-                    <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
-                </div>
+            <!-- Hidden selector mock state to remain backwards-compatible with legacy console.js listener attachment routines -->
+            <select id="console-view-selector" class="d-none">
+                <option value="delta_notes" selected>delta_notes</option>
+                <option value="planning">planning</option>
+                <option value="wu_chat">wu_chat</option>
+                <option value="anamod">anamod</option>
+                <option value="directives_panel">directives_panel</option>
+                <option value="content_panel">content_panel</option>
+            </select>
+        </div>
+
+        <div class="d-flex align-items-center flex-shrink-0">
+            <div class="bg-dark px-2 py-1 rounded border border-secondary d-flex align-items-center">
+                <span class="text-info me-2 small">SESSION_TIME:</span>
+                <span id="session-timer-display" class="badge bg-black text-warning font-monospace" style="font-size: 0.95rem; border: 1px solid #333;">00:00:00</span>
+                <button id="global-timer-toggle-btn" class="btn btn-outline-success btn-xs py-0 px-2 ms-2" style="font-size: 0.75rem;">Start Session</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
-    <div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
+<!-- DYNAMIC HUB WORKSPACE INTERFACE VIEWPORT -->
+<div class="workspace-viewport w-100 flex-grow-1 position-relative" id="cockpit-viewport-container" style="min-height: 0; overflow: hidden; height: calc(100% - 60px);">
 
-        <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
-        <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999; pointer-events: auto;">
-            <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
-            <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Console Matrix Offline</h3>
-            <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace console views.</p>
-        </div>
-
-        <!-- Standardized View Panes -->
-        <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/delta_notes/delta_notes_console_panel.html" %}
-        </div>
-
-        <div class="workspace-section d-none h-100 w-100" id="wu_chat-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/snippets/wu_chat_console_panel.html" %}
-        </div>
-
-        <div class="workspace-section d-none h-100 w-100" id="planning-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/snippets/planning_console_panel.html" %}
-        </div>
-
-        <div class="workspace-section d-none style-panel-sync h-100 w-100" id="ai-blueprint-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/snippets/blueprint_console_panel.html" %}
-            <div id="unlocked-components-list"></div>
-        </div>
-
-        <div class="workspace-section d-none h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/anamod/anamod_console_panel.html" %}
-        </div>
-
-        <div class="workspace-section d-none h-100 w-100" id="content_panel-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/content/content_console_panel.html" %}
-        </div>
-
-        <div class="workspace-section d-none h-100 w-100" id="directives_panel-workspace-container" style="min-height: 0; overflow: hidden;">
-            {% include "aurora/delta_directives/directives_console_panel.html" %}
-        </div>
+    <!-- SYSTEM WORKSPACE LOCKOUT OVERLAY LAYER -->
+    <div id="aurora-cockpit-gate-overlay" class="d-flex flex-column align-items-center justify-content-center text-center w-100 h-100 position-absolute top-0 start-0" style="background-color: rgba(0, 0, 0, 0.95); z-index: 9999; pointer-events: auto;">
+        <img src="{% static 'media/aurora_logo.jpeg' %}" alt="Aurora System Logo" class="mb-4 opacity-75" style="max-width: 600px; width: 85%; height: auto; filter: drop-shadow(0 0 15px rgba(255,255,255,0.15)); border-radius: 6px;">
+        <h3 class="font-monospace text-warning text-uppercase mb-1" style="letter-spacing: 2px; font-size: 1.25rem;">Console Matrix Offline</h3>
+        <p class="text-muted font-monospace small px-3 mb-0">Initialize the SESSION_TIME pipeline terminal bar to map active workspace console views.</p>
     </div>
+
+    <!-- Standardized View Panes -->
+    <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/delta_notes/delta_notes_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="wu_chat-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/snippets/wu_chat_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="planning-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/snippets/planning_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="anamod-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/anamod/anamod_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="content_panel-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/content/content_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="directives_panel-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/delta_directives/directives_console_panel.html" %}
+    </div>
+</div>
+```
+
 </div>
 {% endblock %}
 <!-- ====================================================================== -->
@@ -188,60 +184,91 @@
 <!-- ====================================================================== -->
 
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/aurora_console.html -->
+
+<!-- FILE: aurora/templates/aurora/aurora_console.html (PATCH 2 OF 2) -->
+
 <!-- START: MASTER_WORKSPACE_CONSOLE_SCRIPT_ORCHESTRATOR -->
+
 <!-- ====================================================================== -->
+
 {% block extra_js %}
+
 <!-- Core Main Layout Panel Orchestrator -->
+
 <script src="{% static 'aurora/js/console.js' %}"></script>
-<script src="{% static 'aurora/js/blueprint.js' %}"></script>
+
 <script src="{% static 'aurora/js/delta_notes/delta_notes.js' %}"></script>
+
 <script src="{% static 'aurora/js/wu_chat.js' %}"></script>
 
-
 <!-- ====================================================================== -->
+
 <!-- FILE: aurora/templates/aurora/aurora_console.html -->
+
 <!-- START: PLANNING_MODULE_SCRIPT_LOADERS -->
+
 <!-- ====================================================================== -->
 
 <!-- Foundation -->
+
 <script src="{% static 'aurora/js/planning/state.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/utilities.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/workspace.js' %}"></script>
 
 <!-- API -->
+
 <script src="{% static 'aurora/js/planning/api/planning_api.js' %}"></script>
 
 <!-- Renderers -->
+
 <script src="{% static 'aurora/js/planning/renderers/initiative_renderer.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/renderers/navigator_renderer.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/renderers/phase_renderer.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/renderers/project_renderer.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/renderers/step_renderer.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/renderers/workspace_renderer.js' %}"></script>
 
 <!-- Orchestrator -->
+
 <script src="{% static 'aurora/js/planning/orchestrator.js' %}"></script>
 
 <!-- Controllers -->
+
 <script src="{% static 'aurora/js/planning/controllers/initiatives.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/controllers/phases.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/controllers/projects.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/controllers/steps.js' %}"></script>
 
 <!-- Events -->
+
 <script src="{% static 'aurora/js/planning/events/initiative_events.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/events/phase_events.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/events/project_events.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/events/step_events.js' %}"></script>
+
 <script src="{% static 'aurora/js/planning/events/workspace_events.js' %}"></script>
 
 <!-- ====================================================================== -->
+
 <!-- END: PLANNING_MODULE_SCRIPT_LOADERS -->
+
 <!-- ====================================================================== -->
 
-
 <script src="{% static 'js/jstree.min.js' %}"></script>
+
 <script src="{% static 'js/vs/loader.js' %}"></script>
 
 <script>
@@ -253,9 +280,13 @@ require.config({
 </script>
 
 <script src="{% static 'aurora/js/wu_diff_viewer.js' %}"></script>
+
 <script src="{% static 'aurora/js/anamod/anamod.js' %}"></script>
+
 <script src="{% static 'aurora/js/anamod/anamod_workspace.js' %}"></script>
+
 <script src="{% static 'aurora/js/content/content.js' %}"></script>
+
 <script src="{% static 'aurora/js/delta_directives/directives.js' %}"></script>
 
 <script>
@@ -269,6 +300,7 @@ $(document).ready(function() {
         wu_chat_approve_endpoint: "{% url 'aurora:approve_pending_code_change' %}",
         wu_chat_reject_endpoint: "{% url 'aurora:reject_pending_code_change' %}"
     };
+
     let planningInitialized = false;
     let anamodInitialized = false;
     let contentPanelInitialized = false;
@@ -277,6 +309,7 @@ $(document).ready(function() {
     if (typeof initDeltaNotesConsole === "function") {
         initDeltaNotesConsole(systemEndpoints, '{{ csrf_token }}');
     }
+
     if (typeof initWuChatConsole === "function") {
         initWuChatConsole(systemEndpoints, '{{ csrf_token }}');
     }
@@ -355,7 +388,9 @@ $(document).ready(function() {
     });
 });
 </script>
+
 {% endblock %}
+
 <!-- ====================================================================== -->
 <!-- END: MASTER_WORKSPACE_CONSOLE_SCRIPT_ORCHESTRATOR (PATCH 2 OF 2) -->
 <!-- ====================================================================== -->
