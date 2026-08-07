@@ -1,27 +1,19 @@
-# ====================================================================== #
-# FILE: aurora/api/api_commands.py (PATCH 1 OF 1)                        #
-# START: MODULAR_GATEWAY_EXPORTS_AND_ROUTING_BRIDGE                      #
-# ====================================================================== #
+# ======================================================================
+# FILE: aurora/api/api_commands.py
+# START: MODULAR_GATEWAY_EXPORTS_AND_ROUTING_BRIDGE
+# ======================================================================
 """
-Unified Entry Point Configuration Bridge.
-Redirects legacy system import chains down to the decoupled, refactored modular layout scripts.
+Compatibility bridge for remaining legacy Aurora API exports.
 """
 
-from aurora.api.endpoints import (
-    bind_command_endpoint,
-    delta_notes_endpoint,
-    unlocked_components_endpoint,
-)
 from aurora.api.blueprint import execute_blueprint_api
+from aurora.api.endpoints import unlocked_components_endpoint
 
 
-# Explicitly expose view vectors to satisfy local routing configurations
 __all__ = [
-    "delta_notes_endpoint",
-    "unlocked_components_endpoint",
     "execute_blueprint_api",
-    "bind_command_endpoint",
+    "unlocked_components_endpoint",
 ]
-# ====================================================================== #
-# END: MODULAR_GATEWAY_EXPORTS_AND_ROUTING_BRIDGE (PATCH 1 OF 1)        #
-# ====================================================================== #
+# ======================================================================
+# END: MODULAR_GATEWAY_EXPORTS_AND_ROUTING_BRIDGE
+# ======================================================================

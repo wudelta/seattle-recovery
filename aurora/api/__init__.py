@@ -4,11 +4,12 @@
 # ====================================================================== #
 from .directives_api import directives_endpoint
 from .content_api import content_endpoint
+
+from aurora.subsystems.delta_notes.api import delta_notes_endpoint
 from aurora.subsystems.planning.api import planning_endpoint
 
 # Consolidated imports from the unified api_commands.py file layer
 from .api_commands import (
-    delta_notes_endpoint,
     execute_blueprint_api,
     unlocked_components_endpoint,
 )
