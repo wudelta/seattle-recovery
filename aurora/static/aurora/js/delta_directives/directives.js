@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/directives.js (PATCH 1 OF 2)
+// FILE: aurora/static/aurora/js/delta_directives/directives.js
 // START: DIRECTIVES_PANEL_INITIALIZATION_AND_INVENTORY_PIPES
 // ======================================================================
 function initDirectivesConsole(endpoints, csrfToken) {
@@ -68,11 +68,11 @@ function initDirectivesConsole(endpoints, csrfToken) {
         }
     });
 // ======================================================================
-// END: DIRECTIVES_PANEL_INITIALIZATION_AND_INVENTORY_PIPES (PATCH 1 OF 2)
+// END: DIRECTIVES_PANEL_INITIALIZATION_AND_INVENTORY_PIPES
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/directives.js (PATCH 2 OF 2)
+// FILE: aurora/static/aurora/js/delta_directives/directives.js
 // START: DIRECTIVES_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS
 // ======================================================================
 function clearWorkspaceForm() {
@@ -222,5 +222,5 @@ $('input[name="dc-status-filter"]').on('change', fetchInventory);
 fetchInventory();
 }
 // ======================================================================
-// END: DIRECTIVES_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS (PATCH 2 OF 2)
+// END: DIRECTIVES_PANEL_MUTATION_OPERATIONS_AND_EVENT_BINDINGS
 // ======================================================================

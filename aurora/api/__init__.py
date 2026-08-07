@@ -2,7 +2,7 @@
 # FILE: aurora/api/__init__.py (PATCH 1 OF 1)                            #
 # START: MODULE_ROUTING_REGISTRATION_FOOTPRINT                           #
 # ====================================================================== #
-from .directives_api import directives_endpoint
+from aurora.subsystems.delta_directives.api import directives_endpoint
 from aurora.subsystems.content.api import content_endpoint
 from aurora.subsystems.delta_notes.api import delta_notes_endpoint
 from aurora.subsystems.planning.api import planning_endpoint

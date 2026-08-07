@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/directives_api.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/delta_directives/api/endpoint.py
 # START: API_ENDPOINT_LOGIC
 # ======================================================================
 import json
@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from asgiref.sync import sync_to_async
 from aurora.models import DeltaDirectives
 from aurora.minions.engine import MinionRunner
-from .dev_streamer_api import async_send_to_console
+from aurora.api.dev_streamer_api import async_send_to_console
 
 @login_required
 def directives_endpoint(request):
@@ -167,5 +167,5 @@ def directives_endpoint(request):
 
     return JsonResponse({'status': 'ERROR', 'message': 'Method not allowed.'}, status=405)
 # ======================================================================
-# END: API_ENDPOINT_LOGIC (PATCH 1 OF 1)
+# END: API_ENDPOINT_LOGIC
 # ======================================================================
