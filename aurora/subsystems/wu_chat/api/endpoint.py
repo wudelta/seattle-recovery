@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 1 OF 5)
+# FILE: aurora/subsystems/wu_chat/api/endpoint.py
 # START: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 import asyncio
@@ -29,13 +29,13 @@ from aurora.wu.workspace_context import (
     resolve_workspace_context,
 )
 
-from .dev_streamer_api import async_send_to_console
+from aurora.api.dev_streamer_api import async_send_to_console
 # ======================================================================
-# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES (PATCH 1 OF 5)
+# END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 2 OF 5)
+# FILE: aurora/subsystems/wu_chat/api/endpoint.py
 # START: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 
@@ -269,11 +269,11 @@ def process_wu_logic_synchronous(
         }
 
 # ======================================================================
-# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE (PATCH 2 OF 5)
+# END: SYNCHRONOUS_ORCHESTRATION_CORE_ENGINE
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 3 OF 5)
+# FILE: aurora/subsystems/wu_chat/api/endpoint.py
 # START: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS
 # ======================================================================
 @login_required
@@ -543,22 +543,22 @@ def reject_pending_code_change(request):
             status=400,
         )
 # ======================================================================
-# END: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS (PATCH 3 OF 5)
+# END: CHAT_REQUEST_AND_CODE_REVIEW_ENDPOINTS
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 4 OF 5)
+# FILE: aurora/subsystems/wu_chat/api/endpoint.py
 # START: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS
 # ======================================================================
 # Thread safety locks and allocation deques tracking network transaction states
 OUTBOUND_TRAFFIC_LOG = deque()
 TRAFFIC_LOCK = Lock()
 # ======================================================================
-# END: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS (PATCH 4 OF 5)
+# END: PRE_SEND_TRAFFIC_SAFETY_MONITORING_METRICS
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/api/wu_chat_api.py (PATCH 5 OF 5)
+# FILE: aurora/subsystems/wu_chat/api/endpoint.py
 # START: UTILITY_CONTEXT_TOKEN_BUDGETER
 # ======================================================================
 def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
@@ -649,5 +649,5 @@ def enforce_context_token_budget(raw_text_payload, max_tokens=150000):
 
     return sanitized_text
 # ======================================================================
-# END: UTILITY_CONTEXT_TOKEN_BUDGETER (PATCH 5 OF 5)
+# END: UTILITY_CONTEXT_TOKEN_BUDGETER
 # ======================================================================

@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 1 OF 3)
+// FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
 // START: DOM_INITIALIZATIONS_AND_STREAM_ROUTING
 // ======================================================================
 function initWuChatConsole(endpoints, csrfToken) {
@@ -46,11 +46,11 @@ function initWuChatConsole(endpoints, csrfToken) {
         };
     }
 // ======================================================================
-// END: DOM_INITIALIZATIONS_AND_STREAM_ROUTING (PATCH 1 OF 3)
+// END: DOM_INITIALIZATIONS_AND_STREAM_ROUTING
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 2 OF 3)
+// FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
 // START: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
     inputField.on('keydown', function(e) {
@@ -195,11 +195,11 @@ function initWuChatConsole(endpoints, csrfToken) {
         });
     });
 // ======================================================================
-// END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE (PATCH 2 OF 3)
+// END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/wu_chat.js (PATCH 3 OF 3)
+// FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
 // START: VERIFICATION_ACTIONS_AND_UI_HELPERS
 // ======================================================================
     approveBtn.on('click', function() {
@@ -403,5 +403,5 @@ function initWuChatConsole(endpoints, csrfToken) {
     });
 }
 // ======================================================================
-// END: VERIFICATION_ACTIONS_AND_UI_HELPERS (PATCH 3 OF 3)
+// END: VERIFICATION_ACTIONS_AND_UI_HELPERS
 // ======================================================================

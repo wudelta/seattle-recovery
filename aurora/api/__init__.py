@@ -19,10 +19,10 @@ run_development_pipeline_async,
 trigger_pipeline,
 )
 
-from .wu_chat_api import (
-approve_pending_code_change,
-reject_pending_code_change,
-wu_chat_endpoint,
+from aurora.subsystems.wu_chat.api import (
+    approve_pending_code_change,
+    reject_pending_code_change,
+    wu_chat_endpoint,
 )
 
 __all__ = [
