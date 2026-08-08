@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/workspace/workspace_reconciler.py (PATCH 1 OF 4)
+# FILE: aurora/subsystems/component_registry/services/reconciler.py
 # START: RECONCILIATION_TYPES_AND_INITIALIZATION
 # ======================================================================
 """Read-only comparison of repository files against ComponentRegistry."""
@@ -11,12 +11,12 @@ from pathlib import Path
 from django.conf import settings
 
 from aurora.models import ComponentRegistry
-from aurora.workspace.component_policy import (
+from aurora.subsystems.component_registry.services.component_policy import (
     CLASSIFICATION_EXCLUDE,
     CLASSIFICATION_KEEP,
     CLASSIFICATION_REGISTER,
     CLASSIFICATION_REVIEW,
-    CLASSIFICATION_STAGE,
+    CLASSIFICATION_ARCHIVE,
     CLASSIFICATION_UPDATE,
 )
 
@@ -75,11 +75,11 @@ class WorkspaceReconciler:
 
         return snapshot
 # ======================================================================
-# END: RECONCILIATION_TYPES_AND_INITIALIZATION (PATCH 1 OF 4)
+# END: RECONCILIATION_TYPES_AND_INITIALIZATION
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/workspace/workspace_reconciler.py (PATCH 2 OF 4)
+# FILE: aurora/subsystems/component_registry/services/reconciler.py
 # START: READ_ONLY_REPOSITORY_DISCOVERY
 # ======================================================================
     def discover_workspace_files(self) -> dict[str, dict[str, str | None]]:
@@ -92,7 +92,7 @@ class WorkspaceReconciler:
         import ast
         import os
 
-        from aurora.workspace.component_policy import (
+        from aurora.subsystems.component_registry.services.component_policy import (
             ALLOWED_ROOT_FILES,
             ALLOWED_ROOTS,
             CLASSIFICATION_EXCLUDE,
@@ -183,18 +183,18 @@ class WorkspaceReconciler:
 
         return discovered
 # ======================================================================
-# END: READ_ONLY_REPOSITORY_DISCOVERY (PATCH 2 OF 4)
+# END: READ_ONLY_REPOSITORY_DISCOVERY
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/workspace/workspace_reconciler.py (PATCH 3 OF 4)
+# FILE: aurora/subsystems/component_registry/services/reconciler.py
 # START: REGISTRY_COMPARISON_ENGINE
 # ======================================================================
     def reconcile(self) -> list[ReconciliationItem]:
         """Compare discovered paths with the current registry snapshot."""
         from pathlib import PurePosixPath
 
-        from aurora.workspace.component_policy import classify_component_path
+        from aurora.subsystems.component_registry.services.component_policy import classify_component_path
 
         discovered = self.discover_workspace_files()
         registry = self.load_registry_snapshot()
@@ -310,8 +310,12 @@ class WorkspaceReconciler:
             )
 
         for path, existing in sorted(registry.items()):
+            if existing.status == "ARCHIVED":
+                continue
+
             try:
                 policy_result = classify_component_path(path)
+                
             except ValueError:
                 policy_result = {
                     "classification": CLASSIFICATION_EXCLUDE,
@@ -328,7 +332,7 @@ class WorkspaceReconciler:
                     classification=(
                         CLASSIFICATION_EXCLUDE
                         if is_excluded
-                        else CLASSIFICATION_STAGE
+                        else CLASSIFICATION_ARCHIVE
                     ),
                     reason=(
                         str(policy_result["reason"])
@@ -344,11 +348,11 @@ class WorkspaceReconciler:
 
         return results
 # ======================================================================
-# END: REGISTRY_COMPARISON_ENGINE (PATCH 3 OF 4)
+# END: REGISTRY_COMPARISON_ENGINE
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/workspace/workspace_reconciler.py (PATCH 4 OF 4)
+# FILE: aurora/subsystems/component_registry/services/reconciler.py
 # START: RECONCILIATION_REPORT_GENERATION
 # ======================================================================
     def build_report(self) -> dict[str, object]:
@@ -358,7 +362,7 @@ class WorkspaceReconciler:
             CLASSIFICATION_KEEP,
             CLASSIFICATION_UPDATE,
             CLASSIFICATION_REGISTER,
-            CLASSIFICATION_STAGE,
+            CLASSIFICATION_ARCHIVE,
             CLASSIFICATION_EXCLUDE,
             CLASSIFICATION_REVIEW,
         )
@@ -384,5 +388,5 @@ class WorkspaceReconciler:
             "items": categorized,
         }
 # ======================================================================
-# END: RECONCILIATION_REPORT_GENERATION (PATCH 4 OF 4)
+# END: RECONCILIATION_REPORT_GENERATION
 # ======================================================================

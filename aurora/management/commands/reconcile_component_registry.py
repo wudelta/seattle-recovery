@@ -1,15 +1,21 @@
 # ======================================================================
-# FILE: aurora/management/commands/reconcile_workspace.py (PATCH 1 OF 3)
+# FILE: aurora/management/commands/reconcile_component_registry.py
 # START: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT
 # ======================================================================
-"""Workspace reconciliation and explicit bounded synchronization command."""
+"""Component Registry reconciliation and bounded synchronization command."""
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
-from aurora.workspace.component_policy import ALLOWED_ROOTS
-from aurora.workspace.workspace_reconciler import WorkspaceReconciler
-from aurora.workspace.workspace_synchronizer import WorkspaceSynchronizer
+from aurora.subsystems.component_registry.services.component_policy import (
+    ALLOWED_ROOTS,
+)
+from aurora.subsystems.component_registry.services.reconciler import (
+    WorkspaceReconciler,
+)
+from aurora.subsystems.component_registry.services.synchronizer import (
+    WorkspaceSynchronizer,
+)
 
 
 UserModel = get_user_model()
@@ -19,13 +25,13 @@ class Command(BaseCommand):
     """
     Compare business-relevant repository files with ComponentRegistry.
 
-    Reconciliation remains read-only by default. PostgreSQL and Neo4j mutation
-    require an explicit synchronization operation and --apply.
+    Reconciliation remains read-only by default. ComponentRegistry mutation
+    requires an explicit synchronization operation and --apply.
     """
 
     help = (
-        "Reports deterministic workspace differences and optionally applies "
-        "one explicitly bounded synchronization operation."
+        "Reports deterministic Component Registry differences and optionally "
+        "applies one explicitly bounded synchronization operation."
     )
 
     def add_arguments(self, parser):
@@ -48,11 +54,16 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--operation",
-            choices=("reconcile", "update", "register", "graph"),
+            choices=(
+                "reconcile",
+                "update",
+                "register",
+                "archive",
+            ),
             default="reconcile",
             help=(
                 "Choose read-only reconciliation, existing-row updates, "
-                "new-row registration, or graph projection."
+                "new-row registration, or archival of missing components."
             ),
         )
         parser.add_argument(
@@ -66,11 +77,6 @@ class Command(BaseCommand):
                 "Username assigned as created_by for new registrations. "
                 "Required when applying registration."
             ),
-        )
-        parser.add_argument(
-            "--skip-graph",
-            action="store_true",
-            help="Register PostgreSQL rows without Neo4j projection.",
         )
 
     def _validate_options(self, options):
@@ -89,6 +95,7 @@ class Command(BaseCommand):
                 raise CommandError(
                     "--path must be a safe repository-relative path."
                 )
+
             options["path"] = normalized_path.rstrip("/")
             requested_path = options["path"]
 
@@ -112,21 +119,9 @@ class Command(BaseCommand):
                     "when using --apply."
                 )
 
-        if operation == "graph" and apply:
-            if not requested_path and limit is None:
-                raise CommandError(
-                    "Graph synchronization requires --path or a positive "
-                    "--limit when using --apply."
-                )
-
         if operation != "register" and username:
             raise CommandError(
                 "--user is only valid with the register operation."
-            )
-
-        if operation != "register" and options.get("skip_graph"):
-            raise CommandError(
-                "--skip-graph is only valid with the register operation."
             )
 
     @staticmethod
@@ -138,12 +133,13 @@ class Command(BaseCommand):
             raise CommandError(
                 f"User '{username}' does not exist."
             ) from error
+
 # ======================================================================
-# END: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT (PATCH 1 OF 3)
+# END: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/management/commands/reconcile_workspace.py (PATCH 2 OF 3)
+# FILE: aurora/management/commands/reconcile_component_registry.py
 # START: BOUNDED_REPORT_FILTERING_AND_SYNCHRONIZATION
 # ======================================================================
     def _build_filtered_report(self, options) -> dict[str, object]:
@@ -221,7 +217,6 @@ class Command(BaseCommand):
         requested_path = options.get("path")
         limit = options.get("limit")
         username = options.get("user")
-        synchronize_graph = not options.get("skip_graph", False)
 
         user_instance = None
 
@@ -234,14 +229,14 @@ class Command(BaseCommand):
             user_instance=user_instance,
             path=requested_path,
             limit=limit,
-            synchronize_graph=synchronize_graph,
         )
+
 # ======================================================================
-# END: BOUNDED_REPORT_FILTERING_AND_SYNCHRONIZATION (PATCH 2 OF 3)
+# END: BOUNDED_REPORT_FILTERING_AND_SYNCHRONIZATION
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/management/commands/reconcile_workspace.py (PATCH 3 OF 3)
+# FILE: aurora/management/commands/reconcile_component_registry.py
 # START: COMMAND_EXECUTION_AND_REPORT_OUTPUT
 # ======================================================================
     def handle(self, *args, **options):
@@ -258,7 +253,8 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.MIGRATE_HEADING(
-                    f"Workspace Synchronization — {operation.upper()} {mode}"
+                    f"Component Registry Synchronization — "
+                    f"{operation.upper()} {mode}"
                 )
             )
             self.stdout.write(
@@ -293,11 +289,6 @@ class Command(BaseCommand):
                         "reason",
                         None,
                     )
-
-                    if not candidate_reason and operation == "graph":
-                        candidate_reason = (
-                            "active_registry_record_eligible_for_graph_projection"
-                        )
 
                     metadata = []
 
@@ -337,7 +328,9 @@ class Command(BaseCommand):
                     )
 
                     self.stdout.write(
-                        f"  {candidate_path}{reason_text}{metadata_text}"
+                        f"  {candidate_path}"
+                        f"{reason_text}"
+                        f"{metadata_text}"
                     )
 
             self.stdout.write("")
@@ -345,7 +338,7 @@ class Command(BaseCommand):
             if not apply:
                 self.stdout.write(
                     self.style.WARNING(
-                        "Preview complete. No PostgreSQL or Neo4j "
+                        "Preview complete. No ComponentRegistry "
                         "changes were performed."
                     )
                 )
@@ -355,12 +348,9 @@ class Command(BaseCommand):
 
             for failure in report.failures:
                 self.stderr.write(
-                    self.style.ERROR(f"POSTGRES FAILURE: {failure}")
-                )
-
-            for failure in report.graph_failures:
-                self.stderr.write(
-                    self.style.ERROR(f"GRAPH FAILURE: {failure}")
+                    self.style.ERROR(
+                        f"COMPONENT REGISTRY FAILURE: {failure}"
+                    )
                 )
 
             self.stdout.write(
@@ -373,17 +363,11 @@ class Command(BaseCommand):
                 )
             )
 
-            if report.graph_failures:
+            if report.failures:
                 self.stdout.write(
                     self.style.WARNING(
-                        "PostgreSQL changes completed with Neo4j failures. "
-                        "Graph projection requires deliberate retry."
-                    )
-                )
-            elif report.failures:
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Synchronization completed with PostgreSQL failures."
+                        "Synchronization completed with "
+                        "ComponentRegistry failures."
                     )
                 )
             else:
@@ -400,10 +384,12 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.MIGRATE_HEADING(
-                "Workspace Reconciliation — DRY RUN"
+                "Component Registry Reconciliation — DRY RUN"
             )
         )
-        self.stdout.write(f"Repository: {report['repository_root']}")
+        self.stdout.write(
+            f"Repository: {report['repository_root']}"
+        )
         self.stdout.write(
             "Filters: "
             f"root={filters['root'] or '*'} "
@@ -416,7 +402,7 @@ class Command(BaseCommand):
             "KEEP",
             "UPDATE",
             "REGISTER",
-            "STAGE",
+            "ARCHIVE",
             "EXCLUDE",
             "REVIEW",
         )
@@ -446,7 +432,9 @@ class Command(BaseCommand):
                     metadata.append(f"persona={item.persona}")
 
                 if item.registry_id:
-                    metadata.append(f"registry_id={item.registry_id}")
+                    metadata.append(
+                        f"registry_id={item.registry_id}"
+                    )
 
                 metadata_text = (
                     f" | {' | '.join(metadata)}"
@@ -455,7 +443,9 @@ class Command(BaseCommand):
                 )
 
                 self.stdout.write(
-                    f"  {item.path} | {item.reason}{metadata_text}"
+                    f"  {item.path} | "
+                    f"{item.reason}"
+                    f"{metadata_text}"
                 )
 
             omitted_count = matched_count - displayed_count
@@ -478,12 +468,14 @@ class Command(BaseCommand):
                 + f" | TOTAL={report['counts']['TOTAL']}"
             )
         )
+
         self.stdout.write(
             self.style.WARNING(
-                "Dry run complete. No repository, PostgreSQL, or Neo4j "
-                "changes were performed."
+                "Dry run complete. No repository or "
+                "ComponentRegistry changes were performed."
             )
         )
+
 # ======================================================================
-# END: COMMAND_EXECUTION_AND_REPORT_OUTPUT (PATCH 3 OF 3)
+# END: COMMAND_EXECUTION_AND_REPORT_OUTPUT
 # ======================================================================

@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/graph_synchronizer.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/component_registry/services/graph_projection.py
 # START: EXPLICIT_COMPONENT_GRAPH_SYNCHRONIZATION
 # ======================================================================
 """Explicit bounded projection of ComponentRegistry records into Neo4j."""
@@ -12,7 +12,9 @@ from django.utils import timezone
 
 from aurora.models import ComponentRegistry
 from aurora.nodes import ComponentNode
-from aurora.workspace.dependency_analyzer import DependencyAnalyzer
+from aurora.subsystems.component_registry.services.dependency_analyzer import (
+    DependencyAnalyzer,
+)
 
 
 @dataclass
@@ -218,5 +220,5 @@ class GraphSynchronizer:
 
         return report
 # ======================================================================
-# END: EXPLICIT_COMPONENT_GRAPH_SYNCHRONIZATION (PATCH 1 OF 1)
+# END: EXPLICIT_COMPONENT_GRAPH_SYNCHRONIZATION
 # ======================================================================

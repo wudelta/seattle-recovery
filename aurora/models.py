@@ -37,8 +37,8 @@ class ComponentRegistry(models.Model):
         ]),
     ]
     STATUS_CHOICES = [
-        ('ACTIVE', 'Active Component'),
-        ('STAGED_FOR_DELETION', 'Quarantined / Pending Deletion Review'),
+        ("ACTIVE", "Active Component"),
+        ("ARCHIVED", "Archived Component"),
     ]
     VISIBILITY_CHOICES = [
         ('PUBLIC', 'Public Access Node'),

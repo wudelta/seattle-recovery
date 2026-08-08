@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/forge_registry.py (PATCH 1 OF 2)
+# FILE: aurora/subsystems/component_registry/services/registry.py
 # START: REGISTRY_CORE_IMPORTS_AND_SYSTEM_CONSTRAINTS
 # ======================================================================
 from django.contrib.auth import get_user_model
@@ -11,11 +11,11 @@ UserModel = get_user_model()
 
 BANNED_DIRECTORIES = ["venv", ".venv", "site-packages", ".git"]
 # ======================================================================
-# END: REGISTRY_CORE_IMPORTS_AND_SYSTEM_CONSTRAINTS (PATCH 1 OF 2)
+# END: REGISTRY_CORE_IMPORTS_AND_SYSTEM_CONSTRAINTS
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/forge_registry.py (PATCH 2 OF 2)
+# FILE: aurora/subsystems/component_registry/services/registry.py
 # START: SANDBOX_GUARDRAILS_AND_EXPLICIT_POSTGRES_PROVISIONING
 # ======================================================================
 def register_new_component(
@@ -57,5 +57,5 @@ def register_new_component(
         description_audiences=["developers"],
     )
 # ======================================================================
-# END: SANDBOX_GUARDRAILS_AND_EXPLICIT_POSTGRES_PROVISIONING (PATCH 2 OF 2)
+# END: SANDBOX_GUARDRAILS_AND_EXPLICIT_POSTGRES_PROVISIONING
 # ======================================================================

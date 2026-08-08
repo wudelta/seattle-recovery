@@ -1,10 +1,12 @@
 # ======================================================================
-# FILE: aurora/management/commands/document_workspace.py (PATCH 1 OF 1)
+# FILE: aurora/management/commands/document_component_registry.py
 # START: STREAMING_COMPONENT_ANALYSIS_COMMAND
 # ======================================================================
 from django.core.management.base import BaseCommand, CommandError
 
-from aurora.utils.documenter import WorkspaceDocumenter
+from aurora.subsystems.component_registry.services.documenter import (
+    ComponentRegistryDocumenter,
+)
 
 
 class Command(BaseCommand):
@@ -43,7 +45,7 @@ class Command(BaseCommand):
         )
 
         try:
-            report = WorkspaceDocumenter().analyze_pending(
+            report = ComponentRegistryDocumenter().analyze_pending(
                 apply=apply_changes,
                 path=options.get("path"),
                 limit=options.get("limit"),
@@ -108,5 +110,5 @@ class Command(BaseCommand):
                 )
             )
 # ======================================================================
-# END: STREAMING_COMPONENT_ANALYSIS_COMMAND (PATCH 1 OF 1)
+# END: STREAMING_COMPONENT_ANALYSIS_COMMAND
 # ======================================================================

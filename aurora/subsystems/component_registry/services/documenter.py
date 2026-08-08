@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 1 OF 4)
+# FILE: aurora/subsystems/component_registry/services/documenter.py
 # START: DOCUMENTATION_PROGRESS_INFRASTRUCTURE
 # ======================================================================
 """Bounded AI enrichment for pending ComponentRegistry descriptions."""
@@ -20,7 +20,7 @@ class ProviderExecutionError(RuntimeError):
     """Signal a provider failure that requires stopping the analysis batch."""
 
 
-class WorkspaceDocumenter:
+class ComponentRegistryDocumenter:
     """
     Generate descriptions for explicitly bounded pending components.
 
@@ -108,11 +108,11 @@ class WorkspaceDocumenter:
         if progress_callback:
             progress_callback(message)
 # ======================================================================
-# END: DOCUMENTATION_PROGRESS_INFRASTRUCTURE (PATCH 1 OF 4)
+# END: DOCUMENTATION_PROGRESS_INFRASTRUCTURE
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 2 OF 4)
+# FILE: aurora/subsystems/component_registry/services/documenter.py
 # START: DESCRIPTION_VALIDATION_AND_RUN_INITIALIZATION
 # ======================================================================
     def _validate_description(self, description: str) -> str:
@@ -178,11 +178,11 @@ class WorkspaceDocumenter:
             progress_callback,
         )
 # ======================================================================
-# END: DESCRIPTION_VALIDATION_AND_RUN_INITIALIZATION (PATCH 2 OF 4)
+# END: DESCRIPTION_VALIDATION_AND_RUN_INITIALIZATION
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 3 OF 4)
+# FILE: aurora/subsystems/component_registry/services/documenter.py
 # START: COMPONENT_ANALYSIS_PROGRESS_LOOP
 # ======================================================================
         for position, component in enumerate(components, start=1):
@@ -288,11 +288,11 @@ class WorkspaceDocumenter:
                     progress_callback,
                 )
 # ======================================================================
-# END: COMPONENT_ANALYSIS_PROGRESS_LOOP (PATCH 3 OF 4)
+# END: COMPONENT_ANALYSIS_PROGRESS_LOOP
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/utils/documenter.py (PATCH 4 OF 4)
+# FILE: aurora/subsystems/component_registry/services/documenter.py
 # START: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY
 # ======================================================================
             except Exception as error:
@@ -356,5 +356,5 @@ class WorkspaceDocumenter:
 
         return report
 # ======================================================================
-# END: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY (PATCH 4 OF 4)
+# END: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY
 # ======================================================================

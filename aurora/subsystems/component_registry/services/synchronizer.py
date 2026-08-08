@@ -1,8 +1,8 @@
 # ======================================================================
-# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 1 OF 3)
+# FILE: aurora/subsystems/component_registry/services/synchronizer.py
 # START: SYNCHRONIZATION_TYPES_AND_INITIALIZATION
 # ======================================================================
-"""Controlled application of approved workspace reconciliation changes."""
+"""Controlled application of Component Registry reconciliation changes."""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,19 +12,20 @@ from django.db import transaction
 from django.utils import timezone
 
 from aurora.models import ComponentRegistry
-from aurora.workspace.component_policy import (
+from aurora.subsystems.component_registry.services.component_policy import (
+    CLASSIFICATION_ARCHIVE,
     CLASSIFICATION_EXCLUDE,
     CLASSIFICATION_KEEP,
     CLASSIFICATION_REGISTER,
     CLASSIFICATION_REVIEW,
-    CLASSIFICATION_STAGE,
     CLASSIFICATION_UPDATE,
 )
-from aurora.workspace.forge_registry import register_new_component
-from aurora.workspace.graph_synchronizer import GraphSynchronizer
-from aurora.workspace.workspace_reconciler import (
+from aurora.subsystems.component_registry.services.reconciler import (
     ReconciliationItem,
     WorkspaceReconciler,
+)
+from aurora.subsystems.component_registry.services.registry import (
+    register_new_component,
 )
 
 
@@ -37,10 +38,9 @@ class SynchronizationReport:
 
     updated: list[str] = field(default_factory=list)
     registered: list[str] = field(default_factory=list)
-    graph_synchronized: list[str] = field(default_factory=list)
+    archived: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)
-    graph_failures: list[str] = field(default_factory=list)
 
     @property
     def counts(self) -> dict[str, int]:
@@ -48,17 +48,15 @@ class SynchronizationReport:
         return {
             "UPDATED": len(self.updated),
             "REGISTERED": len(self.registered),
-            "GRAPH_SYNCHRONIZED": len(self.graph_synchronized),
+            "ARCHIVED": len(self.archived),
             "SKIPPED": len(self.skipped),
             "FAILURES": len(self.failures),
-            "GRAPH_FAILURES": len(self.graph_failures),
             "TOTAL": (
                 len(self.updated)
                 + len(self.registered)
-                + len(self.graph_synchronized)
+                + len(self.archived)
                 + len(self.skipped)
                 + len(self.failures)
-                + len(self.graph_failures)
             ),
         }
 
@@ -67,17 +65,16 @@ class WorkspaceSynchronizer:
     """
     Apply bounded reconciliation changes to ComponentRegistry.
 
-    PostgreSQL mutation and Neo4j projection remain explicit operations.
-    Repository files are never modified.
+    Component Registry synchronization is authoritative and independent of
+    optional graph projection or analysis services. Repository files are
+    never modified.
     """
 
     def __init__(
         self,
         reconciler: WorkspaceReconciler | None = None,
-        graph_synchronizer: GraphSynchronizer | None = None,
     ):
         self.reconciler = reconciler or WorkspaceReconciler()
-        self.graph_synchronizer = graph_synchronizer or GraphSynchronizer()
 
     def _eligible_updates(self) -> list[ReconciliationItem]:
         """Return existing registry records classified for safe update."""
@@ -103,25 +100,29 @@ class WorkspaceSynchronizer:
             )
         ]
 
+    def _eligible_archives(self) -> list[ReconciliationItem]:
+        """Return registry records whose repository files no longer exist."""
+        return [
+            item
+            for item in self.reconciler.reconcile()
+            if (
+                item.classification == CLASSIFICATION_ARCHIVE
+                and item.registry_id is not None
+            )
+        ]
+
     @staticmethod
     def _component_name(item: ReconciliationItem) -> str:
         """Derive a stable initial component name from its repository path."""
         return Path(item.path).stem
 
-    def _eligible_graph_components(
-        self,
-        *,
-        limit: int | None = None,
-    ):
-        """Return pending, failed, or stale active graph projections."""
-        return self.graph_synchronizer.eligible_components(limit=limit)
 # ======================================================================
-# END: SYNCHRONIZATION_TYPES_AND_INITIALIZATION (PATCH 1 OF 3)
+# END: SYNCHRONIZATION_TYPES_AND_INITIALIZATION
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 2 OF 3)
-# START: BOUNDED_DATABASE_AND_GRAPH_SYNCHRONIZATION
+# FILE: aurora/subsystems/component_registry/services/synchronizer.py
+# START: BOUNDED_COMPONENT_REGISTRY_SYNCHRONIZATION
 # ======================================================================
     @staticmethod
     def _apply_boundaries(
@@ -136,6 +137,7 @@ class WorkspaceSynchronizer:
         if path:
             normalized_path = path.strip().replace("\\", "/").rstrip("/")
             path_prefix = f"{normalized_path}/"
+
             bounded_items = [
                 item
                 for item in bounded_items
@@ -150,39 +152,10 @@ class WorkspaceSynchronizer:
                 raise ValueError(
                     "Synchronization limit must be greater than zero."
                 )
+
             bounded_items = bounded_items[:limit]
 
         return bounded_items
-
-    @staticmethod
-    def _apply_component_boundaries(
-        components,
-        *,
-        path: str | None = None,
-        limit: int | None = None,
-    ) -> list[ComponentRegistry]:
-        """Apply path and count boundaries to registry graph candidates."""
-        bounded_components = components
-
-        if path:
-            normalized_path = path.strip().replace("\\", "/").rstrip("/")
-            path_prefix = f"{normalized_path}/"
-            bounded_components = bounded_components.filter(
-                file_path__startswith=path_prefix,
-            ) | bounded_components.filter(
-                file_path=normalized_path,
-            )
-
-            bounded_components = bounded_components.order_by("file_path")
-
-        if limit is not None:
-            if limit < 1:
-                raise ValueError(
-                    "Synchronization limit must be greater than zero."
-                )
-            bounded_components = bounded_components[:limit]
-
-        return list(bounded_components)
 
     def apply_updates(
         self,
@@ -192,11 +165,13 @@ class WorkspaceSynchronizer:
     ) -> SynchronizationReport:
         """Persist existing UPDATE results without model save signals."""
         report = SynchronizationReport()
+
         updates = self._apply_boundaries(
             self._eligible_updates(),
             path=path,
             limit=limit,
         )
+
         observed_at = timezone.now()
 
         for item in updates:
@@ -235,20 +210,16 @@ class WorkspaceSynchronizer:
         user_instance: UserModel,
         path: str | None = None,
         limit: int | None = None,
-        synchronize_graph: bool = True,
     ) -> SynchronizationReport:
-        """
-        Register bounded REGISTER candidates and explicitly project them.
-
-        PostgreSQL registration succeeds independently of Neo4j projection.
-        Graph failures are persisted and reported for deliberate retry.
-        """
+        """Register bounded repository files in ComponentRegistry."""
         report = SynchronizationReport()
+
         registrations = self._apply_boundaries(
             self._eligible_registrations(),
             path=path,
             limit=limit,
         )
+
         observed_at = timezone.now()
 
         for item in registrations:
@@ -271,67 +242,58 @@ class WorkspaceSynchronizer:
                         analysis_status="PENDING",
                     )
 
-                component.refresh_from_db()
                 report.registered.append(item.path)
 
             except Exception as error:
                 report.failures.append(
                     f"{item.path}: {type(error).__name__}: {error}"
                 )
-                continue
-
-            if not synchronize_graph:
-                continue
-
-            graph_report = self.graph_synchronizer.synchronize_components(
-                [component],
-            )
-            report.graph_synchronized.extend(
-                graph_report.synchronized
-            )
-            report.graph_failures.extend(
-                graph_report.failures
-            )
-            report.skipped.extend(
-                graph_report.skipped
-            )
 
         return report
 
-    def apply_graph_synchronization(
+    def apply_archives(
         self,
         *,
         path: str | None = None,
         limit: int | None = None,
     ) -> SynchronizationReport:
-        """
-        Project bounded eligible ComponentRegistry records into Neo4j.
-
-        Repository files remain unchanged. PostgreSQL graph synchronization
-        state is updated after each projection attempt.
-        """
+        """Archive registry records whose repository files no longer exist."""
         report = SynchronizationReport()
-        components = self._apply_component_boundaries(
-            self._eligible_graph_components(),
+
+        archives = self._apply_boundaries(
+            self._eligible_archives(),
             path=path,
             limit=limit,
         )
 
-        graph_report = self.graph_synchronizer.synchronize_components(
-            components,
-        )
+        for item in archives:
+            try:
+                with transaction.atomic():
+                    updated_count = ComponentRegistry.objects.filter(
+                        id=item.registry_id,
+                        file_path=item.path,
+                    ).update(
+                        status="ARCHIVED",
+                    )
 
-        report.graph_synchronized.extend(graph_report.synchronized)
-        report.graph_failures.extend(graph_report.failures)
-        report.skipped.extend(graph_report.skipped)
+                if updated_count == 1:
+                    report.archived.append(item.path)
+                else:
+                    report.skipped.append(item.path)
+
+            except Exception as error:
+                report.failures.append(
+                    f"{item.path}: {type(error).__name__}: {error}"
+                )
 
         return report
+
 # ======================================================================
-# END: BOUNDED_DATABASE_AND_GRAPH_SYNCHRONIZATION (PATCH 2 OF 3)
+# END: BOUNDED_COMPONENT_REGISTRY_SYNCHRONIZATION
 # ======================================================================
 
 # ======================================================================
-# FILE: aurora/workspace/workspace_synchronizer.py (PATCH 3 OF 3)
+# FILE: aurora/subsystems/component_registry/services/synchronizer.py
 # START: EXPLICIT_SYNCHRONIZATION_ENTRY_POINT
 # ======================================================================
     def synchronize_path(
@@ -339,13 +301,12 @@ class WorkspaceSynchronizer:
         path: str,
         *,
         user_instance: UserModel | None = None,
-        synchronize_graph: bool = True,
     ) -> dict[str, object]:
         """
         Reconcile and synchronize exactly one repository-relative file.
 
         The reconciler determines desired state. This synchronizer applies
-        registration or update mutations and then refreshes graph projection.
+        ComponentRegistry registration, update, or archive mutations.
         """
         normalized_path = path.strip().replace("\\", "/").lstrip("/")
 
@@ -379,60 +340,26 @@ class WorkspaceSynchronizer:
                 user_instance=user_instance,
                 path=normalized_path,
                 limit=1,
-                synchronize_graph=synchronize_graph,
             )
 
         elif item.classification == CLASSIFICATION_UPDATE:
-            update_report = self.apply_updates(
+            report = self.apply_updates(
                 path=normalized_path,
                 limit=1,
             )
-            report.updated.extend(update_report.updated)
-            report.skipped.extend(update_report.skipped)
-            report.failures.extend(update_report.failures)
 
-            if (
-                synchronize_graph
-                and not update_report.failures
-                and normalized_path in update_report.updated
-            ):
-                graph_report = self.apply_graph_synchronization(
-                    path=normalized_path,
-                    limit=1,
-                )
-                report.graph_synchronized.extend(
-                    graph_report.graph_synchronized
-                )
-                report.skipped.extend(graph_report.skipped)
-                report.graph_failures.extend(
-                    graph_report.graph_failures
-                )
+        elif item.classification == CLASSIFICATION_ARCHIVE:
+            report = self.apply_archives(
+                path=normalized_path,
+                limit=1,
+            )
 
         elif item.classification == CLASSIFICATION_KEEP:
-            if synchronize_graph:
-                graph_report = self.apply_graph_synchronization(
-                    path=normalized_path,
-                    limit=1,
-                )
-                report.graph_synchronized.extend(
-                    graph_report.graph_synchronized
-                )
-                report.skipped.extend(graph_report.skipped)
-                report.graph_failures.extend(
-                    graph_report.graph_failures
-                )
-
-            if (
-                not report.graph_synchronized
-                and not report.graph_failures
-                and normalized_path not in report.skipped
-            ):
-                report.skipped.append(normalized_path)
+            report.skipped.append(normalized_path)
 
         elif item.classification in {
             CLASSIFICATION_EXCLUDE,
             CLASSIFICATION_REVIEW,
-            CLASSIFICATION_STAGE,
         }:
             report.failures.append(
                 f"{normalized_path}: path classified as "
@@ -462,7 +389,6 @@ class WorkspaceSynchronizer:
         user_instance: UserModel | None = None,
         path: str | None = None,
         limit: int | None = None,
-        synchronize_graph: bool = True,
     ) -> dict[str, object]:
         """
         Preview or explicitly apply one bounded synchronization operation.
@@ -470,7 +396,7 @@ class WorkspaceSynchronizer:
         Supported operations:
         - update: refresh existing ComponentRegistry records
         - register: create new ComponentRegistry records
-        - graph: project existing active registry records into Neo4j
+        - archive: archive records whose repository files no longer exist
 
         Mutation occurs only when apply=True is supplied.
         """
@@ -492,10 +418,9 @@ class WorkspaceSynchronizer:
                         "CANDIDATES": len(candidates),
                         "UPDATED": 0,
                         "REGISTERED": 0,
-                        "GRAPH_SYNCHRONIZED": 0,
+                        "ARCHIVED": 0,
                         "SKIPPED": 0,
                         "FAILURES": 0,
-                        "GRAPH_FAILURES": 0,
                     },
                 }
 
@@ -520,10 +445,9 @@ class WorkspaceSynchronizer:
                         "CANDIDATES": len(candidates),
                         "UPDATED": 0,
                         "REGISTERED": 0,
-                        "GRAPH_SYNCHRONIZED": 0,
+                        "ARCHIVED": 0,
                         "SKIPPED": 0,
                         "FAILURES": 0,
-                        "GRAPH_FAILURES": 0,
                     },
                 }
 
@@ -536,12 +460,11 @@ class WorkspaceSynchronizer:
                 user_instance=user_instance,
                 path=path,
                 limit=limit,
-                synchronize_graph=synchronize_graph,
             )
 
-        elif normalized_operation == "graph":
-            candidates = self._apply_component_boundaries(
-                self._eligible_graph_components(),
+        elif normalized_operation == "archive":
+            candidates = self._apply_boundaries(
+                self._eligible_archives(),
                 path=path,
                 limit=limit,
             )
@@ -555,14 +478,13 @@ class WorkspaceSynchronizer:
                         "CANDIDATES": len(candidates),
                         "UPDATED": 0,
                         "REGISTERED": 0,
-                        "GRAPH_SYNCHRONIZED": 0,
+                        "ARCHIVED": 0,
                         "SKIPPED": 0,
                         "FAILURES": 0,
-                        "GRAPH_FAILURES": 0,
                     },
                 }
 
-            synchronization_report = self.apply_graph_synchronization(
+            synchronization_report = self.apply_archives(
                 path=path,
                 limit=limit,
             )
@@ -570,7 +492,7 @@ class WorkspaceSynchronizer:
         else:
             raise ValueError(
                 "Unsupported synchronization operation. "
-                "Expected 'update', 'register', or 'graph'."
+                "Expected 'update', 'register', or 'archive'."
             )
 
         return {
@@ -580,6 +502,7 @@ class WorkspaceSynchronizer:
             "report": synchronization_report,
             "counts": synchronization_report.counts,
         }
+
 # ======================================================================
-# END: EXPLICIT_SYNCHRONIZATION_ENTRY_POINT (PATCH 3 OF 3)
+# END: EXPLICIT_SYNCHRONIZATION_ENTRY_POINT
 # ======================================================================
