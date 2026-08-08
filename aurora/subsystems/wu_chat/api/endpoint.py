@@ -18,13 +18,13 @@ from django.utils import timezone
 
 from aurora.minions.engine import MinionRunner
 from aurora.models import DeltaDirectives, PendingCodeChange
-from aurora.wu.execution_context import ExecutionContextResolver
-from aurora.wu.patch_parser import (
+from aurora.subsystems.wu_chat.services.execution_context import ExecutionContextResolver
+from aurora.subsystems.wu_chat.services.patch_parser import (
     PatchParseError,
     parse_patch_response,
     response_contains_patch_markers,
 )
-from aurora.wu.workspace_context import (
+from aurora.subsystems.wu_chat.services.workspace_context import (
     WorkspaceContextError,
     resolve_workspace_context,
 )

@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/wu/workspace_context.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/wu_chat/services/workspace_context.py
 # START: SAFE_WORKSPACE_CONTEXT_RESOLUTION
 # ======================================================================
 import re
@@ -149,5 +149,5 @@ def resolve_workspace_context(
         hydrated_prompt=hydrated_prompt,
     )
 # ======================================================================
-# END: SAFE_WORKSPACE_CONTEXT_RESOLUTION (PATCH 1 OF 1)
+# END: SAFE_WORKSPACE_CONTEXT_RESOLUTION
 # ======================================================================

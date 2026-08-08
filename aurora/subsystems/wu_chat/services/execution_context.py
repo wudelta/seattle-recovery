@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/wu/execution/context.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/wu_chat/services/execution_context.py
 # START: EXECUTION_CONTEXT_RESOLVER
 # ======================================================================
 """Resolve the current Initiative, Phase, and Step execution state."""
@@ -127,5 +127,5 @@ class ExecutionContextResolver:
         )
 
 # ======================================================================
-# END: EXECUTION_CONTEXT_RESOLVER (PATCH 1 OF 1)
+# END: EXECUTION_CONTEXT_RESOLVER
 # ======================================================================

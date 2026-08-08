@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/wu/patch_parser.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/wu_chat/services/patch_parser.py
 # START: STRUCTURED_WU_PATCH_RESPONSE_PARSER
 # ======================================================================
 import re
@@ -178,5 +178,5 @@ def parse_patch_response(
         patch_complete=True,
     )
 # ======================================================================
-# END: STRUCTURED_WU_PATCH_RESPONSE_PARSER (PATCH 1 OF 1)
+# END: STRUCTURED_WU_PATCH_RESPONSE_PARSER
 # ======================================================================
