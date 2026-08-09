@@ -11,7 +11,7 @@ from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
 from aurora.models import ComponentRegistry
-from aurora.nodes import ComponentNode
+from aurora.subsystems.component_registry.nodes import ComponentNode
 from aurora.subsystems.component_registry.services.dependency_analyzer import (
     DependencyAnalyzer,
 )

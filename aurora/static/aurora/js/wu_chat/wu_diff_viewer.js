@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/wu_diff_viewer.js (PATCH 1 OF 1)
+// FILE: aurora/static/aurora/js/wu_chat/wu_diff_viewer.js
 // START: WU_ISOLATED_MONACO_DIFF_VIEWER
 // ======================================================================
 (function () {
@@ -189,5 +189,5 @@
     };
 })();
 // ======================================================================
-// END: WU_ISOLATED_MONACO_DIFF_VIEWER (PATCH 1 OF 1)
+// END: WU_ISOLATED_MONACO_DIFF_VIEWER
 // ======================================================================

@@ -5,7 +5,7 @@
 
 from django.urls import re_path
 
-from aurora.utils.console_stream import ConsoleConsumer
+from aurora.utils.telemetry_stream import ConsoleConsumer
 
 
 websocket_urlpatterns = [

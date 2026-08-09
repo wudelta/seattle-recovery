@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/nodes.py (PATCH 1 OF 1)
+# FILE: aurora/subsystems/component_registry/nodes.py
 # START: NEO4J_COMPONENT_GRAPH_STRUCTURE_DEFINITIONS
 # ======================================================================
 from neomodel import (
@@ -32,5 +32,5 @@ class ComponentNode(StructuredNode):
     depends_on = RelationshipTo("ComponentNode", "DEPENDS_ON")
     required_by = RelationshipFrom("ComponentNode", "DEPENDS_ON")
 # ======================================================================
-# END: NEO4J_COMPONENT_GRAPH_STRUCTURE_DEFINITIONS (PATCH 1 OF 1)
+# END: NEO4J_COMPONENT_GRAPH_STRUCTURE_DEFINITIONS
 # ======================================================================

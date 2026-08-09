@@ -1,5 +1,5 @@
 # ======================================================================
-# FILE: aurora/utils/console_stream.py
+# FILE: aurora/utils/telemetry_stream.py
 # START: SHARED_CONSOLE_STREAM_TRANSPORT
 # ======================================================================
 

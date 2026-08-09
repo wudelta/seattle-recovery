@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from asgiref.sync import sync_to_async
 from aurora.models import DeltaDirectives
 from aurora.minions.engine import MinionRunner
-from aurora.utils.console_stream import async_send_to_console
+from aurora.utils.telemetry_stream import async_send_to_console
 
 @login_required
 def directives_endpoint(request):

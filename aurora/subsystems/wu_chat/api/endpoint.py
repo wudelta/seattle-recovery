@@ -29,7 +29,7 @@ from aurora.subsystems.wu_chat.services.workspace_context import (
     resolve_workspace_context,
 )
 
-from aurora.utils.console_stream import async_send_to_console
+from aurora.utils.telemetry_stream import async_send_to_console
 # ======================================================================
 # END: MODULE_RUN_IMPORTS_AND_DEPENDENCIES
 # ======================================================================
