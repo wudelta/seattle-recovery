@@ -3,104 +3,113 @@
 // START: INITIATIVE_EVENT_BINDINGS
 // ======================================================================
 (function(window, $) {
-    "use strict";
+"use strict";
 
-    const Planning = window.AuroraPlanning = (
-        window.AuroraPlanning || {}
-    );
+const Planning = window.AuroraPlanning = (
+    window.AuroraPlanning || {}
+);
 
-    const state = Planning.state;
-    const orchestrator = Planning.orchestrator;
-    const initiatives = Planning.initiatives;
+const state = Planning.state;
+const orchestrator = Planning.orchestrator;
+const initiatives = Planning.initiatives;
 
-    function bindInitiativeEvents() {
-        $("#planning-navigator-initiative-list")
-            .off("click.planningInitiative")
-            .on(
-                "click.planningInitiative",
-                (
-                    ".planning-navigator-item"
-                    + "[data-item-type='initiative']"
-                ),
-                function() {
-                    const selectedInitiativeId = Number(
-                        $(this).attr("data-record-id")
-                    );
+function bindInitiativeEvents() {
+    $("#planning-navigator-initiative-list")
+        .off("click.planningInitiative")
+        .on(
+            "click.planningInitiative",
+            (
+                ".planning-navigator-item"
+                + "[data-item-type='initiative']"
+            ),
+            function() {
+                const selectedInitiativeId = Number(
+                    $(this).attr("data-record-id")
+                );
 
-                    if (
-                        !selectedInitiativeId
-                        || selectedInitiativeId
-                            === state.getActiveInitiativeId()
-                    ) {
-                        return;
-                    }
-
-                    state.setActiveInitiativeId(
-                        selectedInitiativeId
-                    );
-
-                    state.setActiveInitiative(null);
-
-                    initiatives.closeForm();
-
-                    orchestrator.loadPlanningData(
-                        state.getActiveProjectSlug(),
-                        state.getActiveInitiativeId()
-                    );
+                if (
+                    !selectedInitiativeId
+                    || selectedInitiativeId
+                        === state.getActiveInitiativeId()
+                ) {
+                    return;
                 }
-            );
 
-        $(
-            "#planning-create-initiative-btn, "
-            + "#planning-empty-create-initiative-btn"
-        )
-            .off("click.planningInitiative")
-            .on("click.planningInitiative", function() {
-                initiatives.openForm(null);
-            });
+                state.setActiveInitiativeId(
+                    selectedInitiativeId
+                );
 
-        $("#planning-cancel-initiative-btn")
-            .off("click.planningInitiative")
-            .on("click.planningInitiative", function() {
+                state.setActiveInitiative(null);
+
                 initiatives.closeForm();
-            });
 
-        $("#planning-initiative-form")
-            .off("submit.planningInitiative")
-            .on("submit.planningInitiative", function(event) {
-                event.preventDefault();
-                initiatives.save();
-            })
-            .off("reset.planningInitiative")
-            .on("reset.planningInitiative", function() {
-                initiatives.clearFormError();
-            });
+                orchestrator.loadPlanningData(
+                    state.getActiveProjectSlug(),
+                    state.getActiveInitiativeId()
+                );
+            }
+        );
 
-        $("#planning-workbench")
-            .off("click.planningInitiative")
-            .on(
-                "click.planningInitiative",
-                ".planning-edit-initiative-btn",
-                function() {
-                    initiatives.openForm(
-                        state.getActiveInitiative()
-                    );
-                }
-            )
-            .on(
-                "click.planningInitiative",
-                ".planning-delete-initiative-btn",
-                function() {
-                    initiatives.delete(
-                        state.getActiveInitiative()
-                    );
-                }
-            );
-    }
+    $(
+        'input[name="planning-initiative-status-filter"]'
+    )
+        .off("change.planningInitiative")
+        .on("change.planningInitiative", function() {
+            Planning.renderers.navigator.refreshInitiatives();
+        });
 
-    Planning.initiativeEvents = {
-        bind: bindInitiativeEvents,
-    };
+    $(
+        "#planning-create-initiative-btn, "
+        + "#planning-empty-create-initiative-btn"
+    )
+        .off("click.planningInitiative")
+        .on("click.planningInitiative", function() {
+            initiatives.openForm(null);
+        });
+
+    $("#planning-cancel-initiative-btn")
+        .off("click.planningInitiative")
+        .on("click.planningInitiative", function() {
+            initiatives.closeForm();
+        });
+
+    $("#planning-initiative-form")
+        .off("submit.planningInitiative")
+        .on("submit.planningInitiative", function(event) {
+            event.preventDefault();
+            initiatives.save();
+        })
+        .off("reset.planningInitiative")
+        .on("reset.planningInitiative", function() {
+            initiatives.clearFormError();
+        });
+
+    $("#planning-workbench")
+        .off("click.planningInitiative")
+        .on(
+            "click.planningInitiative",
+            ".planning-edit-initiative-btn",
+            function() {
+                initiatives.openForm(
+                    state.getActiveInitiative()
+                );
+            }
+        )
+        .on(
+            "click.planningInitiative",
+            ".planning-delete-initiative-btn",
+            function() {
+                initiatives.delete(
+                    state.getActiveInitiative()
+                );
+            }
+        );
+}
+
+Planning.initiativeEvents = {
+    bind: bindInitiativeEvents,
+};
+
 })(window, jQuery);
 // ======================================================================
 // END: INITIATIVE_EVENT_BINDINGS

@@ -91,13 +91,13 @@
     --planning-text: #e5e7e9;
     --planning-muted: #9da6ad;
     --planning-accent: #8fb8c7;
-    --planning-navigator-width: 15rem;
+    --planning-navigator-width: 30rem;
 }
 
 /* ======================================================================
    END: PLANNING_DOCUMENT_VARIABLES
    ====================================================================== */
-
+   
 
 /* ======================================================================
    FILE: aurora/static/aurora/css/planning.css

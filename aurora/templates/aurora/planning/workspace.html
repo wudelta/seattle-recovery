@@ -37,6 +37,97 @@
         >
             <section class="planning-navigator-section">
                 <div
+                    class="btn-group btn-group-sm w-100 mb-2"
+                    role="group"
+                    aria-label="Initiative status filter"
+                >
+                    <input
+                        id="planning-initiative-filter-all"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="ALL"
+                        checked
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-all"
+                    >
+                        ALL
+                    </label>
+
+                    <input
+                        id="planning-initiative-filter-planned"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="PLANNED"
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-planned"
+                    >
+                        PLANNED
+                    </label>
+
+                    <input
+                        id="planning-initiative-filter-active"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="ACTIVE"
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-active"
+                    >
+                        ACTIVE
+                    </label>
+
+                    <input
+                        id="planning-initiative-filter-paused"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="PAUSED"
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-paused"
+                    >
+                        PAUSED
+                    </label>
+
+                    <input
+                        id="planning-initiative-filter-completed"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="COMPLETED"
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-completed"
+                    >
+                        COMPLETED
+                    </label>
+
+                    <input
+                        id="planning-initiative-filter-cancelled"
+                        class="btn-check"
+                        type="radio"
+                        name="planning-initiative-status-filter"
+                        value="CANCELLED"
+                    >
+                    <label
+                        class="btn btn-outline-secondary font-monospace px-1"
+                        for="planning-initiative-filter-cancelled"
+                    >
+                        CANCELLED
+                    </label>
+                </div>
+
+                <div
                     id="planning-navigator-initiative-list"
                     class="planning-navigator-list"
                 >

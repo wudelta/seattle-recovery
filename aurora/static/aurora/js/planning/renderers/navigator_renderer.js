@@ -3,117 +3,227 @@
 // START: PLANNING_NAVIGATOR_RENDERER
 // ======================================================================
 (function(window, $) {
-    "use strict";
+"use strict";
 
-    const Planning = window.AuroraPlanning = (
-        window.AuroraPlanning || {}
+const Planning = window.AuroraPlanning = (
+    window.AuroraPlanning || {}
+);
+
+Planning.renderers = Planning.renderers || {};
+
+const INITIATIVE_STATUS_ORDER = [
+    "PLANNED",
+    "ACTIVE",
+    "PAUSED",
+    "COMPLETED",
+    "CANCELLED",
+];
+
+let currentInitiatives = [];
+let currentSelectedInitiativeId = null;
+
+function navigatorItem(options) {
+    const $button = $("<button>", {
+        type: "button",
+        class: "planning-navigator-item text-start",
+    });
+
+    if (options.id) {
+        $button.attr("data-record-id", options.id);
+    }
+
+    if (options.itemType) {
+        $button.attr("data-item-type", options.itemType);
+    }
+
+    if (options.isActive) {
+        $button.addClass("is-active");
+    }
+
+    if (options.disabled) {
+        $button.prop("disabled", true);
+    }
+
+    const $body = $("<span>", {
+        class: "planning-navigator-item-body",
+    });
+
+    $body.append(
+        $("<span>", {
+            class: "planning-navigator-item-title",
+            text: options.title || "Untitled",
+        })
     );
 
-    Planning.renderers = Planning.renderers || {};
-
-    function navigatorItem(options) {
-        const $button = $("<button>", {
-            type: "button",
-            class: "planning-navigator-item text-start",
-        });
-
-        if (options.id) {
-            $button.attr("data-record-id", options.id);
-        }
-
-        if (options.itemType) {
-            $button.attr("data-item-type", options.itemType);
-        }
-
-        if (options.isActive) {
-            $button.addClass("is-active");
-        }
-
-        if (options.disabled) {
-            $button.prop("disabled", true);
-        }
-
-        const $body = $("<span>", {
-            class: "planning-navigator-item-body",
-        });
-
+    if (options.meta) {
         $body.append(
             $("<span>", {
-                class: "planning-navigator-item-title",
-                text: options.title || "Untitled",
+                class: "planning-navigator-item-meta",
+                text: options.meta,
+            })
+        );
+    }
+
+    $button.append(
+        $("<span>", {
+            class: "planning-navigator-marker",
+        }),
+        $body
+    );
+
+    return $button;
+}
+
+function getInitiativeStatusFilter() {
+    return (
+        $(
+            'input[name="planning-initiative-status-filter"]:checked'
+        ).val()
+        || "ALL"
+    );
+}
+
+function normalizeInitiatives(initiatives) {
+    return initiatives
+        .slice()
+        .sort(function(left, right) {
+            const leftStatusIndex = INITIATIVE_STATUS_ORDER.indexOf(
+                left.status
+            );
+            const rightStatusIndex = INITIATIVE_STATUS_ORDER.indexOf(
+                right.status
+            );
+
+            const normalizedLeftStatusIndex = (
+                leftStatusIndex === -1
+                    ? INITIATIVE_STATUS_ORDER.length
+                    : leftStatusIndex
+            );
+
+            const normalizedRightStatusIndex = (
+                rightStatusIndex === -1
+                    ? INITIATIVE_STATUS_ORDER.length
+                    : rightStatusIndex
+            );
+
+            if (
+                normalizedLeftStatusIndex
+                !== normalizedRightStatusIndex
+            ) {
+                return (
+                    normalizedLeftStatusIndex
+                    - normalizedRightStatusIndex
+                );
+            }
+
+            return (
+                left.title || ""
+            ).localeCompare(
+                right.title || "",
+                undefined,
+                {
+                    sensitivity: "base",
+                }
+            );
+        });
+}
+
+function renderCurrentInitiatives() {
+    const $list = $("#planning-navigator-initiative-list");
+
+    $list.empty();
+
+    if (!currentInitiatives.length) {
+        $list.append(
+            $("<div>", {
+                class: "planning-navigator-placeholder",
+                text: "This Project has no Initiatives.",
             })
         );
 
-        if (options.meta) {
-            $body.append(
-                $("<span>", {
-                    class: "planning-navigator-item-meta",
-                    text: options.meta,
-                })
-            );
-        }
+        return;
+    }
 
-        $button.append(
-            $("<span>", {
-                class: "planning-navigator-marker",
-            }),
-            $body
+    const selectedStatus = getInitiativeStatusFilter();
+
+    const visibleInitiatives = normalizeInitiatives(
+        currentInitiatives
+    ).filter(function(initiative) {
+        return (
+            selectedStatus === "ALL"
+            || initiative.status === selectedStatus
+        );
+    });
+
+    if (!visibleInitiatives.length) {
+        $list.append(
+            $("<div>", {
+                class: "planning-navigator-placeholder",
+                text: (
+                    "No "
+                    + selectedStatus.toLowerCase()
+                    + " Initiatives."
+                ),
+            })
         );
 
-        return $button;
+        return;
     }
 
-    function renderInitiatives(
-        initiatives,
-        selectedInitiativeId
-    ) {
-        const $list = $("#planning-navigator-initiative-list");
+    const selectedId = (
+        currentSelectedInitiativeId !== null
+        && currentSelectedInitiativeId !== undefined
+    )
+        ? String(currentSelectedInitiativeId)
+        : null;
 
-        $list.empty();
+    visibleInitiatives.forEach(function(initiative) {
+        $list.append(
+            navigatorItem({
+                id: initiative.id,
+                itemType: "initiative",
+                title: initiative.title || "Untitled Initiative",
+                meta: (
+                    initiative.status_label
+                    || initiative.status
+                    || "Unknown status"
+                ),
+                isActive: String(initiative.id) === selectedId,
+            })
+        );
+    });
+}
 
-        if (!Array.isArray(initiatives) || !initiatives.length) {
-            $list.append(
-                $("<div>", {
-                    class: "planning-navigator-placeholder",
-                    text: "This Project has no Initiatives.",
-                })
-            );
+function renderInitiatives(
+    initiatives,
+    selectedInitiativeId
+) {
+    currentInitiatives = Array.isArray(initiatives)
+        ? initiatives.slice()
+        : [];
 
-            return;
-        }
+    currentSelectedInitiativeId = selectedInitiativeId;
 
-        const selectedId = (
-            selectedInitiativeId !== null
-            && selectedInitiativeId !== undefined
-        )
-            ? String(selectedInitiativeId)
-            : null;
+    renderCurrentInitiatives();
+}
 
-        initiatives.forEach(function(initiative) {
-            $list.append(
-                navigatorItem({
-                    id: initiative.id,
-                    itemType: "initiative",
-                    title: initiative.title || "Untitled Initiative",
-                    meta: (
-                        initiative.status_label
-                        || initiative.status
-                        || "Unknown status"
-                    ),
-                    isActive: String(initiative.id) === selectedId,
-                })
-            );
-        });
-    }
+function refreshInitiatives() {
+    renderCurrentInitiatives();
+}
 
-    function reset() {
-        renderInitiatives([], null);
-    }
+function reset() {
+    currentInitiatives = [];
+    currentSelectedInitiativeId = null;
 
-    Planning.renderers.navigator = {
-        renderInitiatives: renderInitiatives,
-        reset: reset,
-    };
+    renderCurrentInitiatives();
+}
+
+Planning.renderers.navigator = {
+    renderInitiatives: renderInitiatives,
+    refreshInitiatives: refreshInitiatives,
+    reset: reset,
+};
+
 })(window, jQuery);
 // ======================================================================
 // END: PLANNING_NAVIGATOR_RENDERER
