@@ -1,4 +1,4 @@
-VERIFIED DATA SETS
+KING COUNTY DATA SETS
 
 https://data.kingcounty.gov/api/v3/views/<dataset_id>/query.json?pageNumber=1&pageSize=200&app_token=<token_placeholder>
 
@@ -30,6 +30,10 @@ nqri-czhj: High-priority health interventions and specialized vulnerable populat
 mnxa-8m4g: Community and Human Services Calendar (tracks localized outreach events and mobile distribution pop-ups).
 2be9-wu5b: Best Starts for Kids Award Database (tracks funded youth family resource points and early intervention sites).64yn-5kas: King County Metro - Solid Ground Circulator (tracks targeted public transit routes shuttling individuals directly to local social service agencies).
 
+The Global Catalog Endpoint
+Instead of guessing individual 4x4 IDs, your application can ping Socrata's discovery engine to fetch a complete JSON array of every dataset, view, and API endpoint hosted by King County.You can load this URL directly in your browser or code environment (no token placeholder required): https://kingcounty.gov(the rest of the URL is trucated by Gemini)
+
+Use code with caution.What this returns: A massive root-level JSON list. Each object in the array represents a unique dataset containing its active id, structural name, description, data tags, and exact creation timestamps.
 
 https://dev.socrata.com/docs/endpoints
 
@@ -43,5 +47,3 @@ https://openreferral.org/
 https://www.dshs.wa.gov/
 
 https://api.211.org/v1/openreferral/
-
-
