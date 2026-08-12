@@ -1,21 +1,31 @@
 # ======================================================================
-# FILE: aurora/views/console_view.py (PATCH 1 OF 1)
-# START: COCKPIT TERMINAL DISPLAY ENGINE CONFIGURATION
+# FILE: aurora/views/console_view.py
+# START: COCKPIT_TERMINAL_DISPLAY_ENGINE_CONFIGURATION
 # ======================================================================
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
 
-class ConsoleView(LoginRequiredMixin, TemplateView):
-    """Renders the high-density fluid 4-panel terminal console cockpit dashboard."""
-    template_name = 'aurora/aurora_console.html'
-    login_url = 'aurora:login'
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView
+
+from aurora.access import can_access_aurora
+
+
+class ConsoleView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """Render the Aurora Console for authorized developers."""
+
+    template_name = "aurora/aurora_console.html"
+    login_url = "aurora:login"
+    raise_exception = True
+
+    def test_func(self):
+        """Require explicit Aurora authorization after authentication."""
+        return can_access_aurora(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Binds logged-in user and AI profile tokens directly into frontend terminal scope
-        context['architect'] = self.request.user.username
-        context['ai_lead'] = "Wu"
+        context["architect"] = self.request.user.username
+        context["ai_lead"] = "Wu"
         return context
+
 # ======================================================================
-# END: COCKPIT TERMINAL DISPLAY ENGINE CONFIGURATION
+# END: COCKPIT_TERMINAL_DISPLAY_ENGINE_CONFIGURATION
 # ======================================================================
