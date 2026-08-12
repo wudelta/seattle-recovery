@@ -7,186 +7,189 @@
 
 ## Current Responsibility
 
-Delta Notes is a transient Post-it note system.
+Delta Notes is a lightweight Post-it note system.
 
 Its current responsibility is limited to:
 
 * capture an idea;
 * display captured ideas;
 * edit an idea;
-* delete an idea.
+* delete an idea;
+* mark an idea processed.
 
-Future Planning ingestion is explicitly outside the current refactor.
-
----
-
-## Active Defects
-
-### Delta Notes UI
-
-**Status:** BROKEN
-
-The Delta Notes panel is currently non-functional.
-
-The failure predates the current subsystem refactor.
-
-Current policy:
-
-* do not preserve broken behavior merely for compatibility;
-* restore only the Post-it note workflow defined by this subsystem;
-* unrelated historical functionality is not part of the repair target.
+Planning ingestion is outside the current Delta Notes responsibility.
 
 ---
 
-## Duplicate API Authority
+## Current Functional State
 
-**Status:** ACTIVE ARCHITECTURAL DEBT
+**Status:** VERIFIED
 
-Two separate implementations of `delta_notes_endpoint()` currently exist:
+The Delta Notes Post-it workflow is functional.
 
-```text
-aurora/api/endpoints.py
-aurora/api/delta_notes_api.py
-```
-
-The currently routed implementation is:
+Validated behavior includes:
 
 ```text
-aurora/api/endpoints.py
+initial note loading
+note creation
+unprocessed-note display
+marking a note processed
+processed-note display
+user-scoped persistence
 ```
 
-The two implementations have diverged and contain different behavior.
+The previously reported UI failure was not a Delta Notes defect.
 
-Current policy:
+The apparent missing-data condition was caused by the active Aurora session
+being authenticated as a different user. Delta Notes correctly scopes records
+to:
 
-* establish one canonical Delta Notes API inside this subsystem;
-* preserve only behavior required by the Post-it note responsibility;
-* eliminate the obsolete duplicate implementation;
-* remove the corresponding legacy API file from `aurora/api/` as part of the subsystem migration.
+```text
+request.user
+```
+
+Do not treat that historical symptom as active Delta Notes technical debt.
 
 ---
 
-## Misowned Timer Behavior
+## Canonical API Authority
 
-**Status:** RELOCATE
+**Status:** VERIFIED
 
-Delta Notes currently contains time-tracking behavior through fields and
-actions such as:
+The canonical Delta Notes API implementation is:
 
 ```text
-total_seconds_logged
-sync_timer
+aurora/subsystems/delta_notes/api/endpoint.py
 ```
+
+It is exported through:
+
+```text
+aurora/subsystems/delta_notes/api/__init__.py
+aurora/api/__init__.py
+```
+
+and routed through:
+
+```text
+aurora/urls.py
+```
+
+Do not reintroduce a competing Delta Notes API authority.
+
+---
+
+## Residual Timer State
+
+**Status:** VERIFY / RELOCATE IF STILL PRESENT
 
 Time tracking is not part of the Delta Notes Post-it note responsibility.
 
-The capability is expected to belong to the Aurora Console or another
-repository-wide engineering session metrics owner.
-
-Current policy:
-
-* remove timer behavior from the Delta Notes runtime;
-* preserve useful timer implementation before removing its current ownership;
-* do not redesign or expand timer functionality during this refactor;
-* relocate the capability through a separate bounded migration when its
-  target ownership is defined;
-* existing database fields may remain temporarily if removing or relocating
-  them requires an unrelated schema migration.
-
-Future purpose:
-
-Timer and activity metrics may provide actual engineering effort data to
-Planning and Hansel.
-
-Examples include comparing:
+Historical Delta Notes behavior included timer state such as:
 
 ```text
-Estimated initiative duration: 2 hours
-Actual engineering duration:   4 hours
+total_seconds_logged
+last_started_at
+sync_timer
 ```
 
-Such metrics can later support analysis of:
+The current Delta Notes API does not own timer behavior.
 
-* estimate accuracy;
-* unexpected discovery work;
-* validation failures;
-* excessive Hansel navigation;
-* other sources of engineering variance.
+Existing model fields or other residual timer artifacts may remain.
+
+Before changing them:
+
+1. verify what timer-related state still exists;
+2. identify current consumers;
+3. preserve useful behavior or data;
+4. relocate it only after its owning authority is established.
+
+Do not redesign timer functionality as part of ordinary Delta Notes work.
 
 ---
 
 ## Legacy Project Compilation
 
-**Status:** REMOVE
+**Status:** VERIFY REMOVAL
 
-Delta Notes currently contains legacy behavior that compiles notes directly
-into:
+Historical Delta Notes behavior compiled notes directly into:
 
 ```text
 project.md
 ```
 
-This includes the `compile_blueprint` action.
+through behavior such as:
 
-Direct project file compilation is no longer part of the Delta Notes
-responsibility.
+```text
+compile_blueprint
+```
 
-Current policy:
+This is not part of the current Delta Notes responsibility and is not present
+in the canonical Delta Notes endpoint.
 
-* remove direct `project.md` writes;
-* remove blueprint compilation behavior;
-* Planning will eventually own consumption of captured ideas.
+If legacy implementations still exist elsewhere in the repository, they should
+not be treated as authoritative Delta Notes behavior.
+
+Planning, not Delta Notes, is the intended authority for structured engineering
+work.
 
 ---
 
-## Misowned Telemetry
+## Legacy Telemetry Coupling
 
-**Status:** RELOCATE
+**Status:** VERIFY REMOVAL
 
-The active Delta Notes endpoint currently uses `PageSkeletonBuilder`
+Historical Delta Notes behavior used:
+
+```text
+PageSkeletonBuilder
+```
+
 for telemetry.
 
-`PageSkeletonBuilder` does not own telemetry and should not participate in the
-Delta Notes runtime.
+This dependency is not present in the canonical Delta Notes endpoint and is not
+part of the Delta Notes responsibility.
 
-Current policy:
-
-* remove this dependency from Delta Notes;
-* preserve any useful telemetry behavior for relocation;
-* establish a proper telemetry owner in a future bounded migration.
+If residual legacy references remain, their ownership should be resolved
+separately rather than restored to Delta Notes.
 
 ---
 
-## Wu Coupling
+## Legacy Wu Coupling
 
-**Status:** REMOVE
+**Status:** VERIFY REMOVAL
 
-Wu currently consumes Delta Notes directly.
+Historical Wu behavior consumed Delta Notes directly.
 
-This creates competing workflow authority between free-form notes, Wu, and the
-Planning subsystem.
+Direct Wu consumption is not part of the Delta Notes Post-it responsibility.
 
-Current policy:
+If residual coupling remains elsewhere in the repository, determine its current
+owner before changing it.
 
-* Wu must stop consuming Delta Notes directly;
-* Delta Notes remains a lightweight Post-it note capture system;
-* Planning will eventually own ingestion of captured ideas;
-* Wu should consume Planning, not Delta Notes.
+Do not expand Delta Notes into an orchestration or Planning authority.
 
 ---
 
-## Migration Success Criteria
+## Remaining Success Criteria
 
-The Delta Notes refactor is complete when:
+Delta Notes is considered structurally clean when:
 
-1. Delta Notes has one canonical API implementation.
-2. The UI can create, display, edit, and delete Post-it notes.
-3. Timer functionality has been removed from Delta Notes ownership.
-4. `project.md` compilation has been removed.
-5. `PageSkeletonBuilder` has been removed from the Delta Notes runtime.
-6. Duplicate endpoint implementations have been consolidated.
-7. Delta Notes follows the standard subsystem layout.
-8. Remaining known debt is documented here rather than hidden in legacy code.
+1. `aurora/subsystems/delta_notes/api/endpoint.py` remains the single canonical
+   Delta Notes API implementation;
+2. no live legacy Delta Notes API implementation competes with it;
+3. residual timer ownership is identified and resolved when that work becomes
+   necessary;
+4. obsolete project-compilation behavior is absent from live Delta Notes
+   runtime behavior;
+5. obsolete telemetry coupling is absent from live Delta Notes runtime
+   behavior;
+6. obsolete direct Wu coupling is absent from live Delta Notes runtime
+   behavior;
+7. future Delta Notes changes preserve the lightweight Post-it responsibility.
+
+Do not perform cleanup merely to satisfy this document.
+
+Verify residual debt before acting on it.
 
 <!-- ====================================================================== -->
 <!-- END: DELTA_NOTES_TECHNICAL_DEBT -->

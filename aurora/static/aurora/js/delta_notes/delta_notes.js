@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/delta_notes.js (PATCH 1 OF 2)
+// FILE: aurora/static/aurora/js/delta_notes/delta_notes.js
 // START: INITIALIZATION_CLOSURE_AND_STATE_ENCLOSURE
 // ======================================================================
 function initDeltaNotesConsole(endpoints, csrfToken) {
@@ -137,5 +137,5 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
     loadActiveQueue();
 }
 // ====================================================================== 
-// END: STRIPPED_EVENT_BINDINGS_AND_FLOW_CONTROL (PATCH 2 OF 2)
+// END: STRIPPED_EVENT_BINDINGS_AND_FLOW_CONTROL
 // ======================================================================
