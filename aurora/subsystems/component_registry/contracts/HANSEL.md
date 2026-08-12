@@ -47,14 +47,34 @@ No human user identity is required.
 Run:
 
 ```text
-daurora-cmd document_component_registry --apply
+daurora-cmd enrich_component_registry
 ```
 
-Use this when online and ready to perform the AI enrichment pass.
+This is the normal operational AI enrichment entry point.
 
-AI enrichment is required for useful semantic registry knowledge, but it is
-separate from deterministic maintenance because it is slower, online-dependent,
-and potentially expensive.
+It processes active `PENDING` components until:
+
+```text
+the enrichment queue is exhausted
+or
+an AI provider failure stops the run
+```
+
+Provider failures leave the interrupted component `PENDING` so the same command
+can be run again later to resume naturally.
+
+### Preview or test bounded AI enrichment
+
+Go to:
+
+```text
+aurora/management/commands/document_component_registry.py
+```
+
+Use this precision interface when a bounded `--path`, `--limit`, preview, or
+explicit test run is required.
+
+Do not use it as the normal operational enrichment workflow.
 
 ### Preview repository and registry differences
 
@@ -150,7 +170,12 @@ aurora/subsystems/component_registry/services/graph_projection.py
 aurora/subsystems/component_registry/nodes.py
 ```
 
-### Investigate destructive registry reset behavior
+Neo4j is not part of the current Component Registry maintenance pipeline.
+
+Treat it as a derived projection only when graph capability provides explicit
+decision value.
+
+### Perform explicit disaster-recovery reset
 
 Go to:
 
@@ -163,16 +188,25 @@ ComponentNode projections.
 
 It is not part of normal maintenance.
 
-Do not run it merely to refresh or repair registry state.
+After an intentional reset, rebuild with:
+
+```text
+daurora-cmd maintain_component_registry
+daurora-cmd enrich_component_registry
+```
+
+Do not run reset merely to refresh or repair ordinary registry state.
 
 ---
 
 ## Maintenance Model
 
-Normal registry maintenance is:
+Normal Component Registry operation is:
 
 ```text
 repository
+    ↓
+daurora-cmd maintain_component_registry
     ↓
 deterministic reconciliation
     ↓
@@ -182,13 +216,15 @@ structurally current registry
     ↓
 PENDING enrichment queue
     ↓
-AI enrichment when available
+daurora-cmd enrich_component_registry
+    ↓
+semantic registry knowledge
 ```
 
 Repository freshness must not depend on AI availability.
 
-AI enrichment must not be treated as optional knowledge, but it may be deferred
-until the machine is online and the operation is practical to run.
+AI enrichment is required for useful semantic registry knowledge, but it may be
+deferred until the machine is online and the operation is practical to run.
 
 ---
 
