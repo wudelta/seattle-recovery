@@ -4,7 +4,6 @@
 # ======================================================================
 """Component Registry reconciliation and bounded synchronization command."""
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from aurora.subsystems.component_registry.services.component_policy import (
@@ -16,9 +15,6 @@ from aurora.subsystems.component_registry.services.reconciler import (
 from aurora.subsystems.component_registry.services.synchronizer import (
     WorkspaceSynchronizer,
 )
-
-
-UserModel = get_user_model()
 
 
 class Command(BaseCommand):
@@ -71,20 +67,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Explicitly permit the selected synchronization operation.",
         )
-        parser.add_argument(
-            "--user",
-            help=(
-                "Username assigned as created_by for new registrations. "
-                "Required when applying registration."
-            ),
-        )
 
     def _validate_options(self, options):
         requested_path = options.get("path")
         limit = options.get("limit")
         operation = options.get("operation")
         apply = options.get("apply")
-        username = options.get("user")
 
         if requested_path:
             normalized_path = requested_path.strip().replace("\\", "/")
@@ -97,7 +85,6 @@ class Command(BaseCommand):
                 )
 
             options["path"] = normalized_path.rstrip("/")
-            requested_path = options["path"]
 
         if limit is not None and limit < 1:
             raise CommandError("--limit must be greater than zero.")
@@ -108,31 +95,11 @@ class Command(BaseCommand):
             )
 
         if operation == "register" and apply:
-            if not username:
-                raise CommandError(
-                    "--user is required when applying registration."
-                )
-
             if not requested_path and limit is None:
                 raise CommandError(
                     "Registration requires --path or a positive --limit "
                     "when using --apply."
                 )
-
-        if operation != "register" and username:
-            raise CommandError(
-                "--user is only valid with the register operation."
-            )
-
-    @staticmethod
-    def _resolve_user(username: str):
-        """Resolve one explicit owner from the configured user model."""
-        try:
-            return UserModel.objects.get(username=username)
-        except UserModel.DoesNotExist as error:
-            raise CommandError(
-                f"User '{username}' does not exist."
-            ) from error
 
 # ======================================================================
 # END: COMMAND_IMPORTS_AND_ARGUMENT_CONTRACT
@@ -212,23 +179,11 @@ class Command(BaseCommand):
         """Preview or apply one explicitly bounded synchronization operation."""
         self._validate_options(options)
 
-        operation = options["operation"]
-        apply = options["apply"]
-        requested_path = options.get("path")
-        limit = options.get("limit")
-        username = options.get("user")
-
-        user_instance = None
-
-        if operation == "register" and apply:
-            user_instance = self._resolve_user(username)
-
         return WorkspaceSynchronizer().run(
-            apply=apply,
-            operation=operation,
-            user_instance=user_instance,
-            path=requested_path,
-            limit=limit,
+            apply=options["apply"],
+            operation=options["operation"],
+            path=options.get("path"),
+            limit=options.get("limit"),
         )
 
 # ======================================================================

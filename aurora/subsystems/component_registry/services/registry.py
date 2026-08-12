@@ -2,14 +2,11 @@
 # FILE: aurora/subsystems/component_registry/services/registry.py
 # START: REGISTRY_CORE_IMPORTS_AND_SYSTEM_CONSTRAINTS
 # ======================================================================
-from django.contrib.auth import get_user_model
 
 from aurora.models import ComponentRegistry
 
-
-UserModel = get_user_model()
-
 BANNED_DIRECTORIES = ["venv", ".venv", "site-packages", ".git"]
+
 # ======================================================================
 # END: REGISTRY_CORE_IMPORTS_AND_SYSTEM_CONSTRAINTS
 # ======================================================================
@@ -18,11 +15,11 @@ BANNED_DIRECTORIES = ["venv", ".venv", "site-packages", ".git"]
 # FILE: aurora/subsystems/component_registry/services/registry.py
 # START: SANDBOX_GUARDRAILS_AND_EXPLICIT_POSTGRES_PROVISIONING
 # ======================================================================
+
 def register_new_component(
     file_path: str,
     name: str,
     visibility: str,
-    user_instance: UserModel,
     persona: str = "COMPILER_MODULE",
     description: str = "",
 ):
@@ -31,7 +28,10 @@ def register_new_component(
 
     This function is intentionally limited to PostgreSQL registration.
     Graph synchronization is an explicit responsibility of the caller.
+
+    Repository-discovered registration does not require a human owner.
     """
+
     path_parts = file_path.replace("\\", "/").split("/")
 
     if any(banned in path_parts for banned in BANNED_DIRECTORIES):
@@ -52,10 +52,11 @@ def register_new_component(
         status="ACTIVE",
         visibility=clean_visibility,
         locked=False,
-        created_by=user_instance,
+        created_by=None,
         description=description,
-        description_audiences=["developers"],
+        description_audiences={"developers": ""},
     )
+
 # ======================================================================
 # END: SANDBOX_GUARDRAILS_AND_EXPLICIT_POSTGRES_PROVISIONING
 # ======================================================================

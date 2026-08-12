@@ -7,7 +7,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
@@ -27,9 +26,6 @@ from aurora.subsystems.component_registry.services.reconciler import (
 from aurora.subsystems.component_registry.services.registry import (
     register_new_component,
 )
-
-
-UserModel = get_user_model()
 
 
 @dataclass
@@ -207,7 +203,6 @@ class WorkspaceSynchronizer:
     def apply_registrations(
         self,
         *,
-        user_instance: UserModel,
         path: str | None = None,
         limit: int | None = None,
     ) -> SynchronizationReport:
@@ -229,7 +224,6 @@ class WorkspaceSynchronizer:
                         file_path=item.path,
                         name=self._component_name(item),
                         visibility="PRIVATE",
-                        user_instance=user_instance,
                         persona=item.persona or "COMPILER_MODULE",
                     )
 
@@ -299,8 +293,6 @@ class WorkspaceSynchronizer:
     def synchronize_path(
         self,
         path: str,
-        *,
-        user_instance: UserModel | None = None,
     ) -> dict[str, object]:
         """
         Reconcile and synchronize exactly one repository-relative file.
@@ -331,13 +323,7 @@ class WorkspaceSynchronizer:
         report = SynchronizationReport()
 
         if item.classification == CLASSIFICATION_REGISTER:
-            if user_instance is None:
-                raise ValueError(
-                    "user_instance is required when registering a new path."
-                )
-
             report = self.apply_registrations(
-                user_instance=user_instance,
                 path=normalized_path,
                 limit=1,
             )
@@ -386,7 +372,6 @@ class WorkspaceSynchronizer:
         *,
         apply: bool = False,
         operation: str = "update",
-        user_instance: UserModel | None = None,
         path: str | None = None,
         limit: int | None = None,
     ) -> dict[str, object]:
@@ -451,13 +436,7 @@ class WorkspaceSynchronizer:
                     },
                 }
 
-            if user_instance is None:
-                raise ValueError(
-                    "user_instance is required when applying registrations."
-                )
-
             synchronization_report = self.apply_registrations(
-                user_instance=user_instance,
                 path=path,
                 limit=limit,
             )

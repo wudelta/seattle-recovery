@@ -104,9 +104,11 @@ class ComponentRegistry(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="forged_assets",
+        null=True,
+        blank=True,
         help_text=(
-            "The authenticated developer who authorized "
-            "the execution string."
+            "Authenticated developer responsible for manual registration. "
+            "Null indicates repository-discovered system registration."
         ),
     )
     date_created = models.DateTimeField(auto_now_add=True)
@@ -205,7 +207,6 @@ class ComponentRegistry(models.Model):
 
     def __str__(self):
         return f"{self.name} [{self.persona}] - Locked: {self.locked}"
-
 
 # ======================================================================
 # END: COMPONENT_REGISTRY_CORE_SCHEMA

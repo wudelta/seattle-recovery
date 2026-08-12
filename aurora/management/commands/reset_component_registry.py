@@ -1,8 +1,9 @@
 # ======================================================================
-# FILE: aurora/management/commands/reset_component_registry.py (PATCH 1 OF 1)
+# FILE: aurora/management/commands/reset_component_registry.py
 # START: EXPLICIT_COMPONENT_REGISTRY_RESET_COMMAND
 # ======================================================================
-"""Explicitly reset the ComponentRegistry and its Neo4j projection."""
+
+"""Destructively clear Component Registry for explicit disaster recovery."""
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -13,22 +14,28 @@ from aurora.models import ComponentRegistry
 
 class Command(BaseCommand):
     """
-    Remove all component projections and authoritative registry records.
+    Remove all Component Registry records and Neo4j projections.
 
-    This command performs a destructive one-time reset only. Repository
-    discovery and registration remain separate explicit operations.
+    This is an emergency recovery tool, not a maintenance command.
+
+    After reset, rebuild deterministic registry state with:
+
+        daurora-cmd maintain_component_registry
+
+    AI enrichment must then be restored separately when practical.
     """
 
     help = (
         "Delete all Neo4j ComponentNode projections and all PostgreSQL "
-        "ComponentRegistry records. Requires --apply."
+        "ComponentRegistry records for explicit disaster recovery. "
+        "Requires --apply."
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--apply",
             action="store_true",
-            help="Perform the destructive reset.",
+            help="Perform the destructive registry reset.",
         )
 
     def handle(self, *args, **options):
@@ -53,7 +60,11 @@ class Command(BaseCommand):
                 f"PostgreSQL ComponentRegistry records: {registry_count}"
             )
             self.stdout.write(
-                "Run again with --apply to perform the reset."
+                "This command is intended only for explicit registry "
+                "disaster recovery."
+            )
+            self.stdout.write(
+                "Run again with --apply to perform the destructive reset."
             )
             return
 
@@ -87,7 +98,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Component registry reset completed."
+                "Component Registry disaster-recovery reset completed."
             )
         )
         self.stdout.write(
@@ -97,6 +108,26 @@ class Command(BaseCommand):
             "PostgreSQL ComponentRegistry records deleted: "
             f"{registry_deleted}"
         )
+        self.stdout.write("")
+        self.stdout.write(
+            self.style.WARNING(
+                "The Component Registry is now empty."
+            )
+        )
+        self.stdout.write(
+            "Rebuild deterministic registry state with:"
+        )
+        self.stdout.write(
+            "  daurora-cmd maintain_component_registry"
+        )
+        self.stdout.write(
+            "Then restore pending semantic enrichment when online with:"
+        )
+        self.stdout.write(
+            "  daurora-cmd document_component_registry --apply"
+        )
+
 # ======================================================================
-# END: EXPLICIT_COMPONENT_REGISTRY_RESET_COMMAND (PATCH 1 OF 1)
+# FILE: aurora/management/commands/reset_component_registry.py
+# END: EXPLICIT_COMPONENT_REGISTRY_RESET_COMMAND
 # ======================================================================

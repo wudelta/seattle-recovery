@@ -296,15 +296,21 @@ class ComponentRegistryDocumenter:
 # START: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY
 # ======================================================================
             except Exception as error:
-                ComponentRegistry.objects.filter(
-                    id=component.id,
-                    source_hash=component.source_hash,
-                    analysis_status="PENDING",
-                ).update(
-                    analysis_status="FAILED",
-                    analysis_version=self.ANALYSIS_VERSION,
-                    last_analyzed_at=timezone.now(),
+                is_provider_failure = isinstance(
+                    error,
+                    ProviderExecutionError,
                 )
+
+                if not is_provider_failure:
+                    ComponentRegistry.objects.filter(
+                        id=component.id,
+                        source_hash=component.source_hash,
+                        analysis_status="PENDING",
+                    ).update(
+                        analysis_status="FAILED",
+                        analysis_version=self.ANALYSIS_VERSION,
+                        last_analyzed_at=timezone.now(),
+                    )
 
                 message = (
                     f"{component.file_path}: "
@@ -320,13 +326,14 @@ class ComponentRegistryDocumenter:
                     progress_callback,
                 )
 
-                if isinstance(error, ProviderExecutionError):
+                if is_provider_failure:
                     report["stopped"] = True
                     report["failure_point"] = component.file_path
                     report["restart_from"] = component.file_path
 
                     self._emit_progress(
-                        "Stopping after provider failure.",
+                        "Stopping after provider failure. "
+                        "Current component remains PENDING for retry.",
                         progress_callback,
                     )
                     break
@@ -355,6 +362,7 @@ class ComponentRegistryDocumenter:
         )
 
         return report
+
 # ======================================================================
 # END: COMPONENT_FAILURE_RECOVERY_AND_RUN_SUMMARY
 # ======================================================================
