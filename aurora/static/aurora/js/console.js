@@ -109,108 +109,184 @@ $(document).ready(function() {
 // START: SESSION_LIFE_CYCLE_GATEKEEPER
 // ======================================================================
     /**
-     * Cockpit session life-cycle gatekeeper.
+     * Cockpit Engineering Session client.
      *
-     * Controls console availability, session timing, and the shared
-     * telemetry WebSocket connection.
+     * Engineering Session persistence is authoritative on the backend.
+     * This module owns only Console presentation, elapsed-time display,
+     * workspace gating, and telemetry connection state.
      */
-    $timerToggleBtn.on('click', function(e) {
-        e.preventDefault();
 
-        sessionActive = !sessionActive;
+    const engineeringSessionEndpoint =
+        '/aurora/api/engineering_session/';
 
-        if (sessionActive) {
-            $viewSelector.prop('disabled', false);
-            $gateOverlay.addClass('d-none');
+    function calculateElapsedSeconds(startedAt) {
+        const startedTimestamp = Date.parse(startedAt);
 
-            $timerToggleBtn
-                .removeClass('btn-outline-success')
-                .addClass('btn-outline-danger')
-                .text('Pause Session');
+        if (Number.isNaN(startedTimestamp)) {
+            return 0;
+        }
 
-            timerInterval = setInterval(function() {
-                elapsedSeconds++;
+        return Math.max(
+            0,
+            Math.floor(
+                (Date.now() - startedTimestamp) / 1000
+            )
+        );
+    }
 
-                const hrs = String(
-                    Math.floor(elapsedSeconds / 3600)
-                ).padStart(2, '0');
+    function renderElapsedTime() {
+        const hrs = String(
+            Math.floor(elapsedSeconds / 3600)
+        ).padStart(2, '0');
 
-                const mins = String(
-                    Math.floor(
-                        (elapsedSeconds % 3600) / 60
-                    )
-                ).padStart(2, '0');
+        const mins = String(
+            Math.floor(
+                (elapsedSeconds % 3600) / 60
+            )
+        ).padStart(2, '0');
 
-                const secs = String(
-                    elapsedSeconds % 60
-                ).padStart(2, '0');
+        const secs = String(
+            elapsedSeconds % 60
+        ).padStart(2, '0');
 
-                $timerDisplay.text(
-                    `${hrs}:${mins}:${secs}`
-                );
-            }, 1000);
+        $timerDisplay.text(
+            `${hrs}:${mins}:${secs}`
+        );
+    }
 
-            const wsScheme = (
-                window.location.protocol === "https:"
-                    ? "wss"
-                    : "ws"
+    function startElapsedDisplay(startedAt) {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+
+        elapsedSeconds = calculateElapsedSeconds(
+            startedAt
+        );
+        renderElapsedTime();
+
+        timerInterval = setInterval(function() {
+            elapsedSeconds = calculateElapsedSeconds(
+                startedAt
             );
+            renderElapsedTime();
+        }, 1000);
+    }
 
-            telemetrySocket = new WebSocket(
-                `${wsScheme}://${window.location.host}/ws/console/`
-            );
+    function stopElapsedDisplay() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
 
-            telemetrySocket.onmessage = function(event) {
-                const payload = JSON.parse(event.data);
-                const msg = payload.message;
-
-                const $screens = $(
-                    '#telemetry-screen-output, '
-                    + '#wu-telemetry-screen-output'
-                );
-
-                $screens.each(function() {
-                    const $screen = $(this);
-
-                    const $lineNode = $(
-                        '<div '
-                        + 'style="margin-bottom: 4px; '
-                        + 'white-space: pre-wrap;">'
-                        + '</div>'
-                    ).text(msg);
-
-                    if (
-                        msg.includes(
-                            '[WU ORCHESTRATION PLAN]'
-                        )
-                    ) {
-                        $lineNode.css({
-                            'color': '#a78bfa',
-                            'font-weight': 'bold'
-                        });
-                    } else if (
-                        msg.includes('[SYSTEM]')
-                        || msg.includes('[INFO]')
-                    ) {
-                        $lineNode.css(
-                            'color',
-                            '#38bdf8'
-                        );
-                    }
-
-                    $screen.append($lineNode);
-                    $screen.scrollTop(
-                        $screen[0].scrollHeight
-                    );
-                });
-            };
-
-            $(document).trigger(
-                'aurora:session_started'
-            );
-
+    function openTelemetrySocket() {
+        if (
+            telemetrySocket
+            && (
+                telemetrySocket.readyState === WebSocket.OPEN
+                || telemetrySocket.readyState === WebSocket.CONNECTING
+            )
+        ) {
             return;
         }
+
+        const wsScheme = (
+            window.location.protocol === "https:"
+                ? "wss"
+                : "ws"
+        );
+
+        telemetrySocket = new WebSocket(
+            `${wsScheme}://${window.location.host}/ws/console/`
+        );
+
+        telemetrySocket.onmessage = function(event) {
+            const payload = JSON.parse(event.data);
+            const msg = payload.message;
+
+            const $screens = $(
+                '#telemetry-screen-output, '
+                + '#wu-telemetry-screen-output'
+            );
+
+            $screens.each(function() {
+                const $screen = $(this);
+
+                const $lineNode = $(
+                    '<div '
+                    + 'style="margin-bottom: 4px; '
+                    + 'white-space: pre-wrap;">'
+                    + '</div>'
+                ).text(msg);
+
+                if (
+                    msg.includes(
+                        '[WU ORCHESTRATION PLAN]'
+                    )
+                ) {
+                    $lineNode.css({
+                        'color': '#a78bfa',
+                        'font-weight': 'bold'
+                    });
+                } else if (
+                    msg.includes('[SYSTEM]')
+                    || msg.includes('[INFO]')
+                ) {
+                    $lineNode.css(
+                        'color',
+                        '#38bdf8'
+                    );
+                }
+
+                $screen.append($lineNode);
+                $screen.scrollTop(
+                    $screen[0].scrollHeight
+                );
+            });
+        };
+
+        telemetrySocket.onclose = function() {
+            telemetrySocket = null;
+        };
+    }
+
+    function closeTelemetrySocket() {
+        if (!telemetrySocket) {
+            return;
+        }
+
+        telemetrySocket.close();
+        telemetrySocket = null;
+    }
+
+    function activateConsoleSession(session) {
+        sessionActive = true;
+
+        $viewSelector.prop('disabled', false);
+        $gateOverlay.addClass('d-none');
+
+        $timerToggleBtn
+            .removeClass('btn-outline-success')
+            .addClass('btn-outline-danger')
+            .text('End Session');
+
+        startElapsedDisplay(
+            session.started_at
+        );
+
+        openTelemetrySocket();
+
+        $(document).trigger(
+            'aurora:session_started',
+            [session]
+        );
+    }
+
+    function deactivateConsoleSession(
+        session = null,
+        emitEvent = true
+    ) {
+        sessionActive = false;
 
         $viewSelector.prop('disabled', true);
         $gateOverlay.removeClass('d-none');
@@ -220,20 +296,147 @@ $(document).ready(function() {
             .addClass('btn-outline-success')
             .text('Start Session');
 
-        clearInterval(timerInterval);
+        if (
+            session
+            && session.started_at
+            && session.ended_at
+        ) {
+            const startedTimestamp = Date.parse(
+                session.started_at
+            );
+            const endedTimestamp = Date.parse(
+                session.ended_at
+            );
 
-        if (telemetrySocket) {
-            telemetrySocket.close();
-            telemetrySocket = null;
+            if (
+                !Number.isNaN(startedTimestamp)
+                && !Number.isNaN(endedTimestamp)
+            ) {
+                elapsedSeconds = Math.max(
+                    0,
+                    Math.floor(
+                        (
+                            endedTimestamp
+                            - startedTimestamp
+                        ) / 1000
+                    )
+                );
+
+                renderElapsedTime();
+            }
+        } else {
+            elapsedSeconds = 0;
+            renderElapsedTime();
         }
 
-        $(document).trigger(
-            'aurora:session_stopped',
-            [elapsedSeconds]
+        stopElapsedDisplay();
+        closeTelemetrySocket();
+
+        if (emitEvent) {
+            $(document).trigger(
+                'aurora:session_stopped',
+                [
+                    elapsedSeconds,
+                    session,
+                ]
+            );
+        }
+    }
+
+    function recoverEngineeringSession() {
+        $.get(
+            engineeringSessionEndpoint,
+            function(data) {
+                if (
+                    data.status === 'success'
+                    && data.active
+                    && data.session
+                ) {
+                    activateConsoleSession(
+                        data.session
+                    );
+                    return;
+                }
+
+                deactivateConsoleSession(
+                    null,
+                    false
+                );
+            }
+        ).fail(function(xhr) {
+            console.error(
+                '[Engineering Session] '
+                + 'Unable to recover session state.',
+                xhr.responseText
+            );
+
+            deactivateConsoleSession(
+                null,
+                false
+            );
+        });
+    }
+
+    $timerToggleBtn.on('click', function(e) {
+        e.preventDefault();
+
+        const action = (
+            sessionActive
+                ? 'end'
+                : 'start'
         );
+
+        $timerToggleBtn.prop(
+            'disabled',
+            true
+        );
+
+        $.post(
+            engineeringSessionEndpoint,
+            {
+                action: action
+            },
+            function(data) {
+                if (
+                    data.status !== 'success'
+                    || !data.session
+                ) {
+                    console.error(
+                        '[Engineering Session] '
+                        + 'Invalid lifecycle response.',
+                        data
+                    );
+                    return;
+                }
+
+                if (action === 'start') {
+                    activateConsoleSession(
+                        data.session
+                    );
+                } else {
+                    deactivateConsoleSession(
+                        data.session
+                    );
+                }
+            }
+        ).fail(function(xhr) {
+            console.error(
+                '[Engineering Session] '
+                + `${action} failed.`,
+                xhr.responseText
+            );
+        }).always(function() {
+            $timerToggleBtn.prop(
+                'disabled',
+                false
+            );
+        });
     });
 
-    // Clear terminal output lines across console workspaces
+    // Restore an existing persisted Engineering Session after page refresh.
+    recoverEngineeringSession();
+
+    // Clear terminal output lines across console workspaces.
     $(document).on(
         'click',
         '#clear-telemetry-btn, #clear-wu-telemetry-btn',

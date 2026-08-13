@@ -14,6 +14,7 @@ from aurora.subsystems.component_registry.models import ComponentRegistry
 from aurora.subsystems.content.models import StaticContent
 from aurora.subsystems.delta_directives.models import DeltaDirectives
 from aurora.subsystems.delta_notes.models import DeltaNotesEntry
+from aurora.subsystems.engineering_session.models import EngineeringSession
 from aurora.subsystems.planning.models import (
     EstimateConfidence,
     ExecutionStatus,
@@ -39,6 +40,7 @@ __all__ = [
     "ComponentRegistry",
     "DeltaDirectives",
     "DeltaNotesEntry",
+    "EngineeringSession",
     "EstimateConfidence",
     "ExecutionStatus",
     "Initiative",
