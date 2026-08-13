@@ -6,11 +6,17 @@
     class="d-flex flex-column h-100 w-100 position-relative"
     style="box-sizing: border-box; min-height: 0; overflow: hidden; background-color: #000000;"
 >
-    <!-- Primary Wu Chat and Telemetry Workspace -->
-    <div class="d-flex flex-row flex-grow-1 gap-2 style-container" style="min-height: 0; padding-bottom: 4px;">
+    <!-- Primary Wu Chat and Session Operations Workspace -->
+    <div
+        class="d-flex flex-row flex-grow-1 gap-2 style-container"
+        style="min-height: 0; padding-bottom: 4px;"
+    >
 
         <!-- LEFT PANEL: Interactive Message Log and Command Input Deck -->
-        <div class="d-flex flex-column h-100" style="width: 66.66%; min-width: 0; padding-right: 4px;">
+        <div
+            class="d-flex flex-column h-100"
+            style="width: 66.66%; min-width: 0; padding-right: 4px;"
+        >
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span
                     class="text-uppercase font-weight-bold font-monospace text-warning small"
@@ -26,7 +32,10 @@
                 style="background-color: #050506; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0;"
             ></div>
 
-            <div class="d-flex flex-column gap-2" style="height: 120px; flex-shrink: 0;">
+            <div
+                class="d-flex flex-column gap-2"
+                style="height: 120px; flex-shrink: 0;"
+            >
                 <textarea
                     id="wu-human-delta-notes-input"
                     class="form-control h-100 p-2 font-monospace"
@@ -44,37 +53,130 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: Real-Time Stream Telemetry Console -->
+        <!-- RIGHT PANEL: Engineering Session Operations and Telemetry -->
         <div
-            class="d-flex flex-column h-100"
+            class="d-flex flex-column h-100 gap-2"
             style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;"
         >
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span
-                    class="text-uppercase font-weight-bold font-monospace text-muted small"
-                    style="letter-spacing: 1px; color: #888888;"
-                >
-                    📡 Fleet Telemetry Output Stream
-                </span>
 
-                <button
-                    id="clear-wu-telemetry-btn"
-                    class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace"
-                    style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;"
-                >
-                    Flush Logs
-                </button>
-            </div>
-
-            <div
-                id="wu-telemetry-screen-output"
-                class="flex-grow-1 p-2 rounded"
-                style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;"
+            <!-- SESSION MANAGEMENT -->
+            <section
+                id="wu-session-management-panel"
+                class="d-flex flex-column flex-shrink-0"
+                style="height: 42%; min-height: 220px;"
             >
-                <div class="text-info font-monospace small">
-                    [SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span
+                        class="text-uppercase font-weight-bold font-monospace text-info small"
+                        style="letter-spacing: 1px;"
+                    >
+                        ⚙ Session Management
+                    </span>
                 </div>
-            </div>
+
+                <!-- Session Messages / Current State -->
+                <div
+                    id="wu-session-management-messages"
+                    class="flex-grow-1 p-2 rounded mb-2"
+                    style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
+                >
+                    <div class="text-muted">
+                        [SESSION] Waiting for active workflow state.
+                    </div>
+
+                    <div class="text-muted">
+                        [PLANNING] Active Step: not loaded
+                    </div>
+
+                    <div class="text-muted">
+                        [DELTA NOTES] Unprocessed: not loaded
+                    </div>
+
+                    <div class="text-muted">
+                        [REGISTRY] Pending enrichment: not loaded
+                    </div>
+                </div>
+
+                <!-- Manual Session Events -->
+                <div
+                    id="wu-session-management-actions"
+                    class="d-grid gap-1"
+                    style="grid-template-columns: repeat(2, minmax(0, 1fr));"
+                >
+                    <button
+                        id="wu-start-step-work-btn"
+                        type="button"
+                        class="btn btn-outline-success btn-sm font-monospace"
+                    >
+                        Start Step Work
+                    </button>
+
+                    <button
+                        id="wu-end-step-work-btn"
+                        type="button"
+                        class="btn btn-outline-warning btn-sm font-monospace"
+                    >
+                        End Step Work
+                    </button>
+
+                    <button
+                        id="wu-process-delta-notes-btn"
+                        type="button"
+                        class="btn btn-outline-info btn-sm font-monospace"
+                    >
+                        Process Delta Notes
+                    </button>
+
+                    <button
+                        id="wu-refresh-registry-btn"
+                        type="button"
+                        class="btn btn-outline-info btn-sm font-monospace"
+                    >
+                        Refresh Registry
+                    </button>
+
+                    <button
+                        id="wu-enrich-registry-btn"
+                        type="button"
+                        class="btn btn-outline-primary btn-sm font-monospace"
+                    >
+                        Enrich Registry
+                    </button>
+                </div>
+            </section>
+
+            <!-- TELEMETRY -->
+            <section
+                class="d-flex flex-column flex-grow-1"
+                style="min-height: 0;"
+            >
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span
+                        class="text-uppercase font-weight-bold font-monospace text-muted small"
+                        style="letter-spacing: 1px; color: #888888;"
+                    >
+                        📡 Fleet Telemetry Output Stream
+                    </span>
+
+                    <button
+                        id="clear-wu-telemetry-btn"
+                        class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace"
+                        style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;"
+                    >
+                        Flush Logs
+                    </button>
+                </div>
+
+                <div
+                    id="wu-telemetry-screen-output"
+                    class="flex-grow-1 p-2 rounded"
+                    style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;"
+                >
+                    <div class="text-info font-monospace small">
+                        [SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -124,7 +226,10 @@
             </button>
         </header>
 
-        <div class="d-flex flex-column flex-grow-1 p-2" style="min-height: 0;">
+        <div
+            class="d-flex flex-column flex-grow-1 p-2"
+            style="min-height: 0;"
+        >
             <div
                 class="d-flex flex-shrink-0"
                 style="background-color: #09090b; border: 1px solid #27272a;"

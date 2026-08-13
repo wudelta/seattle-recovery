@@ -9,6 +9,7 @@ from aurora.subsystems.engineering_session.services import (
     EngineeringSessionError,
     end_session,
     get_active_session,
+    get_session_workflow_status,
     start_session,
 )
 
@@ -35,12 +36,14 @@ def engineering_session_endpoint(request):
 
     if request.method == "GET":
         session = get_active_session(request.user)
+        workflow = get_session_workflow_status(request.user)
 
         return JsonResponse(
             {
                 "status": "success",
                 "active": session is not None,
                 "session": _serialize_session(session),
+                "workflow": workflow,
             }
         )
 

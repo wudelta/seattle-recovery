@@ -9,11 +9,15 @@ from aurora.subsystems.engineering_session.services.lifecycle import (
     get_active_session,
     start_session,
 )
+from aurora.subsystems.engineering_session.services.status import (
+    get_session_workflow_status,
+)
 
 __all__ = [
     "EngineeringSessionError",
     "end_session",
     "get_active_session",
+    "get_session_workflow_status",
     "start_session",
 ]
 
