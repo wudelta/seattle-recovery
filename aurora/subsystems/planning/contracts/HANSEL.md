@@ -31,6 +31,23 @@ Go to:
 aurora/subsystems/planning/models.py
 ```
 
+### Understand Planning lifecycle and reconciliation
+
+Go to:
+
+```text
+aurora/subsystems/planning/contracts/LIFECYCLE_AND_RECONCILIATION.md
+```
+
+Use this authority for:
+
+- execution-state transitions;
+- active-work rules;
+- pause and resume semantics;
+- assignment and historical attribution;
+- Planning reconciliation;
+- Planning and Engineering Session boundaries.
+
 ### Understand or change Planning CRUD/API behavior
 
 Start at:

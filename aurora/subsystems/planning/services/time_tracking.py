@@ -6,7 +6,13 @@
 from django.db import transaction
 from django.utils import timezone
 
-from aurora.models import TimeEntry, UserPosition
+from aurora.models import (
+    ExecutionStatus,
+    Initiative,
+    Phase,
+    Step,
+    TimeEntry,
+)
 
 
 class PlanningTimeTrackingError(RuntimeError):
@@ -36,12 +42,93 @@ def get_active_time_entry(user) -> TimeEntry | None:
     )
 
 
+def get_executable_step(user) -> Step:
+    """
+    Resolve the user's one executable Planning Step.
+
+    Executable work requires one ACTIVE Initiative assigned to the user,
+    one ACTIVE Phase within that Initiative assigned to the user, and one
+    ACTIVE Step within that Phase.
+
+    UserPosition is intentionally not consulted.
+    """
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise PlanningTimeTrackingError(
+            "An authenticated user is required to resolve executable work."
+        )
+
+    initiatives = list(
+        Initiative.objects
+        .filter(
+            assigned_to=user,
+            status=ExecutionStatus.ACTIVE,
+        )
+        .order_by("position", "pk")
+    )
+
+    if not initiatives:
+        raise PlanningTimeTrackingError(
+            "No ACTIVE Initiative is assigned to this user."
+        )
+
+    if len(initiatives) > 1:
+        raise PlanningTimeTrackingError(
+            "Multiple ACTIVE Initiatives are assigned to this user."
+        )
+
+    initiative = initiatives[0]
+
+    phases = list(
+        Phase.objects
+        .filter(
+            initiative=initiative,
+            assigned_to=user,
+            status=ExecutionStatus.ACTIVE,
+        )
+        .order_by("position", "pk")
+    )
+
+    if not phases:
+        raise PlanningTimeTrackingError(
+            "The ACTIVE Initiative has no ACTIVE Phase assigned to this user."
+        )
+
+    if len(phases) > 1:
+        raise PlanningTimeTrackingError(
+            "The ACTIVE Initiative has multiple ACTIVE Phases assigned "
+            "to this user."
+        )
+
+    phase = phases[0]
+
+    steps = list(
+        Step.objects
+        .filter(
+            phase=phase,
+            status=ExecutionStatus.ACTIVE,
+        )
+        .order_by("position", "pk")
+    )
+
+    if not steps:
+        raise PlanningTimeTrackingError(
+            "The ACTIVE Phase has no ACTIVE Step."
+        )
+
+    if len(steps) > 1:
+        raise PlanningTimeTrackingError(
+            "The ACTIVE Phase has multiple ACTIVE Steps."
+        )
+
+    return steps[0]
+
+
 def start_step_work(user) -> TimeEntry:
     """
-    Start time tracking for the user's currently selected Planning Step.
+    Start time tracking for the user's executable Planning Step.
 
-    A Step must already be selected through Planning.UserPosition.
-    The service never infers or automatically selects work.
+    Repeated calls return the existing open TimeEntry.
     """
 
     if not user or not getattr(user, "is_authenticated", False):
@@ -54,22 +141,12 @@ def start_step_work(user) -> TimeEntry:
     if existing is not None:
         return existing
 
-    position = (
-        UserPosition.objects
-        .select_related("step")
-        .filter(user=user)
-        .first()
-    )
-
-    if position is None or position.step is None:
-        raise PlanningTimeTrackingError(
-            "No Planning Step is currently selected."
-        )
+    step = get_executable_step(user)
 
     with transaction.atomic():
         return TimeEntry.objects.create(
             user=user,
-            step=position.step,
+            step=step,
             started_at=timezone.now(),
         )
 
