@@ -1,12 +1,21 @@
 # ======================================================================
 # FILE: aurora/subsystems/planning/services/reconciliation.py
-# START: PLANNING_RECONCILIATION_SNAPSHOT_SERVICE
+# START: PLANNING_RECONCILIATION_IMPORTS
 # ======================================================================
 
 from typing import Any
 
 from aurora.models import Project, UserPosition
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# END: PLANNING_RECONCILIATION_IMPORTS
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# START: PLANNING_RECONCILIATION_SNAPSHOT_SERVICE
+# ======================================================================
 
 def _serialize_user(user) -> dict[str, Any] | None:
     """Return stable user identity for reconciliation evidence."""
@@ -157,13 +166,7 @@ def _serialize_project(project) -> dict[str, Any]:
 
 
 def _serialize_user_positions() -> list[dict[str, Any]]:
-    """
-    Return current UI navigation positions.
-
-    UserPosition is diagnostic evidence only. It represents where a user
-    is currently positioned in Planning and must not be treated as proof
-    of executable work.
-    """
+    """Return Planning UI navigation state as diagnostic evidence."""
 
     positions = (
         UserPosition.objects
@@ -191,12 +194,7 @@ def _serialize_user_positions() -> list[dict[str, Any]]:
 
 
 def build_planning_reconciliation_snapshot() -> dict[str, Any]:
-    """
-    Return authoritative persisted Planning evidence for reconciliation.
-
-    This snapshot is diagnostic. It is not an import document and must not
-    be treated as the canonical Planning interchange schema.
-    """
+    """Return the complete forensic Planning reconciliation snapshot."""
 
     projects = (
         Project.objects
@@ -232,4 +230,438 @@ def build_planning_reconciliation_snapshot() -> dict[str, Any]:
 # ======================================================================
 # FILE: aurora/subsystems/planning/services/reconciliation.py
 # END: PLANNING_RECONCILIATION_SNAPSHOT_SERVICE
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# START: PLANNING_RECONCILIATION_SUMMARY_SERVICE
+# ======================================================================
+
+def _collect_status_counts(projects) -> dict[str, dict[str, int]]:
+    """Return lifecycle counts for each Planning hierarchy level."""
+
+    counts = {
+        "projects": {},
+        "initiatives": {},
+        "phases": {},
+        "steps": {},
+    }
+
+    def increment(level: str, status: str) -> None:
+        counts[level][status] = (
+            counts[level].get(status, 0) + 1
+        )
+
+    for project in projects:
+        increment("projects", project.status)
+
+        for initiative in project.initiatives.all():
+            increment("initiatives", initiative.status)
+
+            for phase in initiative.phases.all():
+                increment("phases", phase.status)
+
+                for step in phase.steps.all():
+                    increment("steps", step.status)
+
+    return counts
+
+
+def _collect_legacy_completion_counts(
+    projects,
+) -> dict[str, int]:
+    """
+    Count legacy completed records that lack historical timestamps.
+
+    These records are retained as historical evidence rather than emitted
+    individually as reconciliation anomalies.
+    """
+
+    counts = {
+        "initiatives_completed_without_timestamp": 0,
+        "phases_completed_without_timestamp": 0,
+        "steps_completed_without_timestamp": 0,
+    }
+
+    for project in projects:
+        for initiative in project.initiatives.all():
+            if (
+                initiative.status == "COMPLETED"
+                and initiative.completed_at is None
+            ):
+                counts[
+                    "initiatives_completed_without_timestamp"
+                ] += 1
+
+            for phase in initiative.phases.all():
+                if (
+                    phase.status == "COMPLETED"
+                    and phase.completed_at is None
+                ):
+                    counts[
+                        "phases_completed_without_timestamp"
+                    ] += 1
+
+                for step in phase.steps.all():
+                    if (
+                        step.status == "COMPLETED"
+                        and step.completed_at is None
+                    ):
+                        counts[
+                            "steps_completed_without_timestamp"
+                        ] += 1
+
+    return counts
+
+
+def _collect_execution_conflicts(
+    projects,
+) -> list[dict[str, Any]]:
+    """Return execution-state conflicts requiring Planning reconciliation."""
+
+    conflicts = []
+
+    initiatives_by_user = {}
+
+    for project in projects:
+        for initiative in project.initiatives.all():
+            if initiative.status != "ACTIVE":
+                continue
+
+            user = initiative.assigned_to
+
+            if user is None:
+                conflicts.append(
+                    {
+                        "type": "ACTIVE_INITIATIVE_WITHOUT_ASSIGNEE",
+                        "project": project.slug,
+                        "initiative_id": initiative.pk,
+                        "initiative": initiative.title,
+                    }
+                )
+                continue
+
+            initiatives_by_user.setdefault(
+                user.pk,
+                {
+                    "user": _serialize_user(user),
+                    "initiatives": [],
+                },
+            )
+
+            initiatives_by_user[user.pk][
+                "initiatives"
+            ].append(
+                {
+                    "project": project.slug,
+                    "id": initiative.pk,
+                    "title": initiative.title,
+                }
+            )
+
+    for record in initiatives_by_user.values():
+        if len(record["initiatives"]) <= 1:
+            continue
+
+        conflicts.append(
+            {
+                "type": "MULTIPLE_ACTIVE_INITIATIVES",
+                "user": record["user"],
+                "initiatives": record["initiatives"],
+            }
+        )
+
+    return conflicts
+
+
+def _collect_current_work_candidates(
+    projects,
+) -> list[dict[str, Any]]:
+    """
+    Return non-completed Initiatives requiring bootstrap reconciliation.
+
+    These are candidates for current or future canonical Planning state.
+    """
+
+    candidates = []
+
+    for project in projects:
+        for initiative in project.initiatives.all():
+            if initiative.status == "COMPLETED":
+                continue
+
+            phase_counts = {}
+            step_counts = {}
+
+            for phase in initiative.phases.all():
+                phase_counts[phase.status] = (
+                    phase_counts.get(phase.status, 0) + 1
+                )
+
+                for step in phase.steps.all():
+                    step_counts[step.status] = (
+                        step_counts.get(step.status, 0) + 1
+                    )
+
+            candidates.append(
+                {
+                    "project": project.slug,
+                    "initiative_id": initiative.pk,
+                    "title": initiative.title,
+                    "status": initiative.status,
+                    "assigned_to": _serialize_user(
+                        initiative.assigned_to
+                    ),
+                    "phase_counts": phase_counts,
+                    "step_counts": step_counts,
+                }
+            )
+
+    return candidates
+
+
+def _collect_navigation_state() -> list[dict[str, Any]]:
+    """
+    Return current Planning navigation separately from execution state.
+
+    UserPosition is intentionally treated as UI navigation evidence only.
+    """
+
+    positions = (
+        UserPosition.objects
+        .select_related(
+            "user",
+            "project",
+            "initiative",
+            "phase",
+            "step",
+        )
+        .order_by("user__username")
+    )
+
+    return [
+        {
+            "user": _serialize_user(position.user),
+            "project": (
+                {
+                    "id": position.project.pk,
+                    "slug": position.project.slug,
+                    "title": position.project.title,
+                    "status": position.project.status,
+                }
+                if position.project
+                else None
+            ),
+            "initiative": (
+                {
+                    "id": position.initiative.pk,
+                    "title": position.initiative.title,
+                    "status": position.initiative.status,
+                }
+                if position.initiative
+                else None
+            ),
+            "phase": (
+                {
+                    "id": position.phase.pk,
+                    "title": position.phase.title,
+                    "status": position.phase.status,
+                }
+                if position.phase
+                else None
+            ),
+            "step": (
+                {
+                    "id": position.step.pk,
+                    "title": position.step.title,
+                    "status": position.step.status,
+                }
+                if position.step
+                else None
+            ),
+            "updated_at": position.updated_at.isoformat(),
+        }
+        for position in positions
+    ]
+
+
+def build_planning_reconciliation_summary() -> dict[str, Any]:
+    """
+    Return compact evidence for Planning bootstrap reconciliation.
+
+    The report distinguishes:
+
+    - historical lifecycle evidence;
+    - current execution conflicts;
+    - non-completed Initiative candidates;
+    - UI navigation state.
+
+    The full forensic snapshot remains available through
+    build_planning_reconciliation_snapshot().
+    """
+
+    projects = (
+        Project.objects
+        .select_related(
+            "assigned_to",
+            "created_by",
+        )
+        .prefetch_related(
+            "initiatives__assigned_to",
+            "initiatives__phases__assigned_to",
+            "initiatives__phases__steps__assigned_to",
+            "initiatives__phases__steps__time_entries",
+        )
+        .order_by(
+            "position",
+            "pk",
+        )
+    )
+
+    project_list = list(projects)
+
+    return {
+        "snapshot_type": "planning_reconciliation_summary",
+        "project_count": len(project_list),
+        "status_counts": _collect_status_counts(
+            project_list
+        ),
+        "legacy_completion_evidence": (
+            _collect_legacy_completion_counts(
+                project_list
+            )
+        ),
+        "execution_conflicts": (
+            _collect_execution_conflicts(
+                project_list
+            )
+        ),
+        "current_work_candidates": (
+            _collect_current_work_candidates(
+                project_list
+            )
+        ),
+        "navigation_state": (
+            _collect_navigation_state()
+        ),
+    }
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# END: PLANNING_RECONCILIATION_SUMMARY_SERVICE
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# START: PLANNING_INITIATIVE_RECONCILIATION_INSPECTION
+# ======================================================================
+
+def build_initiative_reconciliation_snapshot(
+    initiative_id: int,
+    *,
+    full: bool = False,
+) -> dict[str, Any]:
+    """Return bounded reconciliation evidence for one Initiative."""
+
+    project = (
+        Project.objects
+        .filter(
+            initiatives__pk=initiative_id,
+        )
+        .select_related(
+            "assigned_to",
+            "created_by",
+        )
+        .prefetch_related(
+            "initiatives__assigned_to",
+            "initiatives__created_by",
+            "initiatives__phases__assigned_to",
+            "initiatives__phases__created_by",
+            "initiatives__phases__steps__assigned_to",
+            "initiatives__phases__steps__created_by",
+            "initiatives__phases__steps__validated_by",
+            "initiatives__phases__steps__time_entries__user",
+        )
+        .first()
+    )
+
+    if project is None:
+        raise ValueError(
+            f"Initiative {initiative_id} does not exist."
+        )
+
+    initiative = (
+        project.initiatives
+        .filter(pk=initiative_id)
+        .first()
+    )
+
+    if initiative is None:
+        raise ValueError(
+            f"Initiative {initiative_id} does not exist."
+        )
+
+    if full:
+        return {
+            "snapshot_type": (
+                "planning_initiative_reconciliation_full"
+            ),
+            "project": {
+                "id": project.pk,
+                "slug": project.slug,
+                "title": project.title,
+                "status": project.status,
+            },
+            "initiative": _serialize_initiative(
+                initiative
+            ),
+        }
+
+    return {
+        "snapshot_type": (
+            "planning_initiative_reconciliation_summary"
+        ),
+        "project": {
+            "id": project.pk,
+            "slug": project.slug,
+            "title": project.title,
+        },
+        "initiative": {
+            "id": initiative.pk,
+            "title": initiative.title,
+            "status": initiative.status,
+            "assigned_to": _serialize_user(
+                initiative.assigned_to
+            ),
+            "phases": [
+                {
+                    "id": phase.pk,
+                    "title": phase.title,
+                    "status": phase.status,
+                    "assigned_to": _serialize_user(
+                        phase.assigned_to
+                    ),
+                    "steps": [
+                        {
+                            "id": step.pk,
+                            "title": step.title,
+                            "status": step.status,
+                        }
+                        for step in phase.steps.all().order_by(
+                            "position",
+                            "pk",
+                        )
+                    ],
+                }
+                for phase in initiative.phases.all().order_by(
+                    "position",
+                    "pk",
+                )
+            ],
+        },
+    }
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/services/reconciliation.py
+# END: PLANNING_INITIATIVE_RECONCILIATION_INSPECTION
 # ======================================================================
