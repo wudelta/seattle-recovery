@@ -29,6 +29,9 @@ from aurora.subsystems.planning.services.lifecycle.step import (
     complete_step,
     pause_step,
 )
+from aurora.subsystems.planning.services.lifecycle.orchestration import (
+    complete_step_and_evaluate_parents,
+)
 
 __all__ = [
     "PlanningLifecycleError",
@@ -49,6 +52,7 @@ __all__ = [
     "evaluate_initiative_completion",
     "reject_initiative_completion",
     "request_initiative_completion",
+    "complete_step_and_evaluate_parents",
 ]
 
 # ======================================================================

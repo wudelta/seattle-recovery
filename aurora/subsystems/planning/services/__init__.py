@@ -13,6 +13,7 @@ from aurora.subsystems.planning.services.lifecycle import (
     complete_initiative,
     complete_phase,
     complete_step,
+    complete_step_and_evaluate_parents,
     evaluate_initiative_completion,
     evaluate_phase_completion,
     pause_initiative,
@@ -55,6 +56,7 @@ __all__ = [
     "request_initiative_completion",
     "request_phase_completion",
     "start_step_work",
+    "complete_step_and_evaluate_parents",
 ]
 
 # ======================================================================
