@@ -224,7 +224,6 @@ class Phase(models.Model):
 # END: PHASE_MODEL
 # ======================================================================
 
-
 # ======================================================================
 # FILE: aurora/subsystems/planning/models.py
 # START: STEP_MODEL
@@ -307,6 +306,18 @@ class Step(models.Model):
         help_text="Observed validation results and supporting evidence.",
     )
 
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="completed_steps",
+        help_text=(
+            "Developer who completed this Step. "
+            "Historical attribution is independent of current Phase assignment."
+        ),
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -325,7 +336,6 @@ class Step(models.Model):
 # ======================================================================
 # END: STEP_MODEL
 # ======================================================================
-
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/models.py

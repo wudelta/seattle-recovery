@@ -51,97 +51,16 @@ function initWuChatConsole(endpoints, csrfToken) {
 
 // ======================================================================
 // FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
-// START: ENGINEERING_SESSION_WORKFLOW_STATUS
+// START: ENGINEERING_SESSION_INITIALIZATION
 // ======================================================================
-    const sessionManagementMessages = $(
-        '#wu-session-management-messages'
-    );
-
-    const engineeringSessionEndpoint =
-        '/aurora/api/engineering_session/';
-
-    function renderSessionWorkflowStatus(data) {
-        if (!sessionManagementMessages.length) {
-            return;
-        }
-
-        const workflow = data.workflow || {};
-        const planning = workflow.planning || {};
-        const deltaNotes = workflow.delta_notes || {};
-        const registry = workflow.component_registry || {};
-
-        sessionManagementMessages.empty();
-
-        const sessionText = data.active
-            ? '[SESSION] Engineering session active'
-            : '[SESSION] No active engineering session';
-
-        const planningText = planning.step
-            ? `[PLANNING] Active Step: ${planning.step}`
-            : '[PLANNING] Active Step: none selected';
-
-        const deltaNotesText =
-            `[DELTA NOTES] Unprocessed: ${
-                deltaNotes.unprocessed_count ?? 0
-            }`;
-
-        const registryText =
-            `[REGISTRY] Pending enrichment: ${
-                registry.pending_enrichment_count ?? 0
-            }`;
-
-        [
-            sessionText,
-            planningText,
-            deltaNotesText,
-            registryText,
-        ].forEach(function(message) {
-            sessionManagementMessages.append(
-                $('<div class="text-muted"></div>').text(
-                    message
-                )
-            );
-        });
+    if (
+        typeof window.initWuEngineeringSession ===
+        'function'
+    ) {
+        window.initWuEngineeringSession();
     }
-
-    function loadSessionWorkflowStatus() {
-        $.get(
-            engineeringSessionEndpoint,
-            function(data) {
-                if (data.status !== 'success') {
-                    return;
-                }
-
-                renderSessionWorkflowStatus(data);
-            }
-        ).fail(function(xhr) {
-            console.error(
-                '[Engineering Session] '
-                + 'Unable to load workflow status.',
-                xhr.responseText
-            );
-        });
-    }
-
-    $(document).on(
-        'aurora:view_changed',
-        function(event, viewMode) {
-            if (viewMode === 'wu_chat') {
-                loadSessionWorkflowStatus();
-            }
-        }
-    );
-
-    $(document).on(
-        'aurora:session_started aurora:session_stopped',
-        function() {
-            loadSessionWorkflowStatus();
-        }
-    );
-
-    loadSessionWorkflowStatus();
 // ======================================================================
-// END: ENGINEERING_SESSION_WORKFLOW_STATUS
+// END: ENGINEERING_SESSION_INITIALIZATION
 // ======================================================================
 
 // ======================================================================

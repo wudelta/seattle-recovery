@@ -1,9 +1,6 @@
 # ======================================================================
-
 # FILE: aurora/subsystems/delta_notes/contracts/HANSEL.md
-
 # START: DELTA_NOTES_HANSEL_CONTRACT
-
 # ======================================================================
 
 # Delta Notes — Hansel Catalogue
@@ -119,7 +116,5 @@ Do not add implementation detail to this catalogue.
 The objective is accurate navigation.
 
 # ======================================================================
-
 # END: DELTA_NOTES_HANSEL_CONTRACT
-
 # ======================================================================

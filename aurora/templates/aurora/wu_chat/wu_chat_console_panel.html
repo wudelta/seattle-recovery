@@ -1,18 +1,24 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
-<!-- START: WU_ORCHESTRATOR_CHAT_AND_REVIEW_WORKSPACE -->
+<!-- START: WU_WORKSPACE_SHELL_OPEN -->
 <!-- ====================================================================== -->
 <div
     class="d-flex flex-column h-100 w-100 position-relative"
     style="box-sizing: border-box; min-height: 0; overflow: hidden; background-color: #000000;"
 >
-    <!-- Primary Wu Chat and Session Operations Workspace -->
     <div
         class="d-flex flex-row flex-grow-1 gap-2 style-container"
         style="min-height: 0; padding-bottom: 4px;"
     >
+<!-- ====================================================================== -->
+<!-- END: WU_WORKSPACE_SHELL_OPEN -->
+<!-- ====================================================================== -->
 
-        <!-- LEFT PANEL: Interactive Message Log and Command Input Deck -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_CHAT_INPUT_DECK -->
+<!-- ====================================================================== -->
         <div
             class="d-flex flex-column h-100"
             style="width: 66.66%; min-width: 0; padding-right: 4px;"
@@ -52,100 +58,164 @@
                 </button>
             </div>
         </div>
+<!-- ====================================================================== -->
+<!-- END: WU_CHAT_INPUT_DECK -->
+<!-- ====================================================================== -->
 
-        <!-- RIGHT PANEL: Engineering Session Operations and Telemetry -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_RIGHT_OPERATIONS_COLUMN_OPEN -->
+<!-- ====================================================================== -->
         <div
             class="d-flex flex-column h-100 gap-2"
             style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;"
         >
+<!-- ====================================================================== -->
+<!-- END: WU_RIGHT_OPERATIONS_COLUMN_OPEN -->
+<!-- ====================================================================== -->
 
-            <!-- SESSION MANAGEMENT -->
-            <section
-                id="wu-session-management-panel"
-                class="d-flex flex-column flex-shrink-0"
-                style="height: 42%; min-height: 220px;"
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_SESSION_MANAGEMENT_PANEL -->
+<!-- ====================================================================== -->
+<section
+    id="wu-session-management-panel"
+    class="d-flex flex-column flex-shrink-0"
+    style="height: 42%; min-height: 220px;"
+>
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <span
+            class="text-uppercase font-weight-bold font-monospace text-info small"
+            style="letter-spacing: 1px;"
+        >
+            ⚙ Session Management
+        </span>
+    </div>
+
+    <div
+        id="wu-session-management-messages"
+        class="flex-grow-1 p-2 rounded mb-2"
+        style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
+    >
+        <div class="text-muted">
+            [SESSION] Waiting for active workflow state.
+        </div>
+
+        <div class="text-muted">
+            [PLANNING] Executable work: not loaded
+        </div>
+
+        <div class="text-muted">
+            [DELTA NOTES] Unprocessed: not loaded
+        </div>
+
+        <div class="text-muted">
+            [REGISTRY] Pending enrichment: not loaded
+        </div>
+    </div>
+
+    <div
+        id="wu-session-management-actions"
+        class="d-grid gap-1"
+        style="grid-template-columns: repeat(2, minmax(0, 1fr));"
+    >
+        <button
+            id="wu-start-step-work-btn"
+            type="button"
+            class="btn btn-outline-success btn-sm font-monospace"
+        >
+            Start Step Work
+        </button>
+
+        <button
+            id="wu-end-step-work-btn"
+            type="button"
+            class="btn btn-outline-warning btn-sm font-monospace"
+        >
+            End Step Work
+        </button>
+
+        <button
+            id="wu-complete-step-btn"
+            type="button"
+            class="btn btn-outline-primary btn-sm font-monospace"
+            disabled
+        >
+            Complete Step
+        </button>
+
+        <button
+            id="wu-process-delta-notes-btn"
+            type="button"
+            class="btn btn-outline-info btn-sm font-monospace"
+        >
+            Process Delta Notes
+        </button>
+
+        <button
+            id="wu-refresh-registry-btn"
+            type="button"
+            class="btn btn-outline-info btn-sm font-monospace"
+        >
+            Refresh Registry
+        </button>
+
+        <button
+            id="wu-enrich-registry-btn"
+            type="button"
+            class="btn btn-outline-primary btn-sm font-monospace"
+        >
+            Enrich Registry
+        </button>
+    </div>
+
+    <div
+        id="wu-planning-completion-review"
+        class="d-none mt-2 p-2 rounded"
+        style="
+            background-color: #050505;
+            border: 1px solid #3f3f46;
+        "
+    >
+        <div
+            id="wu-planning-completion-review-message"
+            class="text-warning font-monospace mb-2"
+            style="font-size: 0.78rem;"
+        ></div>
+
+        <div
+            class="d-grid gap-1"
+            style="grid-template-columns: repeat(2, minmax(0, 1fr));"
+        >
+            <button
+                id="wu-planning-completion-reject-btn"
+                type="button"
+                class="btn btn-outline-danger btn-sm font-monospace"
             >
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span
-                        class="text-uppercase font-weight-bold font-monospace text-info small"
-                        style="letter-spacing: 1px;"
-                    >
-                        ⚙ Session Management
-                    </span>
-                </div>
+                Reject
+            </button>
 
-                <!-- Session Messages / Current State -->
-                <div
-                    id="wu-session-management-messages"
-                    class="flex-grow-1 p-2 rounded mb-2"
-                    style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
-                >
-                    <div class="text-muted">
-                        [SESSION] Waiting for active workflow state.
-                    </div>
+            <button
+                id="wu-planning-completion-approve-btn"
+                type="button"
+                class="btn btn-outline-success btn-sm font-monospace"
+            >
+                Approve
+            </button>
+        </div>
+    </div>
+</section>
+<!-- ====================================================================== -->
+<!-- END: WU_SESSION_MANAGEMENT_PANEL -->
+<!-- ====================================================================== -->
 
-                    <div class="text-muted">
-                        [PLANNING] Active Step: not loaded
-                    </div>
 
-                    <div class="text-muted">
-                        [DELTA NOTES] Unprocessed: not loaded
-                    </div>
-
-                    <div class="text-muted">
-                        [REGISTRY] Pending enrichment: not loaded
-                    </div>
-                </div>
-
-                <!-- Manual Session Events -->
-                <div
-                    id="wu-session-management-actions"
-                    class="d-grid gap-1"
-                    style="grid-template-columns: repeat(2, minmax(0, 1fr));"
-                >
-                    <button
-                        id="wu-start-step-work-btn"
-                        type="button"
-                        class="btn btn-outline-success btn-sm font-monospace"
-                    >
-                        Start Step Work
-                    </button>
-
-                    <button
-                        id="wu-end-step-work-btn"
-                        type="button"
-                        class="btn btn-outline-warning btn-sm font-monospace"
-                    >
-                        End Step Work
-                    </button>
-
-                    <button
-                        id="wu-process-delta-notes-btn"
-                        type="button"
-                        class="btn btn-outline-info btn-sm font-monospace"
-                    >
-                        Process Delta Notes
-                    </button>
-
-                    <button
-                        id="wu-refresh-registry-btn"
-                        type="button"
-                        class="btn btn-outline-info btn-sm font-monospace"
-                    >
-                        Refresh Registry
-                    </button>
-
-                    <button
-                        id="wu-enrich-registry-btn"
-                        type="button"
-                        class="btn btn-outline-primary btn-sm font-monospace"
-                    >
-                        Enrich Registry
-                    </button>
-                </div>
-            </section>
-
-            <!-- TELEMETRY -->
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_TELEMETRY_STREAM -->
+<!-- ====================================================================== -->
             <section
                 class="d-flex flex-column flex-grow-1"
                 style="min-height: 0;"
@@ -177,10 +247,26 @@
                     </div>
                 </div>
             </section>
+<!-- ====================================================================== -->
+<!-- END: WU_TELEMETRY_STREAM -->
+<!-- ====================================================================== -->
+
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_PRIMARY_WORKSPACE_CLOSE -->
+<!-- ====================================================================== -->
         </div>
     </div>
+<!-- ====================================================================== -->
+<!-- END: WU_PRIMARY_WORKSPACE_CLOSE -->
+<!-- ====================================================================== -->
 
-    <!-- Wu-Specific Code Review Slider: Hidden beyond the right edge by default -->
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_CODE_REVIEW_SLIDER -->
+<!-- ====================================================================== -->
     <section
         id="wu-code-review-slider"
         class="position-absolute top-0 h-100 d-flex flex-column"
@@ -282,7 +368,16 @@
             </button>
         </footer>
     </section>
+<!-- ====================================================================== -->
+<!-- END: WU_CODE_REVIEW_SLIDER -->
+<!-- ====================================================================== -->
+
+
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
+<!-- START: WU_WORKSPACE_SHELL_CLOSE -->
+<!-- ====================================================================== -->
 </div>
 <!-- ====================================================================== -->
-<!-- END: WU_ORCHESTRATOR_CHAT_AND_REVIEW_WORKSPACE (PATCH 1 OF 1) -->
+<!-- END: WU_WORKSPACE_SHELL_CLOSE -->
 <!-- ====================================================================== -->

@@ -133,6 +133,17 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }
     });
 
+    // Cross-subsystem synchronization:
+    // another workflow changed Delta Notes persistence.
+    $(document)
+        .off('aurora:delta_notes_changed.delta_notes')
+        .on(
+            'aurora:delta_notes_changed.delta_notes',
+            function() {
+                loadActiveQueue();
+            }
+        );
+        
     // Initial console populate execution pass
     loadActiveQueue();
 }

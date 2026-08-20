@@ -109,17 +109,38 @@ Do not perform broad repository discovery merely to accumulate context.
 
 ## When a Breadcrumb Fails
 
-If a catalogue does not cover the task:
+A breadcrumb that does not resolve is a Hansel defect.
+
+A breadcrumb is broken when its referenced authority:
+
+- does not exist;
+- cannot be resolved;
+- no longer owns the stated responsibility;
+- or routes the worker to stale or non-authoritative knowledge.
+
+When a broken breadcrumb is encountered:
+
+1. stop treating that breadcrumb as authoritative;
+2. perform the narrowest discovery necessary to recover the durable authority;
+3. continue the immediate task only with evidence from that recovered authority;
+4. repair or replace the broken breadcrumb;
+5. if the breadcrumb correctly names a durable contract that is missing, create
+   that contract;
+6. validate that the repaired breadcrumb resolves;
+7. do not consider the task complete while a known broken breadcrumb remains.
+
+Do not merely work around a broken breadcrumb and leave it for another worker
+to rediscover.
+
+If a catalogue does not contain a breadcrumb for the task at all:
 
 1. do not invent ownership, behavior, or architecture;
 2. inspect the narrowest likely authority;
 3. follow cross-boundary dependencies only when the task requires them;
 4. request additional repository evidence when necessary;
-5. identify missing or stale Hansel routing as a discovery defect.
-
-A new breadcrumb should be added only when it represents a durable route that a
-future worker should not have to rediscover.
-
+5. add a new breadcrumb only when discovery reveals a durable route that a
+   future worker should not have to rediscover.
+   
 ---
 
 ## Cross-Boundary Work
