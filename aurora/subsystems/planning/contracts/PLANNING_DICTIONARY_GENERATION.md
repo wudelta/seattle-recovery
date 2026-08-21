@@ -166,6 +166,51 @@ An Initiative should not describe implementation details.
 
 Normally an Initiative contains multiple independently verifiable Phases.
 
+## Active Initiative Decision
+
+A developer may have at most one current `ACTIVE` Initiative.
+
+Before generating a new Initiative with:
+
+```python
+"status": "ACTIVE",
+```
+
+inspect current Planning lifecycle state for the target developer.
+
+If no Initiative is currently `ACTIVE`, the new Initiative may be proposed as
+`ACTIVE` when that matches the architectural discussion.
+
+If another Initiative is already `ACTIVE`, do not silently pause it and do not
+emit a conflicting planning dictionary.
+
+Request one human decision:
+
+```text
+Keep the existing Initiative ACTIVE
+    → generate the new Initiative as PLANNED
+
+Activate the new Initiative
+    → resolve the existing Initiative through Planning lifecycle authority
+    → then generate/apply the new Initiative as ACTIVE
+```
+
+The authoritative lifecycle contract is:
+
+```text
+aurora/subsystems/planning/contracts/
+LIFECYCLE_AND_RECONCILIATION.md
+```
+
+The authoritative Initiative transition service is:
+
+```text
+aurora/subsystems/planning/services/lifecycle/initiative.py
+```
+
+The importer must reject a dictionary that would create a second concurrent
+`ACTIVE` Initiative for the importing developer.
+
 ---
 
 # Phase Design
@@ -608,21 +653,24 @@ Given an architectural discussion:
 2. Determine whether the Project exists in the Decision Engine.
 3. If it does not exist, define one `add_projects` record.
 4. Identify one durable Initiative outcome.
-5. Divide the Initiative into independently verifiable Phases.
-6. Divide each Phase into bounded Steps.
-7. Preserve relevant technical design, dependencies, assumptions, and
+5. Inspect the target developer's current ACTIVE Initiative state.
+6. If the new Initiative should be ACTIVE and another Initiative is already
+   ACTIVE, request the human lifecycle decision before generating the dictionary.
+7. Divide the Initiative into independently verifiable Phases.
+8. Divide each Phase into bounded Steps.
+9. Preserve relevant technical design, dependencies, assumptions, and
    discussion within each Step document.
-8. Add planned repository files only when the paths are supported by the
-   discussion or repository evidence.
-9. Define deterministic validation for every Step.
-10. Assign reasonable estimates, confidence, and risk.
-11. Generate one Python-literal planning dictionary.
-12. Run dry-run validation.
-13. Correct every validation error.
-14. Apply only after successful validation.
-15. Inspect the resulting hierarchy and supporting Step records.
-16. Commit the Initiative source, contract changes, template changes, schema
-   changes, updater changes, command changes, and validated reference import.
+10. Add planned repository files only when the paths are supported by the
+    discussion or repository evidence.
+11. Define deterministic validation for every Step.
+12. Assign reasonable estimates, confidence, and risk.
+13. Generate one Python-literal planning dictionary.
+14. Run dry-run validation.
+15. Correct every validation error.
+16. Apply only after successful validation.
+17. Inspect the resulting hierarchy and supporting Step records.
+18. Commit the Initiative source, contract changes, template changes, schema
+    changes, updater changes, command changes, and validated reference import.
 
 ---
 

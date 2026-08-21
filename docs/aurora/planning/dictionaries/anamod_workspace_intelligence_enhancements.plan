@@ -1,0 +1,681 @@
+{
+    "schema_version": 1,
+
+    "target": {
+        "project_slug": "aurora",
+    },
+
+    "add_projects": [],
+
+    "add_initiatives": [
+        {
+            "title": "Anamod Workspace Intelligence Enhancements",
+            "description": (
+                "Enhance Anamod's repository workspace with a supervised "
+                "Load/Create file workflow, active-file Component Registry "
+                "context, and reusable Component Registry maintenance and "
+                "enrichment controls while preserving subsystem ownership "
+                "boundaries and deterministic user feedback."
+            ),
+            "status": "ACTIVE",
+            "phases": [
+                {
+                    "title": "Load/Create Workspace Flow",
+                    "description": (
+                        "Make repository-relative file loading explicit and "
+                        "safe by distinguishing existing files from missing "
+                        "files, supervising creation, and synchronizing the "
+                        "Project Hierarchy with the active file."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Enforce bounded Anamod workspace paths",
+                            "description": (
+                                "Strengthen Anamod workspace path normalization "
+                                "so repository-relative file operations cannot "
+                                "escape the configured /app workspace while "
+                                "preserving valid existing file operations."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 45,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Path-containment changes affect every Anamod "
+                                "workspace mutation and must not reject valid "
+                                "repository-relative paths."
+                            ),
+                            "validation_description": (
+                                "Valid repository-relative paths continue to "
+                                "read and create files, while traversal or "
+                                "otherwise escaping paths are rejected before "
+                                "filesystem access outside /app occurs."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Harden normalize_workspace_path() or its "
+                                    "immediate workspace-service boundary so "
+                                    "the resolved path is contained by "
+                                    "WORKSPACE_ROOT before read, create, update, "
+                                    "rename, or delete operations proceed."
+                                ),
+                                "dependencies": (
+                                    "Anamod workspace_service.py and its "
+                                    "WorkspaceOperationError HTTP adaptation."
+                                ),
+                                "assumptions": (
+                                    "WORKSPACE_ROOT remains /app and valid "
+                                    "Anamod paths are repository-relative."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The requested Load/Create feature accepts "
+                                    "typed paths. Existing source explicitly "
+                                    "states that containment is not yet "
+                                    "enforced, making this a safety prerequisite "
+                                    "for supervised file creation."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Valid paths remain functional and paths "
+                                    "resolving outside /app are deterministically "
+                                    "rejected."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/subsystems/anamod/services/"
+                                        "workspace_service.py"
+                                    ),
+                                    "reason": (
+                                        "Owns Anamod workspace path "
+                                        "normalization and filesystem mutations."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                        {
+                            "title": "Implement supervised Load/Create behavior",
+                            "description": (
+                                "Replace the Load File interaction with a "
+                                "Load/Create workflow that loads existing files, "
+                                "offers creation only for a true not-found "
+                                "response, creates a blank file on approval, "
+                                "and cancels without mutation."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "An existing path loads normally; a missing path "
+                                "produces an explicit Create/Cancel decision; "
+                                "Create writes and loads a blank file; Cancel "
+                                "creates nothing; and non-404 API failures remain "
+                                "errors rather than creation prompts."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Reuse GET /aurora/api/files/op/ to detect "
+                                    "existence and POST to the same authority "
+                                    "with type=file and empty content for "
+                                    "approved creation. Treat only HTTP 404 as "
+                                    "the missing-file creation case."
+                                ),
+                                "dependencies": (
+                                    "window.loadWorkspaceFile(), the Load File "
+                                    "form in anamod_workspace.js, "
+                                    "file_operation_api(), read_workspace_file(), "
+                                    "and create_workspace_node()."
+                                ),
+                                "assumptions": (
+                                    "The existing API preserves 404 for missing "
+                                    "reads and 409 for create collisions."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The current loader fails into the "
+                                    "Operational Pipeline Log Feed. The desired "
+                                    "workflow must explicitly supervise creation "
+                                    "instead of silently treating every load "
+                                    "failure the same."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Existing, missing-created, missing-cancelled, "
+                                    "and non-404 failure cases each produce the "
+                                    "specified observable behavior."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/templates/aurora/anamod/"
+                                        "anamod_console_panel.html"
+                                    ),
+                                    "reason": (
+                                        "Owns the Load/Create control label and "
+                                        "any confirmation UI surface."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod_workspace.js"
+                                    ),
+                                    "reason": (
+                                        "Owns the repository-relative Load File "
+                                        "form and tree workspace interaction."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod.js"
+                                    ),
+                                    "reason": (
+                                        "Owns loading file contents into Monaco "
+                                        "and active-file state."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                        {
+                            "title": "Refresh and reveal the loaded or created file",
+                            "description": (
+                                "Generalize the existing Project Hierarchy "
+                                "refresh/focus behavior so a typed file path can "
+                                "be revealed after either loading an existing "
+                                "file or creating a new blank file."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "The current focus helper depends on a known "
+                                "parent jsTree node ID, which arbitrary typed "
+                                "paths do not provide."
+                            ),
+                            "validation_description": (
+                                "After Load/Create succeeds, Project Hierarchy "
+                                "refreshes, the relevant parent path is expanded, "
+                                "the target file is selected and visible in the "
+                                "tree, and the same file is active in Monaco."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Reuse and generalize "
+                                    "refreshAndFocusWorkspaceNode() so it can "
+                                    "resolve the tree route from the target path "
+                                    "rather than requiring only a previously "
+                                    "selected parent node ID."
+                                ),
+                                "dependencies": (
+                                    "jsTree data paths, refreshWorkspaceTree(), "
+                                    "refreshAndFocusWorkspaceNode(), and "
+                                    "window.loadWorkspaceFile()."
+                                ),
+                                "assumptions": (
+                                    "Workspace tree nodes continue to expose "
+                                    "their filesystem path through node.data.path."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The context-menu create workflow already "
+                                    "refreshes and focuses a new file. The typed "
+                                    "Load/Create workflow should reuse that "
+                                    "behavior rather than create a second tree "
+                                    "synchronization mechanism."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Both existing-file load and approved "
+                                    "missing-file creation leave Project "
+                                    "Hierarchy expanded and focused on the same "
+                                    "file shown in Monaco."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod_workspace.js"
+                                    ),
+                                    "reason": (
+                                        "Owns Project Hierarchy refresh, "
+                                        "selection, expansion, and Load/Create "
+                                        "form behavior."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                    ],
+                },
+                {
+                    "title": "Active File Component Registry Context",
+                    "description": (
+                        "Expose Component Registry knowledge for Anamod's active "
+                        "file through a Component Registry-owned lookup boundary "
+                        "and a dedicated read-only description viewport."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Establish a Component Registry file-path lookup boundary",
+                            "description": (
+                                "Create the smallest Component Registry-owned "
+                                "read interface that resolves one registry "
+                                "record by repository-relative file_path and "
+                                "returns the description and analysis state "
+                                "needed by Anamod."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "A known registered file_path returns its "
+                                "Component Registry description and analysis "
+                                "status; an unknown path returns an explicit "
+                                "not-found result without exposing unrelated "
+                                "records."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Keep lookup ownership inside Component "
+                                    "Registry. Reuse the model's unique indexed "
+                                    "file_path and primary description field. "
+                                    "Choose the final service/API destination "
+                                    "from current Component Registry structure "
+                                    "during implementation rather than inventing "
+                                    "a path during planning."
+                                ),
+                                "dependencies": (
+                                    "ComponentRegistry.file_path, description, "
+                                    "analysis_status, and the established Django "
+                                    "admin lookup/presentation precedent."
+                                ),
+                                "assumptions": (
+                                    "Anamod needs the unified description field, "
+                                    "not the richer audience-specific documents."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "No reusable browser/API lookup by file_path "
+                                    "was found. Django admin already establishes "
+                                    "file_path and description as searchable "
+                                    "human-facing Component Registry fields."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "The new Component Registry-owned interface "
+                                    "returns only the requested file's registry "
+                                    "summary state and handles absent records "
+                                    "explicitly."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [],
+                            "actual_files": [],
+                        },
+                        {
+                            "title": "Add the active-file registry description viewport",
+                            "description": (
+                                "Add a Component Registry Description viewport "
+                                "between Workflow Controls and Operational "
+                                "Pipeline Log Feed and synchronize it with the "
+                                "currently active Anamod file."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 60,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "Selecting or loading a registered file displays "
+                                "its Component Registry description; pending, "
+                                "unavailable, unregistered, and no-active-file "
+                                "states display explicit messages; switching "
+                                "files updates the viewport to the new active "
+                                "file."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Add a read-only viewport in Anamod's right "
+                                    "column and request registry context whenever "
+                                    "currentFilePath changes successfully."
+                                ),
+                                "dependencies": (
+                                    "Anamod active-file state, the Component "
+                                    "Registry file-path lookup boundary, and the "
+                                    "existing right-column layout."
+                                ),
+                                "assumptions": (
+                                    "The description viewport is informational "
+                                    "and does not edit Component Registry data."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The requested placement is Workflow "
+                                    "Controls, then Component Registry "
+                                    "Description, then Operational Pipeline Log "
+                                    "Feed."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "The viewport always reflects the active "
+                                    "file's current Component Registry description "
+                                    "state and never retains stale context from a "
+                                    "previous file."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/templates/aurora/anamod/"
+                                        "anamod_console_panel.html"
+                                    ),
+                                    "reason": (
+                                        "Owns the right-column viewport layout."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod.js"
+                                    ),
+                                    "reason": (
+                                        "Owns active-file state and successful "
+                                        "file loading."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod_workspace.js"
+                                    ),
+                                    "reason": (
+                                        "Owns typed Load/Create and Project "
+                                        "Hierarchy selection routes that activate "
+                                        "files."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                    ],
+                },
+                {
+                    "title": "Component Registry Workflow Controls",
+                    "description": (
+                        "Make deterministic registry maintenance and AI "
+                        "enrichment available from Anamod while preserving "
+                        "Component Registry ownership and streaming operational "
+                        "progress through Aurora's shared telemetry transport."
+                    ),
+                    "status": "PLANNED",
+                    "steps": [
+                        {
+                            "title": "Expose reusable Component Registry maintenance operations",
+                            "description": (
+                                "Provide Anamod with a non-session-specific "
+                                "backend boundary for deterministic Component "
+                                "Registry refresh and AI enrichment using the "
+                                "existing maintenance and documenter services."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 75,
+                            "estimate_confidence": "MEDIUM",
+                            "risk_level": "MEDIUM",
+                            "risk_description": (
+                                "Wu Chat currently coordinates these operations "
+                                "through Engineering Session; Anamod should not "
+                                "depend on a session-specific API or duplicate "
+                                "Component Registry domain logic."
+                            ),
+                            "validation_description": (
+                                "The reusable backend boundary invokes "
+                                "ComponentRegistryMaintenance.refresh() and "
+                                "ComponentRegistryDocumenter.analyze_pending("
+                                "apply=True) without shelling out to management "
+                                "commands, and enrichment progress reaches the "
+                                "shared telemetry transport."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Reuse Component Registry-owned services and "
+                                    "aurora.utils.telemetry_stream. Establish the "
+                                    "smallest reusable HTTP/service boundary "
+                                    "appropriate to current Component Registry "
+                                    "structure during implementation."
+                                ),
+                                "dependencies": (
+                                    "ComponentRegistryMaintenance, "
+                                    "ComponentRegistryDocumenter, "
+                                    "async_send_to_console, and the proven Wu "
+                                    "Chat coordination behavior as precedent."
+                                ),
+                                "assumptions": (
+                                    "Anamod controls should work independently "
+                                    "of an active Engineering Session."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The same Refresh Registry and Enrich "
+                                    "Registry capabilities already work in Wu "
+                                    "Chat, but their current HTTP orchestration "
+                                    "is session-specific."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Both operations can be invoked through the "
+                                    "reusable boundary, preserve Component "
+                                    "Registry ownership, and emit detailed "
+                                    "operational progress through shared telemetry."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [],
+                            "actual_files": [],
+                        },
+                        {
+                            "title": "Add Refresh Registry and Enrich Registry controls to Anamod",
+                            "description": (
+                                "Add Refresh Registry and Enrich Registry buttons "
+                                "to Anamod Workflow Controls using the reusable "
+                                "Component Registry operations and existing "
+                                "Operational Pipeline Log Feed for detailed "
+                                "progress."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 45,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "Refresh Registry updates deterministic registry "
+                                "state from Anamod; Enrich Registry processes the "
+                                "pending queue; controls disable appropriately "
+                                "while running; and detailed progress is visible "
+                                "in Anamod's Operational Pipeline Log Feed."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Follow the proven Wu Chat user interaction "
+                                    "pattern while consuming the reusable "
+                                    "Component Registry backend boundary instead "
+                                    "of Engineering Session-specific actions."
+                                ),
+                                "dependencies": (
+                                    "Anamod Workflow Controls, shared telemetry, "
+                                    "and the reusable Component Registry operation "
+                                    "boundary established by the prior Step."
+                                ),
+                                "assumptions": (
+                                    "The existing Anamod operational log remains "
+                                    "the appropriate detailed feedback surface."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "The requested controls should behave like "
+                                    "the validated Wu Chat Refresh Registry and "
+                                    "Enrich Registry controls."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Both buttons complete their respective "
+                                    "registry workflows from Anamod and produce "
+                                    "observable progress and completion feedback."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/templates/aurora/anamod/"
+                                        "anamod_console_panel.html"
+                                    ),
+                                    "reason": (
+                                        "Owns Anamod Workflow Controls."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod.js"
+                                    ),
+                                    "reason": (
+                                        "Owns Anamod operational-log behavior "
+                                        "and action-side browser coordination."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                        {
+                            "title": "Reconcile Anamod Hansel and UI routing",
+                            "description": (
+                                "Repair Anamod's durable repository knowledge so "
+                                "future workers are routed to the actual workspace "
+                                "controller, correct JavaScript paths, and the "
+                                "new Component Registry integration authorities."
+                            ),
+                            "status": "PLANNED",
+                            "estimated_minutes": 30,
+                            "estimate_confidence": "HIGH",
+                            "risk_level": "LOW",
+                            "risk_description": "",
+                            "validation_description": (
+                                "Anamod HANSEL.md and UI_MAP.md resolve to real "
+                                "authoritative files, including "
+                                "anamod_workspace.js; stale FILE anchors are "
+                                "corrected; and no known broken Anamod breadcrumb "
+                                "remains."
+                            ),
+                            "document": {
+                                "technical_design": (
+                                    "Update only durable routing knowledge and "
+                                    "source anchors discovered to be stale during "
+                                    "this Initiative."
+                                ),
+                                "dependencies": (
+                                    "Anamod HANSEL.md, UI_MAP.md, and the real "
+                                    "filesystem locations of Anamod JavaScript "
+                                    "authorities."
+                                ),
+                                "assumptions": (
+                                    "Hansel remains an index rather than an "
+                                    "implementation encyclopedia."
+                                ),
+                                "implementation_notes": "",
+                                "discussion": (
+                                    "This planning test found a corrupted Anamod "
+                                    "HANSEL.md, an incomplete UI map, and stale "
+                                    "FILE anchors. The corrupted HANSEL.md itself "
+                                    "was repaired immediately because it blocked "
+                                    "the trail; remaining durable routing defects "
+                                    "belong in this Initiative."
+                                ),
+                            },
+                            "validation": {
+                                "description": (
+                                    "Every changed Anamod breadcrumb and FILE "
+                                    "anchor agrees with the actual repository "
+                                    "authority and resolves without fallback "
+                                    "discovery."
+                                ),
+                                "notes": "",
+                            },
+                            "planned_files": [
+                                {
+                                    "file_path": (
+                                        "aurora/subsystems/anamod/contracts/"
+                                        "HANSEL.md"
+                                    ),
+                                    "reason": (
+                                        "Canonical Anamod discovery entry point."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/subsystems/anamod/contracts/"
+                                        "UI_MAP.md"
+                                    ),
+                                    "reason": (
+                                        "Must route workspace-tree behavior to "
+                                        "anamod_workspace.js and preserve current "
+                                        "UI authorities."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod.js"
+                                    ),
+                                    "reason": (
+                                        "Its FILE anchor was discovered stale."
+                                    ),
+                                },
+                                {
+                                    "file_path": (
+                                        "aurora/static/aurora/js/anamod/"
+                                        "anamod_workspace.js"
+                                    ),
+                                    "reason": (
+                                        "Its FILE anchor was discovered stale and "
+                                        "it is a durable UI authority missing from "
+                                        "the current UI map."
+                                    ),
+                                },
+                            ],
+                            "actual_files": [],
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+
+    "add_phases": [],
+
+    "add_steps": [],
+}

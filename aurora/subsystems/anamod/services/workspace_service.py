@@ -50,18 +50,52 @@ class WorkspaceOperationError(Exception):
 
 def normalize_workspace_path(file_path: str) -> str:
     """
-    Convert a repository-relative path into the current /app-based form.
+    Resolve one Anamod workspace path and enforce containment inside /app.
 
-    This preserves existing behavior. It does not yet enforce containment
-    inside WORKSPACE_ROOT.
+    Accept both repository-relative paths and the existing /app-prefixed form.
+    Reject paths whose resolved filesystem location escapes WORKSPACE_ROOT.
     """
-    if file_path.startswith(f"{WORKSPACE_ROOT}/"):
-        return file_path
+    if not isinstance(file_path, str) or not file_path.strip():
+        raise WorkspaceOperationError(
+            "A non-empty workspace path is required.",
+            400,
+        )
 
-    return os.path.join(
-        WORKSPACE_ROOT,
-        file_path.lstrip("/"),
-    )
+    requested_path = file_path.strip()
+
+    if requested_path == WORKSPACE_ROOT:
+        candidate_path = WORKSPACE_ROOT
+    elif requested_path.startswith(f"{WORKSPACE_ROOT}/"):
+        candidate_path = requested_path
+    else:
+        candidate_path = os.path.join(
+            WORKSPACE_ROOT,
+            requested_path.lstrip("/"),
+        )
+
+    workspace_root = os.path.realpath(WORKSPACE_ROOT)
+    resolved_path = os.path.realpath(candidate_path)
+
+    try:
+        common_path = os.path.commonpath(
+            [
+                workspace_root,
+                resolved_path,
+            ]
+        )
+    except ValueError as exc:
+        raise WorkspaceOperationError(
+            "Workspace path is outside the configured repository root.",
+            400,
+        ) from exc
+
+    if common_path != workspace_root:
+        raise WorkspaceOperationError(
+            "Workspace path is outside the configured repository root.",
+            400,
+        )
+
+    return resolved_path
 
 
 def build_file_tree(path: str = WORKSPACE_ROOT) -> dict[str, Any] | None:

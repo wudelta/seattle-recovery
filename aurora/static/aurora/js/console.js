@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/console.js (PATCH 1 OF 2)
+// FILE: aurora/static/aurora/js/console.js
 // START: SYSTEM_ASSET_REFERENCE_INTEGRITY_ALIGNMENT
 // ======================================================================
 $(document).ready(function() {
@@ -100,12 +100,12 @@ $(document).ready(function() {
         }
     });
 // ======================================================================
-// END: SYSTEM_ASSET_REFERENCE_INTEGRITY_ALIGNMENT (PATCH 1 OF 2)
+// END: SYSTEM_ASSET_REFERENCE_INTEGRITY_ALIGNMENT
 // ======================================================================
 
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/console.js (PATCH 2 OF 2)
+// FILE: aurora/static/aurora/js/console.js
 // START: SESSION_LIFE_CYCLE_GATEKEEPER
 // ======================================================================
     /**
@@ -203,6 +203,11 @@ $(document).ready(function() {
         telemetrySocket.onmessage = function(event) {
             const payload = JSON.parse(event.data);
             const msg = payload.message;
+
+            $(document).trigger(
+                'aurora:telemetry_stream',
+                [msg]
+            );
 
             const $screens = $(
                 '#telemetry-screen-output, '
@@ -449,5 +454,5 @@ $(document).ready(function() {
     );
 });
 // ======================================================================
-// END: SESSION_LIFE_CYCLE_GATEKEEPER (PATCH 2 OF 2)
+// END: SESSION_LIFE_CYCLE_GATEKEEPER
 // ======================================================================

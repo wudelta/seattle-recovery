@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Max
 
 from aurora.models import (
+    ExecutionStatus,
     Initiative,
     Phase,
     Project,
@@ -68,7 +69,11 @@ def update_planning_document(
             project_slug,
             normalized,
         )
-        _validate_database_targets(project, normalized)
+        _validate_database_targets(
+            project,
+            normalized,
+            user=user,
+        )
         return result
 
     try:
@@ -81,6 +86,7 @@ def update_planning_document(
             context = _validate_database_targets(
                 project,
                 normalized,
+                user=user,
             )
             _apply_update(
                 project=project,
@@ -179,7 +185,45 @@ def _build_unsaved_project(
 def _validate_database_targets(
     project: Project,
     normalized: dict[str, Any],
+    *,
+    user: User,
 ) -> dict[str, Any]:
+    active_initiative_additions = [
+        initiative_data["title"]
+        for initiative_data in normalized["add_initiatives"]
+        if initiative_data["status"] == ExecutionStatus.ACTIVE
+    ]
+
+    if len(active_initiative_additions) > 1:
+        raise PlanningImportError(
+            "A planning dictionary may not create more than one ACTIVE "
+            "Initiative for the importing developer."
+        )
+
+    if active_initiative_additions:
+        existing_active = (
+            Initiative.objects
+            .filter(
+                assigned_to=user,
+                status=ExecutionStatus.ACTIVE,
+            )
+            .order_by(
+                "project__position",
+                "position",
+                "pk",
+            )
+            .first()
+        )
+
+        if existing_active is not None:
+            raise PlanningImportError(
+                f'Planning update requests ACTIVE Initiative '
+                f'"{active_initiative_additions[0]}", but '
+                f'"{existing_active.title}" is already ACTIVE for '
+                f'{user.username}. Resolve Initiative lifecycle state '
+                "before applying this dictionary."
+            )
+
     initiatives = {
         initiative.title: initiative
         for initiative in Initiative.objects.filter(project=project)

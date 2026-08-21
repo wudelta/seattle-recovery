@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 1 OF 4)
+// FILE: aurora/static/aurora/js/anamod/anamod.js (PATCH 1 OF 4)
 // START: ANAMOD_CORE_BASE_AND_INITIALIZATION
 // ======================================================================
 (function(window) {
@@ -17,6 +17,336 @@
                 $term.scrollTop(0);
             }
         };
+
+        function setComponentRegistryDescription(
+            message,
+            className
+        ) {
+            const $viewport =
+                $('#anamod-component-registry-description');
+
+            if (!$viewport.length) {
+                return;
+            }
+
+            $viewport
+                .removeClass(
+                    'text-muted text-info text-warning ' +
+                    'text-danger text-success'
+                )
+                .addClass(className || 'text-muted')
+                .text(message);
+        }
+
+        function normalizeRegistryFilePath(filePath) {
+            return (
+                filePath || ''
+            )
+                .trim()
+                .replace(/^\/app\/?/, '')
+                .replace(/^app\/?/, '')
+                .replace(/^\/+/, '');
+        }
+
+        function loadComponentRegistryDescription(filePath) {
+            const normalizedPath =
+                normalizeRegistryFilePath(filePath);
+
+            if (!normalizedPath) {
+                setComponentRegistryDescription(
+                    'No active file selected.',
+                    'text-muted'
+                );
+                return;
+            }
+
+            setComponentRegistryDescription(
+                'Loading Component Registry context...',
+                'text-muted'
+            );
+
+            $.ajax({
+                url: '/aurora/api/component_registry/',
+                type: 'GET',
+                data: {
+                    file_path: normalizedPath
+                },
+                success: function(response) {
+                    const component =
+                        response.component || {};
+
+                    if (
+                        component.description_is_current &&
+                        component.description
+                    ) {
+                        setComponentRegistryDescription(
+                            component.description,
+                            'text-info'
+                        );
+                        return;
+                    }
+
+                    if (component.freshness_message) {
+                        setComponentRegistryDescription(
+                            component.freshness_message,
+                            (
+                                component.analysis_status ===
+                                'FAILED'
+                            )
+                                ? 'text-danger'
+                                : 'text-warning'
+                        );
+                        return;
+                    }
+
+                    if (
+                        component.analysis_status ===
+                        'PENDING'
+                    ) {
+                        setComponentRegistryDescription(
+                            'Component Registry description is ' +
+                            'pending enrichment.',
+                            'text-warning'
+                        );
+                        return;
+                    }
+
+                    if (
+                        component.analysis_status ===
+                        'FAILED'
+                    ) {
+                        setComponentRegistryDescription(
+                            'Component Registry enrichment failed; ' +
+                            'no current description is available.',
+                            'text-danger'
+                        );
+                        return;
+                    }
+
+                    setComponentRegistryDescription(
+                        'No current Component Registry ' +
+                        'description is available for this file.',
+                        'text-muted'
+                    );
+                },
+                error: function(xhr) {
+                    if (xhr.status === 404) {
+                        setComponentRegistryDescription(
+                            'No Component Registry record exists ' +
+                            'for this file.',
+                            'text-muted'
+                        );
+                        return;
+                    }
+
+                    const message = (
+                        xhr.responseJSON &&
+                        (
+                            xhr.responseJSON.message ||
+                            xhr.responseJSON.error
+                        )
+                    )
+                        ? (
+                            xhr.responseJSON.message ||
+                            xhr.responseJSON.error
+                        )
+                        : xhr.statusText;
+
+                    setComponentRegistryDescription(
+                        'Component Registry lookup failed: ' +
+                        message,
+                        'text-danger'
+                    );
+                }
+            });
+        }
+
+        function setAnamodActivity(
+            message,
+            className
+        ) {
+            const $activity =
+                $('#anamod-session-activity');
+
+            if (!$activity.length) {
+                return;
+            }
+
+            $activity
+                .removeClass(
+                    'text-muted text-info text-warning ' +
+                    'text-danger text-success'
+                )
+                .addClass(className || 'text-muted')
+                .text(message);
+        }
+
+        function isAnamodRegistryTelemetry(messageChunk) {
+            const message = String(
+                messageChunk || ''
+            ).trimStart();
+
+            return (
+                message.startsWith('[REGISTRY]') ||
+                message.startsWith('[REGISTRY ERROR]') ||
+                message.startsWith('[REGISTRY REVIEW]') ||
+                message.startsWith('[REGISTRY FAILURE]') ||
+                message.startsWith('Summary:')
+            );
+        }
+
+        $(document)
+            .off(
+                'aurora:telemetry_stream.anamod'
+            )
+            .on(
+                'aurora:telemetry_stream.anamod',
+                function(event, messageChunk) {
+                    if (
+                        !isAnamodRegistryTelemetry(
+                            messageChunk
+                        )
+                    ) {
+                        return;
+                    }
+
+                    const message =
+                        String(messageChunk || '');
+
+                    window.updateAnamodTerminal(
+                        message.endsWith('\n')
+                            ? message
+                            : message + '\n'
+                    );
+                }
+            );
+
+        function setRegistryActionButtonsDisabled(disabled) {
+            $('#anamod-refresh-registry-btn')
+                .prop('disabled', disabled);
+
+            $('#anamod-enrich-registry-btn')
+                .prop('disabled', disabled);
+        }
+
+        function runComponentRegistryAction(action) {
+            setRegistryActionButtonsDisabled(true);
+
+            const isRefresh =
+                action === 'refresh';
+
+            const actionLabel = (
+                isRefresh
+                    ? 'Refreshing Component Registry...'
+                    : 'Enriching Component Registry...'
+            );
+
+            setAnamodActivity(
+                actionLabel,
+                'text-info'
+            );
+
+            $.ajax({
+                url: '/aurora/api/component_registry/',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken':
+                        window.csrfToken ||
+                        $('[name=csrfmiddlewaretoken]').val() ||
+                        ''
+                },
+                data: JSON.stringify({
+                    action: action
+                }),
+                success: function(response) {
+                    setAnamodActivity(
+                        response.message,
+                        'text-success'
+                    );
+
+                    if (currentFilePath) {
+                        loadComponentRegistryDescription(
+                            currentFilePath
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    const message = (
+                        xhr.responseJSON &&
+                        (
+                            xhr.responseJSON.message ||
+                            xhr.responseJSON.error
+                        )
+                    )
+                        ? (
+                            xhr.responseJSON.message ||
+                            xhr.responseJSON.error
+                        )
+                        : xhr.statusText;
+
+                    setAnamodActivity(
+                        message,
+                        'text-danger'
+                    );
+
+                    if (currentFilePath) {
+                        loadComponentRegistryDescription(
+                            currentFilePath
+                        );
+                    }
+                },
+                complete: function() {
+                    setRegistryActionButtonsDisabled(
+                        false
+                    );
+                }
+            });
+        }
+
+        $('#anamod-refresh-registry-btn')
+            .off('click')
+            .on('click', function(e) {
+                e.preventDefault();
+                runComponentRegistryAction(
+                    'refresh'
+                );
+            });
+
+        $('#anamod-enrich-registry-btn')
+            .off('click')
+            .on('click', function(e) {
+                e.preventDefault();
+                runComponentRegistryAction(
+                    'enrich'
+                );
+            });
+
+        $('#anamod-toggle-registry-description-btn')
+            .off('click')
+            .on('click', function(e) {
+                e.preventDefault();
+
+                const $viewport =
+                    $('#anamod-component-registry-description');
+
+                const hidden =
+                    $viewport.hasClass('d-none');
+
+                $viewport.toggleClass(
+                    'd-none',
+                    !hidden
+                );
+
+                $(this)
+                    .attr(
+                        'aria-expanded',
+                        hidden ? 'true' : 'false'
+                    )
+                    .text(
+                        hidden ? '−' : '+'
+                    );
+            });
 
         window.MonacoEnvironment = {
             getWorkerUrl: function(workerId, label) {
@@ -49,7 +379,7 @@
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 2 OF 4)
+// FILE: aurora/static/aurora/js/anamod/anamod.js (PATCH 2 OF 4)
 // START: ANAMOD_REALTIME_MULTI_MARKER_VALIDATOR
 // ======================================================================
 // Multi-marker frontend parser: splits filtered lint rows and plots markers line-by-line safely
@@ -269,7 +599,7 @@ $(document)
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 3 OF 4)
+// FILE: aurora/static/aurora/js/anamod/anamod.js (PATCH 3 OF 4)
 // START: ANAMOD_SAVE_DISCARD_AND_MUTATION_HOOKS
 // ======================================================================
 // 3. Central Application Action Form Trigger Elements
@@ -374,6 +704,7 @@ window.deleteWorkspaceFile = function(filePath) {
                 currentFilePath = null;
                 if (window.editorInstance) window.editorInstance.setValue("# Select a modular file from the directory tree to start coding...\n");
                 $('#active-file-indicator').text("No file active").removeClass('text-warning');
+                loadComponentRegistryDescription('');
             }
             if (typeof window.refreshWorkspaceTree === 'function') window.refreshWorkspaceTree();
         },
@@ -387,7 +718,7 @@ window.deleteWorkspaceFile = function(filePath) {
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod.js (PATCH 4 OF 4)
+// FILE: aurora/static/aurora/js/anamod/anamod.js (PATCH 4 OF 4)
 // START: ANAMOD_ACTION_TRIGGERS_AND_FILE_LOADER
 // ======================================================================
 // 4. Manual Core API Trigger Controls
@@ -410,51 +741,153 @@ $('#anamod-run-btn').off('click').on('click', function() {
 });
 
 // External asynchronous routing mechanism to hook directly into the project hierarchy layout trees
-window.loadWorkspaceFile = function(filePath) {
-    window.updateAnamodTerminal(`[SYSTEM] Reading file trace: ${filePath}...\n`);
+window.loadWorkspaceFile = function(filePath, options) {
+    options = options || {};
+
+    window.updateAnamodTerminal(
+        `[SYSTEM] Reading file trace: ${filePath}...
+`
+    );
+
     $.ajax({
         url: '/aurora/api/files/op/',
         type: 'GET',
-        data: { path: filePath },
+        data: {
+            path: filePath
+        },
         success: function(response) {
             currentFilePath = filePath;
             const ext = filePath.split('.').pop().toLowerCase();
-            if (window.editorInstance !== null && typeof window.editorInstance.setValue === 'function') {
+
+            if (
+                window.editorInstance !== null &&
+                typeof window.editorInstance.setValue === 'function'
+            ) {
                 window.editorInstance.setValue(response.content);
-                if (ext === 'py') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'python');
-                else if (ext === 'css') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'css');
-                else if (ext === 'html') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'html');
-                else if (ext === 'js') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'javascript');
-                else if (ext === 'json') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'json');
-                else if (ext === 'md') monaco.editor.setModelLanguage(window.editorInstance.getModel(), 'markdown');
-                
-                // Enforce real-time hotkey intercepts directly upon a clean file mount sequence
-                window.editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() {
-                    $('#anamod-save-btn').click();
-                });
-                window.editorInstance.addCommand(monaco.KeyCode.F5, function() {
-                    if (ext === 'py') $('#anamod-run-btn').click();
-                });
+
+                if (ext === 'py') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'python'
+                    );
+                } else if (ext === 'css') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'css'
+                    );
+                } else if (ext === 'html') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'html'
+                    );
+                } else if (ext === 'js') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'javascript'
+                    );
+                } else if (ext === 'json') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'json'
+                    );
+                } else if (ext === 'md') {
+                    monaco.editor.setModelLanguage(
+                        window.editorInstance.getModel(),
+                        'markdown'
+                    );
+                }
+
+                // Enforce real-time hotkey intercepts directly upon a
+                // clean file mount sequence.
+                window.editorInstance.addCommand(
+                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                    function() {
+                        $('#anamod-save-btn').click();
+                    }
+                );
+
+                window.editorInstance.addCommand(
+                    monaco.KeyCode.F5,
+                    function() {
+                        if (ext === 'py') {
+                            $('#anamod-run-btn').click();
+                        }
+                    }
+                );
+
                 setTimeout(function() {
                     window.editorInstance.layout();
                 }, 50);
-                window.updateAnamodTerminal(`[SYSTEM] File loaded successfully into viewport.\n`);
+
+                window.updateAnamodTerminal(
+                    `[SYSTEM] File loaded successfully into viewport.
+`
+                );
             } else {
-                window.updateAnamodTerminal(`[WARNING] Core editor initializing. Re-click file.\n`);
+                window.updateAnamodTerminal(
+                    `[WARNING] Core editor initializing. Re-click file.
+`
+                );
                 mountEditorInstance();
             }
-            let displayPath = filePath.replace(/^\/app\//, '').replace(/^app\//, '');
-            $('#active-file-indicator').text(displayPath).attr('title', filePath).removeClass('text-warning');
+
+            let displayPath = filePath
+                .replace(/^\/app\//, '')
+                .replace(/^app\//, '');
+
+            $('#active-file-indicator')
+                .text(displayPath)
+                .attr('title', filePath)
+                .removeClass('text-warning');
+
+            loadComponentRegistryDescription(
+                filePath
+            );
+
             if (ext === 'py') {
                 $('#anamod-run-btn').prop('disabled', false);
             } else {
                 $('#anamod-run-btn').prop('disabled', true);
             }
-            $('#anamod-save-btn').prop('disabled', true).removeClass('btn-warning text-dark font-weight-bold').addClass('btn-outline-warning');
-            $('#anamod-discard-btn').prop('disabled', true).removeClass('btn-danger text-dark font-weight-bold').addClass('btn-outline-danger');
+
+            $('#anamod-save-btn')
+                .prop('disabled', true)
+                .removeClass('btn-warning text-dark font-weight-bold')
+                .addClass('btn-outline-warning');
+
+            $('#anamod-discard-btn')
+                .prop('disabled', true)
+                .removeClass('btn-danger text-dark font-weight-bold')
+                .addClass('btn-outline-danger');
+
+            if (typeof options.onLoaded === 'function') {
+                options.onLoaded(response);
+            }
         },
         error: function(xhr) {
-            window.updateAnamodTerminal(`[ERROR] Failed to load target node filesystem pointer: ${xhr.statusText}\n`);
+            if (
+                xhr.status === 404 &&
+                typeof options.onNotFound === 'function'
+            ) {
+                options.onNotFound(xhr);
+                return;
+            }
+
+            const message = (
+                xhr.responseJSON &&
+                xhr.responseJSON.error
+            )
+                ? xhr.responseJSON.error
+                : xhr.statusText;
+
+            window.updateAnamodTerminal(
+                `[ERROR] Failed to load target node filesystem pointer: ${message}
+`
+            );
+
+            if (typeof options.onError === 'function') {
+                options.onError(xhr, message);
+            }
         }
     });
 };

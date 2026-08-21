@@ -68,6 +68,11 @@ urlpatterns = [
 
     # 6. AURORA CONSOLE SUBSYSTEM ENDPOINTS
     path(
+        "api/component_registry/",
+        api_endpoints.component_registry_endpoint,
+        name="component_registry_endpoint",
+    ),
+    path(
         "api/delta_notes/",
         api_endpoints.delta_notes_endpoint,
         name="delta_notes_endpoint",

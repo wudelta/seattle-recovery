@@ -1,5 +1,5 @@
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 1 OF 3)
+// FILE: aurora/static/aurora/js/anamod/anamod_workspace.js (PATCH 1 OF 3)
 // START: DECOUPLED_IDE_TREE_WORKSPACE_CONTROLLER
 // ======================================================================
 (function(window) {
@@ -75,7 +75,7 @@
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 2 OF 3)
+// FILE: aurora/static/aurora/js/anamod/anamod_workspace.js (PATCH 2 OF 3)
 // START: ANAMOD_TREE_CONTEXT_ROUTING_AND_BOUNDS
 // ======================================================================
         // Helper calculation function to position any context menu while strictly avoiding screen bleed
@@ -135,7 +135,7 @@
 // ======================================================================
 
 // ======================================================================
-// FILE: aurora/static/aurora/js/anamod_workspace.js (PATCH 3 OF 3)
+// FILE: aurora/static/aurora/js/anamod/anamod_workspace.js (PATCH 3 OF 3)
 // START: ANAMOD_TREE_ACTION_DELEGATIONS_AND_CREATION
 // ======================================================================
         // 3. Connect Desktop Context Item Trigger Elements
@@ -174,65 +174,184 @@
             }
         });
 
-        function refreshAndFocusWorkspaceNode(
+        function normalizeTreeTargetPath(targetPath) {
+            const cleanedPath = (
+                targetPath || ''
+            )
+                .trim()
+                .replace(/^\/app\/?/, '')
+                .replace(/^app\/?/, '')
+                .replace(/^\/+/, '');
+
+            return cleanedPath
+                ? '/app/' + cleanedPath
+                : '/app';
+        }
+
+        function findWorkspaceNodeIdByPath(
             treeInstance,
-            parentNodeId,
             targetPath
         ) {
-            $treeContainer.one('refresh.jstree', function() {
-                console.log(
-                    '[Anamod Workspace Tree] Rebuild finished. ' +
-                    'Enforcing layout expansion parameters...'
-                );
+            const normalizedTarget =
+                normalizeTreeTargetPath(targetPath);
 
-                treeInstance.open_node(parentNodeId, function() {
-                    setTimeout(function() {
-                        let foundNodeId = null;
+            let foundNodeId = null;
 
-                        Object.keys(
-                            treeInstance._model.data
-                        ).forEach(function(id) {
-                            const item =
-                                treeInstance._model.data[id];
+            Object.keys(
+                treeInstance._model.data
+            ).some(function(id) {
+                const item =
+                    treeInstance._model.data[id];
 
-                            if (
-                                item.data &&
-                                item.data.path === targetPath
-                            ) {
-                                foundNodeId = id;
-                            }
-                        });
+                if (
+                    item.data &&
+                    normalizeTreeTargetPath(
+                        item.data.path
+                    ) === normalizedTarget
+                ) {
+                    foundNodeId = id;
+                    return true;
+                }
 
-                        if (foundNodeId) {
-                            console.log(
-                                '[Anamod Workspace Tree] New ' +
-                                'workspace node resolved. Shifting ' +
-                                'viewport focus.'
-                            );
-
-                            treeInstance.deselect_all();
-                            treeInstance.select_node(foundNodeId);
-                            treeInstance.open_node(foundNodeId);
-                        } else {
-                            console.warn(
-                                '[Anamod Workspace Tree] Focus ' +
-                                'route path resolution failed for ' +
-                                'pointer: ' +
-                                targetPath
-                            );
-                        }
-                    }, 80);
-                });
+                return false;
             });
 
+            return foundNodeId;
+        }
+
+        function openWorkspaceNodeParents(
+            treeInstance,
+            nodeId,
+            onComplete
+        ) {
+            const node =
+                treeInstance.get_node(nodeId);
+
+            if (!node) {
+                onComplete();
+                return;
+            }
+
+            const parentIds = (
+                node.parents || []
+            )
+                .filter(function(parentId) {
+                    return parentId !== '#';
+                })
+                .reverse();
+
+            function openNext(index) {
+                if (index >= parentIds.length) {
+                    onComplete();
+                    return;
+                }
+
+                treeInstance.open_node(
+                    parentIds[index],
+                    function() {
+                        openNext(index + 1);
+                    }
+                );
+            }
+
+            openNext(0);
+        }
+
+        function focusWorkspaceNode(
+            treeInstance,
+            targetPath
+        ) {
+            const foundNodeId =
+                findWorkspaceNodeIdByPath(
+                    treeInstance,
+                    targetPath
+                );
+
+            if (!foundNodeId) {
+                console.warn(
+                    '[Anamod Workspace Tree] Focus route ' +
+                    'path resolution failed for pointer: ' +
+                    targetPath
+                );
+
+                return;
+            }
+
+            openWorkspaceNodeParents(
+                treeInstance,
+                foundNodeId,
+                function() {
+                    treeInstance.deselect_all();
+                    treeInstance.select_node(
+                        foundNodeId,
+                        true,
+                        true
+                    );
+
+                    const $anchor =
+                        treeInstance.get_node(
+                            foundNodeId,
+                            true
+                        );
+
+                    if (
+                        $anchor &&
+                        $anchor.length &&
+                        $anchor[0].scrollIntoView
+                    ) {
+                        $anchor[0].scrollIntoView({
+                            block: 'nearest'
+                        });
+                    }
+                }
+            );
+        }
+
+        function refreshAndFocusWorkspaceNode(
+            treeInstance,
+            targetPath
+        ) {
+            $treeContainer.one(
+                'refresh.jstree',
+                function() {
+                    console.log(
+                        '[Anamod Workspace Tree] Rebuild ' +
+                        'finished. Resolving target path...'
+                    );
+
+                    setTimeout(function() {
+                        focusWorkspaceNode(
+                            treeInstance,
+                            targetPath
+                        );
+                    }, 80);
+                }
+            );
+
             if (
-                typeof window.refreshWorkspaceTree === 'function'
+                typeof window.refreshWorkspaceTree ===
+                'function'
             ) {
                 window.refreshWorkspaceTree();
             } else {
                 treeInstance.refresh();
             }
         }
+
+        window.refreshAndFocusWorkspacePath =
+            function(targetPath) {
+                const treeInstance =
+                    $treeContainer.jstree(true);
+
+                if (!treeInstance || !targetPath) {
+                    return;
+                }
+
+                refreshAndFocusWorkspaceNode(
+                    treeInstance,
+                    targetPath
+                );
+            };
 
         // 4. File Creation Execution Routing Pipeline Integration
         $('#ctx-add-file-btn')
@@ -255,8 +374,6 @@
                 ) {
                     const parentFolderPath =
                         nodeData.data.path;
-                    const folderIdToOpen = selectedNodeId;
-
                     const inputName = prompt(
                         'Add New File Here\n' +
                         'Directory Context: ' +
@@ -317,7 +434,6 @@
 
                             refreshAndFocusWorkspaceNode(
                                 treeInstance,
-                                folderIdToOpen,
                                 finalContainerPath
                             );
                         },
@@ -360,8 +476,6 @@
                 ) {
                     const parentFolderPath =
                         nodeData.data.path;
-                    const folderIdToOpen = selectedNodeId;
-
                     const inputName = prompt(
                         'Add New Directory Here\n' +
                         'Directory Context: ' +
@@ -422,7 +536,6 @@
 
                             refreshAndFocusWorkspaceNode(
                                 treeInstance,
-                                folderIdToOpen,
                                 finalContainerPath
                             );
                         },
@@ -525,6 +638,8 @@
                     $('#anamod-load-file-path');
                 const $error =
                     $('#anamod-load-file-error');
+                const $submit =
+                    $('#anamod-load-file-submit-btn');
 
                 const filePath = (
                     $pathInput.val() || ''
@@ -559,19 +674,205 @@
                     return;
                 }
 
+                function closeLoadCreatePanel() {
+                    $('#anamod-load-file-panel')
+                        .addClass('d-none');
+
+                    $('#anamod-load-file-btn')
+                        .attr(
+                            'aria-expanded',
+                            'false'
+                        );
+
+                    $error
+                        .addClass('d-none')
+                        .text('');
+
+                    $pathInput.val('');
+                }
+
+                function showLoadCreateError(message) {
+                    $error
+                        .removeClass('d-none')
+                        .text(message);
+                }
+
                 $error
                     .addClass('d-none')
                     .text('');
 
-                $('#anamod-load-file-panel')
-                    .addClass('d-none');
+                $submit.prop(
+                    'disabled',
+                    true
+                );
 
-                $('#anamod-load-file-btn')
-                    .attr('aria-expanded', 'false');
+                window.loadWorkspaceFile(
+                    filePath,
+                    {
+                        onLoaded: function() {
+                            $submit.prop(
+                                'disabled',
+                                false
+                            );
 
-                $pathInput.val('');
+                            if (
+                                typeof window
+                                    .refreshAndFocusWorkspacePath ===
+                                'function'
+                            ) {
+                                window.refreshAndFocusWorkspacePath(
+                                    filePath
+                                );
+                            }
 
-                window.loadWorkspaceFile(filePath);
+                            closeLoadCreatePanel();
+                        },
+
+                        onNotFound: function() {
+                            $submit.prop(
+                                'disabled',
+                                false
+                            );
+
+                            const createFile = confirm(
+                                '"' +
+                                filePath +
+                                '" does not exist.\n\n' +
+                                'Create a blank file and load it?'
+                            );
+
+                            if (!createFile) {
+                                window.updateAnamodTerminal(
+                                    '[SYSTEM] Missing-file creation ' +
+                                    'cancelled by user.\n'
+                                );
+
+                                showLoadCreateError(
+                                    'File does not exist. ' +
+                                    'Creation cancelled.'
+                                );
+
+                                return;
+                            }
+
+                            $submit.prop(
+                                'disabled',
+                                true
+                            );
+
+                            window.updateAnamodTerminal(
+                                '[SYSTEM] Creating missing ' +
+                                'workspace file: ' +
+                                filePath +
+                                '...\n'
+                            );
+
+                            $.ajax({
+                                url: '/aurora/api/files/op/',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                headers: {
+                                    'X-CSRFToken':
+                                        window.csrfToken ||
+                                        $(
+                                            '[name=csrfmiddlewaretoken]'
+                                        ).val() ||
+                                        ''
+                                },
+                                data: JSON.stringify({
+                                    path: filePath,
+                                    type: 'file',
+                                    content: ''
+                                }),
+
+                                success: function() {
+                                    window.updateAnamodTerminal(
+                                        '[SUCCESS] Blank workspace ' +
+                                        'file created successfully.\n'
+                                    );
+
+                                    window.loadWorkspaceFile(
+                                        filePath,
+                                        {
+                                            onLoaded: function() {
+                                                $submit.prop(
+                                                    'disabled',
+                                                    false
+                                                );
+
+                                                if (
+                                                    typeof window
+                                                        .refreshAndFocusWorkspacePath ===
+                                                    'function'
+                                                ) {
+                                                    window
+                                                        .refreshAndFocusWorkspacePath(
+                                                            filePath
+                                                        );
+                                                }
+
+                                                closeLoadCreatePanel();
+                                            },
+
+                                            onError: function(
+                                                xhr,
+                                                message
+                                            ) {
+                                                $submit.prop(
+                                                    'disabled',
+                                                    false
+                                                );
+
+                                                showLoadCreateError(
+                                                    message
+                                                );
+                                            }
+                                        }
+                                    );
+                                },
+
+                                error: function(xhr) {
+                                    $submit.prop(
+                                        'disabled',
+                                        false
+                                    );
+
+                                    const message = (
+                                        xhr.responseJSON &&
+                                        xhr.responseJSON.error
+                                    )
+                                        ? xhr.responseJSON.error
+                                        : xhr.statusText;
+
+                                    window.updateAnamodTerminal(
+                                        '[ERROR] Missing-file ' +
+                                        'creation failed: ' +
+                                        message +
+                                        '\n'
+                                    );
+
+                                    showLoadCreateError(
+                                        message
+                                    );
+                                }
+                            });
+                        },
+
+                        onError: function(
+                            xhr,
+                            message
+                        ) {
+                            $submit.prop(
+                                'disabled',
+                                false
+                            );
+
+                            showLoadCreateError(
+                                message
+                            );
+                        }
+                    }
+                );
             });
 
         // 8. Handle Inline Rename Commits
