@@ -13,12 +13,18 @@ function initContentConsole(endpoints, csrfToken) {
         const timestamp = new Date().toLocaleTimeString();
         const indicator = isError ? '[ERROR]' : '[SUCCESS]';
         const colorClass = isError ? 'text-danger' : 'text-success';
-        const rawLine = `\n[${timestamp}] ${indicator} ${text}`;
-        
+        const rawLine = `[${timestamp}] ${indicator} ${text}\n`;
+
         const $stream = $('#cc-terminal-stream');
-        $stream.append($('<span>').addClass(colorClass).text(rawLine));
+
+        $stream.prepend(
+            $('<span>')
+                .addClass(colorClass)
+                .text(rawLine)
+        );
+
         if ($stream.length) {
-            $stream.scrollTop($stream.scrollHeight);
+            $stream.scrollTop(0);
         }
     }
 
@@ -33,7 +39,7 @@ function initContentConsole(endpoints, csrfToken) {
 
     function fetchInventory() {
         const currentScope = $('input[name="cc-app-filter"]:checked').val();
-        
+
         $.ajax({
             url: apiURL,
             type: 'GET',
@@ -41,36 +47,74 @@ function initContentConsole(endpoints, csrfToken) {
             success: function(response) {
                 if (response.status === 'SUCCESS') {
                     const $list = $('#cc-inventory-list').empty();
+
                     if (!response.inventory.length) {
-                        $list.append('<div class="text-muted text-center p-3 small italic">No records found.</div>');
+                        $list.append(
+                            '<div class="text-muted text-center p-3 small italic">'
+                            + 'No records found.'
+                            + '</div>'
+                        );
                         return;
                     }
+
                     response.inventory.forEach(function(item) {
-                        const labelApp = item.application === 'aurora' ? 'info' : 'warning';
+                        const labelApp = (
+                            item.application === 'aurora'
+                                ? 'info'
+                                : 'warning'
+                        );
+
                         const $row = $(`
-                            <div class="d-flex align-items-center justify-content-between p-1 rounded border border-dark bg-black text-light" style="cursor:pointer;" data-id="${item.id}">
+                            <div
+                                class="d-flex align-items-center justify-content-between p-1 rounded border border-dark bg-black text-light"
+                                style="cursor:pointer;"
+                                data-id="${item.id}"
+                            >
                                 <div class="text-truncate flex-grow-1 me-1">
-                                    <span class="badge bg-opacity-25 bg-${labelApp} text-${labelApp} font-monospace me-1" style="font-size:0.65rem;">${item.application.toUpperCase()}</span>
-                                    <span class="font-monospace small">${item.title}</span>
+                                    <span
+                                        class="badge bg-opacity-25 bg-${labelApp} text-${labelApp} font-monospace me-1"
+                                        style="font-size:0.65rem;"
+                                    >
+                                        ${item.application.toUpperCase()}
+                                    </span>
+                                    <span class="font-monospace small">
+                                        ${item.title}
+                                    </span>
                                 </div>
-                                <span class="text-muted" style="font-size:0.7rem; font-style:italic;">${item.date_modified}</span>
+                                <span
+                                    class="text-muted"
+                                    style="font-size:0.7rem; font-style:italic;"
+                                >
+                                    ${item.date_modified}
+                                </span>
                             </div>
                         `);
-                        if(activeAssetId === item.id) {
-                            $row.addClass('border-warning').css('background-color', '#1b1b1b');
+
+                        if (activeAssetId === item.id) {
+                            $row
+                                .addClass('border-warning')
+                                .css(
+                                    'background-color',
+                                    '#1b1b1b'
+                                );
                         }
+
                         $list.append($row);
                     });
                 }
             },
             error: function(xhr) {
-                logToStream(`Inventory registry retrieval fault: ${xhr.status}`, true);
+                logToStream(
+                    `Inventory registry retrieval fault: ${xhr.status}`,
+                    true
+                );
             }
         });
     }
 // ======================================================================
-// END: CONTENT_PANEL_CORE_INITIALIZATION_AND_INVENTORY_PIPES (PATCH 1 OF 2)
+// END: CONTENT_PANEL_CORE_INITIALIZATION_AND_INVENTORY_PIPES
 // ======================================================================
+
 
 // ======================================================================
 // FILE: aurora/static/aurora/js/content/content.js

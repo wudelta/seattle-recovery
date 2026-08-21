@@ -9,7 +9,8 @@
         const processBtn = $('#wu-process-delta-notes-btn');
         const messages = $('#wu-session-management-messages');
         const endpoint = options.endpoint;
-        const onWorkflowChanged = options.onWorkflowChanged || function() {};
+        const onWorkflowChanged =
+            options.onWorkflowChanged || function() {};
 
         let activeNote = null;
         let pendingPlanningProposal = null;
@@ -42,23 +43,37 @@
         sendToPlanningBtn.after(rejectPlanningBtn);
         rejectPlanningBtn.after(approvePlanningBtn);
 
-        function appendMessage(message, className = 'text-muted') {
+        function appendMessage(
+            message,
+            className = 'text-muted'
+        ) {
             if (!messages.length) {
                 return;
             }
 
-            messages.append(
-                $(`<div class="${className}"></div>`).text(message)
+            messages.prepend(
+                $(`<div class="${className}"></div>`).text(
+                    message
+                )
             );
-            messages.scrollTop(messages[0].scrollHeight);
+
+            messages.scrollTop(0);
         }
 
-        function extractErrorMessage(xhr, fallback) {
+        function extractErrorMessage(
+            xhr,
+            fallback
+        ) {
             let errorText = fallback;
 
             try {
-                const response = JSON.parse(xhr.responseText);
-                errorText = response.message || errorText;
+                const response = JSON.parse(
+                    xhr.responseText
+                );
+
+                errorText =
+                    response.message
+                    || errorText;
             } catch (error) {
                 // Preserve fallback message.
             }
@@ -67,7 +82,8 @@
         }
 
         function refreshButtons() {
-            const proposalPending = pendingPlanningProposal !== null;
+            const proposalPending =
+                pendingPlanningProposal !== null;
 
             processBtn.text(
                 activeNote
@@ -80,7 +96,10 @@
                 (
                     !sessionActive
                     || proposalPending
-                    || (!activeNote && unprocessedCount === 0)
+                    || (
+                        !activeNote
+                        && unprocessedCount === 0
+                    )
                 )
             );
 
@@ -95,17 +114,25 @@
             );
 
             rejectPlanningBtn
-                .toggleClass('d-none', !proposalPending)
+                .toggleClass(
+                    'd-none',
+                    !proposalPending
+                )
                 .prop(
                     'disabled',
-                    !sessionActive || !proposalPending
+                    !sessionActive
+                    || !proposalPending
                 );
 
             approvePlanningBtn
-                .toggleClass('d-none', !proposalPending)
+                .toggleClass(
+                    'd-none',
+                    !proposalPending
+                )
                 .prop(
                     'disabled',
-                    !sessionActive || !proposalPending
+                    !sessionActive
+                    || !proposalPending
                 );
         }
 
@@ -115,30 +142,39 @@
             }
 
             appendMessage(
-                `[DELTA NOTE ${activeNote.id}] ${activeNote.text}`,
+                `[DELTA NOTE ${activeNote.id}] ${
+                    activeNote.text
+                }`,
                 'text-info'
             );
-
-            if (pendingPlanningProposal) {
-                renderPlanningProposalSummary(
-                    pendingPlanningProposal
-                );
-            }
         }
 
-        function renderPlanningProposalSummary(proposal) {
+        function renderPlanningProposalSummary(
+            proposal
+        ) {
             if (!proposal) {
                 return;
             }
 
-            const document = proposal.document || {};
-            const addProjects = document.add_projects || [];
-            const addInitiatives = document.add_initiatives || [];
-            const addPhases = document.add_phases || [];
-            const addSteps = document.add_steps || [];
+            const document =
+                proposal.document || {};
+
+            const addProjects =
+                document.add_projects || [];
+
+            const addInitiatives =
+                document.add_initiatives || [];
+
+            const addPhases =
+                document.add_phases || [];
+
+            const addSteps =
+                document.add_steps || [];
 
             appendMessage(
-                `[PLANNING PROPOSAL] Project: ${proposal.project_slug}`,
+                `[PLANNING PROPOSAL] Project: ${
+                    proposal.project_slug
+                }`,
                 'text-warning'
             );
 
@@ -151,53 +187,83 @@
                 'text-warning'
             );
 
-            addProjects.forEach(function(project) {
-                appendMessage(
-                    `[PLANNING PROPOSAL] New Project: ${project.title}`,
-                    'text-warning'
-                );
-            });
-
-            addInitiatives.forEach(function(initiative) {
-                appendMessage(
-                    `[PLANNING PROPOSAL] New Initiative: ${initiative.title}`,
-                    'text-warning'
-                );
-            });
-
-            addPhases.forEach(function(addition) {
-                appendMessage(
-                    '[PLANNING PROPOSAL] '
-                    + `Existing Initiative: ${addition.initiative_title}`,
-                    'text-warning'
-                );
-
-                (addition.phases || []).forEach(function(phase) {
+            addProjects.forEach(
+                function(project) {
                     appendMessage(
-                        `[PLANNING PROPOSAL] New Phase: ${phase.title}`,
+                        `[PLANNING PROPOSAL] New Project: ${
+                            project.title
+                        }`,
                         'text-warning'
                     );
-                });
-            });
+                }
+            );
 
-            addSteps.forEach(function(addition) {
-                appendMessage(
-                    '[PLANNING PROPOSAL] '
-                    + `Existing Path: ${addition.initiative_title} `
-                    + `→ ${addition.phase_title}`,
-                    'text-warning'
-                );
-
-                (addition.steps || []).forEach(function(step) {
+            addInitiatives.forEach(
+                function(initiative) {
                     appendMessage(
-                        `[PLANNING PROPOSAL] New Step: ${step.title}`,
+                        `[PLANNING PROPOSAL] New Initiative: ${
+                            initiative.title
+                        }`,
                         'text-warning'
                     );
-                });
-            });
+                }
+            );
+
+            addPhases.forEach(
+                function(addition) {
+                    appendMessage(
+                        '[PLANNING PROPOSAL] '
+                        + `Existing Initiative: ${
+                            addition.initiative_title
+                        }`,
+                        'text-warning'
+                    );
+
+                    (
+                        addition.phases || []
+                    ).forEach(
+                        function(phase) {
+                            appendMessage(
+                                `[PLANNING PROPOSAL] New Phase: ${
+                                    phase.title
+                                }`,
+                                'text-warning'
+                            );
+                        }
+                    );
+                }
+            );
+
+            addSteps.forEach(
+                function(addition) {
+                    appendMessage(
+                        '[PLANNING PROPOSAL] '
+                        + `Existing Path: ${
+                            addition.initiative_title
+                        } → ${
+                            addition.phase_title
+                        }`,
+                        'text-warning'
+                    );
+
+                    (
+                        addition.steps || []
+                    ).forEach(
+                        function(step) {
+                            appendMessage(
+                                `[PLANNING PROPOSAL] New Step: ${
+                                    step.title
+                                }`,
+                                'text-warning'
+                            );
+                        }
+                    );
+                }
+            );
 
             appendMessage(
-                '[PLANNING PROPOSAL] Validated dry-run only. '
+                '[PLANNING PROPOSAL] '
+                + 'Validated dry-run only. '
                 + 'Approve to apply this exact proposal.',
                 'text-success'
             );
@@ -210,13 +276,24 @@
         }
 
         function updateStatus(data) {
-            const workflow = data.workflow || {};
-            const planning = workflow.planning || {};
-            const executable = planning.executable || {};
-            const navigation = planning.navigation || {};
-            const deltaNotes = workflow.delta_notes || {};
+            const workflow =
+                data.workflow || {};
 
-            if (typeof data.active === 'boolean') {
+            const planning =
+                workflow.planning || {};
+
+            const executable =
+                planning.executable || {};
+
+            const navigation =
+                planning.navigation || {};
+
+            const deltaNotes =
+                workflow.delta_notes || {};
+
+            if (
+                typeof data.active === 'boolean'
+            ) {
                 sessionActive = data.active;
             }
 
@@ -232,32 +309,57 @@
             );
 
             refreshButtons();
-            renderActiveNote();
         }
 
         function loadNextNote() {
-            processBtn.prop('disabled', true);
-            sendToPlanningBtn.prop('disabled', true);
-            rejectPlanningBtn.prop('disabled', true);
-            approvePlanningBtn.prop('disabled', true);
+            processBtn.prop(
+                'disabled',
+                true
+            );
+
+            sendToPlanningBtn.prop(
+                'disabled',
+                true
+            );
+
+            rejectPlanningBtn.prop(
+                'disabled',
+                true
+            );
+
+            approvePlanningBtn.prop(
+                'disabled',
+                true
+            );
 
             $.post(
                 endpoint,
-                {action: 'next_delta_note'},
+                {
+                    action: 'next_delta_note'
+                },
                 function(data) {
-                    if (data.status !== 'success') {
+                    if (
+                        data.status !== 'success'
+                    ) {
                         return;
                     }
 
-                    activeNote = data.note || null;
-                    pendingPlanningProposal = null;
+                    activeNote =
+                        data.note || null;
+
+                    pendingPlanningProposal =
+                        null;
+
                     updateStatus(data);
 
-                    if (!activeNote) {
-                        appendMessage(
-                            '[DELTA NOTES] No unprocessed notes.'
-                        );
+                    if (activeNote) {
+                        renderActiveNote();
+                        return;
                     }
+
+                    appendMessage(
+                        '[DELTA NOTES] No unprocessed notes.'
+                    );
                 }
             ).fail(function(xhr) {
                 appendMessage(
@@ -269,19 +371,31 @@
                     }`,
                     'text-danger'
                 );
+
                 refreshButtons();
             });
         }
 
         function resolveActiveNote() {
-            if (!activeNote || pendingPlanningProposal) {
+            if (
+                !activeNote
+                || pendingPlanningProposal
+            ) {
                 return;
             }
 
-            const noteId = activeNote.id;
+            const noteId =
+                activeNote.id;
 
-            processBtn.prop('disabled', true);
-            sendToPlanningBtn.prop('disabled', true);
+            processBtn.prop(
+                'disabled',
+                true
+            );
+
+            sendToPlanningBtn.prop(
+                'disabled',
+                true
+            );
 
             $.post(
                 endpoint,
@@ -290,12 +404,15 @@
                     note_id: noteId
                 },
                 function(data) {
-                    if (data.status !== 'success') {
+                    if (
+                        data.status !== 'success'
+                    ) {
                         return;
                     }
 
                     activeNote = null;
                     pendingPlanningProposal = null;
+
                     updateStatus(data);
 
                     $(document).trigger(
@@ -303,11 +420,14 @@
                     );
 
                     appendMessage(
-                        `[DELTA NOTE ${noteId}] Resolved / no action.`,
+                        `[DELTA NOTE ${noteId}] `
+                        + 'Resolved / no action.',
                         'text-success'
                     );
 
-                    if (unprocessedCount > 0) {
+                    if (
+                        unprocessedCount > 0
+                    ) {
                         loadNextNote();
                         return;
                     }
@@ -324,6 +444,7 @@
                     }`,
                     'text-danger'
                 );
+
                 refreshButtons();
             });
         }
@@ -337,28 +458,43 @@
                 return;
             }
 
-            processBtn.prop('disabled', true);
+            processBtn.prop(
+                'disabled',
+                true
+            );
 
             sendToPlanningBtn
-                .prop('disabled', true)
-                .text('Generating Planning Proposal...');
+                .prop(
+                    'disabled',
+                    true
+                )
+                .text(
+                    'Generating Planning Proposal...'
+                );
 
             $.post(
                 endpoint,
                 {
-                    action: 'propose_delta_note_planning',
-                    note_id: activeNote.id,
-                    project_slug: planningProjectSlug
+                    action:
+                        'propose_delta_note_planning',
+                    note_id:
+                        activeNote.id,
+                    project_slug:
+                        planningProjectSlug
                 },
                 function(data) {
-                    if (data.status !== 'success') {
+                    if (
+                        data.status !== 'success'
+                    ) {
                         return;
                     }
 
                     pendingPlanningProposal =
                         data.proposal || null;
 
-                    if (!pendingPlanningProposal) {
+                    if (
+                        !pendingPlanningProposal
+                    ) {
                         appendMessage(
                             '[PLANNING ERROR] '
                             + 'No Planning proposal was returned.',
@@ -382,7 +518,10 @@
                     'text-danger'
                 );
             }).always(function() {
-                sendToPlanningBtn.text('Send to Planning');
+                sendToPlanningBtn.text(
+                    'Send to Planning'
+                );
+
                 refreshButtons();
             });
         }
@@ -404,68 +543,111 @@
         }
 
         function approvePlanningProposal() {
-            if (!activeNote || !pendingPlanningProposal) {
+            if (
+                !activeNote
+                || !pendingPlanningProposal
+            ) {
                 return;
             }
 
-            const noteId = activeNote.id;
+            const noteId =
+                activeNote.id;
+
             const planningDocument =
                 pendingPlanningProposal.document;
 
-            processBtn.prop('disabled', true);
-            sendToPlanningBtn.prop('disabled', true);
-            rejectPlanningBtn.prop('disabled', true);
+            processBtn.prop(
+                'disabled',
+                true
+            );
+
+            sendToPlanningBtn.prop(
+                'disabled',
+                true
+            );
+
+            rejectPlanningBtn.prop(
+                'disabled',
+                true
+            );
 
             approvePlanningBtn
-                .prop('disabled', true)
-                .text('Applying Planning Proposal...');
+                .prop(
+                    'disabled',
+                    true
+                )
+                .text(
+                    'Applying Planning Proposal...'
+                );
 
             $.post(
                 endpoint,
                 {
-                    action: 'apply_delta_note_planning',
-                    note_id: noteId,
-                    planning_document: JSON.stringify(
-                        planningDocument
-                    )
+                    action:
+                        'apply_delta_note_planning',
+                    note_id:
+                        noteId,
+                    planning_document:
+                        JSON.stringify(
+                            planningDocument
+                        )
                 },
                 function(data) {
-                    if (data.status !== 'success') {
+                    if (
+                        data.status !== 'success'
+                    ) {
                         return;
                     }
 
-                    const result = data.result || {};
-                    const application = result.application || {};
+                    const result =
+                        data.result || {};
+
+                    const application =
+                        result.application || {};
 
                     appendMessage(
-                        `[PLANNING APPLIED] Project: ${result.project_slug}`,
+                        `[PLANNING APPLIED] Project: ${
+                            result.project_slug
+                        }`,
                         'text-success'
                     );
 
                     appendMessage(
                         '[PLANNING APPLIED] '
-                        + `Projects ${application.projects ?? 0}, `
-                        + `Initiatives ${application.initiatives ?? 0}, `
-                        + `Phases ${application.phases ?? 0}, `
-                        + `Steps ${application.steps ?? 0}`,
+                        + `Projects ${
+                            application.projects ?? 0
+                        }, `
+                        + `Initiatives ${
+                            application.initiatives ?? 0
+                        }, `
+                        + `Phases ${
+                            application.phases ?? 0
+                        }, `
+                        + `Steps ${
+                            application.steps ?? 0
+                        }`,
                         'text-success'
                     );
 
                     appendMessage(
                         `[DELTA NOTE ${noteId}] `
-                        + 'Resolved after successful Planning application.',
+                        + 'Resolved after successful '
+                        + 'Planning application.',
                         'text-success'
                     );
 
                     activeNote = null;
                     pendingPlanningProposal = null;
+
                     updateStatus(data);
 
                     $(document).trigger(
                         'aurora:delta_notes_changed'
                     );
 
-                    if (unprocessedCount > 0) {
+                    if (
+                        unprocessedCount > 0
+                    ) {
                         loadNextNote();
                         return;
                     }
@@ -486,35 +668,51 @@
                 approvePlanningBtn.text(
                     'Approve Planning Proposal'
                 );
+
                 refreshButtons();
             });
         }
 
-        processBtn.on('click', function(event) {
-            event.preventDefault();
+        processBtn.on(
+            'click',
+            function(event) {
+                event.preventDefault();
 
-            if (activeNote) {
-                resolveActiveNote();
-                return;
+                if (activeNote) {
+                    resolveActiveNote();
+                    return;
+                }
+
+                loadNextNote();
             }
+        );
 
-            loadNextNote();
-        });
+        sendToPlanningBtn.on(
+            'click',
+            function(event) {
+                event.preventDefault();
 
-        sendToPlanningBtn.on('click', function(event) {
-            event.preventDefault();
-            proposeActiveNotePlanning();
-        });
+                proposeActiveNotePlanning();
+            }
+        );
 
-        rejectPlanningBtn.on('click', function(event) {
-            event.preventDefault();
-            rejectPlanningProposal();
-        });
+        rejectPlanningBtn.on(
+            'click',
+            function(event) {
+                event.preventDefault();
 
-        approvePlanningBtn.on('click', function(event) {
-            event.preventDefault();
-            approvePlanningProposal();
-        });
+                rejectPlanningProposal();
+            }
+        );
+
+        approvePlanningBtn.on(
+            'click',
+            function(event) {
+                event.preventDefault();
+
+                approvePlanningProposal();
+            }
+        );
 
         refreshButtons();
 

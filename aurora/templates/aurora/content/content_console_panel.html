@@ -1,12 +1,15 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/content/content_console_panel.html (PATCH 1 OF 1) -->
+<!-- FILE: aurora/templates/aurora/content/content_console_panel.html -->
 <!-- START: CONTENT_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
 <div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; position: relative;" id="content-module-wrapper">
     
     <!-- COLUMN 1: LEFT SIDE CONTENT INVENTORY DIRECTORY -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 220px; background-color: #121212;">
-        <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+        <div
+            class="d-flex justify-content-between align-items-center text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
             <span>📑 Content Registry</span>
             <button id="cc-new-page-btn" class="btn btn-link p-0 text-success text-decoration-none" title="Create New Page Asset" style="font-size: 1.1rem; line-height: 1;">
                 ➕
@@ -40,36 +43,66 @@
         <div class="flex-grow-1 p-3" style="overflow-y: auto;">
             <form id="cc-composer-form" autocomplete="off" onsubmit="return false;">
                 <input type="hidden" id="cc-field-id" value="">
+
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold">Page Title</label>
-                        <input type="text" id="cc-field-title" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" placeholder="e.g. system_architecture_overview" required>
+                        <label class="form-label text-muted small text-uppercase font-weight-bold">
+                            Page Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cc-field-title"
+                            class="form-control form-control-sm bg-black text-light border-secondary font-monospace"
+                            placeholder="e.g. system_architecture_overview"
+                            required
+                        >
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold">Target Application</label>
-                        <select id="cc-field-application" class="form-select form-select-sm bg-black text-warning border-secondary font-monospace">
+                        <label class="form-label text-muted small text-uppercase font-weight-bold">
+                            Target Application
+                        </label>
+
+                        <select
+                            id="cc-field-application"
+                            class="form-select form-select-sm bg-black text-warning border-secondary font-monospace"
+                        >
                             <option value="aurora">aurora</option>
                             <option value="hopehub">hopehub</option>
                         </select>
                     </div>
+
                     <div class="col-12 d-flex flex-column" style="height: calc(100vh - 290px); min-height: 250px;">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">Rich Document Payload Editor</label>
+                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">
+                            Rich Document Payload Editor
+                        </label>
                         
                         <!-- ADDED: Lightweight Rich Text Command Format Action Toolbar Bar -->
                         <div class="d-flex align-items-center gap-1 bg-black p-1 mb-1 rounded border border-secondary" id="cc-editor-toolbar">
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="bold" title="Bold"><b>B</b></button>
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="italic" title="Italic"><i>I</i></button>
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-light" style="font-size:0.75rem;" data-cmd="underline" title="Underline"><u>U</u></button>
+
                             <div class="border-start border-secondary h-75 mx-1" style="width:1px; height:16px;"></div>
+
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="h1" title="Heading 1">H1</button>
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="h2" title="Heading 2">H2</button>
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-1 text-warning" style="font-size:0.75rem;" data-cmd="formatBlock" data-val="p" title="Paragraph">P</button>
+
                             <div class="border-start border-secondary h-75 mx-1" style="width:1px; height:16px;"></div>
+
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-info" style="font-size:0.75rem;" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
                             <button type="button" class="btn btn-outline-secondary btn-xs font-monospace py-0 px-2 text-danger" style="font-size:0.75rem;" data-cmd="removeFormat" title="Clear Styling">❌ Clear</button>
                         </div>
 
-                        <div id="cc-rich-editor" class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace" contenteditable="true" spellcheck="true" style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5; min-height: 200px;"></div>
+                        <div
+                            id="cc-rich-editor"
+                            class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace"
+                            contenteditable="true"
+                            spellcheck="true"
+                            style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5; min-height: 200px;"
+                        ></div>
                     </div>
                 </div>
             </form>
@@ -78,19 +111,25 @@
 
     <!-- COLUMN 3: RIGHT SIDE ACTION CONTROL MATRIX AND TRACE TERMINAL -->
     <div class="p-2 d-flex flex-column border-start border-secondary" style="width: 28%; min-width: 250px; background-color: #121212;">
-        <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
-            🛠️ Operational Matrix
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
+            🛠️ Workflow Controls
         </div>
+
         <div class="d-grid gap-2 mb-3">
             <button id="cc-save-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase">
                 💾 Save Asset Structure
             </button>
+
             <div class="row g-1">
                 <div class="col-6">
                     <button id="cc-clear-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100">
                         ✨ Clear Form
                     </button>
                 </div>
+
                 <div class="col-6">
                     <button id="cc-delete-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled>
                         🗑️ Delete
@@ -98,12 +137,21 @@
                 </div>
             </div>
         </div>
-        <div class="text-uppercase small font-weight-bold text-muted mb-1" style="letter-spacing: 1px; font-size: 0.75rem;">
+
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-1"
+            style="letter-spacing: 1px;"
+        >
             🖥️ Operational Pipeline Log Feed
         </div>
-        <pre id="cc-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Static Content Asset Engine Initialized...</pre>
+
+        <pre
+            id="cc-terminal-stream"
+            class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small"
+            style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;"
+        >[SYSTEM READY] Static Content Asset Engine Initialized...</pre>
     </div>
 </div>
 <!-- ====================================================================== -->
-<!-- END: CONTENT_VIEWPORT_SCALING_CLAMP (PATCH 1 OF 1) -->
+<!-- END: CONTENT_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->

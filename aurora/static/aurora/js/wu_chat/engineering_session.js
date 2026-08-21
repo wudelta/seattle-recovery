@@ -6,6 +6,10 @@
     "use strict";
 
     function initWuEngineeringSession() {
+    const workflowState = $(
+        '#wu-session-workflow-state'
+    );
+
     const sessionManagementMessages = $(
         '#wu-session-management-messages'
     );
@@ -52,14 +56,27 @@
             return;
         }
 
-        sessionManagementMessages.append(
+        sessionManagementMessages.prepend(
             $(`<div class="${className}"></div>`).text(
                 message
             )
         );
 
-        sessionManagementMessages.scrollTop(
-            sessionManagementMessages[0].scrollHeight
+        sessionManagementMessages.scrollTop(0);
+    }
+
+    function appendWorkflowStateMessage(
+        message,
+        className = 'text-muted'
+    ) {
+        if (!workflowState.length) {
+            return;
+        }
+
+        workflowState.append(
+            $(`<div class="${className}"></div>`).text(
+                message
+            )
         );
     }
 
@@ -133,7 +150,7 @@
     }
 
     function renderSessionWorkflowStatus(data) {
-        if (!sessionManagementMessages.length) {
+        if (!workflowState.length) {
             return;
         }
 
@@ -147,41 +164,41 @@
         const activeTimeEntry =
             executable.active_time_entry || null;
 
-        sessionManagementMessages.empty();
+        workflowState.empty();
 
-        appendSessionManagementMessage(
+        appendWorkflowStateMessage(
             data.active
                 ? '[SESSION] Engineering session active'
                 : '[SESSION] No active engineering session'
         );
 
         if (executable.available) {
-            appendSessionManagementMessage(
+            appendWorkflowStateMessage(
                 `[PLANNING] Initiative: ${
                     executable.initiative
                 }`
             );
 
-            appendSessionManagementMessage(
+            appendWorkflowStateMessage(
                 `[PLANNING] Phase: ${
                     executable.phase
                 }`
             );
 
-            appendSessionManagementMessage(
+            appendWorkflowStateMessage(
                 `[PLANNING] Step: ${
                     executable.step
                 }`,
                 'text-info'
             );
         } else {
-            appendSessionManagementMessage(
+            appendWorkflowStateMessage(
                 '[PLANNING] No executable work',
                 'text-warning'
             );
 
             if (executable.reason) {
-                appendSessionManagementMessage(
+                appendWorkflowStateMessage(
                     `[PLANNING] ${executable.reason}`
                 );
             }
@@ -212,14 +229,14 @@
                 );
             }
 
-            appendSessionManagementMessage(
+            appendWorkflowStateMessage(
                 `[NAVIGATION] ${
                     navigationParts.join(' → ')
                 }`
             );
         }
 
-        appendSessionManagementMessage(
+        appendWorkflowStateMessage(
             activeTimeEntry
                 ? `[STEP WORK] Active: ${
                     activeTimeEntry.step
@@ -227,13 +244,13 @@
                 : '[STEP WORK] No active work interval'
         );
 
-        appendSessionManagementMessage(
+        appendWorkflowStateMessage(
             `[DELTA NOTES] Unprocessed: ${
                 deltaNotes.unprocessed_count ?? 0
             }`
         );
 
-        appendSessionManagementMessage(
+        appendWorkflowStateMessage(
             `[REGISTRY] Pending enrichment: ${
                 registry.pending_enrichment_count ?? 0
             }`

@@ -21,11 +21,11 @@
 <!-- ====================================================================== -->
         <div
             class="d-flex flex-column h-100"
-            style="width: 66.66%; min-width: 0; padding-right: 4px;"
+            style="width: 52%; min-width: 0; padding-right: 4px;"
         >
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span
-                    class="text-uppercase font-weight-bold font-monospace text-warning small"
+                    class="text-uppercase font-weight-bold font-monospace text-info small"
                     style="letter-spacing: 1px;"
                 >
                     💬 Command Input Deck: Wu
@@ -68,8 +68,8 @@
 <!-- START: WU_RIGHT_OPERATIONS_COLUMN_OPEN -->
 <!-- ====================================================================== -->
         <div
-            class="d-flex flex-column h-100 gap-2"
-            style="width: 33.33%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;"
+            class="d-flex flex-row h-100 gap-2"
+            style="width: 48%; min-width: 0; border-left: 1px solid #1f1f23; padding-left: 8px;"
         >
 <!-- ====================================================================== -->
 <!-- END: WU_RIGHT_OPERATIONS_COLUMN_OPEN -->
@@ -83,43 +83,21 @@
 <section
     id="wu-session-management-panel"
     class="d-flex flex-column flex-shrink-0"
-    style="height: 42%; min-height: 220px;"
+    style="width: 38%; min-width: 0;"
 >
     <div class="d-flex justify-content-between align-items-center mb-1">
         <span
             class="text-uppercase font-weight-bold font-monospace text-info small"
             style="letter-spacing: 1px;"
         >
-            ⚙ Session Management
+            🛠️ Workflow Controls
         </span>
     </div>
 
     <div
-        id="wu-session-management-messages"
-        class="flex-grow-1 p-2 rounded mb-2"
-        style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
-    >
-        <div class="text-muted">
-            [SESSION] Waiting for active workflow state.
-        </div>
-
-        <div class="text-muted">
-            [PLANNING] Executable work: not loaded
-        </div>
-
-        <div class="text-muted">
-            [DELTA NOTES] Unprocessed: not loaded
-        </div>
-
-        <div class="text-muted">
-            [REGISTRY] Pending enrichment: not loaded
-        </div>
-    </div>
-
-    <div
         id="wu-session-management-actions"
-        class="d-grid gap-1"
-        style="grid-template-columns: repeat(2, minmax(0, 1fr));"
+        class="d-grid gap-1 flex-shrink-0"
+        style="grid-template-columns: 1fr;"
     >
         <button
             id="wu-start-step-work-btn"
@@ -173,7 +151,7 @@
 
     <div
         id="wu-planning-completion-review"
-        class="d-none mt-2 p-2 rounded"
+        class="d-none mt-2 p-2 rounded flex-shrink-0"
         style="
             background-color: #050505;
             border: 1px solid #3f3f46;
@@ -185,10 +163,7 @@
             style="font-size: 0.78rem;"
         ></div>
 
-        <div
-            class="d-grid gap-1"
-            style="grid-template-columns: repeat(2, minmax(0, 1fr));"
-        >
+        <div class="d-grid gap-1">
             <button
                 id="wu-planning-completion-reject-btn"
                 type="button"
@@ -216,37 +191,83 @@
 <!-- FILE: aurora/templates/aurora/wu_chat/wu_chat_console_panel.html -->
 <!-- START: WU_TELEMETRY_STREAM -->
 <!-- ====================================================================== -->
-            <section
-                class="d-flex flex-column flex-grow-1"
-                style="min-height: 0;"
+<section
+    class="d-flex flex-column flex-grow-1 gap-2"
+    style="min-width: 0; min-height: 0;"
+>
+    <div class="d-flex flex-column flex-shrink-0">
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-1"
+            style="letter-spacing: 1px;"
+        >
+            📍 Current Workflow State
+        </div>
+
+        <div
+            id="wu-session-workflow-state"
+            class="p-2 rounded"
+            style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; max-height: 150px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
+        >
+            <div class="text-muted">
+                [SESSION] Waiting for active workflow state.
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="d-flex flex-column flex-grow-1"
+        style="min-height: 110px;"
+    >
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-1"
+            style="letter-spacing: 1px;"
+        >
+            📋 Session Activity
+        </div>
+
+        <div
+            id="wu-session-management-messages"
+            class="flex-grow-1 p-2 rounded"
+            style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.78rem; line-height: 1.4;"
+        >
+            <div class="text-muted">
+                [SESSION] Waiting for activity.
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="d-flex flex-column flex-shrink-0"
+        style="height: 28%; min-height: 130px;"
+    >
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span
+                class="text-uppercase font-weight-bold font-monospace text-info small"
+                style="letter-spacing: 1px;"
             >
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span
-                        class="text-uppercase font-weight-bold font-monospace text-muted small"
-                        style="letter-spacing: 1px; color: #888888;"
-                    >
-                        📡 Fleet Telemetry Output Stream
-                    </span>
+                🖥️ Operational Pipeline Log Feed
+            </span>
 
-                    <button
-                        id="clear-wu-telemetry-btn"
-                        class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace"
-                        style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;"
-                    >
-                        Flush Logs
-                    </button>
-                </div>
+            <button
+                id="clear-wu-telemetry-btn"
+                class="btn btn-outline-secondary btn-xs py-0 px-2 font-monospace"
+                style="font-size: 0.7rem; border-color: #27272a; color: #a3a3a3;"
+            >
+                Flush Logs
+            </button>
+        </div>
 
-                <div
-                    id="wu-telemetry-screen-output"
-                    class="flex-grow-1 p-2 rounded"
-                    style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;"
-                >
-                    <div class="text-info font-monospace small">
-                        [SYSTEM] Telemetry pipeline deck initialized. Activate session timer to mount Daphne connection...
-                    </div>
-                </div>
-            </section>
+        <div
+            id="wu-telemetry-screen-output"
+            class="flex-grow-1 p-2 rounded"
+            style="background-color: #050505; border: 1px solid #1f1f23; overflow-y: auto; min-height: 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85rem; line-height: 1.4; color: #a3a3a3;"
+        >
+            <div class="text-info font-monospace small">
+                [SYSTEM] Operational pipeline ready.
+            </div>
+        </div>
+    </div>
+</section>
 <!-- ====================================================================== -->
 <!-- END: WU_TELEMETRY_STREAM -->
 <!-- ====================================================================== -->

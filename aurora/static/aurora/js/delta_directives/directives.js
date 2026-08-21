@@ -13,11 +13,11 @@ function initDirectivesConsole(endpoints, csrfToken) {
         const timestamp = new Date().toLocaleTimeString();
         const indicator = isError ? '[ERROR]' : '[SUCCESS]';
         const colorClass = isError ? 'text-danger' : 'text-success';
-        const rawLine = `\n[${timestamp}] ${indicator} ${text}`;
+        const rawLine = `[${timestamp}] ${indicator} ${text}\n`;
         const $stream = $('#dc-terminal-stream');
-        $stream.append($('<span>').addClass(colorClass).text(rawLine));
+        $stream.prepend($('<span>').addClass(colorClass).text(rawLine));
         if ($stream.length) {
-            $stream.scrollTop($stream.scrollHeight);
+            $stream.scrollTop(0);
         }
     }
 

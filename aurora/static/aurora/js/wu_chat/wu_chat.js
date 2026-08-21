@@ -17,7 +17,10 @@ function initWuChatConsole(endpoints, csrfToken) {
     function handleIncomingStreamData(rawData) {
         let rawStringContent = '';
 
-        if (typeof rawData === 'object' && rawData !== null) {
+        if (
+            typeof rawData === 'object'
+            && rawData !== null
+        ) {
             rawStringContent = JSON.stringify(rawData);
         } else if (typeof rawData === 'string') {
             rawStringContent = rawData.trim();
@@ -29,8 +32,8 @@ function initWuChatConsole(endpoints, csrfToken) {
             '<div style="margin-bottom: 2px; color: #a3a3a3;"></div>'
         ).text(rawStringContent);
 
-        telemetryLog.append(lineNode);
-        telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
+        telemetryLog.prepend(lineNode);
+        telemetryLog.scrollTop(0);
     }
 
     $(document).on(
@@ -48,6 +51,7 @@ function initWuChatConsole(endpoints, csrfToken) {
 // ======================================================================
 // END: DOM_INITIALIZATIONS_AND_STREAM_ROUTING
 // ======================================================================
+
 
 // ======================================================================
 // FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
@@ -212,12 +216,16 @@ function initWuChatConsole(endpoints, csrfToken) {
 // END: TRANSMIT_CLICK_EVENT_AND_AJAX_ENGINE
 // ======================================================================
 
+
 // ======================================================================
 // FILE: aurora/static/aurora/js/wu_chat/wu_chat.js
 // START: VERIFICATION_ACTIONS_AND_UI_HELPERS
 // ======================================================================
     approveBtn.on('click', function() {
-        if (!pendingPatch || !pendingPatch.pending_change_id) {
+        if (
+            !pendingPatch
+            || !pendingPatch.pending_change_id
+        ) {
             appendSystemAlert(
                 '💥 [PATCH ERROR] No persisted code change is available for approval.'
             );
@@ -232,16 +240,19 @@ function initWuChatConsole(endpoints, csrfToken) {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                pending_change_id: pendingPatch.pending_change_id
+                pending_change_id:
+                    pendingPatch.pending_change_id
             }),
             headers: {
                 'X-CSRFToken':
-                    csrfToken || $('[name=csrfmiddlewaretoken]').val()
+                    csrfToken
+                    || $('[name=csrfmiddlewaretoken]').val()
             },
             success: function(response) {
                 appendSystemAlert(
                     `✅ [PATCH APPLIED] Repository file updated: ${
-                        response.file_path || formatPatchTarget(pendingPatch)
+                        response.file_path
+                        || formatPatchTarget(pendingPatch)
                     }`
                 );
 
@@ -252,11 +263,17 @@ function initWuChatConsole(endpoints, csrfToken) {
                 }
             },
             error: function(xhr) {
-                let errorText = 'The code change could not be applied.';
+                let errorText =
+                    'The code change could not be applied.';
 
                 try {
-                    const parsed = JSON.parse(xhr.responseText);
-                    errorText = parsed.error || parsed.message || errorText;
+                    const parsed =
+                        JSON.parse(xhr.responseText);
+
+                    errorText =
+                        parsed.error
+                        || parsed.message
+                        || errorText;
                 } catch (e) {
                     // Preserve the generic message for non-JSON responses.
                 }
@@ -273,7 +290,10 @@ function initWuChatConsole(endpoints, csrfToken) {
     });
 
     rejectBtn.on('click', function() {
-        if (!pendingPatch || !pendingPatch.pending_change_id) {
+        if (
+            !pendingPatch
+            || !pendingPatch.pending_change_id
+        ) {
             appendSystemAlert(
                 '💥 [PATCH ERROR] No persisted code change is available for rejection.'
             );
@@ -288,11 +308,13 @@ function initWuChatConsole(endpoints, csrfToken) {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                pending_change_id: pendingPatch.pending_change_id
+                pending_change_id:
+                    pendingPatch.pending_change_id
             }),
             headers: {
                 'X-CSRFToken':
-                    csrfToken || $('[name=csrfmiddlewaretoken]').val()
+                    csrfToken
+                    || $('[name=csrfmiddlewaretoken]').val()
             },
             success: function() {
                 pendingPatch = null;
@@ -306,11 +328,17 @@ function initWuChatConsole(endpoints, csrfToken) {
                 );
             },
             error: function(xhr) {
-                let errorText = 'The code change could not be rejected.';
+                let errorText =
+                    'The code change could not be rejected.';
 
                 try {
-                    const parsed = JSON.parse(xhr.responseText);
-                    errorText = parsed.error || parsed.message || errorText;
+                    const parsed =
+                        JSON.parse(xhr.responseText);
+
+                    errorText =
+                        parsed.error
+                        || parsed.message
+                        || errorText;
                 } catch (e) {
                     // Preserve the generic message for non-JSON responses.
                 }
@@ -334,9 +362,14 @@ function initWuChatConsole(endpoints, csrfToken) {
             '<strong>Wu: </strong></div>'
         );
 
-        wuBubble.append(document.createTextNode(message));
+        wuBubble.append(
+            document.createTextNode(message)
+        );
+
         chatHistory.append(wuBubble);
-        chatHistory.scrollTop(chatHistory[0].scrollHeight);
+        chatHistory.scrollTop(
+            chatHistory[0].scrollHeight
+        );
     }
 
     function formatPatchError(patchError) {
@@ -344,50 +377,77 @@ function initWuChatConsole(endpoints, csrfToken) {
             return patchError;
         }
 
-        if (patchError && typeof patchError === 'object') {
+        if (
+            patchError
+            && typeof patchError === 'object'
+        ) {
             return (
-                patchError.message ||
-                patchError.error ||
-                JSON.stringify(patchError)
+                patchError.message
+                || patchError.error
+                || JSON.stringify(patchError)
             );
         }
 
-        return 'The AI response did not contain a valid structured patch.';
+        return (
+            'The AI response did not contain '
+            + 'a valid structured patch.'
+        );
     }
 
     function formatPatchTarget(patch) {
-        if (!patch || typeof patch !== 'object') {
+        if (
+            !patch
+            || typeof patch !== 'object'
+        ) {
             return '';
         }
 
         const targetPath =
-            patch.file_path ||
-            patch.path ||
-            patch.target_file;
+            patch.file_path
+            || patch.path
+            || patch.target_file;
 
-        return targetPath ? ` for ${targetPath}` : '';
+        return (
+            targetPath
+                ? ` for ${targetPath}`
+                : ''
+        );
     }
 
     function gatherLocalChatHistory() {
         const historyArray = [];
 
-        chatHistory.find('> div').each(function() {
-            const node = $(this);
-            const textContent = node.text().trim();
-            const backgroundColor = node.css('background-color');
+        chatHistory
+            .find('> div')
+            .each(function() {
+                const node = $(this);
+                const textContent =
+                    node.text().trim();
 
-            if (backgroundColor === 'rgb(24, 24, 27)') {
-                historyArray.push({
-                    role: 'user',
-                    text: textContent
-                });
-            } else if (backgroundColor === 'rgb(30, 27, 75)') {
-                historyArray.push({
-                    role: 'model',
-                    text: textContent.replace(/^Wu:\s*/i, '')
-                });
-            }
-        });
+                const backgroundColor =
+                    node.css('background-color');
+
+                if (
+                    backgroundColor
+                    === 'rgb(24, 24, 27)'
+                ) {
+                    historyArray.push({
+                        role: 'user',
+                        text: textContent
+                    });
+                } else if (
+                    backgroundColor
+                    === 'rgb(30, 27, 75)'
+                ) {
+                    historyArray.push({
+                        role: 'model',
+                        text: textContent.replace(
+                            /^Wu:\s*/i,
+                            ''
+                        )
+                    });
+                }
+            });
 
         return historyArray;
     }
@@ -408,13 +468,16 @@ function initWuChatConsole(endpoints, csrfToken) {
             '<div style="margin-bottom: 4px; color: #38bdf8;"></div>'
         ).text(message);
 
-        telemetryLog.append(lineNode);
-        telemetryLog.scrollTop(telemetryLog[0].scrollHeight);
+        telemetryLog.prepend(lineNode);
+        telemetryLog.scrollTop(0);
     }
 
-    $(document).on('aurora:telemetry_stream_ended', function() {
-        resetInputControls();
-    });
+    $(document).on(
+        'aurora:telemetry_stream_ended',
+        function() {
+            resetInputControls();
+        }
+    );
 }
 // ======================================================================
 // END: VERIFICATION_ACTIONS_AND_UI_HELPERS

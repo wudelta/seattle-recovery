@@ -1,356 +1,243 @@
 # ======================================================================
-# FILE: aurora/subsystems/anamod/contracts/HANSEL.md
-# START: ANAMOD_HANSEL_CONTRACT
+# FILE: aurora/subsystems/content/contracts/HANSEL.md
+# START: CONTENT_HANSEL_CONTRACT
 # ======================================================================
 
-# Anamod — Hansel Contract
+# Content — Hansel Contract
 
 **Knowledge State:** VERIFIED
-**Subsystem:** `anamod`
+**Subsystem:** `content`
 
 ---
 
 ## Purpose
 
-Anamod provides Aurora's repository editor and workspace-oriented development
-capabilities.
+Content stores and serves standalone informational HTML content used by Aurora
+and HopeHub.
 
-Its current implemented responsibilities center on IDE operations and bounded
-workspace/file services.
-
-Anamod is undergoing architectural migration.
-
-Its present directory structure contains both implemented responsibilities and
-reserved or incomplete layers.
+It provides a lightweight persisted content source for informational pages
+without introducing a full CMS.
 
 ---
 
 ## Ownership Boundary
 
-Anamod owns:
+Content owns:
 
-* repository editor operations specific to Anamod;
-* bounded workspace/file operations used by the editor;
-* Anamod-specific API behavior;
-* future Anamod editor behavior;
-* future Anamod UI behavior;
-* Anamod migration and technical-debt documentation.
+* persistent `StaticContent` records;
+* application-level content classification;
+* stored HTML content;
+* Content API behavior;
+* Content Django administration;
+* Content-specific client-side UI behavior.
 
-Anamod does not own:
+Content does not own:
 
-* general repository component discovery;
-* Component Registry state;
-* Hansel repository grammar;
+* page routing outside its API integration;
+* full CMS workflow;
+* repository documentation;
 * Planning state;
-* AI provider execution;
-* Wu Chat code-review workflow;
-* general Initiative orchestration;
-* Django-wide static or template infrastructure.
+* Component Registry metadata;
+* AI execution;
+* orchestration;
+* Wu Chat behavior.
 
 ---
 
-## Current Implementation State
+## Canonical Data Authority
 
-The currently populated implementation surfaces are:
+Authoritative model:
 
-```text id="ahj4ln"
-api/ide_operations.py
-services/workspace_service.py
+```text
+aurora/subsystems/content/models.py
+    StaticContent
 ```
 
-Several additional directories exist but contain no implementation beyond
-package markers or are completely empty.
+Current persisted state includes:
 
-These directories must not be treated as implemented capabilities merely
-because they exist.
+```text
+application
+title
+html_content
+created_by
+date_created
+date_modified
+```
+
+Supported application values currently include:
+
+```text
+aurora
+hopehub
+```
 
 ---
 
 ## Repository Map
 
-```text id="3vdav5"
-anamod/
-    api/
-        ide_operations.py
-            Implemented Anamod IDE operation API behavior.
+```text
+content/
+    admin.py
+        Django administration for StaticContent.
 
-    services/
-        workspace_service.py
-            Implemented workspace/file service behavior.
+    models.py
+        Authoritative StaticContent persistence model.
+
+    api/
+        endpoint.py
+            Content API behavior.
 
     contracts/
         HANSEL.md
             Canonical Hansel discovery entry point.
 
-        MIGRATION_PLAN.md
-            Existing migration planning contract.
-
-        SUBSYSTEM.md
-            Pre-Hansel subsystem documentation.
-
-        TECHNICAL_DEBT.md
-            Known technical debt and unresolved Anamod concerns.
-
-    docs/
-        Empty directory.
-
-    editor/
-        __init__.py only.
-
-    ui/
-        __init__.py only.
-
-    workspace/
-        __init__.py only.
+        UI_MAP.md
+            Routes Content UI work to the owning template, JavaScript,
+            and CSS authorities.
 ```
 
----
+No service layer currently exists.
 
-## Directory Classification
+That is appropriate while Content remains a simple persistence-and-delivery
+capability.
 
-Hansel classifies the current Anamod structure as follows.
-
-### API
-
-```text id="nbu6md"
-anamod/api/
-```
-
-**State:** POPULATED
-
-Implemented authority:
-
-```text id="10pqg4"
-aurora/subsystems/anamod/api/ide_operations.py
-```
-
----
-
-### Services
-
-```text id="78d4m5"
-anamod/services/
-```
-
-**State:** POPULATED
-
-Implemented authority:
-
-```text id="9qqz3i"
-aurora/subsystems/anamod/services/workspace_service.py
-```
-
----
-
-### Editor
-
-```text id="s1dwzn"
-anamod/editor/
-```
-
-**State:** EMPTY
-
-The directory currently contains only:
-
-```text id="3j0c4u"
-__init__.py
-```
-
-No editor implementation responsibility is proven by current repository
-contents.
-
-Whether this directory represents planned architecture, unfinished migration, or
-stale scaffolding must be established from deeper Anamod contracts.
-
----
-
-### UI
-
-```text id="z9nh6o"
-anamod/ui/
-```
-
-**State:** EMPTY
-
-The directory currently contains only:
-
-```text id="1e6dyg"
-__init__.py
-```
-
-No Anamod UI implementation responsibility is proven by current repository
-contents.
-
----
-
-### Workspace
-
-```text id="7l9g8j"
-anamod/workspace/
-```
-
-**State:** EMPTY
-
-The directory currently contains only:
-
-```text id="1u94l3"
-__init__.py
-```
-
-Workspace behavior currently exists instead in:
-
-```text id="tnmm1p"
-aurora/subsystems/anamod/services/workspace_service.py
-```
-
-The reason for retaining a separate empty `workspace/` package is not
-established by this contract.
-
----
-
-### Docs
-
-```text id="h0fcsg"
-anamod/docs/
-```
-
-**State:** EMPTY
-
-No current documentation responsibility is represented by files in this
-directory.
-
-Anamod architectural documentation currently resides under:
-
-```text id="91yjbd"
-anamod/contracts/
-```
+Content also owns browser and template integration surfaces outside the Python
+subsystem directory. Those are mapped through `UI_MAP.md`.
 
 ---
 
 ## Public Entry Points
 
-Primary Anamod API implementation:
+### Content API
 
-```text id="g7dboc"
-aurora/subsystems/anamod/api/ide_operations.py
+Primary API entry point:
+
+```text
+aurora/subsystems/content/api/endpoint.py
 ```
 
-Primary workspace service:
+### Persistent Content Authority
 
-```text id="bx9s6a"
-aurora/subsystems/anamod/services/workspace_service.py
+```text
+aurora/subsystems/content/models.py
 ```
 
-Additional runtime entry points are not established by this contract.
+### Administrative Interface
 
-**Knowledge State:** UNKNOWN
-
-Next breadcrumb:
-
-```text id="rz9jd0"
-aurora/subsystems/anamod/api/ide_operations.py
+```text
+aurora/subsystems/content/admin.py
 ```
 
-and consumer mapping for that module.
+### Content UI
 
----
+Primary UI routing contract:
 
-## Workspace Service
-
-Current workspace/file implementation authority:
-
-```text id="q58s9u"
-aurora/subsystems/anamod/services/workspace_service.py
+```text
+aurora/subsystems/content/contracts/UI_MAP.md
 ```
 
-The service belongs to Anamod because it supports Anamod's repository editing
-and IDE workflow.
-
-This does not make Anamod the owner of all repository discovery or repository
-knowledge.
-
-Repository knowledge belongs to Hansel and Component Registry according to their
-respective contracts.
+Use this authority when the task concerns Content Console structure, browser
+interaction, operational-log behavior, or Content-specific styling.
 
 ---
 
 ## AI Usage
 
-No Anamod-owned AI execution behavior is established by the current subsystem
-tree.
+Content does not currently own AI-assisted behavior.
 
-**Knowledge State:** UNKNOWN
+**Knowledge State:** VERIFIED
 
-Do not infer AI behavior from Anamod's role as a development tool.
-
-Next breadcrumb:
-
-```text id="mh8d6c"
-aurora/subsystems/anamod/api/ide_operations.py
-aurora/subsystems/anamod/services/workspace_service.py
-```
+If AI-assisted authoring or transformation is introduced later, persisted
+content must remain distinguishable from generated drafts or transient AI
+output.
 
 ---
 
 ## Dependencies
 
-Exact runtime dependencies are not established from the subsystem tree alone.
+### Django
 
-**Knowledge State:** UNKNOWN
+Content depends on:
 
-Next breadcrumbs:
-
-```text id="7jj0p3"
-aurora/subsystems/anamod/api/ide_operations.py
-aurora/subsystems/anamod/services/workspace_service.py
+```text
+Django ORM
+Django admin
+Django API/request handling
+Django static/template integration
 ```
 
-Existing migration and technical-debt contracts may provide additional
-architectural context:
+### Aurora User Model
 
-```text id="wbztgl"
-aurora/subsystems/anamod/contracts/MIGRATION_PLAN.md
-aurora/subsystems/anamod/contracts/TECHNICAL_DEBT.md
+Content authorship references:
+
+```text
+settings.AUTH_USER_MODEL
 ```
+
+No additional subsystem dependency is established by this contract.
 
 ---
 
 ## Consumers
 
-Exact current consumers of Anamod API and workspace services are not established
-by this contract.
+Known consumers include:
+
+```text
+Aurora
+    May serve persisted informational content.
+
+HopeHub
+    May serve persisted informational content classified for HopeHub.
+
+Django admin
+    Provides administrative content management.
+
+Aurora Console
+    Hosts the Content management interface.
+```
+
+The exact page-routing consumers of persisted Content records are not fully
+established by this contract.
 
 **Knowledge State:** UNKNOWN
 
-Consumer discovery should begin with:
+Next breadcrumb:
 
-```text id="3nddfu"
-aurora.subsystems.anamod
-ide_operations
-workspace_service
+```text
+aurora/subsystems/content/api/endpoint.py
 ```
 
-Search only as broadly as necessary to establish the current consumer map.
+and repository consumers of `StaticContent`.
 
 ---
 
 ## Framework Integration Surfaces
 
-No specific Django-mandated Anamod integration surface is established by this
-contract.
+Content models are re-exported through:
 
-**Knowledge State:** UNKNOWN
-
-Do not invent one from subsystem naming or historical architecture.
-
-Consumer discovery of:
-
-```text id="g4uj5m"
-api/ide_operations.py
-services/workspace_service.py
+```text
+aurora/models.py
 ```
 
-should establish actual integration points.
+Content admin registration is loaded through:
+
+```text
+aurora/admin.py
+```
+
+Content browser and template integration surfaces are routed through:
+
+```text
+aurora/subsystems/content/contracts/UI_MAP.md
+```
+
+These are framework integration surfaces.
+
+Domain ownership remains:
+
+```text
+aurora/subsystems/content/
+```
 
 ---
 
@@ -358,328 +245,217 @@ should establish actual integration points.
 
 ### Consumer Mapping
 
-Before moving, renaming, consolidating, or deleting Anamod assets, identify
-consumers first.
+Before moving, renaming, or deleting Content models, fields, API symbols, UI
+assets, or content-routing integrations, identify consumers first.
 
 Example:
 
-```bash id="qcm5mm"
-grep -RIn <old-path-or-symbol> aurora core_logic
+```bash
+grep -RIn <old-path-or-symbol> aurora hopehub core_logic
 ```
-
-This is especially important while Anamod remains in migration because directory
-shape alone cannot establish active runtime use.
 
 ---
 
 ### Tombstone Validation
 
-After moving, deleting, or renaming an Anamod asset, verify obsolete references
-are gone.
+After rename, move, or deletion, verify obsolete references no longer exist.
 
 Expected:
 
-```text id="rhtnb6"
+```text
 no live references
 ```
 
-This includes obsolete:
+---
 
-* module paths;
-* imports;
-* filenames;
-* service names;
-* API symbols;
-* historical workspace namespaces.
+### Model Survival Validation
+
+For source-only model moves:
+
+```bash
+dmakemigrations --check
+daurora-cmd check
+```
+
+Expected:
+
+```text
+No changes detected
+System check identified no issues
+```
+
+Where appropriate, also verify:
+
+```text
+StaticContent.__module__
+StaticContent._meta.app_label
+StaticContent._meta.db_table
+existing row count
+```
 
 ---
 
-### Survival Validation
+### Admin Survival Validation
 
-An Anamod move or refactor must prove the affected capability survived.
+After moving Content admin configuration, verify:
 
-Depending on the change, evidence may include:
-
-```text id="30vnfe"
-Django system check succeeds.
-Existing consumers import the new authority.
-IDE operations still execute.
-Workspace file reads still succeed.
-Workspace file writes remain bounded and safe.
-Expected editor behavior remains functional.
+```text
+StaticContent in admin.site._registry
 ```
 
-The validation must correspond to the actual changed responsibility.
+Expected:
+
+```text
+True
+```
 
 ---
 
-### Empty Directory Validation
+### UI Survival Validation
 
-Before removing an empty architectural layer:
+Content UI changes should prove the affected behavior directly.
 
-1. inspect deeper Anamod contracts;
-2. map consumers of the namespace;
-3. determine whether the directory represents active planned architecture;
-4. remove only when no current or intentionally reserved responsibility remains;
-5. perform tombstone validation afterward.
+For operational-log changes, verify:
 
-An empty directory is an architectural question, not automatic permission to
-delete it.
+```text
+🖥️ Operational Pipeline Log Feed is visible
+newest message appears at the top
+older messages remain below
+latest activity is visible without manual scrolling
+existing Content actions still emit their existing messages
+```
+
+For other UI changes, follow:
+
+```text
+aurora/subsystems/content/contracts/UI_MAP.md
+```
+
+to identify the narrowest template, JavaScript, or CSS authority.
 
 ---
 
-## Existing Contract Authority
+### Behavioral Survival Validation
 
-Anamod contains documentation created before the canonical Hansel contract
-standard.
+Changes to Content behavior should prove the affected invariant.
 
-Those files must not silently compete with `HANSEL.md`.
+Examples include:
 
-### HANSEL.md
-
-```text id="yp48nv"
-contracts/HANSEL.md
+```text
+content remains readable;
+application classification remains intact;
+stored HTML remains persisted;
+authorized administrative editing still works.
 ```
 
-Canonical discovery entry point.
-
-This file owns the current subsystem map and routes workers toward deeper
-authority.
-
----
-
-### MIGRATION_PLAN.md
-
-```text id="ejtfq5"
-contracts/MIGRATION_PLAN.md
-```
-
-Deeper authority for Anamod migration planning where its contents remain
-current.
-
----
-
-### TECHNICAL_DEBT.md
-
-```text id="1tk1b0"
-contracts/TECHNICAL_DEBT.md
-```
-
-Deeper authority for known Anamod technical debt and unresolved implementation
-concerns.
-
----
-
-### SUBSYSTEM.md
-
-```text id="y6fs1n"
-contracts/SUBSYSTEM.md
-```
-
-**State:** DEPRECATED AS ENTRY POINT
-
-This file predates the canonical Hansel `HANSEL.md` standard.
-
-Its contents may still contain useful architectural evidence, but workers must
-begin with `HANSEL.md`.
-
-`SUBSYSTEM.md` should eventually be:
-
-```text id="a2d7fp"
-reviewed
-    ↓
-useful knowledge migrated or linked
-    ↓
-tombstoned if no unique authority remains
-```
-
-Do not delete it until its unique information has been evaluated.
+Validation should match the actual claim made by the change.
 
 ---
 
 ## Known Gaps
 
-### Empty Editor Layer
+### Consumer Map
 
 **State:** UNKNOWN
 
-```text id="5r73pz"
-aurora/subsystems/anamod/editor/
-```
-
-contains no implemented editor behavior.
+The exact current routes and templates consuming `StaticContent` records are not
+fully enumerated here.
 
 Next breadcrumb:
 
-```text id="jy5gfn"
-contracts/MIGRATION_PLAN.md
-contracts/TECHNICAL_DEBT.md
-contracts/SUBSYSTEM.md
+```text
+grep consumers of StaticContent and the Content API
 ```
+
+Do not infer active consumers from the existence of stored content alone.
 
 ---
 
-### Empty UI Layer
+### CMS Boundary
 
-**State:** UNKNOWN
+**State:** VERIFIED
 
-```text id="esxdbo"
-aurora/subsystems/anamod/ui/
-```
+Content is intentionally lightweight.
 
-contains no implemented UI behavior.
+It is not currently a full content-management system.
 
-Next breadcrumb:
-
-```text id="nx02uf"
-contracts/MIGRATION_PLAN.md
-contracts/TECHNICAL_DEBT.md
-contracts/SUBSYSTEM.md
-```
-
----
-
-### Empty Workspace Layer
-
-**State:** UNKNOWN
-
-```text id="fjv2f3"
-aurora/subsystems/anamod/workspace/
-```
-
-contains no implemented workspace behavior.
-
-Current workspace implementation exists in:
-
-```text id="3m7oxf"
-services/workspace_service.py
-```
-
-Next breadcrumb:
-
-```text id="c86hn7"
-contracts/MIGRATION_PLAN.md
-contracts/TECHNICAL_DEBT.md
-contracts/SUBSYSTEM.md
-```
-
----
-
-### Empty Docs Layer
-
-**State:** UNKNOWN
-
-```text id="9bmfs3"
-aurora/subsystems/anamod/docs/
-```
-
-is empty.
-
-Next breadcrumb:
-
-```text id="7vl8dv"
-contracts/MIGRATION_PLAN.md
-contracts/TECHNICAL_DEBT.md
-contracts/SUBSYSTEM.md
-```
-
-Determine whether this directory has an intentional future responsibility before
-retaining or removing it.
-
----
-
-### Runtime Consumer Map
-
-**State:** UNKNOWN
-
-The current subsystem tree proves implementation exists but does not establish
-who invokes it.
-
-Next breadcrumb:
-
-```text id="sc1i6y"
-consumer search for:
-    aurora.subsystems.anamod
-    ide_operations
-    workspace_service
-```
+If workflow complexity grows enough to justify drafts, publishing states,
+versioning, approval, or richer authoring behavior, that should be treated as an
+architectural expansion rather than silently embedded into the existing simple
+subsystem.
 
 ---
 
 ## Deeper Contracts
 
-For migration architecture:
+For Content UI ownership:
 
-```text id="vavqfm"
-aurora/subsystems/anamod/contracts/MIGRATION_PLAN.md
+```text
+aurora/subsystems/content/contracts/UI_MAP.md
 ```
 
-For known technical debt:
+No other deeper Content contracts are currently authoritative.
 
-```text id="6t71ym"
-aurora/subsystems/anamod/contracts/TECHNICAL_DEBT.md
-```
+Additional contracts should be created only if content lifecycle, publication,
+security, or delivery complexity justifies them.
 
-For pre-Hansel architectural evidence:
-
-```text id="yr48x7"
-aurora/subsystems/anamod/contracts/SUBSYSTEM.md
-```
-
-`SUBSYSTEM.md` is not the canonical entry point.
+`HANSEL.md` remains the canonical discovery entry point.
 
 ---
 
 ## Hansel Rules for This Subsystem
 
-A worker modifying Anamod must:
+A worker modifying Content must:
 
 1. begin with this contract;
-2. distinguish populated implementation from empty architectural scaffolding;
-3. consult migration and technical-debt contracts before deleting empty layers;
-4. treat `SUBSYSTEM.md` as pre-Hansel evidence rather than the canonical entry
-   point;
-5. map consumers before moving or deleting Anamod assets;
-6. perform tombstone validation after rename or removal;
-7. prove IDE/workspace behavior survived relevant refactors;
-8. keep repository knowledge ownership outside Anamod;
-9. avoid inventing responsibility for empty directories;
-10. update this contract when migration resolves current structural unknowns.
+2. preserve Content as a lightweight persistence-and-delivery capability unless
+   architecture explicitly expands its scope;
+3. follow `UI_MAP.md` for Content UI work;
+4. map consumers before moving or deleting assets;
+5. perform tombstone validation after rename or removal;
+6. preserve Django model identity during source-only moves;
+7. validate content persistence and delivery behavior when those invariants
+   change;
+8. preserve existing browser behavior unless the task explicitly changes it;
+9. avoid introducing service layers or deeper contracts without a real
+   responsibility;
+10. update this contract when ownership, interfaces, consumers, lifecycle, or
+    durable UI routing changes.
 
 ---
 
 ## Next Hansel Breadcrumb
 
-For implemented IDE behavior:
+For the authoritative model:
 
-```text id="s94npr"
-aurora/subsystems/anamod/api/ide_operations.py
+```text
+aurora/subsystems/content/models.py
 ```
 
-For implemented workspace behavior:
+For API behavior:
 
-```text id="5ve70k"
-aurora/subsystems/anamod/services/workspace_service.py
+```text
+aurora/subsystems/content/api/endpoint.py
 ```
 
-For migration intent:
+For administration:
 
-```text id="9nxvzf"
-aurora/subsystems/anamod/contracts/MIGRATION_PLAN.md
+```text
+aurora/subsystems/content/admin.py
 ```
 
-For known technical debt:
+For Content UI behavior:
 
-```text id="pwxemg"
-aurora/subsystems/anamod/contracts/TECHNICAL_DEBT.md
+```text
+aurora/subsystems/content/contracts/UI_MAP.md
 ```
 
-For unresolved pre-Hansel architectural knowledge:
+For unresolved consumer mapping:
 
-```text id="gpbwqf"
-aurora/subsystems/anamod/contracts/SUBSYSTEM.md
+```text
+grep consumers of StaticContent and content API paths
 ```
 
 # ======================================================================
-# END: ANAMOD_HANSEL_CONTRACT
+# END: CONTENT_HANSEL_CONTRACT
 # ======================================================================

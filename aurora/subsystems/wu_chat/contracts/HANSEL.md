@@ -39,7 +39,7 @@ Wu Chat owns:
 * preparation of code-review payloads;
 * Wu-specific code-review workflow state;
 * Wu-specific admin configuration;
-* Wu-specific client-side diff-review behavior.
+* Wu-specific client-side interaction and review behavior.
 
 Wu Chat does not own:
 
@@ -112,6 +112,9 @@ wu_chat/
         HANSEL.md
             Canonical Hansel discovery entry point.
 
+        UI_MAP.md
+            Routes Wu Chat UI work to the owning template and browser modules.
+
     services/
         execution_context.py
             Builds Wu execution context from current Aurora state.
@@ -146,29 +149,23 @@ directly in the API layer.
 
 ---
 
-### Code Review UI
+### Wu Chat UI
 
-Wu-specific diff-review JavaScript:
-
-```text
-aurora/static/aurora/js/wu_chat/wu_diff_viewer.js
-```
-
-The script owns the Wu review slider's Monaco diff behavior and exposes:
+Primary UI routing contract:
 
 ```text
-window.WuDiffViewer
+aurora/subsystems/wu_chat/contracts/UI_MAP.md
 ```
 
-Known UI responsibilities include:
+Use this contract when the task concerns Wu Chat workspace layout, core browser
+chat behavior, Engineering Session controls, Delta Note workflow behavior,
+Fleet Telemetry presentation, or Wu-specific Monaco diff review.
 
-* loading current and proposed source into Monaco;
-* displaying a side-by-side diff;
-* showing the targeted repository path;
-* opening and closing the Wu code-review slider.
+The UI map routes each concern to the narrowest template or JavaScript
+authority.
 
-The JavaScript is Wu-specific even though Django static-file requirements place
-it outside:
+Wu-specific browser assets remain owned by Wu Chat even when Django static-file
+requirements place them outside:
 
 ```text
 aurora/subsystems/wu_chat/
@@ -390,26 +387,19 @@ Wu Chat is not the universal AI execution layer.
 Wu Chat uses repository locations outside its subsystem because Django and the
 Aurora Console impose integration surfaces.
 
-### Static JavaScript
+### Static JavaScript and Templates
+
+Wu Chat browser and template integration surfaces are routed through:
 
 ```text
-aurora/static/aurora/js/wu_chat/wu_diff_viewer.js
+aurora/subsystems/wu_chat/contracts/UI_MAP.md
 ```
 
-This file is Wu Chat-owned despite living under Django static assets.
+The current Wu Chat UI spans Django static assets and templates outside the
+Python subsystem directory. Those locations are framework integration surfaces,
+not ownership boundaries.
 
-### Templates
-
-Known Wu Chat UI integration includes:
-
-```text
-aurora/templates/aurora/wu_chat/wu_chat_console_panel.html
-```
-
-and inclusion from the Aurora Console.
-
-Template placement follows Django/Aurora UI conventions rather than Python
-subsystem location.
+Use the UI map rather than rediscovering client-side ownership from filenames.
 
 ### Model Export
 
@@ -648,7 +638,13 @@ semantics.
 
 ## Deeper Contracts
 
-No additional Wu Chat contracts are currently authoritative.
+The current authoritative deeper UI contract is:
+
+```text
+aurora/subsystems/wu_chat/contracts/UI_MAP.md
+```
+
+Use it for Wu Chat template and browser-module ownership.
 
 Future deeper contracts should be created only when complexity justifies them.
 
@@ -671,7 +667,7 @@ A worker modifying Wu Chat must:
 
 1. begin with this contract;
 2. identify whether the change concerns API, persistence, execution context,
-   repository context, patch parsing, or client review behavior;
+   repository context, patch parsing, or client-side UI behavior;
 3. map consumers before moving or deleting Wu Chat assets;
 4. perform tombstone validation after rename or removal;
 5. preserve human review as the boundary before code mutation;
@@ -717,10 +713,10 @@ For patch parsing:
 aurora/subsystems/wu_chat/services/patch_parser.py
 ```
 
-For client-side code review:
+For Wu Chat client-side UI work:
 
 ```text
-aurora/static/aurora/js/wu_chat/wu_diff_viewer.js
+aurora/subsystems/wu_chat/contracts/UI_MAP.md
 ```
 
 For the shared AI worker execution marker:

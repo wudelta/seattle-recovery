@@ -8,16 +8,33 @@
     <!-- COLUMN 1: LEFT SIDE - CAPTURE INTENTION FORM ENGINE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 33.33%; min-width: 280px; background-color: #121212; flex-shrink: 0 !important;">
         <!-- Clean space typography -->
-        <div class="text-uppercase small font-weight-bold text-info mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
             📝 Capture Intention
         </div>
+
         <div class="card-body p-0 bg-transparent d-flex flex-column flex-grow-1" style="min-height: 0;">
             <form id="create-note-form" class="d-flex flex-column flex-grow-1 mb-2" style="min-height: 0;">
                 {% csrf_token %}
+
                 <div class="flex-grow-1 mb-2 d-flex flex-column" style="min-height: 0;">
-                    <textarea id="note-text" class="form-control console-input text-success bg-black border-secondary font-monospace h-100 flex-grow-1 p-2 small" placeholder="Enter target parameter configurations..." required style="resize: none; outline: none;"></textarea>
+                    <textarea
+                        id="note-text"
+                        class="form-control console-input text-success bg-black border-secondary font-monospace h-100 flex-grow-1 p-2 small"
+                        placeholder="Enter target parameter configurations..."
+                        required
+                        style="resize: none; outline: none;"
+                    ></textarea>
                 </div>
-                <button type="submit" class="btn btn-outline-info btn-sm w-100 py-2 font-monospace text-uppercase mb-2">Add to Active Queue</button>
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-info btn-sm w-100 py-2 font-monospace text-uppercase mb-2"
+                >
+                    Add to Active Queue
+                </button>
             </form>
         </div>
     </div>
@@ -25,10 +42,21 @@
     <!-- COLUMN 2: CENTER - UNPROCESSED STAGING QUEUE RUNTIME -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 33.33%; min-width: 280px; background-color: #1e1e1e; flex-shrink: 0 !important;">
         <!-- Clean space typography -->
-        <div class="text-uppercase small font-weight-bold text-success mb-2 border-bottom border-dark pb-1 d-flex justify-content-between align-items-center" style="letter-spacing: 1px;">
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1 d-flex justify-content-between align-items-center"
+            style="letter-spacing: 1px;"
+        >
             <span>📥 Unprocessed Log</span>
-            <span id="queue-count" class="badge bg-success font-monospace" style="font-size: 0.7rem; padding: 2px 4px;">0</span>
+
+            <span
+                id="queue-count"
+                class="badge bg-success font-monospace"
+                style="font-size: 0.7rem; padding: 2px 4px;"
+            >
+                0
+            </span>
         </div>
+
         <div class="flex-grow-1 bg-black rounded border border-dark overflow-auto" style="min-height: 0;">
             <div id="notes-container" class="list-group list-group-flush bg-transparent" style="font-size: 0.85rem;">
                 <!-- Note entries populate here dynamically via javascript -->
@@ -39,10 +67,21 @@
     <!-- COLUMN 3: RIGHT SIDE - PROCESSED ARCHIVE LOG STORAGE -->
     <div class="p-2 d-flex flex-column" style="width: 33.34%; min-width: 280px; background-color: #121212; flex-shrink: 0 !important;">
         <!-- Clean space typography -->
-        <div class="text-uppercase small font-weight-bold mb-2 border-bottom border-dark pb-1 d-flex justify-content-between align-items-center" style="letter-spacing: 1px; color: #6c757d;">
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1 d-flex justify-content-between align-items-center"
+            style="letter-spacing: 1px;"
+        >
             <span>🗄️ Processed Log</span>
-            <span id="processed-count" class="badge bg-secondary font-monospace" style="font-size: 0.7rem; padding: 2px 4px;">0</span>
+
+            <span
+                id="processed-count"
+                class="badge bg-secondary font-monospace"
+                style="font-size: 0.7rem; padding: 2px 4px;"
+            >
+                0
+            </span>
         </div>
+
         <div class="flex-grow-1 bg-black rounded border border-dark overflow-auto" style="min-height: 0;">
             <div id="processed-notes-container" class="list-group list-group-flush bg-transparent" style="font-size: 0.85rem;">
                 <!-- Completed session history records inject here dynamically -->

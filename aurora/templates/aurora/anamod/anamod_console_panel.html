@@ -1,5 +1,5 @@
 <!-- ====================================================================== -->
-<!-- FILE: aurora/templates/aurora/snippets/anamod_console_panel.html -->
+<!-- FILE: aurora/templates/aurora/anamod/anamod_console_panel.html -->
 <!-- START: ANAMOD_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
 {% load static %}
@@ -7,7 +7,10 @@
     
     <!-- COLUMN 1: LEFT FILE SYSTEM DIRECTORY TREE -->
     <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 200px; background-color: #121212;">
-        <div class="d-flex justify-content-between align-items-center text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
+        <div
+            class="d-flex justify-content-between align-items-center text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
             <span>📁 Project Hierarchy</span>
             <button
                 id="anamod-refresh-tree-btn"
@@ -130,41 +133,72 @@
         </div>
     </div>
 
-    <!-- COLUMN 3: RIGHT CONTROL ACTIONS AND SANDBOX TERMINAL -->
+    <!-- COLUMN 3: RIGHT CONTROL ACTIONS AND OPERATIONAL PIPELINE LOG -->
     <div class="p-2 d-flex flex-column border-start border-secondary" style="width: 28%; min-width: 250px; background-color: #121212;">
-        <div class="text-uppercase small font-weight-bold text-muted mb-2 border-bottom border-dark pb-1" style="letter-spacing: 1px;">
-            🛠️ Action Control Matrix
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
+            🛠️ Workflow Controls
         </div>
+
         <div class="d-grid gap-2 mb-3">
-            <button id="anamod-run-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase" disabled> ⚡ Execute Sandbox Run </button>
+            <button id="anamod-run-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase" disabled>
+                ⚡ Execute Sandbox Run
+            </button>
+
             <div class="row g-1">
                 <div class="col-6">
-                    <button id="anamod-save-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100" disabled> 💾 Save </button>
+                    <button id="anamod-save-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100" disabled>
+                        💾 Save
+                    </button>
                 </div>
+
                 <div class="col-6">
-                    <button id="anamod-discard-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled> ❌ Discard </button>
+                    <button id="anamod-discard-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled>
+                        ❌ Discard
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="text-uppercase small font-weight-bold text-muted mb-1" style="letter-spacing: 1px; font-size: 0.75rem;">
-            🖥️ Isolated Sandbox Console Output
+
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-1"
+            style="letter-spacing: 1px;"
+        >
+            🖥️ Operational Pipeline Log Feed
         </div>
-        <pre id="anamod-terminal-stream" class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small" style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;">[SYSTEM READY] Initialize session trace matrix...</pre>
+
+        <pre
+            id="anamod-terminal-stream"
+            class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small"
+            style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;"
+        >[SYSTEM READY] Initialize session trace matrix...</pre>
     </div>
 
     <!-- DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FILES -->
     <div id="anamod-tree-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 130px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
-        <button id="ctx-rename-btn" class="dropdown-item px-2 py-1 text-light bg-transparent border-0 text-start w-100" style="cursor: pointer;">✏️ Rename File</button>
+        <button id="ctx-rename-btn" class="dropdown-item px-2 py-1 text-light bg-transparent border-0 text-start w-100" style="cursor: pointer;">
+            ✏️ Rename File
+        </button>
+
         <div class="dropdown-divider my-1 border-secondary"></div>
-        <button id="ctx-delete-btn" class="dropdown-item px-2 py-1 text-danger bg-transparent border-0 text-start w-100" style="cursor: pointer;">🗑️ Delete File</button>
+
+        <button id="ctx-delete-btn" class="dropdown-item px-2 py-1 text-danger bg-transparent border-0 text-start w-100" style="cursor: pointer;">
+            🗑️ Delete File
+        </button>
     </div>
 
-    <!-- NEW DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FOLDERS -->
+    <!-- DECOUPLED RIGHT-CLICK CONTEXT MENU INTERFACE NODE FOR FOLDERS -->
     <div id="anamod-folder-context-menu" class="position-absolute dropdown-menu dropdown-menu-dark p-1 border-secondary shadow-lg font-monospace" style="display: none; min-width: 190px; font-size: 0.8rem; z-index: 1000; background-color: #1c1c1e;">
-        <button id="ctx-add-file-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">➕ Add New File Here</button>
-        <button id="ctx-add-directory-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">📁 Add New Directory Here</button>
-    </div>
+        <button id="ctx-add-file-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">
+            ➕ Add New File Here
+        </button>
 
+        <button id="ctx-add-directory-btn" class="dropdown-item px-2 py-1 text-success bg-transparent border-0 text-start w-100" style="cursor: pointer;">
+            📁 Add New Directory Here
+        </button>
+    </div>
 </div>
 <!-- ====================================================================== -->
 <!-- END: ANAMOD_VIEWPORT_SCALING_CLAMP -->
