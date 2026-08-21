@@ -6,9 +6,16 @@
 import json
 from dataclasses import asdict
 
+from asgiref.sync import async_to_sync
 from django.http import JsonResponse
 
 from aurora.models import DeltaNotesEntry, Initiative, Phase
+from aurora.subsystems.component_registry.services.documenter import (
+    ComponentRegistryDocumenter,
+)
+from aurora.subsystems.component_registry.services.maintenance import (
+    ComponentRegistryMaintenance,
+)
 from aurora.subsystems.engineering_session.services import (
     EngineeringSessionError,
     EngineeringSessionPlanningError,
@@ -39,6 +46,7 @@ from aurora.subsystems.planning.services import (
     request_initiative_completion,
     start_step_work,
 )
+from aurora.utils.telemetry_stream import async_send_to_console
 
 
 def _serialize_session(session):
@@ -144,6 +152,41 @@ def _parse_planning_document(value):
         )
 
     return document
+
+
+
+def _emit_registry_telemetry(message: str) -> None:
+    """Broadcast one Component Registry operational progress message."""
+
+    async_to_sync(
+        async_send_to_console
+    )(message)
+
+
+def _serialize_registry_maintenance(report):
+    """Return stable deterministic maintenance results for the browser."""
+
+    return {
+        "counts": report.counts,
+        "review": list(report.review),
+        "failures": list(report.failures),
+    }
+
+
+def _serialize_registry_enrichment(report):
+    """Return stable Component Registry enrichment results for the browser."""
+
+    return {
+        "candidates": len(report.get("candidates", [])),
+        "completed": len(report.get("completed", [])),
+        "skipped": len(report.get("skipped", [])),
+        "failures": len(report.get("failures", [])),
+        "stopped": bool(report.get("stopped", False)),
+        "last_completed": report.get("last_completed"),
+        "failure_point": report.get("failure_point"),
+        "restart_from": report.get("restart_from"),
+        "remaining": report.get("remaining", 0),
+    }
 
 
 def _require_active_session(user):
@@ -370,6 +413,165 @@ def engineering_session_endpoint(request):
                     "result": _serialize_planning_application(
                         application
                     ),
+                    "workflow": get_session_workflow_status(
+                        request.user
+                    ),
+                }
+            )
+
+        if action == "refresh_component_registry":
+            _emit_registry_telemetry(
+                "[REGISTRY] Component Registry maintenance started."
+            )
+
+            try:
+                report = ComponentRegistryMaintenance().refresh()
+            except Exception as error:
+                _emit_registry_telemetry(
+                    "[REGISTRY ERROR] Maintenance failed: "
+                    f"{type(error).__name__}: {error}"
+                )
+
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": (
+                            "Component Registry maintenance failed. "
+                            f"{type(error).__name__}: {error}"
+                        ),
+                    },
+                    status=500,
+                )
+
+            counts = report.counts
+
+            _emit_registry_telemetry(
+                "Summary: "
+                + " | ".join(
+                    f"{key}={value}"
+                    for key, value in counts.items()
+                )
+            )
+
+            if report.review:
+                _emit_registry_telemetry(
+                    f"[REGISTRY] REVIEW required for "
+                    f"{len(report.review)} component(s)."
+                )
+
+                for path in report.review:
+                    _emit_registry_telemetry(
+                        f"[REGISTRY REVIEW] {path}"
+                    )
+
+            if report.failures:
+                for failure in report.failures:
+                    _emit_registry_telemetry(
+                        f"[REGISTRY FAILURE] {failure}"
+                    )
+
+            pending_count = (
+                counts["UPDATED"]
+                + counts["REGISTERED"]
+            )
+
+            if pending_count:
+                _emit_registry_telemetry(
+                    f"[REGISTRY] {pending_count} component(s) "
+                    "require AI enrichment."
+                )
+
+            _emit_registry_telemetry(
+                "[REGISTRY] Component Registry maintenance completed."
+            )
+
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "action": action,
+                    "maintenance": _serialize_registry_maintenance(
+                        report
+                    ),
+                    "workflow": get_session_workflow_status(
+                        request.user
+                    ),
+                }
+            )
+
+        if action == "enrich_component_registry":
+            _emit_registry_telemetry(
+                "[REGISTRY] Component Registry AI enrichment started."
+            )
+
+            def emit_progress(message):
+                _emit_registry_telemetry(
+                    f"[REGISTRY] {message}"
+                )
+
+            try:
+                report = (
+                    ComponentRegistryDocumenter()
+                    .analyze_pending(
+                        apply=True,
+                        progress_callback=emit_progress,
+                    )
+                )
+            except Exception as error:
+                _emit_registry_telemetry(
+                    "[REGISTRY ERROR] Enrichment failed: "
+                    f"{type(error).__name__}: {error}"
+                )
+
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": (
+                            "Component Registry enrichment failed. "
+                            f"{type(error).__name__}: {error}"
+                        ),
+                    },
+                    status=500,
+                )
+
+            serialized_report = (
+                _serialize_registry_enrichment(
+                    report
+                )
+            )
+
+            if report.get("stopped"):
+                _emit_registry_telemetry(
+                    "[REGISTRY] Enrichment stopped after an "
+                    "AI provider failure."
+                )
+
+                _emit_registry_telemetry(
+                    f"[REGISTRY] Resume from: "
+                    f"{report.get('restart_from')}"
+                )
+
+            elif report.get("failures"):
+                _emit_registry_telemetry(
+                    "[REGISTRY] Enrichment completed with "
+                    f"{len(report['failures'])} failure(s)."
+                )
+
+                for failure in report["failures"]:
+                    _emit_registry_telemetry(
+                        f"[REGISTRY FAILURE] {failure}"
+                    )
+
+            else:
+                _emit_registry_telemetry(
+                    "[REGISTRY] Component Registry enrichment "
+                    "completed successfully."
+                )
+
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "action": action,
+                    "enrichment": serialized_report,
                     "workflow": get_session_workflow_status(
                         request.user
                     ),

@@ -26,6 +26,14 @@
         '#wu-complete-step-btn'
     );
 
+    const refreshRegistryBtn = $(
+        '#wu-refresh-registry-btn'
+    );
+
+    const enrichRegistryBtn = $(
+        '#wu-enrich-registry-btn'
+    );
+
     const completionReview = $(
         '#wu-planning-completion-review'
     );
@@ -77,6 +85,18 @@
             $(`<div class="${className}"></div>`).text(
                 message
             )
+        );
+    }
+
+    function setRegistryButtonsDisabled(disabled) {
+        refreshRegistryBtn.prop(
+            'disabled',
+            disabled
+        );
+
+        enrichRegistryBtn.prop(
+            'disabled',
+            disabled
         );
     }
 
@@ -386,6 +406,118 @@
         });
     }
 
+
+    function refreshComponentRegistry() {
+        setRegistryButtonsDisabled(true);
+
+        appendSessionManagementMessage(
+            '[REGISTRY] Deterministic refresh started.',
+            'text-info'
+        );
+
+        $.post(
+            engineeringSessionEndpoint,
+            {
+                action: 'refresh_component_registry'
+            },
+            function(data) {
+                if (data.status !== 'success') {
+                    return;
+                }
+
+                const maintenance =
+                    data.maintenance || {};
+
+                const counts =
+                    maintenance.counts || {};
+
+                appendSessionManagementMessage(
+                    '[REGISTRY] Refresh complete: '
+                    + `updated ${counts.UPDATED ?? 0}, `
+                    + `registered ${counts.REGISTERED ?? 0}, `
+                    + `archived ${counts.ARCHIVED ?? 0}, `
+                    + `review ${counts.REVIEW ?? 0}, `
+                    + `failures ${counts.FAILURES ?? 0}.`,
+                    (
+                        (counts.FAILURES ?? 0) > 0
+                            ? 'text-danger'
+                            : 'text-success'
+                    )
+                );
+
+                loadSessionWorkflowStatus();
+            }
+        ).fail(function(xhr) {
+            appendSessionManagementMessage(
+                `[REGISTRY ERROR] ${
+                    extractErrorMessage(
+                        xhr,
+                        'Component Registry refresh failed.'
+                    )
+                }`,
+                'text-danger'
+            );
+
+            loadSessionWorkflowStatus();
+        }).always(function() {
+            setRegistryButtonsDisabled(false);
+        });
+    }
+
+    function enrichComponentRegistry() {
+        setRegistryButtonsDisabled(true);
+
+        appendSessionManagementMessage(
+            '[REGISTRY] AI enrichment started.',
+            'text-info'
+        );
+
+        $.post(
+            engineeringSessionEndpoint,
+            {
+                action: 'enrich_component_registry'
+            },
+            function(data) {
+                if (data.status !== 'success') {
+                    return;
+                }
+
+                const enrichment =
+                    data.enrichment || {};
+
+                appendSessionManagementMessage(
+                    '[REGISTRY] Enrichment complete: '
+                    + `completed ${enrichment.completed ?? 0}, `
+                    + `skipped ${enrichment.skipped ?? 0}, `
+                    + `remaining ${enrichment.remaining ?? 0}, `
+                    + `failures ${enrichment.failures ?? 0}.`,
+                    (
+                        (enrichment.failures ?? 0) > 0
+                        || enrichment.stopped
+                            ? 'text-warning'
+                            : 'text-success'
+                    )
+                );
+
+                loadSessionWorkflowStatus();
+            }
+        ).fail(function(xhr) {
+            appendSessionManagementMessage(
+                `[REGISTRY ERROR] ${
+                    extractErrorMessage(
+                        xhr,
+                        'Component Registry enrichment failed.'
+                    )
+                }`,
+                'text-danger'
+            );
+
+            loadSessionWorkflowStatus();
+        }).always(function() {
+            setRegistryButtonsDisabled(false);
+        });
+    }
+
     function completeCurrentStep() {
         clearCompletionReview();
 
@@ -562,6 +694,24 @@
             event.preventDefault();
 
             completeCurrentStep();
+        }
+    );
+
+    refreshRegistryBtn.on(
+        'click',
+        function(event) {
+            event.preventDefault();
+
+            refreshComponentRegistry();
+        }
+    );
+
+    enrichRegistryBtn.on(
+        'click',
+        function(event) {
+            event.preventDefault();
+
+            enrichComponentRegistry();
         }
     );
 
