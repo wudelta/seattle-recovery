@@ -41,7 +41,10 @@ from aurora.subsystems.planning.services.time_tracking import (
     get_executable_step,
     start_step_work,
 )
-
+from aurora.subsystems.planning.services.validation import (
+    PlanningValidationError,
+    validate_and_complete_step,
+)
 
 __all__ = [
     "PlanningExecutionEvidenceError",
@@ -74,6 +77,8 @@ __all__ = [
     "request_initiative_completion",
     "request_phase_completion",
     "start_step_work",
+    "PlanningValidationError",
+    "validate_and_complete_step",
 ]
 
 

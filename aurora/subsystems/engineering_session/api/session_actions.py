@@ -18,10 +18,10 @@ from aurora.subsystems.engineering_session.services import (
     start_session,
 )
 from aurora.subsystems.planning.services import (
-    complete_step_and_evaluate_parents,
     end_step_work,
     get_executable_step,
     start_step_work,
+    validate_and_complete_step,
 )
 
 
@@ -154,22 +154,35 @@ def _end_step_work_action(request):
 
 def _complete_step_action(request):
     """
-    Complete the lifecycle-authoritative ACTIVE Step.
+    Validate and complete the lifecycle-authoritative ACTIVE Step.
 
-    Completion attribution and parent eligibility remain Planning-owned.
+    Validation evidence and lifecycle completion remain Planning-owned.
     """
 
     require_active_session(
         request.user
     )
 
+    validation_notes = str(
+        request.POST.get(
+            "validation_notes",
+            ""
+        )
+    ).strip()
+
+    if not validation_notes:
+        raise ValueError(
+            "validation_notes is required to complete Planning work."
+        )
+
     step = get_executable_step(
         request.user
     )
 
-    lifecycle = complete_step_and_evaluate_parents(
-        step,
-        request.user,
+    lifecycle = validate_and_complete_step(
+        step=step,
+        user=request.user,
+        validation_notes=validation_notes,
         auto_phase=False,
         auto_initiative=False,
     )
