@@ -1,0 +1,1296 @@
+{'schema_version': 1,
+ 'target': {'project_slug': 'aurora'},
+ 'add_projects': [],
+ 'add_initiatives': [{'title': 'Hansel Engineering Workflow',
+                      'description': 'Create a resumable, self-correcting engineering '
+                                     'workflow in which Planning records execution state '
+                                     'as work happens, Hansel provides the smallest '
+                                     'sufficient repository authority, execution evidence '
+                                     'is persisted continuously, and Initiative closure '
+                                     'becomes a cheap consistency check instead of an '
+                                     'expensive reconstruction exercise.',
+                      'status': 'PLANNED',
+                      'phases': [{'title': 'Real-Time Resumable Engineering State',
+                                  'description': 'Make Planning and Delta Notes reflect '
+                                                 'engineering reality continuously so an '
+                                                 'interrupted session always has an '
+                                                 'authoritative resume point.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Process Delta Notes at successful '
+                                                      'Planning handoff',
+                                             'description': 'Resolve a Delta Note '
+                                                            'immediately after its intent '
+                                                            'is successfully incorporated '
+                                                            'into canonical Planning.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'The note must remain '
+                                                                 'unresolved if the '
+                                                                 'Planning mutation fails.',
+                                             'validation_description': 'Successful '
+                                                                       'Planning handoff '
+                                                                       'marks the source '
+                                                                       'note processed; '
+                                                                       'failed handoff '
+                                                                       'does not.',
+                                             'document': {'technical_design': 'Preserve '
+                                                                              'mutation '
+                                                                              'ordering: '
+                                                                              'Planning '
+                                                                              'success '
+                                                                              'first, '
+                                                                              'Delta Note '
+                                                                              'resolution '
+                                                                              'second.',
+                                                          'dependencies': 'Engineering '
+                                                                          'Session Delta '
+                                                                          'Note and '
+                                                                          'Planning '
+                                                                          'handoff '
+                                                                          'services.',
+                                                          'assumptions': 'Processed means '
+                                                                         'responsibility '
+                                                                         'transferred into '
+                                                                         'canonical '
+                                                                         'Planning.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'The Anamod '
+                                                                        'Initiative left '
+                                                                        'source notes '
+                                                                        'unresolved until '
+                                                                        'post-mortem.'},
+                                             'validation': {'description': 'Successful '
+                                                                           'Planning '
+                                                                           'handoff marks '
+                                                                           'the source '
+                                                                           'note '
+                                                                           'processed; '
+                                                                           'failed handoff '
+                                                                           'does not.',
+                                                            'notes': ''},
+                                             'planned_files': [{'file_path': 'aurora/subsystems/engineering_session/services/planning.py',
+                                                                'reason': 'Owns supervised '
+                                                                          'Delta Note to '
+                                                                          'Planning '
+                                                                          'handoff.'},
+                                                               {'file_path': 'aurora/subsystems/engineering_session/services/delta_notes.py',
+                                                                'reason': 'Owns Delta Note '
+                                                                          'resolution.'}],
+                                             'actual_files': []},
+                                            {'title': 'Activate Planning hierarchy when '
+                                                      'work begins',
+                                             'description': 'Activate the Initiative, '
+                                                            'Phase, and Step at the moment '
+                                                            'engineering execution begins.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Lifecycle changes must '
+                                                                 'preserve pause/resume '
+                                                                 'semantics and use '
+                                                                 'existing lifecycle '
+                                                                 'authority.',
+                                             'validation_description': 'Beginning a Step '
+                                                                       'leaves one '
+                                                                       'authoritative '
+                                                                       'ACTIVE Initiative '
+                                                                       '→ Phase → Step '
+                                                                       'path.',
+                                             'document': {'technical_design': 'Coordinate '
+                                                                              'existing '
+                                                                              'Initiative, '
+                                                                              'Phase, and '
+                                                                              'Step '
+                                                                              'activation '
+                                                                              'services '
+                                                                              'from '
+                                                                              'Engineering '
+                                                                              'Session '
+                                                                              'workflow.',
+                                                          'dependencies': 'Planning '
+                                                                          'lifecycle '
+                                                                          'services and '
+                                                                          'Engineering '
+                                                                          'Session '
+                                                                          'coordination.',
+                                                          'assumptions': 'At most one '
+                                                                         'current ACTIVE '
+                                                                         'Initiative '
+                                                                         'exists per '
+                                                                         'developer.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'The Anamod '
+                                                                        'Initiative was '
+                                                                        'executed while '
+                                                                        'all Steps '
+                                                                        'remained '
+                                                                        'PLANNED.'},
+                                             'validation': {'description': 'Beginning a '
+                                                                           'Step leaves '
+                                                                           'one '
+                                                                           'authoritative '
+                                                                           'ACTIVE '
+                                                                           'Initiative → '
+                                                                           'Phase → Step '
+                                                                           'path.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Complete Steps immediately after '
+                                                      'validation',
+                                             'description': 'Make validated Step '
+                                                            'completion an immediate '
+                                                            'checkpoint before the next '
+                                                            'Step begins.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A validated Step '
+                                                                       'is persisted '
+                                                                       'COMPLETED before '
+                                                                       'execution proceeds '
+                                                                       'to the next Step.',
+                                             'document': {'technical_design': 'Use '
+                                                                              'complete_step_and_evaluate_parents() '
+                                                                              'as the '
+                                                                              'normal '
+                                                                              'checkpoint '
+                                                                              'boundary.',
+                                                          'dependencies': 'Planning '
+                                                                          'lifecycle '
+                                                                          'orchestration.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Post-hoc '
+                                                                        'completion forced '
+                                                                        'reconstruction of '
+                                                                        'eight Steps the '
+                                                                        'following day.'},
+                                             'validation': {'description': 'A validated '
+                                                                           'Step is '
+                                                                           'persisted '
+                                                                           'COMPLETED '
+                                                                           'before '
+                                                                           'execution '
+                                                                           'proceeds to '
+                                                                           'the next Step.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Accumulate actual files during Step '
+                                                      'execution',
+                                             'description': 'Record StepFile ACTUAL '
+                                                            'evidence as repository '
+                                                            'changes are accepted instead '
+                                                            'of reconstructing files '
+                                                            'during closeout.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Actual-file attribution '
+                                                                 'must exclude incidental '
+                                                                 'or unrelated repository '
+                                                                 'changes.',
+                                             'validation_description': 'Accepted '
+                                                                       'repository '
+                                                                       'mutations appear '
+                                                                       'as ACTUAL files on '
+                                                                       'the current Step '
+                                                                       'before completion.',
+                                             'document': {'technical_design': 'Attach '
+                                                                              'accepted '
+                                                                              'changed-file '
+                                                                              'evidence at '
+                                                                              'the '
+                                                                              'execution/approval '
+                                                                              'boundary.',
+                                                          'dependencies': 'Planning '
+                                                                          'StepFile '
+                                                                          'persistence and '
+                                                                          'repository '
+                                                                          'change approval '
+                                                                          'workflow.',
+                                                          'assumptions': 'The current '
+                                                                         'executable Step '
+                                                                         'can be resolved '
+                                                                         'deterministically.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'The Anamod '
+                                                                        'post-mortem '
+                                                                        'manually '
+                                                                        'reconstructed '
+                                                                        'ACTUAL files for '
+                                                                        'every Step.'},
+                                             'validation': {'description': 'Accepted '
+                                                                           'repository '
+                                                                           'mutations '
+                                                                           'appear as '
+                                                                           'ACTUAL files '
+                                                                           'on the current '
+                                                                           'Step before '
+                                                                           'completion.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Persist validation evidence at Step '
+                                                      'completion',
+                                             'description': 'Store concise executed '
+                                                            'validation evidence so future '
+                                                            'workers can trust completion '
+                                                            'without repeating successful '
+                                                            'tests.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Completed Steps '
+                                                                       'retain concise '
+                                                                       'executed '
+                                                                       'validation '
+                                                                       'evidence distinct '
+                                                                       'from planned '
+                                                                       'validation.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Planning Step '
+                                                                          'validation '
+                                                                          'persistence.',
+                                                          'assumptions': 'Evidence remains '
+                                                                         'concise and '
+                                                                         'durable rather '
+                                                                         'than a '
+                                                                         'transcript dump.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Important Anamod '
+                                                                        'validation '
+                                                                        'outputs otherwise '
+                                                                        'lived only in '
+                                                                        'conversation '
+                                                                        'history.'},
+                                             'validation': {'description': 'Completed '
+                                                                           'Steps retain '
+                                                                           'concise '
+                                                                           'executed '
+                                                                           'validation '
+                                                                           'evidence '
+                                                                           'distinct from '
+                                                                           'planned '
+                                                                           'validation.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Prove interruption and '
+                                                      'clean-context resume',
+                                             'description': 'Interrupt this Initiative '
+                                                            'deliberately and prove a '
+                                                            'fresh worker can resume from '
+                                                            'Planning plus Hansel without '
+                                                            'reconstructing conversation '
+                                                            'history.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A clean-context '
+                                                                       'worker identifies '
+                                                                       'the current '
+                                                                       'objective, ACTIVE '
+                                                                       'Step, completed '
+                                                                       'work, evidence, '
+                                                                       'authority, and '
+                                                                       'next action with '
+                                                                       'bounded discovery.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Prior Phase 1 '
+                                                                          'Steps.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'This is the '
+                                                                        'primary success '
+                                                                        'criterion for the '
+                                                                        'new workflow.'},
+                                             'validation': {'description': 'A '
+                                                                           'clean-context '
+                                                                           'worker '
+                                                                           'identifies the '
+                                                                           'current '
+                                                                           'objective, '
+                                                                           'ACTIVE Step, '
+                                                                           'completed '
+                                                                           'work, '
+                                                                           'evidence, '
+                                                                           'authority, and '
+                                                                           'next action '
+                                                                           'with bounded '
+                                                                           'discovery.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Hansel Integrity and Deterministic Validation',
+                                  'description': 'Catch corrupted, truncated, '
+                                                 'mis-anchored, stale, and broken Hansel '
+                                                 'routes mechanically.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define Hansel integrity rules',
+                                             'description': 'Translate the current Hansel '
+                                                            'standard and observed '
+                                                            'failures into deterministic '
+                                                            'checks for required files, '
+                                                            'FILE/START/END anchors, '
+                                                            'subsystem identity, '
+                                                            'breadcrumb targets, and '
+                                                            'referenced repository paths.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Every integrity '
+                                                                       'rule maps to a '
+                                                                       'documented Hansel '
+                                                                       'requirement and '
+                                                                       'produces a '
+                                                                       'deterministic '
+                                                                       'failure.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Hansel '
+                                                                          'SUBSYSTEM_STANDARD.md '
+                                                                          'and current '
+                                                                          'validators.',
+                                                          'assumptions': 'Hansel remains '
+                                                                         'an index rather '
+                                                                         'than an '
+                                                                         'encyclopedia.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Incorporates '
+                                                                        'unfinished '
+                                                                        'validator work '
+                                                                        'and the '
+                                                                        'Anamod/Content '
+                                                                        'corruption '
+                                                                        'discovered during '
+                                                                        'this Initiative.'},
+                                             'validation': {'description': 'Every '
+                                                                           'integrity rule '
+                                                                           'maps to a '
+                                                                           'documented '
+                                                                           'Hansel '
+                                                                           'requirement '
+                                                                           'and produces a '
+                                                                           'deterministic '
+                                                                           'failure.',
+                                                            'notes': ''},
+                                             'planned_files': [{'file_path': 'aurora/subsystems/hansel/contracts/SUBSYSTEM_STANDARD.md',
+                                                                'reason': 'Authoritative '
+                                                                          'Hansel contract '
+                                                                          'standard.'}],
+                                             'actual_files': []},
+                                            {'title': 'Implement Hansel contract validator',
+                                             'description': 'Implement or extend '
+                                                            'deterministic validation for '
+                                                            'one subsystem or the '
+                                                            'repository-wide Hansel '
+                                                            'catalogue.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Validator scope must '
+                                                                 'remain structural and '
+                                                                 'deterministic rather '
+                                                                 'than claiming semantic '
+                                                                 'truth.',
+                                             'validation_description': 'Validator reports '
+                                                                       'exact file/rule '
+                                                                       'failures, exits '
+                                                                       'nonzero on '
+                                                                       'violations, and '
+                                                                       'passes compliant '
+                                                                       'Hansel and Anamod '
+                                                                       'contracts.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'aurora/subsystems/hansel/validators/',
+                                                          'assumptions': 'Existing '
+                                                                         'validator code '
+                                                                         'must be '
+                                                                         'inspected before '
+                                                                         'adding new '
+                                                                         'implementation.',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Consolidates '
+                                                                        'unfinished Hansel '
+                                                                        'Repository '
+                                                                        'Knowledge System '
+                                                                        'validator work.'},
+                                             'validation': {'description': 'Validator '
+                                                                           'reports exact '
+                                                                           'file/rule '
+                                                                           'failures, '
+                                                                           'exits nonzero '
+                                                                           'on violations, '
+                                                                           'and passes '
+                                                                           'compliant '
+                                                                           'Hansel and '
+                                                                           'Anamod '
+                                                                           'contracts.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Validate against real Anamod trail '
+                                                      'failures',
+                                             'description': 'Use the actual corrupted '
+                                                            'contracts, stale anchors, '
+                                                            'incomplete UI map, and '
+                                                            'missing authorities from the '
+                                                            'Anamod Initiative as concrete '
+                                                            'validator cases.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Repaired Anamod '
+                                                                       'passes; controlled '
+                                                                       'reintroductions of '
+                                                                       'observed defects '
+                                                                       'fail '
+                                                                       'deterministically.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Anamod '
+                                                                          'HANSEL.md/UI_MAP.md '
+                                                                          'and Hansel '
+                                                                          'validator.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Repaired '
+                                                                           'Anamod passes; '
+                                                                           'controlled '
+                                                                           'reintroductions '
+                                                                           'of observed '
+                                                                           'defects fail '
+                                                                           'deterministically.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Planning to Hansel Discovery and Preflight',
+                                  'description': 'Make the route from engineering intent '
+                                                 'to Planning and from Planning to '
+                                                 'sufficient repository authority '
+                                                 'explicit, bounded, and lifecycle-aware.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Add Planning lifecycle preflight '
+                                                      'before dictionary generation',
+                                             'description': 'Inspect current ACTIVE '
+                                                            'Initiative state and relevant '
+                                                            'Planning state before '
+                                                            'emitting a new planning '
+                                                            'dictionary.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Preflight must ask only '
+                                                                 'genuinely missing '
+                                                                 'lifecycle decisions and '
+                                                                 'never silently replace '
+                                                                 'active work.',
+                                             'validation_description': 'Conflicting ACTIVE '
+                                                                       'work triggers a '
+                                                                       'human choice '
+                                                                       'before dictionary '
+                                                                       'generation; '
+                                                                       'uncontested cases '
+                                                                       'proceed without '
+                                                                       'extra questions.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Planning '
+                                                                          'generation '
+                                                                          'contract, '
+                                                                          'lifecycle '
+                                                                          'services, '
+                                                                          'updater guard.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'The Anamod test '
+                                                                        'exposed ambiguous '
+                                                                        'concurrent ACTIVE '
+                                                                        'behavior.'},
+                                             'validation': {'description': 'Conflicting '
+                                                                           'ACTIVE work '
+                                                                           'triggers a '
+                                                                           'human choice '
+                                                                           'before '
+                                                                           'dictionary '
+                                                                           'generation; '
+                                                                           'uncontested '
+                                                                           'cases proceed '
+                                                                           'without extra '
+                                                                           'questions.',
+                                                            'notes': ''},
+                                             'planned_files': [{'file_path': 'aurora/subsystems/planning/contracts/PLANNING_DICTIONARY_GENERATION.md',
+                                                                'reason': 'Canonical '
+                                                                          'generation '
+                                                                          'workflow.'}],
+                                             'actual_files': []},
+                                            {'title': 'Publish canonical planning '
+                                                      'dictionary destination',
+                                             'description': 'Make '
+                                                            'docs/aurora/planning/dictionaries/ '
+                                                            'the discoverable '
+                                                            'repository-owned destination '
+                                                            'for generated planning '
+                                                            'dictionaries.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 30,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A clean-context '
+                                                                       'worker writes and '
+                                                                       'validates '
+                                                                       'dictionaries from '
+                                                                       'the canonical '
+                                                                       'repository-visible '
+                                                                       'path without '
+                                                                       'host/container '
+                                                                       'path confusion.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': '',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Supersedes stale '
+                                                                        'planning_imports '
+                                                                        'locations in '
+                                                                        'historical '
+                                                                        'Planning '
+                                                                        'Knowledge '
+                                                                        'Pipeline work.'},
+                                             'validation': {'description': 'A '
+                                                                           'clean-context '
+                                                                           'worker writes '
+                                                                           'and validates '
+                                                                           'dictionaries '
+                                                                           'from the '
+                                                                           'canonical '
+                                                                           'repository-visible '
+                                                                           'path without '
+                                                                           'host/container '
+                                                                           'path '
+                                                                           'confusion.',
+                                                            'notes': ''},
+                                             'planned_files': [{'file_path': 'aurora/subsystems/planning/contracts/PLANNING_DICTIONARY_GENERATION.md',
+                                                                'reason': 'Must expose the '
+                                                                          'canonical '
+                                                                          'dictionary '
+                                                                          'destination.'}],
+                                             'actual_files': []},
+                                            {'title': 'Define Planning to Hansel '
+                                                      'sufficient-authority route',
+                                             'description': 'Formalize how a Planning Step '
+                                                            'identifies its owner, enters '
+                                                            'through Hansel, escalates '
+                                                            'only while uncertainty '
+                                                            'remains, and stops at '
+                                                            'sufficient authority.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A worker starts '
+                                                                       'from a Planning '
+                                                                       'Step and reaches '
+                                                                       'sufficient '
+                                                                       'authority without '
+                                                                       'broad repository '
+                                                                       'discovery.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Planning '
+                                                                          'HANSEL.md, '
+                                                                          'Hansel '
+                                                                          'HANSEL.md, '
+                                                                          'Planning '
+                                                                          'lifecycle/reconciliation '
+                                                                          'contract.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Consolidates '
+                                                                        'useful '
+                                                                        'clean-context and '
+                                                                        'minimal-context '
+                                                                        'work from paused '
+                                                                        'Initiatives 17 '
+                                                                        'and 23.'},
+                                             'validation': {'description': 'A worker '
+                                                                           'starts from a '
+                                                                           'Planning Step '
+                                                                           'and reaches '
+                                                                           'sufficient '
+                                                                           'authority '
+                                                                           'without broad '
+                                                                           'repository '
+                                                                           'discovery.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Run clean-context Planning and '
+                                                      'Hansel walkthrough',
+                                             'description': 'Validate preflight and '
+                                                            'discovery using a worker '
+                                                            'without originating '
+                                                            'conversation history.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Worker identifies '
+                                                                       'Planning state, '
+                                                                       'canonical '
+                                                                       'dictionary '
+                                                                       'destination, '
+                                                                       'lifecycle '
+                                                                       'decisions, owning '
+                                                                       'subsystem, Hansel '
+                                                                       'authority, and '
+                                                                       'validation without '
+                                                                       'tribal knowledge.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Prior Phase 3 '
+                                                                          'Steps.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Worker '
+                                                                           'identifies '
+                                                                           'Planning '
+                                                                           'state, '
+                                                                           'canonical '
+                                                                           'dictionary '
+                                                                           'destination, '
+                                                                           'lifecycle '
+                                                                           'decisions, '
+                                                                           'owning '
+                                                                           'subsystem, '
+                                                                           'Hansel '
+                                                                           'authority, and '
+                                                                           'validation '
+                                                                           'without tribal '
+                                                                           'knowledge.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Hansel Trail Observability and Self-Correction',
+                                  'description': 'Capture where Hansel succeeds or fails '
+                                                 'during real work so manual discovery '
+                                                 'produces durable improvements.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define Hansel trail event model',
+                                             'description': 'Define minimal structured '
+                                                            'evidence for breadcrumb '
+                                                            'followed, result '
+                                                            'classification, manual '
+                                                            'recovery, recovered '
+                                                            'authority, and reconciliation '
+                                                            'outcome.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Observability must '
+                                                                 'remain lightweight and '
+                                                                 'not become exhaustive '
+                                                                 'execution logging.',
+                                             'validation_description': 'The model '
+                                                                       'represents useful, '
+                                                                       'stale, missing, '
+                                                                       'wrong, and '
+                                                                       'recovered '
+                                                                       'breadcrumbs from '
+                                                                       'the Anamod '
+                                                                       'Initiative without '
+                                                                       'transcript '
+                                                                       'storage.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Hansel and '
+                                                                          'Engineering '
+                                                                          'Session '
+                                                                          'workflow.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'The model '
+                                                                           'represents '
+                                                                           'useful, stale, '
+                                                                           'missing, '
+                                                                           'wrong, and '
+                                                                           'recovered '
+                                                                           'breadcrumbs '
+                                                                           'from the '
+                                                                           'Anamod '
+                                                                           'Initiative '
+                                                                           'without '
+                                                                           'transcript '
+                                                                           'storage.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Capture trail outcomes during '
+                                                      'engineering execution',
+                                             'description': 'Record Hansel breadcrumb '
+                                                            'outcomes while workers follow '
+                                                            'the trail.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Instrumentation must not '
+                                                                 'add significant latency '
+                                                                 'or force logging of '
+                                                                 'trivial navigation.',
+                                             'validation_description': 'A bounded '
+                                                                       'engineering Step '
+                                                                       'leaves enough '
+                                                                       'structured trail '
+                                                                       'evidence to '
+                                                                       'identify '
+                                                                       'successful and '
+                                                                       'failed '
+                                                                       'breadcrumbs.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Trail event '
+                                                                          'model and '
+                                                                          'Engineering '
+                                                                          'Session '
+                                                                          'coordination.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'A bounded '
+                                                                           'engineering '
+                                                                           'Step leaves '
+                                                                           'enough '
+                                                                           'structured '
+                                                                           'trail evidence '
+                                                                           'to identify '
+                                                                           'successful and '
+                                                                           'failed '
+                                                                           'breadcrumbs.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Reconcile discovered authorities '
+                                                      'back into Hansel',
+                                             'description': 'Turn confirmed missing, '
+                                                            'stale, or wrong breadcrumbs '
+                                                            'into bounded reviewable '
+                                                            'Hansel corrections.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A recovered '
+                                                                       'durable authority '
+                                                                       'produces a Hansel '
+                                                                       'correction; '
+                                                                       'incidental '
+                                                                       'implementation '
+                                                                       'knowledge does not '
+                                                                       'expand the '
+                                                                       'catalogue.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Trail evidence '
+                                                                          'and Hansel '
+                                                                          'catalogue '
+                                                                          'reconciliation '
+                                                                          'rules.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Combines '
+                                                                        'architecture-change '
+                                                                        'guidance from '
+                                                                        'paused Initiative '
+                                                                        '25 with the new '
+                                                                        'self-correction '
+                                                                        'requirement.'},
+                                             'validation': {'description': 'A recovered '
+                                                                           'durable '
+                                                                           'authority '
+                                                                           'produces a '
+                                                                           'Hansel '
+                                                                           'correction; '
+                                                                           'incidental '
+                                                                           'implementation '
+                                                                           'knowledge does '
+                                                                           'not expand the '
+                                                                           'catalogue.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Canonical Hansel Scaffolding',
+                                  'description': 'Preserve still-valuable Hansel '
+                                                 'standardization work through concise '
+                                                 'templates and deterministic subsystem '
+                                                 'generation.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Reconcile and simplify canonical '
+                                                      'contract templates',
+                                             'description': 'Review unfinished template '
+                                                            'work against the current '
+                                                            'index-oriented Hansel '
+                                                            'standard and create only '
+                                                            'templates that remain '
+                                                            'genuinely required.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Older plans proposed a '
+                                                                 'larger contract set that '
+                                                                 'may conflict with the '
+                                                                 'concise Hansel '
+                                                                 'philosophy.',
+                                             'validation_description': 'Templates reflect '
+                                                                       'the current Hansel '
+                                                                       'standard, '
+                                                                       'UNKNOWN-safe '
+                                                                       'placeholders, '
+                                                                       'valid anchors, and '
+                                                                       'precise next '
+                                                                       'breadcrumbs.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Current '
+                                                                          'SUBSYSTEM_STANDARD.md '
+                                                                          'and paused '
+                                                                          'Initiative 25 '
+                                                                          'template work.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Historical '
+                                                                        'template work is '
+                                                                        'reconciled rather '
+                                                                        'than copied '
+                                                                        'blindly.'},
+                                             'validation': {'description': 'Templates '
+                                                                           'reflect the '
+                                                                           'current Hansel '
+                                                                           'standard, '
+                                                                           'UNKNOWN-safe '
+                                                                           'placeholders, '
+                                                                           'valid anchors, '
+                                                                           'and precise '
+                                                                           'next '
+                                                                           'breadcrumbs.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Define deterministic subsystem '
+                                                      'generator contract',
+                                             'description': 'Define path-safe inputs, '
+                                                            'outputs, collision behavior, '
+                                                            'dry-run semantics, and the '
+                                                            'exact Hansel scaffold a '
+                                                            'generator may create.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Generator contract '
+                                                                       'is deterministic, '
+                                                                       'bounded, '
+                                                                       'path-safe, and '
+                                                                       'refuses collisions '
+                                                                       'without partial '
+                                                                       'output.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Reconciled '
+                                                                          'canonical '
+                                                                          'templates.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Generator '
+                                                                           'contract is '
+                                                                           'deterministic, '
+                                                                           'bounded, '
+                                                                           'path-safe, and '
+                                                                           'refuses '
+                                                                           'collisions '
+                                                                           'without '
+                                                                           'partial '
+                                                                           'output.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Implement and validate subsystem '
+                                                      'generator',
+                                             'description': 'Implement the approved '
+                                                            'generator and validate it '
+                                                            'against a disposable or '
+                                                            'designated test subsystem.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 150,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Generator failure must '
+                                                                 'not leave partial '
+                                                                 'repository scaffolding.',
+                                             'validation_description': 'Dry-run reports '
+                                                                       'exact paths; apply '
+                                                                       'creates the '
+                                                                       'approved scaffold; '
+                                                                       'generated '
+                                                                       'contracts pass '
+                                                                       'Hansel validation.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Generator '
+                                                                          'contract, '
+                                                                          'templates, '
+                                                                          'Hansel '
+                                                                          'validator.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Dry-run '
+                                                                           'reports exact '
+                                                                           'paths; apply '
+                                                                           'creates the '
+                                                                           'approved '
+                                                                           'scaffold; '
+                                                                           'generated '
+                                                                           'contracts pass '
+                                                                           'Hansel '
+                                                                           'validation.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Initiative Completion and Knowledge '
+                                           'Reconciliation',
+                                  'description': 'Make Initiative closure verify '
+                                                 'continuously accumulated evidence '
+                                                 'instead of reconstructing history.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Define Initiative closeout '
+                                                      'checklist',
+                                             'description': 'Define deterministic '
+                                                            'consistency checks required '
+                                                            'before an Initiative is '
+                                                            'complete.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 60,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Closeout verifies '
+                                                                       'completed '
+                                                                       'Steps/Phases, '
+                                                                       'ACTUAL files, '
+                                                                       'validation '
+                                                                       'evidence, source '
+                                                                       'handoffs, '
+                                                                       'lifecycle state, '
+                                                                       'and Hansel '
+                                                                       'reconciliation.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Phase 1 '
+                                                                          'evidence and '
+                                                                          'Hansel trail '
+                                                                          'reconciliation.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Closeout '
+                                                                           'verifies '
+                                                                           'completed '
+                                                                           'Steps/Phases, '
+                                                                           'ACTUAL files, '
+                                                                           'validation '
+                                                                           'evidence, '
+                                                                           'source '
+                                                                           'handoffs, '
+                                                                           'lifecycle '
+                                                                           'state, and '
+                                                                           'Hansel '
+                                                                           'reconciliation.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Detect stale Planning assumptions '
+                                                      'during closeout',
+                                             'description': 'Reconcile persisted Planning '
+                                                            'assumptions against '
+                                                            'repository reality and '
+                                                            'classify superseded, '
+                                                            'already-implemented, '
+                                                            'obsolete, or duplicate work '
+                                                            'without destroying history.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Reconciliation must not '
+                                                                 'silently rewrite '
+                                                                 'historical evidence or '
+                                                                 'infer completion without '
+                                                                 'proof.',
+                                             'validation_description': 'Known stale '
+                                                                       'assumptions from '
+                                                                       'the paused '
+                                                                       'Planning Knowledge '
+                                                                       'Pipeline are '
+                                                                       'identified and '
+                                                                       'classified without '
+                                                                       'destructive '
+                                                                       'deletion.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Planning '
+                                                                          'LIFECYCLE_AND_RECONCILIATION.md.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'The stale '
+                                                                        'planning_imports '
+                                                                        'location is a '
+                                                                        'concrete '
+                                                                        'historical test '
+                                                                        'case.'},
+                                             'validation': {'description': 'Known stale '
+                                                                           'assumptions '
+                                                                           'from the '
+                                                                           'paused '
+                                                                           'Planning '
+                                                                           'Knowledge '
+                                                                           'Pipeline are '
+                                                                           'identified and '
+                                                                           'classified '
+                                                                           'without '
+                                                                           'destructive '
+                                                                           'deletion.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Capture Initiative post-mortem as '
+                                                      'structured improvement input',
+                                             'description': 'Preserve what worked, what '
+                                                            'failed, process deficiencies, '
+                                                            'and candidate improvements in '
+                                                            'a concise durable closeout '
+                                                            'record.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 75,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A future planning '
+                                                                       'session can '
+                                                                       'recover key '
+                                                                       'lessons without '
+                                                                       'the originating '
+                                                                       'conversation.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Initiative '
+                                                                          'closeout and '
+                                                                          'trail evidence.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': "Today's Anamod "
+                                                                        'post-mortem is '
+                                                                        'the reference '
+                                                                        'example.'},
+                                             'validation': {'description': 'A future '
+                                                                           'planning '
+                                                                           'session can '
+                                                                           'recover key '
+                                                                           'lessons '
+                                                                           'without the '
+                                                                           'originating '
+                                                                           'conversation.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]},
+                                 {'title': 'Repository Adoption and Governance',
+                                  'description': 'Adopt the proven Hansel workflow '
+                                                 'incrementally and enforce it only after '
+                                                 'the workflow and tooling are proven.',
+                                  'status': 'PLANNED',
+                                  'steps': [{'title': 'Validate Anamod as the first full '
+                                                      'workflow specimen',
+                                             'description': 'Run a bounded Anamod task '
+                                                            'through real-time Planning, '
+                                                            'Hansel, evidence, validation, '
+                                                            'and closeout.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'HIGH',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'A fresh Anamod '
+                                                                       'task remains '
+                                                                       'resumable at '
+                                                                       'arbitrary '
+                                                                       'interruption '
+                                                                       'points and closes '
+                                                                       'without '
+                                                                       'retrospective '
+                                                                       'reconstruction.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'All prior '
+                                                                          'phases.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'A fresh Anamod '
+                                                                           'task remains '
+                                                                           'resumable at '
+                                                                           'arbitrary '
+                                                                           'interruption '
+                                                                           'points and '
+                                                                           'closes without '
+                                                                           'retrospective '
+                                                                           'reconstruction.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Select and validate a second '
+                                                      'subsystem pilot',
+                                             'description': 'Choose a subsystem with '
+                                                            'different runtime '
+                                                            'characteristics and prove the '
+                                                            'workflow is portable.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Second pilot may expose '
+                                                                 'Anamod-specific '
+                                                                 'assumptions.',
+                                             'validation_description': 'Second subsystem '
+                                                                       'completes a '
+                                                                       'bounded task '
+                                                                       'through the same '
+                                                                       'Planning/Hansel '
+                                                                       'workflow without a '
+                                                                       'parallel knowledge '
+                                                                       'structure.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Proven Anamod '
+                                                                          'workflow.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Second '
+                                                                           'subsystem '
+                                                                           'completes a '
+                                                                           'bounded task '
+                                                                           'through the '
+                                                                           'same '
+                                                                           'Planning/Hansel '
+                                                                           'workflow '
+                                                                           'without a '
+                                                                           'parallel '
+                                                                           'knowledge '
+                                                                           'structure.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Publish repository-wide Hansel '
+                                                      'adoption policy',
+                                             'description': 'Define sequencing, '
+                                                            'exceptions, enforcement '
+                                                            'triggers, completion '
+                                                            'requirements, and rollback '
+                                                            'rules for existing and future '
+                                                            'subsystems.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 90,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'LOW',
+                                             'risk_description': '',
+                                             'validation_description': 'Policy defines '
+                                                                       'when compliance is '
+                                                                       'required, allowed '
+                                                                       'exceptions, '
+                                                                       'expiration, and '
+                                                                       'required proven '
+                                                                       'tooling.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Two successful '
+                                                                          'subsystem '
+                                                                          'pilots.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': 'Consolidates '
+                                                                        'paused Initiative '
+                                                                        '25 adoption and '
+                                                                        'governance work.'},
+                                             'validation': {'description': 'Policy defines '
+                                                                           'when '
+                                                                           'compliance is '
+                                                                           'required, '
+                                                                           'allowed '
+                                                                           'exceptions, '
+                                                                           'expiration, '
+                                                                           'and required '
+                                                                           'proven '
+                                                                           'tooling.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []},
+                                            {'title': 'Integrate Hansel validation into '
+                                                      'engineering workflows',
+                                             'description': 'Add proven Hansel validation '
+                                                            'to appropriate development, '
+                                                            'migration, merge, or release '
+                                                            'workflows.',
+                                             'status': 'PLANNED',
+                                             'estimated_minutes': 120,
+                                             'estimate_confidence': 'MEDIUM',
+                                             'risk_level': 'MEDIUM',
+                                             'risk_description': 'Premature or overly '
+                                                                 'broad enforcement could '
+                                                                 'create false failures '
+                                                                 'and friction.',
+                                             'validation_description': 'Covered workflows '
+                                                                       'reject '
+                                                                       'deterministic '
+                                                                       'Hansel violations '
+                                                                       'with actionable '
+                                                                       'errors and allow '
+                                                                       'compliant work '
+                                                                       'without manual '
+                                                                       'exceptions.',
+                                             'document': {'technical_design': '',
+                                                          'dependencies': 'Validator and '
+                                                                          'published '
+                                                                          'adoption '
+                                                                          'policy.',
+                                                          'assumptions': '',
+                                                          'implementation_notes': '',
+                                                          'discussion': ''},
+                                             'validation': {'description': 'Covered '
+                                                                           'workflows '
+                                                                           'reject '
+                                                                           'deterministic '
+                                                                           'Hansel '
+                                                                           'violations '
+                                                                           'with '
+                                                                           'actionable '
+                                                                           'errors and '
+                                                                           'allow '
+                                                                           'compliant work '
+                                                                           'without manual '
+                                                                           'exceptions.',
+                                                            'notes': ''},
+                                             'planned_files': [],
+                                             'actual_files': []}]}]}],
+ 'add_phases': [],
+ 'add_steps': []}

@@ -13,6 +13,12 @@ from aurora.models import (
     Step,
     TimeEntry,
 )
+from aurora.subsystems.planning.services.lifecycle import (
+    PlanningLifecycleError,
+    activate_initiative,
+    activate_phase,
+    activate_step,
+)
 
 
 class PlanningTimeTrackingError(RuntimeError):
@@ -126,9 +132,10 @@ def get_executable_step(user) -> Step:
 
 def start_step_work(user) -> TimeEntry:
     """
-    Start time tracking for the user's executable Planning Step.
+    Resume timing for the user's already executable Planning Step.
 
-    Repeated calls return the existing open TimeEntry.
+    This compatibility operation does not choose or activate work. New work
+    should begin through start_planning_work() with an explicit Step.
     """
 
     if not user or not getattr(user, "is_authenticated", False):
@@ -136,12 +143,16 @@ def start_step_work(user) -> TimeEntry:
             "An authenticated user is required to start Step work."
         )
 
-    existing = get_active_time_entry(user)
+    existing = get_active_time_entry(
+        user
+    )
 
     if existing is not None:
         return existing
 
-    step = get_executable_step(user)
+    step = get_executable_step(
+        user
+    )
 
     with transaction.atomic():
         return TimeEntry.objects.create(
@@ -186,7 +197,7 @@ def end_step_work(user) -> TimeEntry:
 
     return time_entry
 
+
 # ======================================================================
-# FILE: aurora/subsystems/planning/services/time_tracking.py
 # END: PLANNING_STEP_TIME_TRACKING_SERVICE
 # ======================================================================

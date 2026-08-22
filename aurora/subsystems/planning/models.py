@@ -167,6 +167,50 @@ class Initiative(models.Model):
 # END: INITIATIVE_MODEL
 # ======================================================================
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/models.py
+# START: INITIATIVE_SOURCE_DELTA_NOTE_MODEL
+# ======================================================================
+class InitiativeSourceDeltaNote(models.Model):
+    """Link one Planning Initiative to one source Delta Note."""
+
+    initiative = models.ForeignKey(
+        Initiative,
+        on_delete=models.CASCADE,
+        related_name="source_delta_notes",
+    )
+
+    delta_note = models.ForeignKey(
+        "aurora.DeltaNotesEntry",
+        on_delete=models.PROTECT,
+        related_name="planning_initiatives",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = [
+            "created_at",
+            "pk",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "initiative",
+                    "delta_note",
+                ],
+                name="unique_initiative_source_delta_note",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.initiative} / "
+            f"Delta Note {self.delta_note_id}"
+        )
+# ======================================================================
+# END: INITIATIVE_SOURCE_DELTA_NOTE_MODEL
+# ======================================================================
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/models.py

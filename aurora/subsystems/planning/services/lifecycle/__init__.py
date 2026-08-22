@@ -30,30 +30,34 @@ from aurora.subsystems.planning.services.lifecycle.step import (
     pause_step,
 )
 from aurora.subsystems.planning.services.lifecycle.orchestration import (
+    activate_step_hierarchy,
     complete_step_and_evaluate_parents,
 )
+
 
 __all__ = [
     "PlanningLifecycleError",
     "activate_initiative",
     "activate_phase",
     "activate_step",
+    "activate_step_hierarchy",
+    "approve_initiative_completion",
     "approve_phase_completion",
+    "complete_initiative",
     "complete_phase",
     "complete_step",
+    "complete_step_and_evaluate_parents",
+    "evaluate_initiative_completion",
     "evaluate_phase_completion",
     "pause_initiative",
     "pause_phase",
     "pause_step",
-    "reject_phase_completion",
-    "request_phase_completion",
-    "approve_initiative_completion",
-    "complete_initiative",
-    "evaluate_initiative_completion",
     "reject_initiative_completion",
+    "reject_phase_completion",
     "request_initiative_completion",
-    "complete_step_and_evaluate_parents",
+    "request_phase_completion",
 ]
+
 
 # ======================================================================
 # END: PLANNING_LIFECYCLE_PACKAGE

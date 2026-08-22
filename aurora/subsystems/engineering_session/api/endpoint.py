@@ -3,30 +3,33 @@
 # START: ENGINEERING_SESSION_API_ENDPOINT
 # ======================================================================
 
-import json
-from dataclasses import asdict
-
-from asgiref.sync import async_to_sync
 from django.http import JsonResponse
 
 from aurora.models import DeltaNotesEntry, Initiative, Phase
-from aurora.subsystems.component_registry.services.documenter import (
-    ComponentRegistryDocumenter,
+from aurora.subsystems.engineering_session.api.completion_actions import (
+    COMPLETION_ACTIONS,
+    handle_completion_action,
 )
-from aurora.subsystems.component_registry.services.maintenance import (
-    ComponentRegistryMaintenance,
+from aurora.subsystems.engineering_session.api.delta_note_actions import (
+    DELTA_NOTE_ACTIONS,
+    handle_delta_note_action,
+)
+from aurora.subsystems.engineering_session.api.registry_actions import (
+    REGISTRY_ACTIONS,
+    handle_registry_action,
+)
+from aurora.subsystems.engineering_session.api.serializers import (
+    serialize_session,
+)
+from aurora.subsystems.engineering_session.api.session_actions import (
+    SESSION_ACTIONS,
+    handle_session_action,
 )
 from aurora.subsystems.engineering_session.services import (
     EngineeringSessionError,
     EngineeringSessionPlanningError,
-    apply_delta_note_planning,
-    end_session,
     get_active_session,
-    get_next_unprocessed_delta_note,
     get_session_workflow_status,
-    propose_delta_note_planning,
-    resolve_delta_note,
-    start_session,
 )
 from aurora.subsystems.planning.io.exceptions import (
     PlanningImportError,
@@ -36,184 +39,63 @@ from aurora.subsystems.planning.services import (
     PlanningGenerationError,
     PlanningLifecycleError,
     PlanningTimeTrackingError,
-    approve_initiative_completion,
-    approve_phase_completion,
-    complete_step_and_evaluate_parents,
-    end_step_work,
-    get_executable_step,
-    reject_initiative_completion,
-    reject_phase_completion,
-    request_initiative_completion,
-    start_step_work,
 )
-from aurora.utils.telemetry_stream import async_send_to_console
 
 
-def _serialize_session(session):
-    """Return stable API data for one EngineeringSession."""
+def _dispatch_post_action(request, action):
+    """Route one Engineering Session POST action to its owning module."""
 
-    if session is None:
-        return None
-
-    return {
-        "id": session.id,
-        "started_at": session.started_at.isoformat(),
-        "ended_at": (
-            session.ended_at.isoformat()
-            if session.ended_at
-            else None
-        ),
-    }
-
-
-def _serialize_time_entry(time_entry):
-    """Return stable API data for one Planning TimeEntry."""
-
-    if time_entry is None:
-        return None
-
-    return {
-        "id": time_entry.id,
-        "step_id": time_entry.step_id,
-        "step": time_entry.step.title,
-        "started_at": time_entry.started_at.isoformat(),
-        "ended_at": (
-            time_entry.ended_at.isoformat()
-            if time_entry.ended_at
-            else None
-        ),
-    }
-
-
-def _serialize_delta_note(note):
-    """Return stable API data for one Delta Note."""
-
-    if note is None:
-        return None
-
-    return {
-        "id": note.pk,
-        "text": note.text,
-        "created_at": note.created_at.isoformat(),
-        "updated_at": note.updated_at.isoformat(),
-    }
-
-
-def _serialize_planning_proposal(proposal):
-    """Return stable API data for one validated Planning proposal."""
-
-    return {
-        "note_id": proposal.note_id,
-        "note_text": proposal.note_text,
-        "project_slug": proposal.project_slug,
-        "document": proposal.document,
-        "validation": asdict(
-            proposal.validation
-        ),
-    }
-
-
-def _serialize_planning_application(application):
-    """Return stable API data for an applied Delta Note Planning proposal."""
-
-    return {
-        "note_id": application.note_id,
-        "project_slug": application.project_slug,
-        "validation": asdict(
-            application.validation
-        ),
-        "application": asdict(
-            application.application
-        ),
-        "note_resolved": application.note_resolved,
-    }
-
-
-def _parse_planning_document(value):
-    """Parse one browser-submitted Planning dictionary."""
-
-    if not isinstance(value, str) or not value.strip():
-        raise EngineeringSessionPlanningError(
-            "Planning proposal document is required."
+    if action in SESSION_ACTIONS:
+        return handle_session_action(
+            request,
+            action,
         )
 
-    try:
-        document = json.loads(
-            value
-        )
-    except json.JSONDecodeError as error:
-        raise EngineeringSessionPlanningError(
-            "Planning proposal document is not valid JSON."
-        ) from error
-
-    if not isinstance(document, dict):
-        raise EngineeringSessionPlanningError(
-            "Planning proposal document must be an object."
+    if action in DELTA_NOTE_ACTIONS:
+        return handle_delta_note_action(
+            request,
+            action,
         )
 
-    return document
-
-
-
-def _emit_registry_telemetry(message: str) -> None:
-    """Broadcast one Component Registry operational progress message."""
-
-    async_to_sync(
-        async_send_to_console
-    )(message)
-
-
-def _serialize_registry_maintenance(report):
-    """Return stable deterministic maintenance results for the browser."""
-
-    return {
-        "counts": report.counts,
-        "review": list(report.review),
-        "failures": list(report.failures),
-    }
-
-
-def _serialize_registry_enrichment(report):
-    """Return stable Component Registry enrichment results for the browser."""
-
-    return {
-        "candidates": len(report.get("candidates", [])),
-        "completed": len(report.get("completed", [])),
-        "skipped": len(report.get("skipped", [])),
-        "failures": len(report.get("failures", [])),
-        "stopped": bool(report.get("stopped", False)),
-        "last_completed": report.get("last_completed"),
-        "failure_point": report.get("failure_point"),
-        "restart_from": report.get("restart_from"),
-        "remaining": report.get("remaining", 0),
-    }
-
-
-def _require_active_session(user):
-    """Require an active Engineering Session for workflow mutations."""
-
-    session = get_active_session(user)
-
-    if session is None:
-        raise EngineeringSessionError(
-            "An active engineering session is required."
+    if action in REGISTRY_ACTIONS:
+        return handle_registry_action(
+            request,
+            action,
         )
 
-    return session
+    if action in COMPLETION_ACTIONS:
+        return handle_completion_action(
+            request,
+            action,
+        )
+
+    return JsonResponse(
+        {
+            "status": "error",
+            "message": f"Unknown action: {action}",
+        },
+        status=400,
+    )
 
 
 def engineering_session_endpoint(request):
     """Read or change the authenticated user's Engineering Session."""
 
     if request.method == "GET":
-        session = get_active_session(request.user)
-        workflow = get_session_workflow_status(request.user)
+        session = get_active_session(
+            request.user
+        )
+        workflow = get_session_workflow_status(
+            request.user
+        )
 
         return JsonResponse(
             {
                 "status": "success",
                 "active": session is not None,
-                "session": _serialize_session(session),
+                "session": serialize_session(
+                    session
+                ),
                 "workflow": workflow,
             }
         )
@@ -227,466 +109,15 @@ def engineering_session_endpoint(request):
             status=405,
         )
 
-    action = request.POST.get("action")
+    action = request.POST.get(
+        "action"
+    )
 
     try:
-        if action == "start":
-            session = start_session(request.user)
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "active": True,
-                    "session": _serialize_session(session),
-                }
-            )
-
-        if action == "end":
-            session = end_session(request.user)
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "active": False,
-                    "session": _serialize_session(session),
-                }
-            )
-
-        if action == "start_step_work":
-            _require_active_session(request.user)
-
-            time_entry = start_step_work(request.user)
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "start_step_work",
-                    "time_entry": _serialize_time_entry(time_entry),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "end_step_work":
-            _require_active_session(request.user)
-
-            time_entry = end_step_work(request.user)
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "end_step_work",
-                    "time_entry": _serialize_time_entry(time_entry),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "complete_step":
-            _require_active_session(request.user)
-
-            step = get_executable_step(
-                request.user
-            )
-
-            lifecycle = complete_step_and_evaluate_parents(
-                step,
-                request.user,
-                auto_phase=False,
-                auto_initiative=False,
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "complete_step",
-                    "lifecycle": lifecycle,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "next_delta_note":
-            _require_active_session(request.user)
-
-            note = get_next_unprocessed_delta_note(
-                request.user
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "next_delta_note",
-                    "note": _serialize_delta_note(note),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "resolve_delta_note":
-            _require_active_session(request.user)
-
-            note = DeltaNotesEntry.objects.get(
-                pk=request.POST.get("note_id"),
-                user=request.user,
-                processed=False,
-            )
-
-            note_id = note.pk
-
-            resolve_delta_note(
-                note
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "resolve_delta_note",
-                    "note_id": note_id,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "propose_delta_note_planning":
-            _require_active_session(request.user)
-
-            note = DeltaNotesEntry.objects.get(
-                pk=request.POST.get("note_id"),
-                user=request.user,
-                processed=False,
-            )
-
-            proposal = propose_delta_note_planning(
-                note=note,
-                project_slug=request.POST.get(
-                    "project_slug",
-                    "",
-                ),
-                user=request.user,
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "propose_delta_note_planning",
-                    "proposal": _serialize_planning_proposal(
-                        proposal
-                    ),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "apply_delta_note_planning":
-            _require_active_session(request.user)
-
-            note = DeltaNotesEntry.objects.get(
-                pk=request.POST.get("note_id"),
-                user=request.user,
-                processed=False,
-            )
-
-            document = _parse_planning_document(
-                request.POST.get(
-                    "planning_document",
-                    "",
-                )
-            )
-
-            application = apply_delta_note_planning(
-                note=note,
-                document=document,
-                user=request.user,
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": "apply_delta_note_planning",
-                    "result": _serialize_planning_application(
-                        application
-                    ),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "refresh_component_registry":
-            _emit_registry_telemetry(
-                "[REGISTRY] Component Registry maintenance started."
-            )
-
-            try:
-                report = ComponentRegistryMaintenance().refresh()
-            except Exception as error:
-                _emit_registry_telemetry(
-                    "[REGISTRY ERROR] Maintenance failed: "
-                    f"{type(error).__name__}: {error}"
-                )
-
-                return JsonResponse(
-                    {
-                        "status": "error",
-                        "message": (
-                            "Component Registry maintenance failed. "
-                            f"{type(error).__name__}: {error}"
-                        ),
-                    },
-                    status=500,
-                )
-
-            counts = report.counts
-
-            _emit_registry_telemetry(
-                "Summary: "
-                + " | ".join(
-                    f"{key}={value}"
-                    for key, value in counts.items()
-                )
-            )
-
-            if report.review:
-                _emit_registry_telemetry(
-                    f"[REGISTRY] REVIEW required for "
-                    f"{len(report.review)} component(s)."
-                )
-
-                for path in report.review:
-                    _emit_registry_telemetry(
-                        f"[REGISTRY REVIEW] {path}"
-                    )
-
-            if report.failures:
-                for failure in report.failures:
-                    _emit_registry_telemetry(
-                        f"[REGISTRY FAILURE] {failure}"
-                    )
-
-            pending_count = (
-                counts["UPDATED"]
-                + counts["REGISTERED"]
-            )
-
-            if pending_count:
-                _emit_registry_telemetry(
-                    f"[REGISTRY] {pending_count} component(s) "
-                    "require AI enrichment."
-                )
-
-            _emit_registry_telemetry(
-                "[REGISTRY] Component Registry maintenance completed."
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "maintenance": _serialize_registry_maintenance(
-                        report
-                    ),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "enrich_component_registry":
-            _emit_registry_telemetry(
-                "[REGISTRY] Component Registry AI enrichment started."
-            )
-
-            def emit_progress(message):
-                _emit_registry_telemetry(
-                    f"[REGISTRY] {message}"
-                )
-
-            try:
-                report = (
-                    ComponentRegistryDocumenter()
-                    .analyze_pending(
-                        apply=True,
-                        progress_callback=emit_progress,
-                    )
-                )
-            except Exception as error:
-                _emit_registry_telemetry(
-                    "[REGISTRY ERROR] Enrichment failed: "
-                    f"{type(error).__name__}: {error}"
-                )
-
-                return JsonResponse(
-                    {
-                        "status": "error",
-                        "message": (
-                            "Component Registry enrichment failed. "
-                            f"{type(error).__name__}: {error}"
-                        ),
-                    },
-                    status=500,
-                )
-
-            serialized_report = (
-                _serialize_registry_enrichment(
-                    report
-                )
-            )
-
-            if report.get("stopped"):
-                _emit_registry_telemetry(
-                    "[REGISTRY] Enrichment stopped after an "
-                    "AI provider failure."
-                )
-
-                _emit_registry_telemetry(
-                    f"[REGISTRY] Resume from: "
-                    f"{report.get('restart_from')}"
-                )
-
-            elif report.get("failures"):
-                _emit_registry_telemetry(
-                    "[REGISTRY] Enrichment completed with "
-                    f"{len(report['failures'])} failure(s)."
-                )
-
-                for failure in report["failures"]:
-                    _emit_registry_telemetry(
-                        f"[REGISTRY FAILURE] {failure}"
-                    )
-
-            else:
-                _emit_registry_telemetry(
-                    "[REGISTRY] Component Registry enrichment "
-                    "completed successfully."
-                )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "enrichment": serialized_report,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "approve_phase_completion":
-            _require_active_session(request.user)
-
-            phase = (
-                Phase.objects
-                .select_related("initiative")
-                .get(
-                    pk=request.POST.get("phase_id")
-                )
-            )
-
-            decision = approve_phase_completion(
-                phase
-            )
-
-            initiative_completion = (
-                request_initiative_completion(
-                    phase.initiative,
-                    auto=False,
-                )
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "decision": decision,
-                    "initiative_completion": (
-                        initiative_completion
-                    ),
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "reject_phase_completion":
-            _require_active_session(request.user)
-
-            phase = Phase.objects.get(
-                pk=request.POST.get("phase_id")
-            )
-
-            decision = reject_phase_completion(
-                phase,
-                reason=request.POST.get(
-                    "reason",
-                    "",
-                ),
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "decision": decision,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "approve_initiative_completion":
-            _require_active_session(request.user)
-
-            initiative = Initiative.objects.get(
-                pk=request.POST.get("initiative_id")
-            )
-
-            decision = approve_initiative_completion(
-                initiative
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "decision": decision,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
-
-        if action == "reject_initiative_completion":
-            _require_active_session(request.user)
-
-            initiative = Initiative.objects.get(
-                pk=request.POST.get("initiative_id")
-            )
-
-            decision = reject_initiative_completion(
-                initiative,
-                reason=request.POST.get(
-                    "reason",
-                    "",
-                ),
-            )
-
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "action": action,
-                    "decision": decision,
-                    "workflow": get_session_workflow_status(
-                        request.user
-                    ),
-                }
-            )
+        return _dispatch_post_action(
+            request,
+            action,
+        )
 
     except (
         EngineeringSessionError,
@@ -720,13 +151,6 @@ def engineering_session_endpoint(request):
             status=400,
         )
 
-    return JsonResponse(
-        {
-            "status": "error",
-            "message": f"Unknown action: {action}",
-        },
-        status=400,
-    )
 
 # ======================================================================
 # END: ENGINEERING_SESSION_API_ENDPOINT

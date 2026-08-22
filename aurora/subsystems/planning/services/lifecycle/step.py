@@ -95,7 +95,10 @@ def pause_step(step: Step) -> Step:
 
 def complete_step(step: Step, user) -> Step:
     """
-    Complete one Step and persist historical completion attribution.
+    Complete one validated Step and persist completion attribution.
+
+    StepValidation is the authoritative validation evidence. Completion is
+    forbidden until deterministic validation evidence has been recorded.
 
     Any open TimeEntry for this user and Step is closed before completion.
     """
@@ -125,6 +128,29 @@ def complete_step(step: Step, user) -> Step:
         if locked.status == ExecutionStatus.CANCELLED:
             raise PlanningLifecycleError(
                 "A cancelled Step cannot be completed."
+            )
+
+        try:
+            validation = locked.validation
+        except Step.validation.RelatedObjectDoesNotExist:
+            raise PlanningLifecycleError(
+                "This Step has no validation record."
+            )
+
+        if not validation.notes.strip():
+            raise PlanningLifecycleError(
+                "Validation evidence must be recorded before completing "
+                "this Step."
+            )
+
+        if validation.validated_by_id is None:
+            raise PlanningLifecycleError(
+                "A validator must be recorded before completing this Step."
+            )
+
+        if validation.validated_at is None:
+            raise PlanningLifecycleError(
+                "Validation time must be recorded before completing this Step."
             )
 
         now = timezone.now()

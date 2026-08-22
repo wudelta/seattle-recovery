@@ -3,6 +3,10 @@
 # START: PLANNING_SERVICES_PACKAGE
 # ======================================================================
 
+from aurora.subsystems.planning.services.execution_evidence import (
+    PlanningExecutionEvidenceError,
+    record_actual_step_file,
+)
 from aurora.subsystems.planning.services.generation import (
     PlanningGenerationError,
     PlanningGenerationResult,
@@ -13,6 +17,7 @@ from aurora.subsystems.planning.services.lifecycle import (
     activate_initiative,
     activate_phase,
     activate_step,
+    activate_step_hierarchy,
     approve_initiative_completion,
     approve_phase_completion,
     complete_initiative,
@@ -37,7 +42,9 @@ from aurora.subsystems.planning.services.time_tracking import (
     start_step_work,
 )
 
+
 __all__ = [
+    "PlanningExecutionEvidenceError",
     "PlanningGenerationError",
     "PlanningGenerationResult",
     "PlanningLifecycleError",
@@ -45,6 +52,7 @@ __all__ = [
     "activate_initiative",
     "activate_phase",
     "activate_step",
+    "activate_step_hierarchy",
     "approve_initiative_completion",
     "approve_phase_completion",
     "complete_initiative",
@@ -60,12 +68,14 @@ __all__ = [
     "pause_initiative",
     "pause_phase",
     "pause_step",
+    "record_actual_step_file",
     "reject_initiative_completion",
     "reject_phase_completion",
     "request_initiative_completion",
     "request_phase_completion",
     "start_step_work",
 ]
+
 
 # ======================================================================
 # END: PLANNING_SERVICES_PACKAGE
