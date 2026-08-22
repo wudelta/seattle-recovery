@@ -11,7 +11,8 @@ Component Registry maintains Aurora's searchable inventory of repository
 components.
 
 It owns deterministic repository discovery, registry reconciliation, registry
-synchronization, and semantic component enrichment.
+synchronization, semantic component enrichment, and Component Registry-owned
+HTTP operations consumed by Aurora interfaces.
 
 Neo4j projection is derived and optional.
 
@@ -63,6 +64,34 @@ an AI provider failure stops the run
 Provider failures leave the interrupted component `PENDING` so the same command
 can be run again later to resume naturally.
 
+### Consume Component Registry through Aurora UI/API
+
+Go to:
+
+```text
+aurora/subsystems/component_registry/api/endpoint.py
+```
+
+This is the Component Registry-owned HTTP boundary for:
+
+```text
+single-file registry lookup
+live source freshness validation
+deterministic registry maintenance
+AI enrichment
+```
+
+Browser consumers such as Anamod may invoke this authority.
+
+They must not duplicate:
+
+```text
+Component Registry lookup logic
+source freshness determination
+registry maintenance behavior
+AI enrichment behavior
+```
+
 ### Preview or test bounded AI enrichment
 
 Go to:
@@ -97,13 +126,15 @@ Go to:
 aurora/subsystems/component_registry/services/maintenance.py
 ```
 
-### Change repository reconciliation behavior
+### Change repository reconciliation or source freshness behavior
 
 Go to:
 
 ```text
 aurora/subsystems/component_registry/services/reconciler.py
 ```
+
+This authority owns deterministic source hashing and repository comparison.
 
 ### Change registry mutation behavior
 
@@ -145,6 +176,16 @@ Go to:
 aurora/subsystems/component_registry/models.py
 ```
 
+Primary file identity and semantic state include:
+
+```text
+file_path
+source_hash
+analysis_status
+analysis_version
+description
+```
+
 ### Understand or change Component Registry administration
 
 Go to:
@@ -152,6 +193,9 @@ Go to:
 ```text
 aurora/subsystems/component_registry/admin.py
 ```
+
+Use this authority for Django-admin presentation, search, filtering, and manual
+inspection of Component Registry records.
 
 ### Work with repository dependency analysis
 
@@ -228,6 +272,42 @@ deferred until the machine is online and the operation is practical to run.
 
 ---
 
+## UI Consumption Model
+
+Aurora interfaces may consume Component Registry capabilities through:
+
+```text
+aurora/subsystems/component_registry/api/endpoint.py
+```
+
+Current consumers may request:
+
+```text
+one file's registry description
+one file's freshness state
+registry maintenance
+registry enrichment
+```
+
+The API may coordinate Component Registry-owned services, but ownership remains
+with those services.
+
+For source freshness:
+
+```text
+API
+    ↓
+calculate_source_hash()
+    ↓
+compare repository source hash
+with ComponentRegistry.source_hash
+```
+
+A stored description must not be presented as current when the repository file
+has changed since the registry source hash was recorded.
+
+---
+
 ## Unknown Territory
 
 If the task is not covered by this catalogue:
@@ -258,8 +338,8 @@ Do not load additional Component Registry context merely because it exists.
 
 After completing a change, ask:
 
-> Has this change made a Component Registry breadcrumb or maintenance route
-> stale?
+> Has this change made a Component Registry breadcrumb, API route, ownership
+> boundary, or maintenance route stale?
 
 If no, no Hansel update is required.
 

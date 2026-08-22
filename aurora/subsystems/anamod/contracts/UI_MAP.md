@@ -11,23 +11,44 @@ Route Anamod UI tasks to the narrowest authoritative repository surface.
 
 This file is a map, not a UI specification.
 
+---
+
 ## Console Structure
 
-For Anamod Console structure, editor layout, action controls, and operational
-log markup:
+For Anamod Console structure, editor layout, Workflow Controls, Component
+Registry description presentation, Activity state, and operational-log markup:
 
 ```text
 aurora/templates/aurora/anamod/anamod_console_panel.html
 ```
 
-## Client Behavior
+---
 
-For Anamod editor interaction, workspace actions, Monaco coordination, and
-operational log behavior:
+## Editor and Active-File Behavior
+
+For Monaco coordination, active-file state, save/discard behavior, Component
+Registry description loading, registry workflow controls, and Anamod operational
+log behavior:
 
 ```text
 aurora/static/aurora/js/anamod/anamod.js
 ```
+
+---
+
+## Project Hierarchy and Workspace Interaction
+
+For Project Hierarchy behavior, tree refresh and expansion, Load/Create,
+repository-path loading, file/directory creation, rename/delete interaction, and
+tree focus:
+
+```text
+aurora/static/aurora/js/anamod/anamod_workspace.js
+```
+
+This is a separate browser authority from `anamod.js`.
+
+---
 
 ## Styling
 
@@ -36,6 +57,49 @@ For Anamod-specific presentation:
 ```text
 aurora/static/aurora/css/anamod.css
 ```
+
+---
+
+## Component Registry Integration
+
+Anamod consumes Component Registry knowledge and operations through:
+
+```text
+aurora/subsystems/component_registry/contracts/HANSEL.md
+```
+
+Component Registry retains ownership of:
+
+```text
+file-path registry lookup
+description freshness
+deterministic maintenance
+AI enrichment
+```
+
+Anamod owns only presentation and invocation of those capabilities.
+
+---
+
+## Shared Telemetry
+
+The shared Aurora Console WebSocket transport is dispatched to browser
+consumers through:
+
+```text
+aurora/static/aurora/js/console.js
+    aurora:telemetry_stream
+```
+
+Anamod consumes relevant Component Registry telemetry in:
+
+```text
+aurora/static/aurora/js/anamod/anamod.js
+```
+
+Do not create an Anamod-specific WebSocket transport.
+
+---
 
 ## Operational Pipeline Log Feed
 
@@ -56,10 +120,10 @@ Reference behavior:
 ```text
 newest message is inserted at the top
 older history descends
-viewport returns to the top after each new message
+latest activity remains immediately visible
 ```
 
-This is the current reference pattern for comparable Aurora operational logs.
+---
 
 ## Unknown UI Territory
 
@@ -69,10 +133,14 @@ If the requested Anamod UI responsibility is not mapped here:
 2. perform the narrowest exact-symbol discovery necessary;
 3. add a breadcrumb only for a durable UI authority.
 
+---
+
 ## Sufficient Authority
 
 Stop UI discovery when the authoritative surface, bounded change, preserved
 behavior, and validation method are known.
+
+---
 
 ## Authority Reconciliation
 
