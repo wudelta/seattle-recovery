@@ -214,6 +214,89 @@ class InitiativeSourceDeltaNote(models.Model):
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/models.py
+# START: INITIATIVE_POST_MORTEM_MODEL
+# ======================================================================
+
+
+class InitiativePostMortem(models.Model):
+    """Structured improvement evidence captured during Initiative closeout."""
+
+    initiative = models.OneToOneField(
+        Initiative,
+        on_delete=models.CASCADE,
+        related_name="post_mortem",
+    )
+
+    summary = models.TextField(
+        blank=True,
+        help_text=(
+            "Concise retrospective summary of the completed Initiative."
+        ),
+    )
+
+    successes = models.TextField(
+        blank=True,
+        help_text=(
+            "Approaches, decisions, or workflow behavior worth preserving."
+        ),
+    )
+
+    friction = models.TextField(
+        blank=True,
+        help_text=(
+            "Observed problems, inefficiencies, surprises, or failed "
+            "assumptions encountered during execution."
+        ),
+    )
+
+    planning_improvements = models.TextField(
+        blank=True,
+        help_text=(
+            "Durable improvements suggested for Planning contracts, "
+            "estimation, lifecycle behavior, or execution workflow."
+        ),
+    )
+
+    hansel_improvements = models.TextField(
+        blank=True,
+        help_text=(
+            "Durable improvements suggested for Hansel routing, "
+            "authority discovery, validation, or reconciliation."
+        ),
+    )
+
+    follow_up = models.TextField(
+        blank=True,
+        help_text=(
+            "Concrete improvement work that should be considered after "
+            "Initiative closeout."
+        ),
+    )
+
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="initiative_post_mortems",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def __str__(self):
+        return f"Post-mortem / {self.initiative}"
+
+
+# ======================================================================
+# END: INITIATIVE_POST_MORTEM_MODEL
+# ======================================================================
+
+# ======================================================================
+# FILE: aurora/subsystems/planning/models.py
 # START: PHASE_MODEL
 # ======================================================================
 class Phase(models.Model):

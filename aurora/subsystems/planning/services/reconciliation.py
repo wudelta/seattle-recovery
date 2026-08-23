@@ -6,6 +6,7 @@
 from typing import Any
 
 from aurora.models import Project, UserPosition
+from django.core.exceptions import ObjectDoesNotExist
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/services/reconciliation.py
@@ -556,6 +557,309 @@ def build_planning_reconciliation_summary() -> dict[str, Any]:
 # START: PLANNING_INITIATIVE_RECONCILIATION_INSPECTION
 # ======================================================================
 
+def _serialize_step_closeout_evidence(step) -> dict[str, Any]:
+    """
+    Return bounded closeout evidence for one Step.
+
+    Narrative Planning fields are surfaced for review rather than
+    semantically classified by deterministic code.
+    """
+
+    try:
+        document = step.document
+    except ObjectDoesNotExist:
+        document = None
+
+    try:
+        validation = step.validation
+    except ObjectDoesNotExist:
+        validation = None
+
+    planned_files = []
+    actual_files = []
+
+    for step_file in step.files.all().order_by(
+        "role",
+        "file_path",
+        "pk",
+    ):
+        record = {
+            "path": step_file.file_path,
+            "reason": step_file.reason,
+            "recorded_by": _serialize_user(
+                step_file.recorded_by
+            ),
+        }
+
+        if step_file.role == "PLANNED":
+            planned_files.append(record)
+        elif step_file.role == "ACTUAL":
+            actual_files.append(record)
+
+    return {
+        "id": step.pk,
+        "title": step.title,
+        "status": step.status,
+        "description": step.description,
+        "document": (
+            {
+                "technical_design": document.technical_design,
+                "dependencies": document.dependencies,
+                "assumptions": document.assumptions,
+                "implementation_notes": document.implementation_notes,
+                "discussion": document.discussion,
+            }
+            if document is not None
+            else None
+        ),
+        "validation": (
+            {
+                "description": validation.description,
+                "notes": validation.notes,
+                "validated_by": _serialize_user(
+                    validation.validated_by
+                ),
+                "validated_at": (
+                    validation.validated_at.isoformat()
+                    if validation.validated_at
+                    else None
+                ),
+            }
+            if validation is not None
+            else None
+        ),
+        "planned_files": planned_files,
+        "actual_files": actual_files,
+    }
+
+
+def _collect_step_closeout_findings(
+    step,
+) -> list[dict[str, Any]]:
+    """
+    Return only deterministic closeout findings for one Step.
+
+    These findings identify evidence requiring review. They do not infer
+    whether narrative Planning assumptions are semantically stale.
+    """
+
+    findings = []
+
+    if step.status != "COMPLETED":
+        return findings
+
+    try:
+        validation = step.validation
+    except ObjectDoesNotExist:
+        validation = None
+
+    if validation is None:
+        findings.append(
+            {
+                "type": "COMPLETED_STEP_WITHOUT_VALIDATION",
+                "step_id": step.pk,
+                "step": step.title,
+            }
+        )
+    else:
+        if not validation.description.strip():
+            findings.append(
+                {
+                    "type": "COMPLETED_STEP_WITHOUT_VALIDATION_REQUIREMENT",
+                    "step_id": step.pk,
+                    "step": step.title,
+                }
+            )
+
+        if not validation.notes.strip():
+            findings.append(
+                {
+                    "type": "COMPLETED_STEP_WITHOUT_VALIDATION_EVIDENCE",
+                    "step_id": step.pk,
+                    "step": step.title,
+                }
+            )
+
+        if (
+            validation.validated_by_id is None
+            or validation.validated_at is None
+        ):
+            findings.append(
+                {
+                    "type": "COMPLETED_STEP_WITHOUT_VALIDATION_ATTRIBUTION",
+                    "step_id": step.pk,
+                    "step": step.title,
+                }
+            )
+
+    planned_paths = set(
+        step.files.filter(
+            role="PLANNED"
+        ).values_list(
+            "file_path",
+            flat=True,
+        )
+    )
+
+    actual_paths = set(
+        step.files.filter(
+            role="ACTUAL"
+        ).values_list(
+            "file_path",
+            flat=True,
+        )
+    )
+
+    for path in sorted(
+        planned_paths - actual_paths
+    ):
+        findings.append(
+            {
+                "type": "PLANNED_FILE_NOT_OBSERVED_AS_ACTUAL",
+                "step_id": step.pk,
+                "step": step.title,
+                "file_path": path,
+            }
+        )
+
+    return findings
+
+
+def build_initiative_closeout_inspection(
+    initiative_id: int,
+) -> dict[str, Any]:
+    """
+    Return bounded deterministic evidence for Initiative closeout.
+
+    Narrative assumptions and implementation decisions are exposed for
+    review. This service reports provable Planning discrepancies only and
+    does not automatically classify semantic architectural staleness.
+    """
+
+    project = (
+        Project.objects
+        .filter(
+            initiatives__pk=initiative_id,
+        )
+        .select_related(
+            "assigned_to",
+            "created_by",
+        )
+        .prefetch_related(
+            "initiatives__assigned_to",
+            "initiatives__created_by",
+            "initiatives__phases__assigned_to",
+            "initiatives__phases__created_by",
+            "initiatives__phases__steps__assigned_to",
+            "initiatives__phases__steps__created_by",
+            "initiatives__phases__steps__validated_by",
+            "initiatives__phases__steps__document",
+            "initiatives__phases__steps__validation__validated_by",
+            "initiatives__phases__steps__files__recorded_by",
+        )
+        .first()
+    )
+
+    if project is None:
+        raise ValueError(
+            f"Initiative {initiative_id} does not exist."
+        )
+
+    initiative = (
+        project.initiatives
+        .filter(pk=initiative_id)
+        .first()
+    )
+
+    if initiative is None:
+        raise ValueError(
+            f"Initiative {initiative_id} does not exist."
+        )
+
+    findings = []
+    phases = []
+
+    for phase in initiative.phases.all().order_by(
+        "position",
+        "pk",
+    ):
+        steps = []
+
+        if (
+            phase.status not in {
+                "COMPLETED",
+                "CANCELLED",
+            }
+        ):
+            findings.append(
+                {
+                    "type": "UNFINISHED_NON_CANCELLED_PHASE",
+                    "phase_id": phase.pk,
+                    "phase": phase.title,
+                    "status": phase.status,
+                }
+            )
+
+        for step in phase.steps.all().order_by(
+            "position",
+            "pk",
+        ):
+            findings.extend(
+                _collect_step_closeout_findings(
+                    step
+                )
+            )
+
+            steps.append(
+                _serialize_step_closeout_evidence(
+                    step
+                )
+            )
+
+        phases.append(
+            {
+                "id": phase.pk,
+                "title": phase.title,
+                "status": phase.status,
+                "steps": steps,
+            }
+        )
+
+    return {
+        "snapshot_type": (
+            "planning_initiative_closeout_inspection"
+        ),
+        "project": {
+            "id": project.pk,
+            "slug": project.slug,
+            "title": project.title,
+        },
+        "initiative": {
+            "id": initiative.pk,
+            "title": initiative.title,
+            "status": initiative.status,
+            "phases": phases,
+        },
+        "findings": findings,
+        "semantic_review_required": any(
+            (
+                step["document"] is not None
+                and any(
+                    (
+                        step["document"]["technical_design"],
+                        step["document"]["dependencies"],
+                        step["document"]["assumptions"],
+                        step["document"]["implementation_notes"],
+                        step["document"]["discussion"],
+                    )
+                )
+            )
+            for phase in phases
+            for step in phase["steps"]
+        ),
+    }
+
+
 def build_initiative_reconciliation_snapshot(
     initiative_id: int,
     *,
@@ -660,6 +964,7 @@ def build_initiative_reconciliation_snapshot(
             ],
         },
     }
+
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/services/reconciliation.py
