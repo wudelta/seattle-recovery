@@ -71,22 +71,58 @@ UI location does not determine domain ownership.
 
 ---
 
-## Current Discovery State
+## Current Implementation Authority
 
-The subsystem boundary is established.
+Engineering Session Management has established persistence, API, and service
+authorities.
 
-The authoritative persistence model, API, and service interfaces have not yet
-been defined.
-
-Before implementing them, inspect:
+For session persistence:
 
 ```text
-Aurora Console timer authority
-Planning Step authority
-Wu Chat UI authority
+aurora/subsystems/engineering_session/models.py
 ```
 
-Do not infer those interfaces from this catalogue.
+For browser/API workflow routing:
+
+```text
+aurora/subsystems/engineering_session/api/endpoint.py
+```
+
+The API package contains bounded action modules for specific coordinated
+workflows.
+
+Enter those modules through `endpoint.py` rather than assuming Engineering
+Session owns the underlying domain behavior.
+
+For session lifecycle behavior:
+
+```text
+aurora/subsystems/engineering_session/services/lifecycle.py
+```
+
+For Planning coordination:
+
+```text
+aurora/subsystems/engineering_session/services/planning.py
+```
+
+For Delta Notes coordination:
+
+```text
+aurora/subsystems/engineering_session/services/delta_notes.py
+```
+
+For session-status behavior:
+
+```text
+aurora/subsystems/engineering_session/services/status.py
+```
+
+These authorities define Engineering Session coordination behavior only.
+
+When implementation crosses into Planning, Delta Notes, Component Registry,
+Hansel, Wu Chat, or another subsystem, follow that subsystem's canonical
+`contracts/HANSEL.md` rather than extending Engineering Session ownership.
 
 ---
 

@@ -18,10 +18,15 @@ from aurora.subsystems.hansel.services.trails import (
     complete_hansel_trail,
     start_hansel_trail,
 )
+from aurora.subsystems.hansel.services.validation import (
+    HanselRepositoryValidation,
+    validate_hansel_repository,
+)
 
 
 __all__ = [
     "HanselReconciliationCandidate",
+    "HanselRepositoryValidation",
     "HanselTrailError",
     "HanselTrailReconciliation",
     "SubsystemGenerationError",
@@ -30,6 +35,7 @@ __all__ = [
     "complete_hansel_trail",
     "generate_subsystem",
     "start_hansel_trail",
+    "validate_hansel_repository",
 ]
 
 

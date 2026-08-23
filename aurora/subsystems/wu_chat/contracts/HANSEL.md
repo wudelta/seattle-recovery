@@ -618,21 +618,37 @@ similar capability.
 
 **State:** VERIFIED
 
-`PendingCodeChange` represents reviewed code proposals.
+`PendingCodeChange` represents a reviewed Wu code proposal.
 
-The exact current repository-write implementation used after approval is not
-fully described by this contract.
-
-**Knowledge State:** UNKNOWN
-
-Next breadcrumb:
+Proposal creation occurs in:
 
 ```text
-aurora/subsystems/wu_chat/api/endpoint.py
+aurora/subsystems/wu_chat/services/orchestration.py
 ```
 
-Inspect the approval/application path before modifying repository-write
-semantics.
+Repository application after developer approval occurs in:
+
+```text
+aurora/subsystems/wu_chat/api/code_review.py
+```
+
+The approval path:
+
+1. locks and verifies the pending proposal;
+2. resolves the reviewed repository file through Wu repository context;
+3. verifies that the source still matches the reviewed content and SHA-256;
+4. refuses the write and records a conflict when the source changed;
+5. obtains the executable Planning Step;
+6. writes the approved proposed content;
+7. marks the proposal applied;
+8. records the repository mutation as ACTUAL Planning Step evidence.
+
+Repository-write semantics for reviewed Wu proposals are therefore owned by the
+Wu Chat code-review API.
+
+Changes to general repository file operations remain outside this authority.
+
+**Knowledge State:** VERIFIED
 
 ---
 

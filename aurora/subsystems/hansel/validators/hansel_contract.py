@@ -37,6 +37,11 @@ FILE_ANCHOR_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+FENCED_BLOCK_PATTERN = re.compile(
+    r"```(?:text)?\s*\n(.*?)```",
+    re.DOTALL | re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class HanselContractIssue:
@@ -345,46 +350,54 @@ def _validate_repository_paths(
     root: Path,
     issues: list[HanselContractIssue],
 ) -> None:
-    """Verify deterministic repository paths referenced by the contract."""
+    """
+    Verify repository authorities declared in fenced text blocks.
+
+    Path-shaped strings appearing only in explanatory prose are historical or
+    descriptive text, not declared breadcrumbs, and are not validated here.
+    """
 
     checked: set[str] = set()
 
-    for match in PATH_PATTERN.finditer(
+    for block in FENCED_BLOCK_PATTERN.findall(
         text
     ):
-        relative_path = _normalize_repository_path(
-            match.group(0)
-        )
-
-        if relative_path in checked:
-            continue
-
-        checked.add(
-            relative_path
-        )
-
-        destination = (
-            root
-            / relative_path
-        )
-
-        if destination.exists():
-            continue
-
-        issues.append(
-            HanselContractIssue(
-                code="BROKEN_BREADCRUMB",
-                message=(
-                    "Referenced repository authority "
-                    "does not exist: "
-                    f"{relative_path}"
-                ),
-                path=_display_path(
-                    contract,
-                    root,
-                ),
+        for match in PATH_PATTERN.finditer(
+            block
+        ):
+            relative_path = _normalize_repository_path(
+                match.group(0)
             )
-        )
+
+            if relative_path in checked:
+                continue
+
+            checked.add(
+                relative_path
+            )
+
+            destination = (
+                root
+                / relative_path
+            )
+
+            if destination.exists():
+                continue
+
+            issues.append(
+                HanselContractIssue(
+                    code="BROKEN_BREADCRUMB",
+                    message=(
+                        "Referenced repository authority "
+                        "does not exist: "
+                        f"{relative_path}"
+                    ),
+                    path=_display_path(
+                        contract,
+                        root,
+                    ),
+                )
+            )
 
 
 def _normalize_repository_path(

@@ -608,6 +608,146 @@ Do not update unrelated contracts merely for documentation symmetry.
 
 ---
 
+## Repository-Wide Adoption and Governance
+
+Hansel is mandatory repository infrastructure for every recognized Aurora
+subsystem.
+
+Every subsystem must maintain one canonical entry point:
+
+```text
+aurora/subsystems/<subsystem>/contracts/HANSEL.md
+```
+
+New subsystems must be created through the canonical subsystem-generation
+workflow when that workflow can represent the required subsystem shape.
+
+Existing subsystems must remain discoverable through their canonical
+`HANSEL.md` as their implementation evolves.
+
+### Worker Entry Rule
+
+When a task belongs to a known subsystem, humans and AI workers should enter
+through that subsystem's canonical `HANSEL.md`.
+
+Do not begin with repository-wide discovery when a durable Hansel route already
+exists.
+
+Follow only the breadcrumbs required to establish sufficient authority:
+
+1. who owns the behavior;
+2. what must change;
+3. what must remain unchanged;
+4. how the change will be validated.
+
+Repository-wide discovery remains appropriate when ownership is genuinely
+unknown or when validating repository-wide governance itself.
+
+### Catalogue Scope Rule
+
+A Hansel catalogue is an index, not an encyclopedia.
+
+It should preserve the smallest durable breadcrumbs necessary to reach
+authoritative implementation, contracts, validation, and deeper knowledge.
+
+Do not duplicate implementation detail merely to make a catalogue appear
+complete.
+
+Do not add breadcrumbs for incidental files that workers do not need in order
+to reach sufficient authority.
+
+### Structural and Semantic Validity
+
+Deterministic Hansel validation proves structural contract integrity.
+
+Structural validity may include:
+
+```text
+canonical contract presence
+contract identity
+valid knowledge states
+actionable UNKNOWN breadcrumbs
+existence of declared repository authorities
+```
+
+Structural validity does not prove that catalogue knowledge is current.
+
+A contract may be structurally valid while containing stale descriptions of
+ownership, implementation, lifecycle, or available authorities.
+
+Semantic reconciliation therefore remains a separate engineering
+responsibility.
+
+### Reconciliation Rule
+
+When implementation changes invalidate or create a durable breadcrumb, the
+owning subsystem's Hansel catalogue must be reconciled.
+
+A stale but structurally valid breadcrumb is a Hansel defect.
+
+Reconciliation should:
+
+1. inspect current repository evidence;
+2. replace stale knowledge with the smallest durable current authority;
+3. preserve valid ownership boundaries;
+4. preserve genuinely `UNKNOWN`, `PLANNED`, or `DEFERRED` knowledge rather than
+   guessing;
+5. rerun deterministic validation after the change.
+
+Do not rewrite unrelated catalogue sections merely because reconciliation is
+being performed.
+
+### Repository Audit Rule
+
+Repository-wide Hansel validation is appropriate after:
+
+* changes to Hansel validators or contract semantics;
+* subsystem-generation or scaffold changes;
+* repository-wide ownership migrations;
+* discovery of a defect that may affect multiple subsystem catalogues;
+* or explicit Hansel governance work.
+
+A repository-wide audit has two distinct passes:
+
+```text
+deterministic structural validation
+    ↓
+bounded semantic stale-knowledge review
+```
+
+Passing deterministic validation does not eliminate the semantic review when
+the purpose of the audit is governance or knowledge reconciliation.
+
+### Defect Handling
+
+Broken declared breadcrumbs are defects and must not be silently ignored.
+
+Historical or explanatory repository paths are not declared authorities merely
+because they resemble repository paths.
+
+Deterministic validators should validate explicit contract declarations and
+must avoid converting incidental prose into architectural claims.
+
+When deterministic validation cannot establish semantic correctness, surface
+the uncertainty for bounded human or AI review rather than inventing an
+answer.
+
+### Adoption Baseline
+
+Repository-wide adoption is established when:
+
+1. every recognized subsystem has a canonical non-blank `contracts/HANSEL.md`;
+2. all canonical contracts pass deterministic Hansel validation;
+3. known stale catalogue knowledge discovered during adoption has been
+   reconciled;
+4. unresolved knowledge is explicitly represented rather than inferred;
+5. new subsystem creation preserves the canonical Hansel entry point.
+
+Once this baseline is established, Hansel maintenance becomes part of normal
+engineering work rather than a separate documentation project.
+
+---
+
 ## Anchor Rule
 
 Hansel contracts use complete anchored replacement regions with matching:
