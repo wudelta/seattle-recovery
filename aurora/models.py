@@ -2,6 +2,7 @@
 # FILE: aurora/models.py
 # START: SUBSYSTEM_MODEL_EXPORTS
 # ======================================================================
+
 """
 Compatibility exports for Aurora subsystem-owned Django models.
 
@@ -15,6 +16,11 @@ from aurora.subsystems.content.models import StaticContent
 from aurora.subsystems.delta_directives.models import DeltaDirectives
 from aurora.subsystems.delta_notes.models import DeltaNotesEntry
 from aurora.subsystems.engineering_session.models import EngineeringSession
+from aurora.subsystems.hansel.models import (
+    HanselTrail,
+    HanselTrailAuthority,
+    HanselTrailOutcome,
+)
 from aurora.subsystems.planning.models import (
     EstimateConfidence,
     ExecutionStatus,
@@ -44,6 +50,9 @@ __all__ = [
     "EngineeringSession",
     "EstimateConfidence",
     "ExecutionStatus",
+    "HanselTrail",
+    "HanselTrailAuthority",
+    "HanselTrailOutcome",
     "Initiative",
     "InitiativeSourceDeltaNote",
     "PendingCodeChange",

@@ -40,6 +40,13 @@ from aurora.subsystems.planning.services import (
     PlanningLifecycleError,
     PlanningTimeTrackingError,
 )
+from aurora.subsystems.engineering_session.api.hansel_actions import (
+    HANSEL_ACTIONS,
+    handle_hansel_action,
+)
+from aurora.subsystems.hansel.services import (
+    HanselTrailError,
+)
 
 
 def _dispatch_post_action(request, action):
@@ -47,6 +54,12 @@ def _dispatch_post_action(request, action):
 
     if action in SESSION_ACTIONS:
         return handle_session_action(
+            request,
+            action,
+        )
+
+    if action in HANSEL_ACTIONS:
+        return handle_hansel_action(
             request,
             action,
         )
@@ -122,13 +135,14 @@ def engineering_session_endpoint(request):
     except (
         EngineeringSessionError,
         EngineeringSessionPlanningError,
+        HanselTrailError,
         PlanningGenerationError,
         PlanningImportError,
         PlanningLifecycleError,
         PlanningSchemaError,
         PlanningTimeTrackingError,
     ) as error:
-        return JsonResponse(
+            return JsonResponse(
             {
                 "status": "error",
                 "message": str(error),
