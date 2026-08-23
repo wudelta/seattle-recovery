@@ -48,6 +48,25 @@ Use this authority for:
 - Planning reconciliation;
 - Planning and Engineering Session boundaries.
 
+
+### Route executable Planning work into repository authority
+
+When an ACTIVE Planning Step requires repository work, treat the Step as the
+engineering task and begin repository discovery at:
+
+```text
+aurora/subsystems/hansel/contracts/HANSEL.md
+```
+
+Follow Hansel from the task to the owning authority, then to the narrowest
+task-specific authority required for implementation and validation.
+
+Do not use Planning UI navigation state as execution authority. The executable
+Planning hierarchy is authoritative for the work being performed.
+
+Stop discovery when Hansel's Sufficient Authority conditions are satisfied.
+
+
 ### Understand or change Planning CRUD/API behavior
 
 Start at:
@@ -72,7 +91,7 @@ aurora/subsystems/planning/io/
 
 ### Generate an import-ready planning dictionary
 
-Go to:
+Generation authority:
 
 ```text
 aurora/subsystems/planning/contracts/PLANNING_DICTIONARY_GENERATION.md

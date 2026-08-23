@@ -22,6 +22,10 @@ from aurora.subsystems.planning.services.reconciliation import (
     build_initiative_reconciliation_snapshot,
     build_planning_reconciliation_summary,
 )
+from aurora.subsystems.planning.services.generation_preflight import (
+    PlanningGenerationPreflightError,
+    preflight_planning_generation,
+)
 
 
 PLANNING_GENERATOR_DIRECTIVE = "planning_generator"
@@ -62,6 +66,9 @@ def generate_planning_update(
     can reconcile intent against exact existing Initiative, Phase, and
     Step titles.
 
+    Current lifecycle state is established deterministically before AI
+    generation begins.
+
     Generated Planning proposals must contain actionable work. A newly
     generated Phase may not be empty.
 
@@ -86,8 +93,22 @@ def generate_planning_update(
             "A persisted user is required."
         )
 
+    try:
+        preflight = preflight_planning_generation(
+            project_slug=slug,
+            user=user,
+        )
+    except PlanningGenerationPreflightError as error:
+        raise PlanningGenerationError(
+            f"Planning lifecycle preflight failed: {error}"
+        ) from error
+
     planning_evidence = _build_project_planning_evidence(
         project_slug=slug,
+    )
+
+    planning_evidence["lifecycle_preflight"] = (
+        preflight.as_evidence()
     )
 
     task_input = _build_generation_task(
