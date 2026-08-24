@@ -67,6 +67,62 @@ Do not include:
 
 ---
 
+# Planning Dictionary Location and Lifecycle
+
+Planning dictionaries are temporary transport artifacts.
+
+Project-specific dictionaries must be created under:
+
+```text
+docs/<project_slug>/management/planning_imports/
+```
+
+Use an underscore-separated Initiative slug as the filename:
+
+```text
+<initiative_slug>.plan
+```
+
+Example:
+
+```text
+docs/aurora/management/planning_imports/
+planning_initiative_transition_workflow.plan
+```
+
+Do not use sequence numbers.
+
+Do not archive successfully applied dictionaries as Planning history.
+
+The lifecycle of a Planning dictionary is:
+
+```text
+architectural decision
+    ↓
+generate dictionary
+    ↓
+dry-run
+    ↓
+correct validation failures
+    ↓
+apply
+    ↓
+verify persisted Planning hierarchy
+    ↓
+delete dictionary
+```
+
+The Planning database is the durable authority after successful application and
+verification.
+
+A `.plan` file must not be treated as a second historical authority for work
+that has already been persisted.
+
+If validation or application fails, retain the dictionary only while it is
+needed to correct and retry the import.
+
+---
+
 # Required Inputs
 
 Before beginning, obtain:
@@ -801,8 +857,8 @@ modification.
 
 The Planning Knowledge Pipeline is complete for one Initiative when:
 
-* a durable Initiative source exists;
 * the target Project decision is explicit;
+* one durable Initiative outcome has been identified;
 * the dictionary starts from the canonical template;
 * only schema-supported fields are present;
 * Project creation is included only when required;
@@ -812,8 +868,12 @@ The Planning Knowledge Pipeline is complete for one Initiative when:
 * planned files are included only when supported;
 * actual files are not predicted;
 * relevant discussion and design context are preserved;
+* the dictionary is stored temporarily under
+  `docs/<project_slug>/management/planning_imports/`;
+* the filename uses an underscore-separated Initiative slug;
 * dry-run succeeds;
 * apply succeeds transactionally;
-* the hierarchy and Step supporting records are inspected;
-* the source and resulting planning dictionary are committed;
+* the resulting hierarchy and supporting Step records are inspected;
+* the persisted Planning hierarchy is confirmed authoritative;
+* the successfully applied `.plan` transport artifact is deleted;
 * a future AI can repeat the workflow by following this authority chain.

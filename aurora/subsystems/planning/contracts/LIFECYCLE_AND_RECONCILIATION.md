@@ -19,7 +19,8 @@ Project → Initiative → Phase → Step
 Planning also owns the lifecycle rules that determine which work is current,
 paused, completed, historical, or eligible for execution.
 
-Generic CRUD must not become the authority for workflow transitions.
+Generic CRUD must not become the authority for workflow transitions that require
+lifecycle invariants, dependencies, attribution, or side effects.
 
 ---
 
@@ -36,20 +37,45 @@ validation requirements
 position
 ```
 
-Workflow-sensitive fields must be changed through deterministic lifecycle
-operations rather than arbitrary form updates.
+A field is not lifecycle-sensitive merely because it contains workflow state.
 
-These include:
+A change requires deterministic lifecycle authority when correctness depends on:
 
 ```text
-status
-assignment
-completion
-active-work transitions
+other Planning records
+active-work invariants
+assignment side effects
+time attribution
+completion eligibility
 historical execution attribution
 ```
 
-The lifecycle authority must validate the current state before mutation.
+Examples include:
+
+```text
+activating executable work
+completing work
+reassigning execution responsibility
+starting or ending tracked work
+```
+
+Simple state changes that require no additional lifecycle consequences may remain
+ordinary CRUD operations.
+
+In particular, cancelling an Initiative may be performed through normal Planning
+CRUD when cancellation means only:
+
+```text
+preserve the Initiative as historical Planning evidence
+    +
+mark it non-executable
+```
+
+Do not introduce a lifecycle service merely because a status field changes.
+
+If a requested state change would violate an active-work invariant or requires
+additional side effects, ordinary CRUD must reject that change and route it
+through the appropriate lifecycle authority.
 
 ---
 
@@ -119,6 +145,37 @@ Pausing an Initiative does not automatically change the status of its current
 Phase or Step.
 
 Their ACTIVE states may remain as the Initiative's resume position.
+
+### Initiative Cancellation
+
+Cancellation preserves Planning history while declaring that the Initiative is
+no longer intended for execution.
+
+An Initiative may be changed to:
+
+```text
+CANCELLED
+```
+
+through ordinary Planning CRUD when no additional lifecycle side effects are
+required.
+
+Cancellation does not require:
+
+- deletion of the Initiative;
+- deletion or rewriting of its Phases or Steps;
+- fabricated completion evidence;
+- completion eligibility;
+- a dedicated lifecycle transition solely for setting the status.
+
+A CANCELLED Initiative is not executable.
+
+Its existing child lifecycle states remain historical evidence unless a
+separate reconciliation decision requires correction.
+
+If cancellation would conflict with an active invariant that requires other
+state changes, the CRUD operation must reject the request rather than silently
+perform those side effects.
 
 ---
 
@@ -391,7 +448,11 @@ must not duplicate Planning execution state.
 
 ## Deterministic Transitions
 
-Lifecycle operations must:
+Lifecycle operations are required when a workflow change has invariants,
+dependencies, attribution requirements, or side effects beyond changing one
+record's ordinary persisted state.
+
+Such operations must:
 
 1. validate the requested transition;
 2. inspect conflicting current state;
@@ -405,7 +466,7 @@ Examples include:
 
 ```text
 activate Initiative
-pause Initiative
+pause Initiative when active-work consequences require coordination
 resume Initiative
 activate Phase
 activate Step
@@ -415,7 +476,11 @@ end Step work
 complete Step
 ```
 
-Generic API persistence must not bypass these rules.
+Do not create or require a lifecycle operation merely because a CRUD action
+changes a status field.
+
+Simple cancellation that only preserves a record as non-executable historical
+Planning evidence remains ordinary CRUD behavior.
 
 ---
 
@@ -443,11 +508,16 @@ Planning lifecycle and reconciliation are functioning correctly when:
 3. pause/resume preserves intended work position;
 4. assignment changes do not rewrite historical execution evidence;
 5. Step time is attributed through Planning TimeEntries;
-6. lifecycle transitions are deterministic and validated;
-7. stale Planning records can be reconciled against repository reality;
-8. AI workers can obtain sufficient evidence without broad dumps;
-9. planning dictionaries are produced from validated decisions rather than
-   treated as the planning process itself.
+6. lifecycle transitions with invariants or side effects are deterministic and
+   validated;
+7. simple state changes are not unnecessarily forced through lifecycle
+   orchestration;
+8. cancelled Initiatives remain preserved as non-executable historical Planning
+   evidence;
+9. stale Planning records can be reconciled against repository reality;
+10. AI workers can obtain sufficient evidence without broad dumps;
+11. planning dictionaries are produced from validated decisions rather than
+    treated as the planning process itself.
 
 # ======================================================================
 # FILE: aurora/subsystems/planning/contracts/LIFECYCLE_AND_RECONCILIATION.md
