@@ -1,5 +1,5 @@
 # ====================================================================== #
-# FILE: docker-compose.yml (PATCH 1 OF 1)                                #
+# FILE: docker-compose.yml                                               #
 # START: DOCKER_COMPOSE_CORE_BLUEPRINT                                   #
 # ====================================================================== #
 services:
@@ -88,6 +88,7 @@ services:
       - .:/app:rw
       - static_volume:/app/staticfiles
       - /var/run/docker.sock:/var/run/docker.sock
+      - /media/delta:/recovery_media:rslave
     depends_on:
       - postgres
       - neo4j
@@ -166,5 +167,5 @@ networks:
   recovery_net:
     driver: bridge
 # ====================================================================== #
-# END: DOCKER_COMPOSE_CORE_BLUEPRINT (PATCH 1 OF 1)                      #
+# END: DOCKER_COMPOSE_CORE_BLUEPRINT                                     #
 # ====================================================================== #
