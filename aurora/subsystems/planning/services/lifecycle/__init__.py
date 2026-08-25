@@ -15,6 +15,11 @@ from aurora.subsystems.planning.services.lifecycle.initiative import (
     reject_initiative_completion,
     request_initiative_completion,
 )
+from aurora.subsystems.planning.services.lifecycle.orchestration import (
+    activate_step_hierarchy,
+    complete_step_and_evaluate_parents,
+    establish_initiative_work,
+)
 from aurora.subsystems.planning.services.lifecycle.phase import (
     activate_phase,
     approve_phase_completion,
@@ -28,10 +33,6 @@ from aurora.subsystems.planning.services.lifecycle.step import (
     activate_step,
     complete_step,
     pause_step,
-)
-from aurora.subsystems.planning.services.lifecycle.orchestration import (
-    activate_step_hierarchy,
-    complete_step_and_evaluate_parents,
 )
 
 
@@ -47,6 +48,7 @@ __all__ = [
     "complete_phase",
     "complete_step",
     "complete_step_and_evaluate_parents",
+    "establish_initiative_work",
     "evaluate_initiative_completion",
     "evaluate_phase_completion",
     "pause_initiative",
@@ -57,7 +59,6 @@ __all__ = [
     "request_initiative_completion",
     "request_phase_completion",
 ]
-
 
 # ======================================================================
 # END: PLANNING_LIFECYCLE_PACKAGE

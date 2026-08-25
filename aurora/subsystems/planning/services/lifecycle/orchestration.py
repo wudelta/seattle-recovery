@@ -5,7 +5,7 @@
 
 from django.db import transaction
 
-from aurora.models import Step
+from aurora.models import ExecutionStatus, Initiative, Phase, Step
 
 from aurora.subsystems.planning.services.lifecycle.exceptions import (
     PlanningLifecycleError,
@@ -85,6 +85,149 @@ def activate_step_hierarchy(
         )
 
     return activated_step
+
+
+def establish_initiative_work(
+    initiative: Initiative,
+    user,
+) -> Step:
+    """
+    Establish a complete executable path for one Initiative.
+
+    Existing ACTIVE Phase and Step state is treated as an explicit resume
+    position and takes precedence over positional defaults.
+
+    When an ACTIVE child does not exist, Planning selects the first unfinished
+    child by position. COMPLETED and CANCELLED children are never selected.
+
+    Position therefore defines predictable default execution order without
+    preventing a developer from explicitly activating a different Phase or
+    Step.
+    """
+
+    if initiative is None or not initiative.pk:
+        raise PlanningLifecycleError(
+            "A persisted Initiative is required."
+        )
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise PlanningLifecycleError(
+            "An authenticated user is required to activate Planning work."
+        )
+
+    with transaction.atomic():
+        locked_initiative = (
+            Initiative.objects
+            .select_for_update()
+            .get(pk=initiative.pk)
+        )
+
+        if locked_initiative.assigned_to_id != user.pk:
+            raise PlanningLifecycleError(
+                "The Initiative is not assigned to this user."
+            )
+
+        activate_initiative(
+            locked_initiative
+        )
+
+        active_phases = list(
+            Phase.objects
+            .select_for_update()
+            .filter(
+                initiative=locked_initiative,
+                assigned_to=user,
+                status=ExecutionStatus.ACTIVE,
+            )
+            .order_by(
+                "position",
+                "pk",
+            )
+        )
+
+        if len(active_phases) > 1:
+            raise PlanningLifecycleError(
+                "The ACTIVE Initiative has multiple ACTIVE Phases."
+            )
+
+        if active_phases:
+            phase = active_phases[0]
+        else:
+            phase = (
+                Phase.objects
+                .select_for_update()
+                .filter(
+                    initiative=locked_initiative,
+                    assigned_to=user,
+                )
+                .exclude(
+                    status__in=[
+                        ExecutionStatus.COMPLETED,
+                        ExecutionStatus.CANCELLED,
+                    ]
+                )
+                .order_by(
+                    "position",
+                    "pk",
+                )
+                .first()
+            )
+
+            if phase is None:
+                raise PlanningLifecycleError(
+                    "The ACTIVE Initiative has no unfinished Phase "
+                    "assigned to this user."
+                )
+
+        active_steps = list(
+            Step.objects
+            .select_for_update()
+            .filter(
+                phase=phase,
+                status=ExecutionStatus.ACTIVE,
+            )
+            .order_by(
+                "position",
+                "pk",
+            )
+        )
+
+        if len(active_steps) > 1:
+            raise PlanningLifecycleError(
+                "The selected Phase has multiple ACTIVE Steps."
+            )
+
+        if active_steps:
+            step = active_steps[0]
+        else:
+            step = (
+                Step.objects
+                .select_for_update()
+                .filter(
+                    phase=phase,
+                )
+                .exclude(
+                    status__in=[
+                        ExecutionStatus.COMPLETED,
+                        ExecutionStatus.CANCELLED,
+                    ]
+                )
+                .order_by(
+                    "position",
+                    "pk",
+                )
+                .first()
+            )
+
+            if step is None:
+                raise PlanningLifecycleError(
+                    "The selected Phase has no unfinished Step."
+                )
+
+        return activate_step_hierarchy(
+            step,
+            user,
+        )
 
 
 def complete_step_and_evaluate_parents(

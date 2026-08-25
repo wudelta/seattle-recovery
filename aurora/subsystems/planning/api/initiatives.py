@@ -1,7 +1,8 @@
 # ======================================================================
 # FILE: aurora/subsystems/planning/api/initiatives.py
-# START: INITIATIVE_PERSISTENCE
+# START: INITIATIVE_PERSISTENCE_IMPORTS
 # ======================================================================
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
@@ -11,11 +12,24 @@ from aurora.models import ExecutionStatus, Initiative, Project
 from aurora.subsystems.planning.api.serializers import (
     serialize_initiative,
 )
+from aurora.subsystems.planning.services.lifecycle import (
+    establish_initiative_work,
+)
+from aurora.subsystems.planning.services.lifecycle.exceptions import (
+    PlanningLifecycleError,
+)
 
 
 User = get_user_model()
 
+# ======================================================================
+# END: INITIATIVE_PERSISTENCE_IMPORTS
+# ======================================================================
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/api/initiatives.py
+# START: INITIATIVE_PERSISTENCE
+# ======================================================================
 def save_initiative(request, payload):
     """Creates or updates one Initiative beneath a Project."""
     initiative_id = payload.get("initiative_id")
@@ -148,6 +162,24 @@ def save_initiative(request, payload):
             status=400,
         )
 
+    if status == ExecutionStatus.COMPLETED:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    "Initiative completion must use Planning lifecycle "
+                    "authority."
+                ),
+                "field_errors": {
+                    "status": (
+                        "Complete the Initiative through its lifecycle "
+                        "workflow."
+                    ),
+                },
+            },
+            status=409,
+        )
+
     description = str(
         payload.get("description", "")
     ).strip()
@@ -157,32 +189,57 @@ def save_initiative(request, payload):
         and initiative.project_id != project.pk
     )
 
-    with transaction.atomic():
-        if created:
-            initiative = Initiative(
-                created_by=request.user,
-            )
+    try:
+        with transaction.atomic():
+            if created:
+                initiative = Initiative(
+                    created_by=request.user,
+                    status=ExecutionStatus.PLANNED,
+                )
 
-        if created or project_changed:
-            highest_position = (
-                Initiative.objects
-                .filter(project=project)
-                .aggregate(highest=Max("position"))
-                .get("highest")
-            )
+            if created or project_changed:
+                highest_position = (
+                    Initiative.objects
+                    .filter(project=project)
+                    .aggregate(highest=Max("position"))
+                    .get("highest")
+                )
 
-            initiative.position = (
-                highest_position + 1
-                if highest_position is not None
-                else 0
-            )
+                initiative.position = (
+                    highest_position + 1
+                    if highest_position is not None
+                    else 0
+                )
 
-        initiative.project = project
-        initiative.title = title
-        initiative.description = description
-        initiative.status = status
-        initiative.assigned_to = assigned_to
-        initiative.save()
+            initiative.project = project
+            initiative.title = title
+            initiative.description = description
+            initiative.assigned_to = assigned_to
+
+            if status != ExecutionStatus.ACTIVE:
+                initiative.status = status
+
+            initiative.save()
+
+            if status == ExecutionStatus.ACTIVE:
+                establish_initiative_work(
+                    initiative,
+                    assigned_to,
+                )
+
+                initiative.refresh_from_db()
+
+    except PlanningLifecycleError as exc:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": str(exc),
+                "field_errors": {
+                    "status": str(exc),
+                },
+            },
+            status=409,
+        )
 
     return JsonResponse(
         {
