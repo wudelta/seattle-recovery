@@ -31,6 +31,25 @@ Go to:
 aurora/subsystems/planning/models.py
 ```
 
+### Determine what engineering work happens next
+
+Go to:
+
+```text
+aurora/subsystems/planning/contracts/INITIATIVE_TRANSITION.md
+```
+
+Use this authority when:
+
+- no executable Initiative is currently active;
+- an Initiative has just been completed or paused;
+- priorities are changing between Initiatives;
+- or a worker must present existing or new objective choices to a human.
+
+The worker presents candidates and routes the decision.
+
+The human selects the engineering objective.
+
 ### Understand Planning lifecycle and reconciliation
 
 Go to:
