@@ -2,6 +2,7 @@
 # FILE: aurora/subsystems/planning/api/phases.py
 # START: PHASE_PERSISTENCE
 # ======================================================================
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Max
@@ -9,6 +10,13 @@ from django.http import JsonResponse
 
 from aurora.models import ExecutionStatus, Initiative, Phase
 from aurora.subsystems.planning.api.serializers import serialize_phase
+from aurora.subsystems.planning.services.lifecycle import (
+    activate_phase,
+    establish_initiative_work,
+)
+from aurora.subsystems.planning.services.lifecycle.exceptions import (
+    PlanningLifecycleError,
+)
 
 
 User = get_user_model()
@@ -142,6 +150,22 @@ def save_phase(request, payload):
             status=400,
         )
 
+    if status == ExecutionStatus.COMPLETED:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    "Phase completion must use Planning lifecycle authority."
+                ),
+                "field_errors": {
+                    "status": (
+                        "Complete the Phase through its lifecycle workflow."
+                    ),
+                },
+            },
+            status=409,
+        )
+
     description = str(
         payload.get(
             "description",
@@ -149,33 +173,9 @@ def save_phase(request, payload):
         )
     ).strip()
 
-    with transaction.atomic():
-        if phase is None:
-            highest_position = (
-                Phase.objects
-                .filter(initiative=initiative)
-                .aggregate(highest=Max("position"))
-                .get("highest")
-            )
-
-            phase = Phase.objects.create(
-                initiative=initiative,
-                title=title,
-                description=description,
-                status=status,
-                position=(
-                    highest_position + 1
-                    if highest_position is not None
-                    else 0
-                ),
-                created_by=request.user,
-                assigned_to=assigned_to,
-            )
-
-            response_status = 201
-            message = "Phase created."
-        else:
-            if phase.initiative_id != initiative.pk:
+    try:
+        with transaction.atomic():
+            if phase is None:
                 highest_position = (
                     Phase.objects
                     .filter(initiative=initiative)
@@ -183,32 +183,87 @@ def save_phase(request, payload):
                     .get("highest")
                 )
 
-                phase.initiative = initiative
-                phase.position = (
-                    highest_position + 1
-                    if highest_position is not None
-                    else 0
+                phase = Phase.objects.create(
+                    initiative=initiative,
+                    title=title,
+                    description=description,
+                    status=(
+                        ExecutionStatus.PLANNED
+                        if status == ExecutionStatus.ACTIVE
+                        else status
+                    ),
+                    position=(
+                        highest_position + 1
+                        if highest_position is not None
+                        else 0
+                    ),
+                    created_by=request.user,
+                    assigned_to=assigned_to,
                 )
 
-            phase.title = title
-            phase.description = description
-            phase.status = status
-            phase.assigned_to = assigned_to
+                response_status = 201
+                message = "Phase created."
+            else:
+                if phase.initiative_id != initiative.pk:
+                    highest_position = (
+                        Phase.objects
+                        .filter(initiative=initiative)
+                        .aggregate(highest=Max("position"))
+                        .get("highest")
+                    )
 
-            phase.save(
-                update_fields=[
-                    "initiative",
-                    "title",
-                    "description",
-                    "status",
-                    "position",
-                    "assigned_to",
-                    "updated_at",
-                ]
-            )
+                    phase.initiative = initiative
+                    phase.position = (
+                        highest_position + 1
+                        if highest_position is not None
+                        else 0
+                    )
 
-            response_status = 200
-            message = "Phase updated."
+                phase.title = title
+                phase.description = description
+                phase.assigned_to = assigned_to
+
+                if status != ExecutionStatus.ACTIVE:
+                    phase.status = status
+
+                phase.save(
+                    update_fields=[
+                        "initiative",
+                        "title",
+                        "description",
+                        "status",
+                        "position",
+                        "assigned_to",
+                        "updated_at",
+                    ]
+                )
+
+                response_status = 200
+                message = "Phase updated."
+
+            if status == ExecutionStatus.ACTIVE:
+                phase = activate_phase(
+                    phase
+                )
+
+                establish_initiative_work(
+                    initiative,
+                    assigned_to,
+                )
+
+                phase.refresh_from_db()
+
+    except PlanningLifecycleError as exc:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": str(exc),
+                "field_errors": {
+                    "status": str(exc),
+                },
+            },
+            status=409,
+        )
 
     return JsonResponse(
         {
@@ -274,6 +329,8 @@ def delete_phase(payload):
 def create_phase(request, payload):
     """Compatibility wrapper until endpoint dispatch uses save operations."""
     return save_phase(request, payload)
+
+
 # ======================================================================
 # END: PHASE_PERSISTENCE
 # ======================================================================

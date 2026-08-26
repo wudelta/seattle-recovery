@@ -48,6 +48,20 @@ Use this authority for:
 - Planning reconciliation;
 - Planning and Engineering Session boundaries.
 
+### Execute repeated worker Planning transitions
+
+Go to:
+
+```text
+aurora/subsystems/planning/services/workflow.py
+```
+
+Use this authority when a worker must complete validated current work, respect
+Phase or Initiative review boundaries, and advance to the next executable
+Planning work.
+
+Do not reconstruct these transitions from lower-level lifecycle services when
+the canonical worker workflow operation already exists.
 
 ### Route executable Planning work into repository authority
 
@@ -65,7 +79,6 @@ Do not use Planning UI navigation state as execution authority. The executable
 Planning hierarchy is authoritative for the work being performed.
 
 Stop discovery when Hansel's Sufficient Authority conditions are satisfied.
-
 
 ### Understand or change Planning CRUD/API behavior
 

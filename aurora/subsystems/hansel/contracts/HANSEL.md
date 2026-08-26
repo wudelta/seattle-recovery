@@ -33,6 +33,43 @@ Do not load repository knowledge merely because it exists.
 
 ---
 
+## Universal Mandates
+
+These mandates remain operative throughout every Hansel trail.
+
+### Automate Demonstrated Repetition
+
+When substantially identical engineering behavior recurs, stop reconstructing
+the procedure and determine whether it belongs in deterministic,
+repository-owned automation.
+
+Prefer a reusable workflow, service, command, validator, or other deterministic
+authority over repeatedly asking a human or intelligent worker to reproduce the
+same procedure.
+
+Automate demonstrated repetition, not hypothetical repetition.
+
+### Validate Before Assuming
+
+Do not design a solution around an unverified premise.
+
+When a decision depends upon an assumption about the repository, validate the
+assumption through the narrowest authoritative evidence available.
+
+Discovery should establish what is true before engineering decides what should
+change.
+
+### Keep the Trail Small
+
+Load only the authority required for the current task.
+
+Do not expand a Hansel trail because additional knowledge might become useful.
+
+Follow additional breadcrumbs only when the work demonstrates that they are
+needed.
+
+---
+
 ## Start Here
 
 Given a task:
@@ -140,7 +177,7 @@ If a catalogue does not contain a breadcrumb for the task at all:
 4. request additional repository evidence when necessary;
 5. add a new breadcrumb only when discovery reveals a durable route that a
    future worker should not have to rediscover.
-   
+
 ---
 
 ## Cross-Boundary Work
