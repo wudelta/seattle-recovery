@@ -22,6 +22,9 @@ from aurora.subsystems.wu_chat.services.workspace_context import (
 )
 
 
+MAX_HANSEL_CONTINUATIONS = 8
+
+
 def process_wu_logic_synchronous(
     user_delta_notes,
     user,
@@ -135,27 +138,124 @@ def process_wu_logic_synchronous(
 
             return response_text
 
-        complete_response_text = invoke_wu(
-            compiled_task_notes
-        )
+        def format_continuation_trace(
+            continuation_paths,
+        ):
+            return (
+                "Hansel continuation path:\n"
+                + "\n".join(
+                    f"{index}. {file_path}"
+                    for index, file_path in enumerate(
+                        continuation_paths,
+                        start=1,
+                    )
+                )
+            )
 
-        repository_file = resolve_repository_request(
-            complete_response_text
-        )
+        def build_continuation_task(
+            repository_file,
+            hydrated_authorities,
+        ):
+            previous_authority_blocks = []
 
-        if repository_file is not None:
-            continuation_task = (
+            for authority in hydrated_authorities:
+                previous_authority_blocks.append(
+                    "[AUTHORITY_FILE_START]\n"
+                    f"FILE_PATH: {authority.file_path}\n"
+                    f"{authority.original_content}"
+                    f"{'' if authority.original_content.endswith(chr(10)) else chr(10)}"
+                    "[AUTHORITY_FILE_END]"
+                )
+
+            previous_authority_context = ""
+
+            if previous_authority_blocks:
+                previous_authority_context = (
+                    "[PREVIOUS_AUTHORITY_TRAIL_START]\n"
+                    + "\n".join(
+                        previous_authority_blocks
+                    )
+                    + "\n"
+                    "[PREVIOUS_AUTHORITY_TRAIL_END]\n"
+                )
+
+            return (
                 "[AURORA_HANSEL_CONTINUATION]\n"
                 f"REQUESTED_FILE: {repository_file.file_path}\n"
                 "[ORIGINAL_TASK_START]\n"
                 f"{user_delta_notes.strip()}\n"
                 "[ORIGINAL_TASK_END]\n"
+                f"{previous_authority_context}"
                 "[REQUESTED_FILE_START]\n"
                 f"{repository_file.original_content}"
                 f"{'' if repository_file.original_content.endswith(chr(10)) else chr(10)}"
                 "[REQUESTED_FILE_END]\n"
                 "[/AURORA_HANSEL_CONTINUATION]"
             )
+
+        complete_response_text = invoke_wu(
+            compiled_task_notes
+        )
+
+        continuation_count = 0
+        continuation_paths = []
+        hydrated_authorities = []
+        hydrated_paths = set()
+
+        while True:
+            repository_file = resolve_repository_request(
+                complete_response_text
+            )
+
+            if repository_file is None:
+                break
+
+            requested_path = repository_file.file_path
+
+            continuation_paths.append(
+                requested_path
+            )
+
+            if requested_path in hydrated_paths:
+                return {
+                    "status": "ERROR",
+                    "message": (
+                        "Wu entered a Hansel continuation cycle by "
+                        "requesting repository authority that had already "
+                        "been hydrated during this execution: "
+                        f"{requested_path}"
+                    ),
+                    "trace": format_continuation_trace(
+                        continuation_paths
+                    ),
+                }
+
+            if continuation_count >= MAX_HANSEL_CONTINUATIONS:
+                return {
+                    "status": "ERROR",
+                    "message": (
+                        "Wu exceeded the bounded Hansel continuation limit "
+                        f"of {MAX_HANSEL_CONTINUATIONS} repository requests."
+                    ),
+                    "trace": format_continuation_trace(
+                        continuation_paths
+                    ),
+                }
+
+            continuation_task = build_continuation_task(
+                repository_file=repository_file,
+                hydrated_authorities=(
+                    hydrated_authorities
+                ),
+            )
+
+            hydrated_authorities.append(
+                repository_file
+            )
+            hydrated_paths.add(
+                requested_path
+            )
+            continuation_count += 1
 
             complete_response_text = invoke_wu(
                 continuation_task
@@ -279,6 +379,7 @@ def process_wu_logic_synchronous(
             "message": str(err),
             "trace": traceback.format_exc(),
         }
+
 
 # ======================================================================
 # END: WU_SYNCHRONOUS_ORCHESTRATION_SERVICE
