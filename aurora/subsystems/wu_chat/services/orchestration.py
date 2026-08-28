@@ -199,6 +199,7 @@ def process_wu_logic_synchronous(
 
         continuation_count = 0
         continuation_paths = []
+        hansel_transitions = []
         hydrated_authorities = []
         hydrated_paths = set()
 
@@ -211,12 +212,26 @@ def process_wu_logic_synchronous(
                 break
 
             requested_path = repository_file.file_path
+            previous_authority = (
+                hydrated_authorities[-1].file_path
+                if hydrated_authorities
+                else None
+            )
 
             continuation_paths.append(
                 requested_path
             )
 
             if requested_path in hydrated_paths:
+                hansel_transitions.append(
+                    {
+                        "sequence": len(hansel_transitions) + 1,
+                        "from_authority": previous_authority,
+                        "to_authority": requested_path,
+                        "outcome": "REJECTED_CYCLE",
+                    }
+                )
+
                 return {
                     "status": "ERROR",
                     "message": (
@@ -228,9 +243,24 @@ def process_wu_logic_synchronous(
                     "trace": format_continuation_trace(
                         continuation_paths
                     ),
+                    "hansel_navigation": {
+                        "transition_count": len(
+                            hansel_transitions
+                        ),
+                        "transitions": hansel_transitions,
+                    },
                 }
 
             if continuation_count >= MAX_HANSEL_CONTINUATIONS:
+                hansel_transitions.append(
+                    {
+                        "sequence": len(hansel_transitions) + 1,
+                        "from_authority": previous_authority,
+                        "to_authority": requested_path,
+                        "outcome": "REJECTED_LIMIT",
+                    }
+                )
+
                 return {
                     "status": "ERROR",
                     "message": (
@@ -240,6 +270,12 @@ def process_wu_logic_synchronous(
                     "trace": format_continuation_trace(
                         continuation_paths
                     ),
+                    "hansel_navigation": {
+                        "transition_count": len(
+                            hansel_transitions
+                        ),
+                        "transitions": hansel_transitions,
+                    },
                 }
 
             continuation_task = build_continuation_task(
@@ -256,6 +292,15 @@ def process_wu_logic_synchronous(
                 requested_path
             )
             continuation_count += 1
+
+            hansel_transitions.append(
+                {
+                    "sequence": len(hansel_transitions) + 1,
+                    "from_authority": previous_authority,
+                    "to_authority": requested_path,
+                    "outcome": "HYDRATED",
+                }
+            )
 
             complete_response_text = invoke_wu(
                 continuation_task
@@ -365,6 +410,12 @@ def process_wu_logic_synchronous(
             "patch_error": patch_error,
             "telemetry": execution_telemetry,
             "fuel_gauge": fuel_gauge_metrics,
+            "hansel_navigation": {
+                "transition_count": len(
+                    hansel_transitions
+                ),
+                "transitions": hansel_transitions,
+            },
         }
 
     except WorkspaceContextError as err:
