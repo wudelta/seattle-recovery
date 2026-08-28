@@ -2,158 +2,196 @@
 <!-- FILE: aurora/templates/aurora/delta_directives/directives_console_panel.html -->
 <!-- START: DIRECTIVES_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->
-<div class="d-flex h-100 w-100 text-light font-monospace" style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; position: relative;" id="directives-module-wrapper">
-    
-    <!-- COLUMN 1: LEFT SIDE DIRECTIVES INVENTORY REGISTRY -->
-    <div class="p-2 d-flex flex-column border-end border-secondary" style="width: 22%; min-width: 220px; background-color: #121212;">
-        <div
-            class="d-flex justify-content-between align-items-center text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
-            style="letter-spacing: 1px;"
-        >
-            <span>🤖 AI Minion Fleet</span>
-            <button id="dc-new-prompt-btn" class="btn btn-link p-0 text-success text-decoration-none" title="Provision New Minion Prompt" style="font-size: 1.1rem; line-height: 1;">
-                ➕
-            </button>
-        </div>
-        
-        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-            <input type="radio" class="btn-check" name="dc-status-filter" id="dc-filter-all" value="all" checked>
-            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="dc-filter-all">ALL</label>
-            
-            <input type="radio" class="btn-check" name="dc-status-filter" id="dc-filter-active" value="active">
-            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="dc-filter-active">ACTIVE</label>
-            
-            <input type="radio" class="btn-check" name="dc-status-filter" id="dc-filter-inactive" value="inactive">
-            <label class="btn btn-outline-secondary font-monospace px-1" style="font-size:0.75rem;" for="dc-filter-inactive">INACTIVE</label>
-        </div>
-
-        <div id="dc-inventory-list" class="flex-grow-1 d-flex flex-column gap-1" style="overflow-y: auto; font-size: 0.85rem;">
-            <div class="text-muted text-center p-3 small italic">No prompts registered.</div>
-        </div>
-    </div>
-
-    <!-- COLUMN 2: CENTER Prompt INSTRUCTIONS COMPOSER FORM -->
-    <div class="d-flex flex-column flex-grow-1 position-relative" style="background-color: #1e1e1e;">
-        <div class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark" style="background-color: #141414; height: 35px;">
-            <div id="dc-active-asset-indicator" class="text-warning small text-truncate flex-grow-1 text-uppercase" style="letter-spacing: 0.5px;">
-                🆕 COMPOSING NEW MASTER MINION PROMPT DIRECTIVE
-            </div>
-        </div>
-        
-        <div class="flex-grow-1 p-3" style="overflow-y: auto;">
-            <form id="dc-composer-form" autocomplete="off" onsubmit="return false;">
-                <input type="hidden" id="dc-field-id" value="">
-
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold">
-                            Directive System Name
-                        </label>
-
-                        <input
-                            type="text"
-                            id="dc-field-name"
-                            class="form-control form-control-sm bg-black text-light border-secondary font-monospace"
-                            placeholder="e.g. minion_AI_writer"
-                            required
-                        >
-                    </div>
-
-                    <div class="col-md-4 d-flex align-items-end pb-1">
-                        <div class="form-check form-switch mb-1">
-                            <input
-                                class="form-check-input bg-black border-secondary"
-                                type="checkbox"
-                                id="dc-field-active"
-                                checked
-                            >
-
-                            <label
-                                class="form-check-label text-muted small text-uppercase font-weight-bold"
-                                for="dc-field-active"
-                            >
-                                Profile Active
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- MOVED UP: Main payload instruction area shifted higher in the form block -->
-                    <div class="col-12 d-flex flex-column" style="height: calc(100vh - 460px); min-height: 200px;">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">
-                            Master Prompt Directive Payload Instructions
-                        </label>
-
-                        <div
-                            id="dc-rich-editor"
-                            class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small"
-                            contenteditable="true"
-                            spellcheck="true"
-                            style="overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5;"
-                        ></div>
-                    </div>
-
-                    <!-- MOVED DOWN: Placed the JSON parameters editor down below the raw workspace text editor -->
-                    <div class="col-12">
-                        <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">
-                            Engine Configurations &amp; Parameter Constraints (JSON)
-                        </label>
-
-                        <textarea
-                            id="dc-field-constraints"
-                            class="form-control bg-black text-warning border-secondary font-monospace p-2 small"
-                            rows="4"
-                            style="resize: vertical; font-size: 0.85rem; line-height: 1.4;"
-                            placeholder="{&#10;  &quot;model&quot;: &quot;llama-3.1-8b-instant&quot;,&#10;  &quot;temperature&quot;: 0.3&#10;}"
-                        ></textarea>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- COLUMN 3: RIGHT SIDE ACTIONS MATRIX AND WORKSPACE TERMINAL -->
-    <div class="p-2 d-flex flex-column border-start border-secondary" style="width: 28%; min-width: 250px; background-color: #121212;">
+<div
+    id="directives-module-wrapper"
+    class="d-flex h-100 w-100 text-light font-monospace"
+    style="background-color: #0d0d0d; border-radius: 4px; overflow: hidden; position: relative;"
+>
+    <div
+        class="p-2 d-flex flex-column border-end border-secondary"
+        style="width: 22%; min-width: 220px; background-color: #121212;"
+    >
         <div
             class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
             style="letter-spacing: 1px;"
         >
-            🛠️ Workflow Controls
+            🤖 AI Minion Fleet
         </div>
 
-        <div class="d-grid gap-2 mb-3">
-            <button id="dc-save-btn" class="btn btn-outline-success btn-sm font-monospace text-uppercase">
-                💾 Save Directive Structure
-            </button>
+        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+            <input
+                type="radio"
+                class="btn-check"
+                name="dc-status-filter"
+                id="dc-filter-all"
+                value="all"
+                checked
+            >
+            <label
+                class="btn btn-outline-secondary font-monospace px-1"
+                style="font-size: 0.75rem;"
+                for="dc-filter-all"
+            >
+                ALL
+            </label>
 
-            <div class="row g-1">
-                <div class="col-6">
-                    <button id="dc-clear-btn" class="btn btn-outline-warning btn-sm font-monospace text-uppercase w-100">
-                        ✨ Clear Form
-                    </button>
+            <input
+                type="radio"
+                class="btn-check"
+                name="dc-status-filter"
+                id="dc-filter-active"
+                value="active"
+            >
+            <label
+                class="btn btn-outline-secondary font-monospace px-1"
+                style="font-size: 0.75rem;"
+                for="dc-filter-active"
+            >
+                ACTIVE
+            </label>
+
+            <input
+                type="radio"
+                class="btn-check"
+                name="dc-status-filter"
+                id="dc-filter-inactive"
+                value="inactive"
+            >
+            <label
+                class="btn btn-outline-secondary font-monospace px-1"
+                style="font-size: 0.75rem;"
+                for="dc-filter-inactive"
+            >
+                INACTIVE
+            </label>
+        </div>
+
+        <div
+            id="dc-inventory-list"
+            class="flex-grow-1 d-flex flex-column gap-1"
+            style="overflow-y: auto; font-size: 0.85rem;"
+        >
+            <div class="text-muted text-center p-3 small italic">
+                No directives registered.
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="d-flex flex-column flex-grow-1 position-relative"
+        style="background-color: #1e1e1e;"
+    >
+        <div
+            class="d-flex justify-content-between align-items-center px-3 py-1 border-bottom border-dark"
+            style="background-color: #141414; height: 35px;"
+        >
+            <div
+                id="dc-active-asset-indicator"
+                class="text-info small text-truncate flex-grow-1 text-uppercase"
+                style="letter-spacing: 0.5px;"
+            >
+                📑 SELECT A DIRECTIVE TO INSPECT
+            </div>
+        </div>
+
+        <div class="flex-grow-1 p-3" style="overflow-y: auto;">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label text-muted small text-uppercase font-weight-bold">
+                        Directive System Name
+                    </label>
+                    <input
+                        type="text"
+                        id="dc-field-name"
+                        class="form-control form-control-sm bg-black text-light border-secondary font-monospace"
+                        readonly
+                    >
                 </div>
 
-                <div class="col-6">
-                    <button id="dc-delete-btn" class="btn btn-outline-danger btn-sm font-monospace text-uppercase w-100" disabled>
-                        🗑️ Delete
-                    </button>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small text-uppercase font-weight-bold">
+                        Profile State
+                    </label>
+                    <input
+                        type="text"
+                        id="dc-field-active"
+                        class="form-control form-control-sm bg-black text-light border-secondary font-monospace"
+                        readonly
+                    >
+                </div>
+
+                <div
+                    class="col-12 d-flex flex-column"
+                    style="height: calc(100vh - 460px); min-height: 200px;"
+                >
+                    <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">
+                        Master Prompt Directive Payload Instructions
+                    </label>
+                    <textarea
+                        id="dc-rich-editor"
+                        class="form-control flex-grow-1 bg-black text-info border-secondary p-2 small font-monospace"
+                        readonly
+                        spellcheck="false"
+                        style="resize: none; overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-word; line-height: 1.5;"
+                    ></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label text-muted small text-uppercase font-weight-bold mb-1">
+                        Engine Configurations &amp; Parameter Constraints (JSON)
+                    </label>
+                    <textarea
+                        id="dc-field-constraints"
+                        class="form-control bg-black text-warning border-secondary font-monospace p-2 small"
+                        rows="4"
+                        readonly
+                        spellcheck="false"
+                        style="resize: vertical; font-size: 0.85rem; line-height: 1.4;"
+                    ></textarea>
+                </div>
+
+                <div class="col-12">
+                    <div class="small text-muted">
+                        Directive configuration is read-only in Aurora Console.
+                        Worker instruction changes are deployed through the
+                        repository-owned Delta Directives deployment workflow.
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div
+        class="p-2 d-flex flex-column border-start border-secondary"
+        style="width: 28%; min-width: 250px; background-color: #121212;"
+    >
+        <div
+            class="text-uppercase font-weight-bold font-monospace text-info small mb-2 border-bottom border-dark pb-1"
+            style="letter-spacing: 1px;"
+        >
+            🔎 Directive Inspection
+        </div>
+
+        <div class="small text-muted mb-3">
+            Select a directive from the inventory to inspect its persisted
+            configuration. This console does not mutate worker directives.
         </div>
 
         <div
             class="text-uppercase font-weight-bold font-monospace text-info small mb-1"
             style="letter-spacing: 1px;"
         >
-            🖥️ Operational Pipeline Log Feed
+            🖥️ Inspection Log
         </div>
 
         <pre
             id="dc-terminal-stream"
             class="flex-grow-1 p-2 rounded m-0 font-monospace text-success bg-black border border-dark small"
             style="overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.25; font-size: 0.8rem; border-color: #222 !important;"
-        >[SYSTEM READY] Directive Prompt Asset Engine Online...</pre>
+        >[SYSTEM READY] Directive inspection console online.</pre>
     </div>
 </div>
 <!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/delta_directives/directives_console_panel.html -->
 <!-- END: DIRECTIVES_VIEWPORT_SCALING_CLAMP -->
 <!-- ====================================================================== -->

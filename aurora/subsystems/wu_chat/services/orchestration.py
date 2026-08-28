@@ -17,6 +17,7 @@ from aurora.subsystems.wu_chat.services.patch_parser import (
 )
 from aurora.subsystems.wu_chat.services.workspace_context import (
     WorkspaceContextError,
+    resolve_repository_request,
     resolve_workspace_context,
 )
 
@@ -101,35 +102,64 @@ def process_wu_logic_synchronous(
                 f"{current_task_input}"
             )
 
-        complete_response_text = ""
-        stream_generator = runner.run_minion_task_stream(
-            "minion_wu",
-            compiled_task_notes,
+        def invoke_wu(task_input):
+            response_text = ""
+            stream_generator = runner.run_minion_task_stream(
+                "minion_wu",
+                task_input,
+            )
+
+            async def consume_stream():
+                nonlocal response_text
+
+                async for token in stream_generator:
+                    response_text += token
+
+            def run_async_in_thread():
+                new_loop = asyncio.new_event_loop()
+
+                try:
+                    return new_loop.run_until_complete(
+                        consume_stream()
+                    )
+                finally:
+                    new_loop.close()
+
+            import threading
+
+            thread = threading.Thread(
+                target=run_async_in_thread
+            )
+            thread.start()
+            thread.join()
+
+            return response_text
+
+        complete_response_text = invoke_wu(
+            compiled_task_notes
         )
 
-        async def consume_stream():
-            nonlocal complete_response_text
-
-            async for token in stream_generator:
-                complete_response_text += token
-
-        def run_async_in_thread():
-            new_loop = asyncio.new_event_loop()
-
-            try:
-                return new_loop.run_until_complete(
-                    consume_stream()
-                )
-            finally:
-                new_loop.close()
-
-        import threading
-
-        thread = threading.Thread(
-            target=run_async_in_thread
+        repository_file = resolve_repository_request(
+            complete_response_text
         )
-        thread.start()
-        thread.join()
+
+        if repository_file is not None:
+            continuation_task = (
+                "[AURORA_HANSEL_CONTINUATION]\n"
+                f"REQUESTED_FILE: {repository_file.file_path}\n"
+                "[ORIGINAL_TASK_START]\n"
+                f"{user_delta_notes.strip()}\n"
+                "[ORIGINAL_TASK_END]\n"
+                "[REQUESTED_FILE_START]\n"
+                f"{repository_file.original_content}"
+                f"{'' if repository_file.original_content.endswith(chr(10)) else chr(10)}"
+                "[REQUESTED_FILE_END]\n"
+                "[/AURORA_HANSEL_CONTINUATION]"
+            )
+
+            complete_response_text = invoke_wu(
+                continuation_task
+            )
 
         patch_payload = None
         patch_error = None
