@@ -113,6 +113,23 @@ Then follow the narrowest relevant module under:
 aurora/subsystems/planning/api/
 ```
 
+### Expose bounded Planning state to AI worker continuation
+
+Go to:
+
+```text
+aurora/subsystems/planning/api/worker_resources.py
+```
+
+Use this authority when an AI worker needs a registered, read-only Planning
+application resource during execution.
+
+This boundary owns Planning-side resolution and serialization of those bounded
+worker resources.
+
+It does not own worker continuation signaling, AI reinvocation, or repository
+navigation.
+
 ### Import, export, or update structured plans
 
 Go to:

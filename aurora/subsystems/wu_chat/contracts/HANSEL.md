@@ -35,6 +35,8 @@ Wu Chat owns:
 * pending code-review transactions;
 * Wu-specific execution-context assembly;
 * repository file context hydration for Wu requests;
+* registered Aurora application-resource hydration for Wu requests;
+* bounded Wu continuation and reinvocation across supported context types;
 * parsing of structured Wu patch responses;
 * preparation of code-review payloads;
 * Wu-specific code-review workflow state;
@@ -119,12 +121,24 @@ wu_chat/
         execution_context.py
             Builds Wu execution context from current Aurora state.
 
-        patch_parser.py
-            Parses and validates structured Wu patch responses.
+        orchestration.py
+            Prepares Wu requests, delegates bounded continuation execution,
+            and normalizes the resulting Wu response and review payload.
+
+        hansel_continuation.py
+            Owns bounded Wu continuation and reinvocation across supported
+            repository and Aurora application-resource context types.
 
         workspace_context.py
             Resolves repository paths, reads source content, and hydrates
             Wu prompts with bounded repository context.
+
+        application_resource.py
+            Recognizes registered Aurora application-resource requests and
+            delegates resolution to the owning subsystem boundary.
+
+        patch_parser.py
+            Parses and validates structured Wu patch responses.
 ```
 
 Wu Chat also owns client-side review behavior outside the Python subsystem
@@ -184,11 +198,14 @@ Wu Chat API
     ↓
 execution context resolution
     ↓
-repository context resolution when required
+initial repository workspace context when developer-specified
     ↓
 shared MinionRunner execution
     ↓
-AI response
+bounded continuation when Wu requests repository authority
+or a registered Aurora application resource
+    ↓
+terminal AI response
     ↓
 patch marker detection and parsing when present
     ↓
@@ -619,8 +636,64 @@ For implementation work on repository-file hydration, continue to:
 aurora/subsystems/wu_chat/services/workspace_context.py
 ```
 
-For implementation work on Wu request continuation and reinvocation, continue
-to the Wu request orchestration path beginning at:
+### Application Resource Context Ownership
+
+**State:** VERIFIED
+
+Wu Chat owns recognition and hydration of registered Aurora application-resource
+continuation requests through:
+
+```text
+aurora/subsystems/wu_chat/services/application_resource.py
+```
+
+This service does not own the application data it returns.
+
+It recognizes the worker's registered logical resource request, rejects unknown
+or ambiguous requests, and delegates resolution to the owning Aurora subsystem
+boundary.
+
+Planning-owned worker resources are resolved by:
+
+```text
+aurora/subsystems/planning/api/worker_resources.py
+```
+
+Wu Chat must not bypass that owning boundary through direct Planning ORM or
+lifecycle-service access.
+
+Worker-facing application-resource continuation semantics are defined by the
+deployed Wu directive authority. Do not duplicate the signal syntax, envelope,
+or worker instructions into this catalogue.
+
+### Continuation and Reinvocation Ownership
+
+**State:** VERIFIED
+
+Bounded continuation and reinvocation after Wu requests additional context are
+owned by:
+
+```text
+aurora/subsystems/wu_chat/services/hansel_continuation.py
+```
+
+This service coordinates supported continuation context types, preserves the
+repository authority trail, reinvokes Wu, bounds continuation, and records
+navigation/economic evidence.
+
+Repository-file resolution remains owned by `workspace_context.py`.
+
+Registered Aurora application-resource resolution remains delegated through
+`application_resource.py` to the owning subsystem boundary.
+
+For implementation work on Wu request preparation and post-continuation response
+handling, continue to:
+
+```text
+aurora/subsystems/wu_chat/services/orchestration.py
+```
+
+For the request-facing entry point, continue to:
 
 ```text
 aurora/subsystems/wu_chat/api/endpoint.py
@@ -697,7 +770,8 @@ A worker modifying Wu Chat must:
 
 1. begin with this contract;
 2. identify whether the change concerns API, persistence, execution context,
-   repository context, patch parsing, or client-side UI behavior;
+   repository context, application-resource context, continuation/reinvocation,
+   patch parsing, or client-side UI behavior;
 3. map consumers before moving or deleting Wu Chat assets;
 4. perform tombstone validation after rename or removal;
 5. preserve human review as the boundary before code mutation;
@@ -735,6 +809,18 @@ For repository context hydration:
 
 ```text
 aurora/subsystems/wu_chat/services/workspace_context.py
+```
+
+For registered Aurora application-resource hydration:
+
+```text
+aurora/subsystems/wu_chat/services/application_resource.py
+```
+
+For bounded continuation and Wu reinvocation:
+
+```text
+aurora/subsystems/wu_chat/services/hansel_continuation.py
 ```
 
 For patch parsing:
