@@ -258,6 +258,38 @@ already exists.
 
 ---
 
+## Sufficient Authority in the Gap
+
+While the worker is in the Between-Initiative Gap, this contract is sufficient
+authority for:
+
+- presenting unfinished PAUSED and PLANNED Initiative candidates;
+- preserving existing Planning order;
+- prohibiting autonomous Initiative selection;
+- preserving the human objective-selection boundary;
+- and determining which transition route becomes applicable after the human
+  decision.
+
+Do not load:
+
+```text
+aurora/subsystems/planning/contracts/HANSEL.md
+```
+
+merely to confirm the authority already established by this contract.
+
+Load additional Planning authority only when the human decision creates a
+specific need identified by this contract, such as:
+
+- reconciling a selected existing Initiative;
+- generating a new Planning dictionary;
+- applying Planning lifecycle operations;
+- or establishing the executable Initiative → Phase → Step hierarchy.
+
+Until that decision occurs, stop repository navigation at the human boundary.
+
+---
+
 ## Return to Hansel
 
 Once an executable Step exists, that Step becomes the engineering task.
