@@ -6,6 +6,7 @@
 import asyncio
 import hashlib
 import sys
+import time
 import traceback
 
 from aurora.minions.engine import MinionRunner
@@ -33,6 +34,8 @@ def process_wu_logic_synchronous(
     """Execute Wu and return normalized review and runtime telemetry."""
     try:
         runner = MinionRunner()
+        navigation_started_at = time.perf_counter()
+        invocation_economics = []
 
         try:
             DeltaDirectives.objects.get(
@@ -107,6 +110,8 @@ def process_wu_logic_synchronous(
 
         def invoke_wu(task_input):
             response_text = ""
+            invocation_started_at = time.perf_counter()
+
             stream_generator = runner.run_minion_task_stream(
                 "minion_wu",
                 task_input,
@@ -136,6 +141,37 @@ def process_wu_logic_synchronous(
             thread.start()
             thread.join()
 
+            invocation_elapsed_ms = round(
+                (
+                    time.perf_counter()
+                    - invocation_started_at
+                )
+                * 1000,
+                2,
+            )
+
+            invocation_economics.append(
+                {
+                    "sequence": len(
+                        invocation_economics
+                    )
+                    + 1,
+                    "provider": runner.last_provider_name,
+                    "model": runner.last_model_name,
+                    "input_tokens": runner.last_input_tokens,
+                    "output_tokens": runner.last_output_tokens,
+                    "total_tokens": runner.last_tokens_consumed,
+                    "elapsed_ms": invocation_elapsed_ms,
+                    "provider_latency_ms": runner.last_latency_ms,
+                    "provider_cost": getattr(
+                        runner,
+                        "last_cost",
+                        None,
+                    ),
+                    "provider_error": runner.last_provider_error,
+                }
+            )
+
             return response_text
 
         def format_continuation_trace(
@@ -151,6 +187,141 @@ def process_wu_logic_synchronous(
                     )
                 )
             )
+
+        def build_hansel_navigation_metrics(
+            hansel_transitions,
+            cumulative_repository_context_characters,
+            cumulative_repository_context_bytes,
+            invocation_economics,
+            navigation_started_at,
+        ):
+            hydrated = [
+                transition
+                for transition in hansel_transitions
+                if transition["outcome"] == "HYDRATED"
+            ]
+            duplicate_requests = [
+                transition
+                for transition in hansel_transitions
+                if transition.get("duplicate_request")
+            ]
+            backtracks = [
+                transition
+                for transition in hansel_transitions
+                if transition.get("backtrack")
+            ]
+            failed_routes = [
+                transition
+                for transition in hansel_transitions
+                if transition["outcome"] != "HYDRATED"
+            ]
+            unnecessary_load_candidates = [
+                transition
+                for transition in hydrated
+                if transition.get("unnecessary_load_candidate")
+            ]
+
+            navigation_elapsed_ms = round(
+                (
+                    time.perf_counter()
+                    - navigation_started_at
+                )
+                * 1000,
+                2,
+            )
+            known_costs = [
+                invocation["provider_cost"]
+                for invocation in invocation_economics
+                if invocation.get("provider_cost")
+                is not None
+            ]
+            provider_cost_available = (
+                len(known_costs)
+                == len(invocation_economics)
+                and bool(invocation_economics)
+            )
+
+            return {
+                "transition_count": len(
+                    hansel_transitions
+                ),
+                "authority_hop_count": len(
+                    hydrated
+                ),
+                "duplicate_load_count": 0,
+                "duplicate_request_count": len(
+                    duplicate_requests
+                ),
+                "failed_route_count": len(
+                    failed_routes
+                ),
+                "backtrack_count": len(
+                    backtracks
+                ),
+                "unnecessary_authority_load_count": len(
+                    unnecessary_load_candidates
+                ),
+                "unique_repository_context_characters": sum(
+                    transition.get(
+                        "context_characters",
+                        0,
+                    )
+                    for transition in hydrated
+                ),
+                "unique_repository_context_bytes": sum(
+                    transition.get(
+                        "context_bytes",
+                        0,
+                    )
+                    for transition in hydrated
+                ),
+                "cumulative_repository_context_characters": (
+                    cumulative_repository_context_characters
+                ),
+                "cumulative_repository_context_bytes": (
+                    cumulative_repository_context_bytes
+                ),
+                "economics": {
+                    "invocation_count": len(
+                        invocation_economics
+                    ),
+                    "elapsed_ms": navigation_elapsed_ms,
+                    "human_intervention_count": 0,
+                    "input_tokens": sum(
+                        invocation.get("input_tokens")
+                        or 0
+                        for invocation in invocation_economics
+                    ),
+                    "output_tokens": sum(
+                        invocation.get("output_tokens")
+                        or 0
+                        for invocation in invocation_economics
+                    ),
+                    "total_tokens": sum(
+                        invocation.get("total_tokens")
+                        or 0
+                        for invocation in invocation_economics
+                    ),
+                    "provider_cost_available": (
+                        provider_cost_available
+                    ),
+                    "provider_cost": (
+                        sum(known_costs)
+                        if provider_cost_available
+                        else None
+                    ),
+                    "provider_cost_unavailable_reason": (
+                        None
+                        if provider_cost_available
+                        else (
+                            "The active provider runtime did not "
+                            "report monetary cost for every invocation."
+                        )
+                    ),
+                    "invocations": invocation_economics,
+                },
+                "transitions": hansel_transitions,
+            }
 
         def build_continuation_task(
             repository_file,
@@ -202,33 +373,83 @@ def process_wu_logic_synchronous(
         hansel_transitions = []
         hydrated_authorities = []
         hydrated_paths = set()
+        cumulative_repository_context_characters = 0
+        cumulative_repository_context_bytes = 0
 
         while True:
-            repository_file = resolve_repository_request(
-                complete_response_text
-            )
-
-            if repository_file is None:
-                break
-
-            requested_path = repository_file.file_path
             previous_authority = (
                 hydrated_authorities[-1].file_path
                 if hydrated_authorities
                 else None
             )
 
+            try:
+                repository_file = resolve_repository_request(
+                    complete_response_text
+                )
+            except WorkspaceContextError as err:
+                hansel_transitions.append(
+                    {
+                        "sequence": len(hansel_transitions) + 1,
+                        "from_authority": previous_authority,
+                        "to_authority": None,
+                        "outcome": "FAILED_ROUTE",
+                        "duplicate_request": False,
+                        "backtrack": False,
+                        "unnecessary_load_candidate": False,
+                        "context_characters": 0,
+                        "context_bytes": 0,
+                        "error": str(err),
+                    }
+                )
+
+                return {
+                    "status": "ERROR",
+                    "message": str(err),
+                    "trace": traceback.format_exc(),
+                    "hansel_navigation": (
+                        build_hansel_navigation_metrics(
+                            hansel_transitions,
+                            cumulative_repository_context_characters,
+                            cumulative_repository_context_bytes,
+                            invocation_economics,
+                            navigation_started_at,
+                        )
+                    ),
+                }
+
+            if repository_file is None:
+                break
+
+            requested_path = repository_file.file_path
+            previous_paths = [
+                authority.file_path
+                for authority in hydrated_authorities
+            ]
+            duplicate_request = (
+                requested_path in hydrated_paths
+            )
+            backtrack = (
+                len(previous_paths) >= 2
+                and requested_path == previous_paths[-2]
+            )
+
             continuation_paths.append(
                 requested_path
             )
 
-            if requested_path in hydrated_paths:
+            if duplicate_request:
                 hansel_transitions.append(
                     {
                         "sequence": len(hansel_transitions) + 1,
                         "from_authority": previous_authority,
                         "to_authority": requested_path,
                         "outcome": "REJECTED_CYCLE",
+                        "duplicate_request": True,
+                        "backtrack": backtrack,
+                        "unnecessary_load_candidate": False,
+                        "context_characters": 0,
+                        "context_bytes": 0,
                     }
                 )
 
@@ -243,12 +464,15 @@ def process_wu_logic_synchronous(
                     "trace": format_continuation_trace(
                         continuation_paths
                     ),
-                    "hansel_navigation": {
-                        "transition_count": len(
-                            hansel_transitions
-                        ),
-                        "transitions": hansel_transitions,
-                    },
+                    "hansel_navigation": (
+                        build_hansel_navigation_metrics(
+                            hansel_transitions,
+                            cumulative_repository_context_characters,
+                            cumulative_repository_context_bytes,
+                            invocation_economics,
+                            navigation_started_at,
+                        )
+                    ),
                 }
 
             if continuation_count >= MAX_HANSEL_CONTINUATIONS:
@@ -258,6 +482,11 @@ def process_wu_logic_synchronous(
                         "from_authority": previous_authority,
                         "to_authority": requested_path,
                         "outcome": "REJECTED_LIMIT",
+                        "duplicate_request": False,
+                        "backtrack": False,
+                        "unnecessary_load_candidate": False,
+                        "context_characters": 0,
+                        "context_bytes": 0,
                     }
                 )
 
@@ -270,13 +499,25 @@ def process_wu_logic_synchronous(
                     "trace": format_continuation_trace(
                         continuation_paths
                     ),
-                    "hansel_navigation": {
-                        "transition_count": len(
-                            hansel_transitions
-                        ),
-                        "transitions": hansel_transitions,
-                    },
+                    "hansel_navigation": (
+                        build_hansel_navigation_metrics(
+                            hansel_transitions,
+                            cumulative_repository_context_characters,
+                            cumulative_repository_context_bytes,
+                            invocation_economics,
+                            navigation_started_at,
+                        )
+                    ),
                 }
+
+            context_characters = len(
+                repository_file.original_content
+            )
+            context_bytes = len(
+                repository_file.original_content.encode(
+                    "utf-8"
+                )
+            )
 
             continuation_task = build_continuation_task(
                 repository_file=repository_file,
@@ -299,7 +540,31 @@ def process_wu_logic_synchronous(
                     "from_authority": previous_authority,
                     "to_authority": requested_path,
                     "outcome": "HYDRATED",
+                    "duplicate_request": False,
+                    "backtrack": False,
+                    "unnecessary_load_candidate": False,
+                    "context_characters": context_characters,
+                    "context_bytes": context_bytes,
                 }
+            )
+
+            authority_context_characters = sum(
+                len(authority.original_content)
+                for authority in hydrated_authorities
+            )
+            authority_context_bytes = sum(
+                len(
+                    authority.original_content.encode(
+                        "utf-8"
+                    )
+                )
+                for authority in hydrated_authorities
+            )
+            cumulative_repository_context_characters += (
+                authority_context_characters
+            )
+            cumulative_repository_context_bytes += (
+                authority_context_bytes
             )
 
             complete_response_text = invoke_wu(
@@ -410,12 +675,15 @@ def process_wu_logic_synchronous(
             "patch_error": patch_error,
             "telemetry": execution_telemetry,
             "fuel_gauge": fuel_gauge_metrics,
-            "hansel_navigation": {
-                "transition_count": len(
-                    hansel_transitions
-                ),
-                "transitions": hansel_transitions,
-            },
+            "hansel_navigation": (
+                build_hansel_navigation_metrics(
+                    hansel_transitions,
+                    cumulative_repository_context_characters,
+                    cumulative_repository_context_bytes,
+                    invocation_economics,
+                    navigation_started_at,
+                )
+            ),
         }
 
     except WorkspaceContextError as err:
