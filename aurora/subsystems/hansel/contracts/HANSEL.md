@@ -52,9 +52,29 @@ aurora/subsystems/<subsystem>/contracts/HANSEL.md
 Do not begin with repository-wide discovery when an existing Hansel breadcrumb
 can identify the next authority.
 
+If no executable engineering task currently exists, do not invent one.
+
+Use the Between-Initiative Gap authority identified below to determine what work
+may happen next while preserving the human objective-selection boundary.
+
 ---
 
 ## Authority Catalogue
+
+### No Current Engineering Task
+
+When no executable engineering task exists, or when the worker is asked to
+determine what engineering work should happen next, go to:
+
+```text
+aurora/subsystems/planning/contracts/INITIATIVE_TRANSITION.md
+```
+
+Use that authority to enter the Between-Initiative Gap, present existing
+Planning candidates, preserve the human objective-selection boundary, and
+establish the next executable Planning hierarchy.
+
+Do not invent an engineering objective.
 
 ### Subsystem-Owned Behavior
 
@@ -140,7 +160,7 @@ If a catalogue does not contain a breadcrumb for the task at all:
 4. request additional repository evidence when necessary;
 5. add a new breadcrumb only when discovery reveals a durable route that a
    future worker should not have to rediscover.
-   
+
 ---
 
 ## Cross-Boundary Work
@@ -183,6 +203,32 @@ A breadcrumb must reduce uncertainty, establish missing authority, or define
 validation.
 
 Otherwise, do not follow it.
+
+---
+
+## Repeated Engineering Behavior
+
+When the same engineering behavior is repeatedly reconstructed by a human or
+worker, stop and determine whether that behavior should become deterministic
+repository-owned automation.
+
+Prefer a callable workflow, validator, command, or other narrow deterministic
+authority when the behavior:
+
+- has a stable sequence;
+- has known inputs and outputs;
+- enforces an architectural or lifecycle rule;
+- or has already been reconstructed more than once.
+
+Do not ask workers to repeatedly recreate deterministic behavior from prose or
+lower-level primitives.
+
+Automate observed repetition.
+
+Do not build automation for hypothetical repetition.
+
+When durable automation is created, Hansel should route future workers to that
+authority rather than documenting how to reconstruct it.
 
 ---
 

@@ -51,7 +51,11 @@ class Command(BaseCommand):
         mode.add_argument(
             "--apply",
             action="store_true",
-            help="Validate and transactionally create the planning records.",
+            help=(
+                "Validate and transactionally create the planning records. "
+                "Canonical temporary planning dictionaries are removed after "
+                "a successful apply."
+            ),
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
@@ -84,6 +88,12 @@ class Command(BaseCommand):
             )
         )
 
+        if result.applied:
+            self._remove_applied_transport_artifact(
+                path=path,
+                project_slug=result.project_slug,
+            )
+
     def _load_dictionary(self, path: Path) -> Any:
         try:
             source = path.read_text(encoding="utf-8")
@@ -107,6 +117,74 @@ class Command(BaseCommand):
             raise CommandError(
                 f'User "{natural_key}" does not exist.'
             ) from exc
+
+    def _remove_applied_transport_artifact(
+        self,
+        *,
+        path: Path,
+        project_slug: str,
+    ) -> None:
+        """
+        Remove one successfully applied canonical planning transport artifact.
+
+        Files outside the repository-owned planning_imports directory are
+        deliberately preserved.
+        """
+        repository_root = Path.cwd().resolve()
+
+        canonical_directory = (
+            repository_root
+            / "docs"
+            / project_slug
+            / "management"
+            / "planning_imports"
+        ).resolve()
+
+        candidate = (
+            path
+            if path.is_absolute()
+            else repository_root / path
+        ).resolve()
+
+        try:
+            candidate.relative_to(
+                canonical_directory
+            )
+        except ValueError:
+            self.stdout.write(
+                self.style.WARNING(
+                    "PRESERVED: applied planning dictionary is outside the "
+                    f'canonical temporary directory "{canonical_directory}".'
+                )
+            )
+            return
+
+        if candidate.parent != canonical_directory:
+            self.stdout.write(
+                self.style.WARNING(
+                    "PRESERVED: applied planning dictionary is not directly "
+                    "inside the canonical planning_imports directory."
+                )
+            )
+            return
+
+        try:
+            candidate.unlink()
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise CommandError(
+                "Planning records were applied successfully, but the temporary "
+                f'planning dictionary "{candidate}" could not be removed: {exc}'
+            ) from exc
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"REMOVED: temporary planning dictionary {candidate}"
+            )
+        )
+
+
 # ======================================================================
 # END: IMPORT_PLANNING_DICTIONARY_COMMAND
 # ======================================================================

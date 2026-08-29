@@ -636,15 +636,32 @@ At least one addition list must contain work.
 
 Load only the next authority required for the current task.
 
+---
+
 ## Architectural Intent
 
-Read the relevant durable Initiative or Planning Handoff.
-
-Example:
+Planning dictionary generation must begin from:
 
 ```text
-docs/hopehub/management/initiatives/CURRENT_INITIATIVE.md
+persisted Planning state
+    +
+current human engineering intent
 ```
+
+When new or changed work is being identified between Initiatives, the
+Between-Initiative Gap provides the human discussion boundary in which that
+intent is clarified.
+
+Do not require or create a separate Planning Handoff artifact.
+
+If persisted Planning state is stale or incomplete, reconcile the narrowest
+affected Planning authority before generating the dictionary.
+
+If the required work does not yet exist in Planning, use the validated human
+decision to generate the new Initiative, Phase, or Step directly through this
+workflow.
+
+---
 
 ## Generation Workflow
 
@@ -655,6 +672,8 @@ aurora/subsystems/planning/contracts/
 PLANNING_DICTIONARY_GENERATION.md
 ```
 
+---
+
 ## Copyable Dictionary Shape
 
 Read:
@@ -664,6 +683,8 @@ aurora/subsystems/planning/io/templates/
 planning_update_v1.plan
 ```
 
+---
+
 ## Accepted Fields and Normalization
 
 Read:
@@ -671,6 +692,8 @@ Read:
 ```text
 aurora/subsystems/planning/io/schema.py
 ```
+
+---
 
 ## Transactional Persistence
 
@@ -680,6 +703,8 @@ Read:
 aurora/subsystems/planning/io/updater.py
 ```
 
+---
+
 ## Existing Step Payload Semantics
 
 Read only when Step supporting structures require clarification:
@@ -687,6 +712,8 @@ Read only when Step supporting structures require clarification:
 ```text
 aurora/subsystems/planning/api/steps.py
 ```
+
+---
 
 ## Command Parsing and Execution
 

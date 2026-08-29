@@ -590,27 +590,41 @@ and the future orchestration design.
 
 **State:** VERIFIED
 
-Wu Chat currently owns:
+Wu Chat owns bounded Wu-specific repository context hydration through:
 
 ```text
-services/workspace_context.py
+aurora/subsystems/wu_chat/services/workspace_context.py
 ```
 
-for bounded Wu-specific repository context hydration.
+This service resolves repository files requested during Wu execution and
+constructs the bounded context used to continue that execution.
 
-Whether some portion of this responsibility should later move into Hansel or
-orchestration is not yet established.
+It does not own repository navigation authority.
 
-**Knowledge State:** UNKNOWN
-
-Next breadcrumb:
+Repository navigation authority remains with:
 
 ```text
-future orchestration and Hansel repository-context design
+aurora/subsystems/hansel/contracts/HANSEL.md
 ```
 
-Do not move this service merely because another subsystem may eventually need
-similar capability.
+and the subsystem Hansel contracts reached through that trail.
+
+Worker-facing repository continuation semantics are defined by the deployed Wu
+directive authority. Do not duplicate the continuation protocol, envelope, or
+worker instructions into this catalogue.
+
+For implementation work on repository-file hydration, continue to:
+
+```text
+aurora/subsystems/wu_chat/services/workspace_context.py
+```
+
+For implementation work on Wu request continuation and reinvocation, continue
+to the Wu request orchestration path beginning at:
+
+```text
+aurora/subsystems/wu_chat/api/endpoint.py
+```
 
 ---
 

@@ -27,6 +27,42 @@ Go to:
 aurora/subsystems/delta_directives/models.py
 ```
 
+`DeltaDirectives.instructions` is the canonical persistent worker-instruction
+authority.
+
+Worker instructions use Markdown as their canonical textual representation.
+
+The stored Markdown is semantic configuration, not presentation content.
+Persistence and editing surfaces must preserve the instruction text without
+silently converting it to HTML or otherwise changing its meaning.
+
+HTML may be produced for presentation, but HTML is not a canonical directive
+storage format.
+
+Changes to worker behavior belong in the directive instructions rather than in
+consumer code when the behavior is properly a worker instruction. Execution
+mechanics remain owned by the consuming workflow.
+
+
+### Deploy or replace canonical worker instructions
+
+Go to:
+
+```text
+aurora/subsystems/delta_directives/contracts/DIRECTIVE_DEPLOYMENT.md
+```
+
+This contract owns the controlled workflow for moving repository-owned worker
+instructions into persistent `DeltaDirectives.instructions`.
+
+Use it when the task involves directive deployment, directive validation,
+dry-run/apply behavior, deployment triggers, or restricting uncontrolled
+instruction mutation.
+
+Do not infer deployment behavior from the UI or API merely because those
+surfaces can currently mutate directive records.
+
+
 ### Understand or change Delta Directives API behavior
 
 Go to:

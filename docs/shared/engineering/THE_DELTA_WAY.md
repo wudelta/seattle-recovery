@@ -109,7 +109,11 @@ When working in unfamiliar areas:
 
 Implementation follows understanding.
 
-Never the reverse.
+Validate the premise before engineering the solution.
+
+Never build architecture around an untested assumption.
+
+Never modify first and understand later.
 
 ---
 
@@ -144,6 +148,16 @@ Only then introduce additional abstractions, automation, or optimization.
 Ideas are never lost.
 
 Premature implementation is avoided.
+
+---
+
+# Keep It Simple
+
+Use the simplest solution that correctly solves the problem.
+
+Complexity must earn its place.
+
+Sometimes the best engineering comes not from what you add, but what you leave out.
 
 ---
 
@@ -274,7 +288,9 @@ When a recurring lesson is discovered:
 * improve the workflow
 * improve the engineering process
 
-The project should become easier to develop over time.
+Repeated engineering behavior is evidence that automation may be missing.
+
+Do not repeatedly ask humans or intelligence to reconstruct a process that software can execute deterministically.
 
 Every solved problem should reduce the likelihood of solving the same problem twice.
 

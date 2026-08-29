@@ -31,6 +31,25 @@ Go to:
 aurora/subsystems/planning/models.py
 ```
 
+### Determine what engineering work happens next
+
+Go to:
+
+```text
+aurora/subsystems/planning/contracts/INITIATIVE_TRANSITION.md
+```
+
+Use this authority when:
+
+- no executable Initiative is currently active;
+- an Initiative has just been completed or paused;
+- priorities are changing between Initiatives;
+- or a worker must present existing or new objective choices to a human.
+
+The worker presents candidates and routes the decision.
+
+The human selects the engineering objective.
+
 ### Understand Planning lifecycle and reconciliation
 
 Go to:
@@ -48,6 +67,20 @@ Use this authority for:
 - Planning reconciliation;
 - Planning and Engineering Session boundaries.
 
+### Execute repeated worker Planning transitions
+
+Go to:
+
+```text
+aurora/subsystems/planning/services/workflow.py
+```
+
+Use this authority when a worker must complete validated current work, respect
+Phase or Initiative review boundaries, and advance to the next executable
+Planning work.
+
+Do not reconstruct these transitions from lower-level lifecycle services when
+the canonical worker workflow operation already exists.
 
 ### Route executable Planning work into repository authority
 
@@ -65,7 +98,6 @@ Do not use Planning UI navigation state as execution authority. The executable
 Planning hierarchy is authoritative for the work being performed.
 
 Stop discovery when Hansel's Sufficient Authority conditions are satisfied.
-
 
 ### Understand or change Planning CRUD/API behavior
 
