@@ -226,13 +226,37 @@ Normally an Initiative contains multiple independently verifiable Phases.
 
 A developer may have at most one current `ACTIVE` Initiative.
 
+Before generating a new Initiative, inspect persisted Planning state through:
+
+```text
+aurora/management/commands/inspect_planning_state.py
+```
+
+Start with:
+
+```text
+daurora-cmd inspect_planning_state
+```
+
+Use Initiative-scoped or `--full` inspection only when the compact evidence is
+insufficient.
+
+Use this persisted state to determine whether the target developer already has
+an `ACTIVE` Initiative and whether the proposed dictionary would conflict with
+the current executable hierarchy.
+
+Do not infer current Initiative state from conversation history or reconstruct
+it through ad hoc ORM queries when the deterministic inspection entry point can
+answer the question.
+
 Before generating a new Initiative with:
 
 ```python
 "status": "ACTIVE",
 ```
 
-inspect current Planning lifecycle state for the target developer.
+confirm from that persisted Planning evidence that the target developer does not
+already have a conflicting `ACTIVE` Initiative.
 
 If no Initiative is currently `ACTIVE`, the new Initiative may be proposed as
 `ACTIVE` when that matches the architectural discussion.
@@ -736,23 +760,26 @@ Given an architectural discussion:
 2. Determine whether the Project exists in the Decision Engine.
 3. If it does not exist, define one `add_projects` record.
 4. Identify one durable Initiative outcome.
-5. Inspect the target developer's current ACTIVE Initiative state.
-6. If the new Initiative should be ACTIVE and another Initiative is already
+5. Inspect the target developer's persisted Planning state through
+   `inspect_planning_state`.
+6. Determine the target developer's current ACTIVE Initiative state from that
+   deterministic evidence.
+8. If the new Initiative should be ACTIVE and another Initiative is already
    ACTIVE, request the human lifecycle decision before generating the dictionary.
 7. Divide the Initiative into independently verifiable Phases.
-8. Divide each Phase into bounded Steps.
-9. Preserve relevant technical design, dependencies, assumptions, and
+9. Divide each Phase into bounded Steps.
+10. Preserve relevant technical design, dependencies, assumptions, and
    discussion within each Step document.
-10. Add planned repository files only when the paths are supported by the
+11. Add planned repository files only when the paths are supported by the
     discussion or repository evidence.
-11. Define deterministic validation for every Step.
-12. Assign reasonable estimates, confidence, and risk.
-13. Generate one Python-literal planning dictionary.
-14. Run dry-run validation.
-15. Correct every validation error.
-16. Apply only after successful validation.
-17. Inspect the resulting hierarchy and supporting Step records.
-18. Commit the Initiative source, contract changes, template changes, schema
+12. Define deterministic validation for every Step.
+13. Assign reasonable estimates, confidence, and risk.
+14. Generate one Python-literal planning dictionary.
+15. Run dry-run validation.
+16. Correct every validation error.
+17. Apply only after successful validation.
+18. Inspect the resulting hierarchy and supporting Step records.
+19. Commit the Initiative source, contract changes, template changes, schema
     changes, updater changes, command changes, and validated reference import.
 
 ---

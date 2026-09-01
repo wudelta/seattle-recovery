@@ -48,6 +48,39 @@ Do not invent an engineering objective merely because no Initiative is active.
 
 ---
 
+## Persisted Planning State
+
+Before presenting candidates or deciding which transition route applies, inspect
+persisted Planning state through the deterministic application-level entry
+point catalogued by Planning:
+
+```text
+aurora/management/commands/inspect_planning_state.py
+```
+
+Start with compact reconciliation evidence:
+
+```text
+daurora-cmd inspect_planning_state
+```
+
+Use the result to determine whether an ACTIVE Initiative already exists or the
+Between-Initiative Gap applies.
+
+If an ACTIVE Initiative exists, do not present PAUSED or PLANNED candidates.
+Resume the existing executable hierarchy through Planning lifecycle authority.
+
+If no ACTIVE Initiative exists, use the persisted PAUSED and PLANNED Initiative
+state as the candidate source for the human decision boundary below.
+
+Escalate to Initiative-scoped or `--full` inspection only when the compact
+evidence is insufficient for the current transition.
+
+Do not reconstruct current Planning state through ad hoc ORM queries when the
+deterministic inspection entry point can answer the question.
+
+---
+
 ## Candidate Presentation
 
 Present all unfinished Initiative candidates in this order:

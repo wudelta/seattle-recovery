@@ -58,6 +58,7 @@ def generate_planning_update(
     engineering_intent: str,
     project_slug: str,
     user,
+    supporting_evidence: str = "",
 ) -> PlanningGenerationResult:
     """
     Generate and dry-run one Planning dictionary.
@@ -77,6 +78,7 @@ def generate_planning_update(
 
     intent = engineering_intent.strip()
     slug = project_slug.strip()
+    evidence = supporting_evidence.strip()
 
     if not intent:
         raise PlanningGenerationError(
@@ -115,6 +117,7 @@ def generate_planning_update(
         engineering_intent=intent,
         project_slug=slug,
         planning_evidence=planning_evidence,
+        supporting_evidence=evidence,
     )
 
     runner = MinionRunner()
@@ -229,6 +232,7 @@ def _build_generation_task(
     engineering_intent: str,
     project_slug: str,
     planning_evidence: dict[str, Any],
+    supporting_evidence: str = "",
 ) -> str:
     """Build the bounded task given to the Planning Generator."""
 
@@ -238,6 +242,12 @@ def _build_generation_task(
         planning_evidence,
         sort_dicts=False,
         width=100,
+    )
+
+    supporting_evidence_text = (
+        supporting_evidence
+        if supporting_evidence
+        else "NONE"
     )
 
     grouped_addition_guidance = (
@@ -338,6 +348,11 @@ def _build_generation_task(
         f"Target Project slug: {project_slug}\n\n"
         "Engineering intent:\n"
         f"{engineering_intent}\n\n"
+        "Supporting engineering evidence:\n"
+        f"{supporting_evidence_text}\n\n"
+        "Supporting evidence may justify or constrain the human engineering "
+        "intent, but it does not replace that intent and must not independently "
+        "select a new engineering objective.\n\n"
         "Persisted Planning reconciliation evidence for the target Project "
         "follows.\n\n"
         "PLANNING EVIDENCE START\n"

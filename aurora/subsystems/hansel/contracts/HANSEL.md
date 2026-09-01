@@ -33,29 +33,82 @@ Do not load repository knowledge merely because it exists.
 
 ---
 
+## Clean-Context Worker Entry
+
+This file is the canonical repository-owned starting authority for a
+clean-context engineering worker.
+
+At engineering startup, the worker receives this document and no hidden
+repository navigation context is required.
+
+Before assuming that an executable task exists, determine current Planning state
+through Planning's canonical Hansel catalogue:
+
+```text
+aurora/subsystems/planning/contracts/HANSEL.md
+```
+
+Planning owns persisted engineering-work state and the human
+objective-selection boundary.
+
+If Planning establishes an executable:
+
+```text
+ACTIVE Initiative
+    ↓
+ACTIVE Phase
+    ↓
+ACTIVE Step
+```
+
+return to this catalogue with that Step as the current task and route it to the
+owning repository authority.
+
+If Planning establishes that no executable engineering task currently exists,
+remain within Planning's repository-owned workflow until the human
+objective-selection boundary is reached and a new executable hierarchy is
+established.
+
+The root catalogue must not duplicate Planning lifecycle procedures, command
+syntax, candidate-selection rules, or task-specific implementation knowledge.
+
+Its startup responsibility is to identify the next owning authority.
+
+---
+
 ## Start Here
 
 Given a task:
 
 1. identify the repository authority most likely to own the requested behavior;
-2. if a subsystem owns it, go to that subsystem's canonical Hansel catalogue:
+2. if a recognized subsystem owns the behavior and exposes a canonical
+   `contracts/HANSEL.md`, enter through that subsystem catalogue;
+3. use a direct application-level authority only when this root catalogue or
+   another authoritative Hansel catalogue explicitly identifies that
+   application-level surface as the intended entry point;
+4. follow the narrowest breadcrumb relevant to the task;
+5. continue only while additional authority is required.
+
+Canonical subsystem entry points use:
 
 ```text
 aurora/subsystems/<subsystem>/contracts/HANSEL.md
 ```
 
-3. if Hansel identifies a direct application-level authority, go directly to
-   that destination;
-4. follow the narrowest breadcrumb relevant to the task;
-5. continue only while additional authority is required.
+Do not bypass a subsystem catalogue by deep-linking from root Hansel to one of
+that subsystem's internal task authorities.
+
+A direct application-level breadcrumb is not a subsystem bypass when the
+application-level surface is itself the intentionally declared authority or
+framework entry point.
 
 Do not begin with repository-wide discovery when an existing Hansel breadcrumb
 can identify the next authority.
 
 If no executable engineering task currently exists, do not invent one.
 
-Use the Between-Initiative Gap authority identified below to determine what work
-may happen next while preserving the human objective-selection boundary.
+Use the Planning authority identified below to determine what work may happen
+next while preserving the human objective-selection boundary.
 
 ---
 
@@ -67,12 +120,16 @@ When no executable engineering task exists, or when the worker is asked to
 determine what engineering work should happen next, go to:
 
 ```text
-aurora/subsystems/planning/contracts/INITIATIVE_TRANSITION.md
+aurora/subsystems/planning/contracts/HANSEL.md
 ```
 
-Use that authority to enter the Between-Initiative Gap, present existing
-Planning candidates, preserve the human objective-selection boundary, and
-establish the next executable Planning hierarchy.
+Planning owns the workflow for determining what engineering work may happen
+next.
+
+Enter Planning through its canonical Hansel catalogue and follow the narrowest
+breadcrumb it provides for the current Planning state.
+
+Preserve the human objective-selection boundary.
 
 Do not invent an engineering objective.
 
@@ -93,7 +150,10 @@ aurora/subsystems/delta_notes/contracts/HANSEL.md
 aurora/subsystems/hansel/contracts/HANSEL.md
 ```
 
-A subsystem catalogue should route a task to the narrowest authoritative source
+When a subsystem owns the behavior, its canonical catalogue is the boundary
+entry point.
+
+The catalogue should then route the task to the narrowest authoritative source
 needed for that work.
 
 It should not duplicate the implementation or architectural knowledge available
@@ -108,6 +168,8 @@ aurora/access/
 ```
 
 Use this authority when the task concerns who may enter or use Aurora.
+
+This is an intentional application-level authority.
 
 Do not infer Django administration permissions from Aurora access policy.
 
@@ -179,10 +241,12 @@ owning authority
 continue discovery
 ```
 
-If the new owner is a subsystem, enter through its `contracts/HANSEL.md`.
+If the new owner is a recognized subsystem with a canonical
+`contracts/HANSEL.md`, enter through that catalogue before following any
+task-specific internal authority.
 
-If Hansel identifies a direct application-level authority, go directly to that
-authority.
+Use a direct application-level authority only when an authoritative Hansel
+catalogue explicitly identifies that surface as the intended entry point.
 
 Do not preload neighboring knowledge in anticipation of possible dependencies.
 
