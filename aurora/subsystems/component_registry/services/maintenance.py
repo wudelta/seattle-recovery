@@ -95,21 +95,11 @@ class ComponentRegistryMaintenance:
         synchronization_report: SynchronizationReport,
     ) -> None:
         """Merge one synchronization result into the maintenance report."""
-        maintenance_report.updated.extend(
-            synchronization_report.updated
-        )
-        maintenance_report.registered.extend(
-            synchronization_report.registered
-        )
-        maintenance_report.archived.extend(
-            synchronization_report.archived
-        )
-        maintenance_report.skipped.extend(
-            synchronization_report.skipped
-        )
-        maintenance_report.failures.extend(
-            synchronization_report.failures
-        )
+        maintenance_report.updated.extend(synchronization_report.updated)
+        maintenance_report.registered.extend(synchronization_report.registered)
+        maintenance_report.archived.extend(synchronization_report.archived)
+        maintenance_report.skipped.extend(synchronization_report.skipped)
+        maintenance_report.failures.extend(synchronization_report.failures)
 
     @staticmethod
     def _classify_non_mutating_items(
@@ -120,62 +110,43 @@ class ComponentRegistryMaintenance:
         for item in items:
             if item.classification == CLASSIFICATION_KEEP:
                 report.kept.append(item.path)
-
             elif item.classification == CLASSIFICATION_EXCLUDE:
                 report.excluded.append(item.path)
-
             elif item.classification == CLASSIFICATION_REVIEW:
                 report.review.append(item.path)
+
+    def refresh_from_items(
+        self,
+        items: list[ReconciliationItem],
+    ) -> ComponentRegistryMaintenanceReport:
+        """Apply one existing reconciliation snapshot without rescanning."""
+        report = ComponentRegistryMaintenanceReport()
+        self._classify_non_mutating_items(items, report)
+
+        snapshot_reconciler = _SnapshotReconciler(items)
+        synchronizer = WorkspaceSynchronizer(reconciler=snapshot_reconciler)
+
+        update_report = synchronizer.apply_updates()
+        self._merge_synchronization_report(report, update_report)
+
+        registration_report = synchronizer.apply_registrations()
+        self._merge_synchronization_report(report, registration_report)
+
+        archive_report = synchronizer.apply_archives()
+        self._merge_synchronization_report(report, archive_report)
+
+        return report
 
     def refresh(self) -> ComponentRegistryMaintenanceReport:
         """
         Reconcile once and apply all safe registry synchronization classes.
 
-        Automatic maintenance applies:
-
-        - UPDATE
-        - REGISTER
-        - ARCHIVE
-
-        KEEP and EXCLUDE require no mutation.
-
-        REVIEW is preserved for human architectural review and is never
-        automatically mutated.
+        Automatic maintenance applies UPDATE, REGISTER, and ARCHIVE.
+        KEEP and EXCLUDE require no mutation. REVIEW remains for human review.
         """
         items = self.reconciler.reconcile()
+        return self.refresh_from_items(items)
 
-        report = ComponentRegistryMaintenanceReport()
-
-        self._classify_non_mutating_items(
-            items,
-            report,
-        )
-
-        snapshot_reconciler = _SnapshotReconciler(items)
-
-        synchronizer = WorkspaceSynchronizer(
-            reconciler=snapshot_reconciler,
-        )
-
-        update_report = synchronizer.apply_updates()
-        self._merge_synchronization_report(
-            report,
-            update_report,
-        )
-
-        registration_report = synchronizer.apply_registrations()
-        self._merge_synchronization_report(
-            report,
-            registration_report,
-        )
-
-        archive_report = synchronizer.apply_archives()
-        self._merge_synchronization_report(
-            report,
-            archive_report,
-        )
-
-        return report
 
 # ======================================================================
 # END: COMPONENT_REGISTRY_MAINTENANCE_SERVICE
