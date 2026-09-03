@@ -2,28 +2,23 @@
 # FILE: aurora/subsystems/wu_chat/services/execution_context.py
 # START: EXECUTION_CONTEXT_RESOLVER
 # ======================================================================
-"""Resolve the current Initiative, Phase, and Step execution state."""
+"""Resolve Wu prompt context from Planning-owned execution state."""
 
 from dataclasses import dataclass
 from typing import Optional
 
-from django.contrib.auth import get_user_model
-
-from aurora.models import (
-    ExecutionStatus,
-    Initiative,
-    Phase,
-    Step,
+from aurora.subsystems.planning.api.worker_resources import (
+    get_current_execution_worker_resource,
 )
 
 
 @dataclass(frozen=True)
 class ExecutionContext:
-    """Immutable snapshot of Aurora's current execution position."""
+    """Immutable Wu-facing snapshot of Planning's current execution position."""
 
-    initiative: Optional[Initiative] = None
-    phase: Optional[Phase] = None
-    step: Optional[Step] = None
+    initiative: Optional[dict[str, object]] = None
+    phase: Optional[dict[str, object]] = None
+    step: Optional[dict[str, object]] = None
 
     @property
     def is_active(self) -> bool:
@@ -43,27 +38,37 @@ class ExecutionContext:
 
         lines = [
             "=== ACTIVE AURORA EXECUTION CONTEXT ===",
-            f"Initiative: {self.initiative.title}",
-            f"Initiative description: {self.initiative.description or 'Not provided.'}",
-            f"Phase: {self.phase.title}",
-            f"Phase description: {self.phase.description or 'Not provided.'}",
-            f"Step: {self.step.title}",
-            f"Step description: {self.step.description or 'Not provided.'}",
+            f"Initiative: {self.initiative['title']}",
+            (
+                "Initiative description: "
+                f"{self.initiative['description'] or 'Not provided.'}"
+            ),
+            f"Phase: {self.phase['title']}",
+            (
+                "Phase description: "
+                f"{self.phase['description'] or 'Not provided.'}"
+            ),
+            f"Step: {self.step['title']}",
+            (
+                "Step description: "
+                f"{self.step['description'] or 'Not provided.'}"
+            ),
             (
                 "Validation requirement: "
-                f"{self.step.validation_description or 'Not provided.'}"
+                f"{self.step['validation_description'] or 'Not provided.'}"
             ),
         ]
 
-        if self.step.estimated_minutes is not None:
+        estimated_minutes = self.step.get("estimated_minutes")
+        if estimated_minutes is not None:
             lines.append(
-                f"Estimated effort: {self.step.estimated_minutes} minutes"
+                f"Estimated effort: {estimated_minutes} minutes"
             )
 
-        if self.step.estimate_confidence:
+        estimate_confidence = self.step.get("estimate_confidence_label")
+        if estimate_confidence:
             lines.append(
-                "Estimate confidence: "
-                f"{self.step.get_estimate_confidence_display()}"
+                f"Estimate confidence: {estimate_confidence}"
             )
 
         lines.append(
@@ -75,56 +80,19 @@ class ExecutionContext:
 
 
 class ExecutionContextResolver:
-    """Build the current user-scoped execution context."""
+    """Build Wu context from Planning's worker-facing execution resource."""
 
     @classmethod
     def build(cls, user) -> ExecutionContext:
-        """Return the active Initiative → Phase → Step path for a user."""
-        user_model = get_user_model()
-
-        if not isinstance(user, user_model) or not user.is_authenticated:
-            return ExecutionContext()
-
-        initiative = (
-            Initiative.objects.filter(
-                created_by=user,
-                status=ExecutionStatus.ACTIVE,
-            )
-            .order_by("position", "created_at")
-            .first()
-        )
-
-        if initiative is None:
-            return ExecutionContext()
-
-        phase = (
-            Phase.objects.filter(
-                initiative=initiative,
-                status=ExecutionStatus.ACTIVE,
-            )
-            .order_by("position", "created_at")
-            .first()
-        )
-
-        if phase is None:
-            return ExecutionContext(
-                initiative=initiative,
-            )
-
-        step = (
-            Step.objects.filter(
-                phase=phase,
-                status=ExecutionStatus.ACTIVE,
-            )
-            .order_by("position", "created_at")
-            .first()
-        )
+        """Return Planning's authoritative executable path for Wu."""
+        resource = get_current_execution_worker_resource(user=user)
 
         return ExecutionContext(
-            initiative=initiative,
-            phase=phase,
-            step=step,
+            initiative=resource["initiative"],
+            phase=resource["phase"],
+            step=resource["step"],
         )
+
 
 # ======================================================================
 # END: EXECUTION_CONTEXT_RESOLVER
