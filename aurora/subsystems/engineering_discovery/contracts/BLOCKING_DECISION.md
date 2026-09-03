@@ -18,21 +18,23 @@ Engineering Findings.
 
 This contract answers one question:
 
-> Can the current authoritative Planning Step be completed correctly and
-> validated without resolving this finding?
+> Can the current authoritative work proceed correctly and be validated without
+> resolving this finding?
 
 If yes, the finding is NON_BLOCKING.
 
 If no, the finding is BLOCKING.
 
-This contract does not mutate Planning state or create remedial work. That
-integration belongs to later Planning-authorized implementation.
+This contract does not mutate Planning state or create remedial work. When the
+current authoritative work is Planning execution, lifecycle mutation remains owned
+by Planning.
 
 ---
 
 ## Governing Principle
 
-Blocking classification is about the executability of the **current Step**.
+Blocking classification is about the executability of the **current authoritative
+work**.
 
 It is not a measure of:
 
@@ -44,11 +46,11 @@ It is not a measure of:
 - user visibility;
 - expected implementation effort.
 
-A serious problem may be NON_BLOCKING if the current Step can still be completed
-correctly and validated.
+A serious problem may be NON_BLOCKING if the current authoritative work can still
+proceed correctly and be validated.
 
-A small problem may be BLOCKING if the current Step cannot proceed correctly
-without resolving it.
+A small problem may be BLOCKING if the current authoritative work cannot proceed
+correctly without resolving it.
 
 ---
 
@@ -57,8 +59,8 @@ without resolving it.
 Classify the finding by asking:
 
 ```text
-Can the lifecycle-authoritative current Step be completed correctly
-and validated without resolving this finding?
+Can the current authoritative work proceed correctly
+and be validated without resolving this finding?
 ```
 
 ### YES
@@ -75,13 +77,15 @@ Persist the finding and continue current work.
 BLOCKING
 ```
 
-Persist the finding and do not falsely complete the blocked Step.
+Persist the finding and do not falsely complete, close, or continue the blocked
+work.
 
 ---
 
 ## BLOCKING Conditions
 
-A finding is BLOCKING when continuing the current Step without resolution would
+A finding is BLOCKING when continuing the current authoritative work without
+resolution would
 require one or more of the following:
 
 - violating an established subsystem or application boundary;
@@ -91,12 +95,13 @@ require one or more of the following:
 - skipping required deterministic validation;
 - pretending a broken Hansel breadcrumb or authority surface works;
 - knowingly producing an incorrect implementation;
-- knowingly closing the Step without satisfying its validation requirement.
+- knowingly completing or closing the current work without satisfying its
+  validation requirement.
 
 The finding need not make all engineering work impossible.
 
-It only needs to prevent **this Step** from being completed correctly and
-validated.
+It only needs to prevent **the current authoritative work** from proceeding
+correctly and being validated.
 
 ---
 
@@ -104,7 +109,7 @@ validated.
 
 A finding is NON_BLOCKING when:
 
-- the current Step still has a correct authoritative implementation path;
+- the current authoritative work still has a correct authoritative path;
 - required validation can still be performed;
 - the finding does not require an ownership or lifecycle violation;
 - the finding can be durably preserved for later reconciliation;
@@ -112,7 +117,8 @@ A finding is NON_BLOCKING when:
 
 NON_BLOCKING does not mean unimportant.
 
-It means resolution is not required for correct completion of the current Step.
+It means resolution is not required for correct continuation or completion of the
+current authoritative work.
 
 ---
 
@@ -132,7 +138,7 @@ blocking decision
 persist finding
     ↓
 BLOCKING: route into remedial current work
-NON_BLOCKING: continue current Step
+NON_BLOCKING: continue current work
 ```
 
 Do not postpone blocking classification until Initiative closeout.
@@ -173,8 +179,8 @@ BLOCKING + RESOLVED
 NON_BLOCKING + RESOLVED
 ```
 
-Once a BLOCKING finding is resolved, the current Step may become executable
-again.
+Once a BLOCKING finding is resolved, the current authoritative work may become
+executable again.
 
 Resolution does not erase the historical fact that the finding blocked work.
 
@@ -184,16 +190,18 @@ Resolution does not erase the historical fact that the finding blocked work.
 
 Engineering Discovery owns the blocking decision semantics.
 
-Planning owns executable work and lifecycle mutation.
+Planning owns executable work and lifecycle mutation when the current authoritative
+work is represented by Planning.
 
 Therefore:
 
 ```text
 Engineering Discovery
-    decides whether the finding blocks current work
+    decides whether the finding blocks current authoritative work
 
 Planning
-    owns any change to Initiative / Phase / Step execution state
+    owns any change to Initiative / Phase / Step execution state when Planning
+    represents that work
 ```
 
 Engineering Discovery must not directly create, activate, pause, reorder, or
@@ -290,8 +298,8 @@ Before assigning BLOCKING, verify:
 
 ```text
 [ ] The finding already passed Engineering Finding qualification.
-[ ] The problem affects the lifecycle-authoritative current Step.
-[ ] Correct implementation or deterministic validation cannot proceed without
+[ ] The problem affects the current authoritative work.
+[ ] Correct execution or deterministic validation cannot proceed without
     resolving it.
 [ ] Continuing would require an invalid assumption, boundary bypass, false
     evidence, or unsatisfied validation.

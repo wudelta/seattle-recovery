@@ -45,38 +45,45 @@ evidence without requiring hidden conversation history.
 
 At minimum, provenance must establish:
 
-1. the Planning work during which the finding was encountered;
-2. the finding category assigned under the Engineering Discovery contract;
-3. the concrete condition that was observed;
-4. the repository or execution evidence supporting the observation;
-5. when the finding was discovered;
-6. the current blocking classification;
-7. the current resolution state.
+1. the finding category assigned under the Engineering Discovery contract;
+2. the concrete condition that was observed;
+3. the repository, execution, or workflow evidence supporting the observation;
+4. when the finding was discovered;
+5. the current blocking classification;
+6. the current resolution state;
+7. any authoritative Planning context that was truthfully available when the
+   finding was encountered.
 
 Persistence implementations may choose concrete field names and storage shape
 later, but they must preserve these semantics.
 
 ---
 
-## Originating Planning Work
+## Situational and Planning Provenance
 
-Every finding must identify the authoritative Planning path being executed when
-the condition was encountered.
+A finding must preserve truthful situational provenance, but an executable
+Planning Step is not required for the finding to exist.
 
-The durable origin is:
+When the condition is encountered during lifecycle-authoritative Planning work,
+Engineering Discovery must preserve that durable origin:
 
 ```text
 Project → Initiative → Phase → Step
 ```
 
-The originating Step is mandatory because Engineering Findings are qualified by
-being encountered through required current work.
+When no lifecycle-authoritative executable Step exists, Engineering Discovery
+must still capture the qualified finding if its concrete condition and evidence
+are sufficient. It must not invent Planning provenance merely to satisfy a
+storage shape.
 
-Initiative and Phase context must remain derivable from durable Planning state
-or be preserved directly if later architecture requires it.
+Planning provenance is therefore optional enrichment: attach it when Planning
+can establish it truthfully, otherwise leave it absent.
 
-A finding must not be detached from its originating work merely because it is
-later resolved, deferred, or incorporated into different Planning work.
+When Planning provenance exists, Initiative and Phase context must remain
+derivable from durable Planning state or be preserved directly if later
+architecture requires it. A finding must not be detached from known originating
+work merely because it is later resolved, deferred, or incorporated into
+different Planning work.
 
 ---
 
@@ -116,13 +123,18 @@ NON_BLOCKING
 
 Blocking classification answers only this question:
 
-> Can the current authoritative Step be completed correctly and validated
-> without resolving this finding?
+> Can the current authoritative work or workflow proceed correctly and be
+> validated without resolving this finding?
+
+When the finding occurs during an executable Planning Step, that Step is the
+concrete work boundary. Outside Planning execution, use the authoritative
+workflow in which the condition was encountered.
 
 ### BLOCKING
 
-Classify a finding as `BLOCKING` when the current Step cannot be completed
-correctly and validated without resolving the finding first.
+Classify a finding as `BLOCKING` when the current authoritative work or
+workflow cannot proceed correctly and be validated without resolving the
+finding first.
 
 A finding is also blocking when continuing would require:
 
@@ -134,13 +146,14 @@ A finding is also blocking when continuing would require:
 
 Blocking does not mean severe, important, or urgent in the abstract.
 
-It means the finding prevents correct completion of the current Step.
+It means the finding prevents correct completion or safe continuation of the
+current authoritative work.
 
 ### NON_BLOCKING
 
-Classify a finding as `NON_BLOCKING` when the current Step can still be
-completed correctly and deterministically validated without resolving the
-finding.
+Classify a finding as `NON_BLOCKING` when the current authoritative work can
+still proceed correctly and be deterministically validated without resolving
+the finding.
 
 A non-blocking finding may still represent real engineering work requiring
 later disposition.
@@ -355,14 +368,16 @@ Follow current Planning state before creating those surfaces.
 This contract is sufficient only if a clean-context worker can determine, from
 repository-owned authority:
 
-1. which current Planning Step originated a finding;
-2. what concrete evidence caused the observation to qualify;
-3. which Engineering Finding category applies;
-4. whether the finding is BLOCKING or NON_BLOCKING;
-5. whether the finding is UNRESOLVED or RESOLVED;
-6. what deterministic evidence is required for technical resolution;
-7. that original provenance survives resolution or reclassification;
-8. that closeout disposition remains a separate, later-owned concern.
+1. what concrete condition and evidence caused the observation to qualify;
+2. what authoritative work or workflow context was available at discovery;
+3. which Planning Step originated the finding when one truthfully existed;
+4. that absence of an executable Step does not prevent durable capture;
+5. which Engineering Finding category applies;
+6. whether the finding is BLOCKING or NON_BLOCKING;
+7. whether the finding is UNRESOLVED or RESOLVED;
+8. what deterministic evidence is required for technical resolution;
+9. that original provenance survives resolution or reclassification;
+10. that closeout disposition remains a separate, later-owned concern.
 
 No conversation transcript may be required to answer those questions.
 

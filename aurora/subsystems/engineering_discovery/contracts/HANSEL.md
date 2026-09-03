@@ -14,11 +14,12 @@
 ## Purpose
 
 Engineering Discovery owns the durable definition and handling of concrete
-engineering findings encountered while performing required current work.
+engineering findings encountered while performing authoritative engineering work
+or workflow execution.
 
 An Engineering Finding records an observable problem exposed by real execution
 of an authoritative engineering path when that problem has significance beyond
-ordinary successful Step implementation evidence.
+ordinary successful execution evidence.
 
 This subsystem exists to preserve need-driven engineering feedback without
 turning implementation work into speculative repository review.
@@ -66,14 +67,17 @@ to preserve outside the Engineering Finding contract.
 ## Engineering Finding Definition
 
 An **Engineering Finding** is a concrete engineering problem encountered while
-performing required current work, supported by observable evidence, whose
-significance extends beyond merely documenting successful execution of the
-current Step.
+performing authoritative engineering work or workflow execution, supported by
+observable evidence, whose significance extends beyond merely documenting
+successful execution.
+
+An executable Planning Step is useful situational provenance when one exists,
+but it is not required for the finding itself to qualify.
 
 A finding may be blocking or non-blocking.
 
 Blocking status is not part of finding qualification. A valid finding may allow
-the current Step to continue and still require later disposition.
+the current authoritative work to continue and still require later disposition.
 
 ---
 
@@ -89,7 +93,7 @@ true:
 3. the condition represents a concrete engineering problem rather than a
    preference, idea, prediction, or generalized best-practice recommendation;
 4. the condition has significance beyond ordinary evidence that the current
-   Step was implemented and validated.
+   authoritative work or workflow executed and validated successfully.
 
 A worker must not search outside the required implementation path for examples
 of finding categories.
@@ -291,7 +295,8 @@ Use this contract.
 
 A worker has sufficient authority when it can determine:
 
-1. whether the condition was encountered through required current work;
+1. whether the condition was encountered through authoritative current work or
+   workflow execution;
 2. whether direct evidence supports it;
 3. whether one of the defined categories applies;
 4. whether an exclusion makes it ordinary Step evidence, a Delta Note, or
@@ -318,9 +323,9 @@ aurora/subsystems/engineering_discovery/contracts/FINDING_CAPTURE.md
 ```
 
 Use this authority when a worker must determine where findings are observed,
-which subsystem owns capture, how authoritative Planning provenance is obtained,
-which execution surfaces may submit findings, or where Step completion must
-reconcile encountered evidence.
+which subsystem owns capture, how authoritative Planning provenance is obtained
+when available, which execution surfaces may submit findings, or where Step
+completion must reconcile encountered evidence when a Step exists.
 
 ### Decide whether an observed condition qualifies for capture
 
@@ -343,7 +348,7 @@ aurora/subsystems/engineering_discovery/contracts/BLOCKING_DECISION.md
 ```
 
 Use this authority after finding qualification and before deciding whether the
-current Planning Step may continue.
+current authoritative work or workflow may continue.
 
 ### Route a BLOCKING finding into remedial Planning work
 
@@ -363,7 +368,7 @@ Engineering Discovery validates the finding and owns its durable remediation
 link. Planning owns creation and lifecycle activation of the remedial Phase and
 Steps.
 
-### Submit one Engineering Finding during current work
+### Submit one Engineering Finding during current work or workflow execution
 
 Use:
 
@@ -385,8 +390,10 @@ submit_finding(
 )
 ```
 
-The service resolves the lifecycle-authoritative ACTIVE Step through Planning.
-Callers must not supply Project, Initiative, Phase, or Step identifiers.
+The service asks Planning for lifecycle-authoritative current execution state.
+When an ACTIVE Step exists it is preserved as Planning provenance; when none
+exists the finding is captured without invented Planning provenance. Callers
+must not supply Project, Initiative, Phase, or Step identifiers.
 
 A finding requires an observed condition plus evidence,
 `steps_to_reproduce`, or both.

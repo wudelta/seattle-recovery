@@ -214,7 +214,7 @@ import-ready Planning dictionary.
 Go to:
 
 ```text
-aurora/subsystems/planning/models.py
+aurora/subsystems/planning/models/
 ```
 
 Use this only when the task requires Planning persistence structure or model

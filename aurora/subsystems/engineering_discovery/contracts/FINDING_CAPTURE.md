@@ -20,7 +20,7 @@ This contract identifies:
 
 - where a finding may be observed;
 - which subsystem owns submission and qualification;
-- how authoritative Planning provenance is obtained;
+- how authoritative Planning provenance is obtained when available;
 - which existing execution surfaces may call Engineering Discovery;
 - where unresolved findings must be reconciled before current Step completion.
 
@@ -57,7 +57,7 @@ Discovery, but the caller does not become the authority for:
 
 - whether the condition qualifies as an Engineering Finding;
 - which category applies;
-- authoritative originating Planning work;
+- authoritative originating Planning work when one exists;
 - blocking classification;
 - resolution lifecycle.
 
@@ -68,17 +68,17 @@ contracts.
 
 ## Authoritative Planning Provenance
 
-Engineering Discovery must obtain current work provenance from Planning-owned
-execution authority.
+Engineering Discovery must obtain current Planning provenance from Planning-owned
+execution authority when lifecycle-authoritative Planning work exists.
 
-The required pattern is:
+The enrichment pattern is:
 
 ```text
 authenticated user
     ↓
-Planning-owned executable-work resolver
+Planning-owned current-execution authority
     ↓
-authoritative ACTIVE Step
+ACTIVE Step, when one exists
     ↓
 Step.phase
     ↓
@@ -87,17 +87,18 @@ Phase.initiative
 Initiative.project
 ```
 
-The originating Step is the authoritative anchor.
+When an ACTIVE Step exists, that Step is the authoritative Planning anchor.
 
 Engineering Discovery must not reconstruct ACTIVE Initiative, Phase, and Step
 state independently through direct ORM queries when Planning already exposes an
 application or service boundary for executable work.
 
-The caller should not be trusted to provide arbitrary Project, Initiative,
-Phase, or Step identifiers as authoritative provenance.
+The caller must not be trusted to provide arbitrary Project, Initiative, Phase,
+or Step identifiers as authoritative provenance.
 
-If no lifecycle-authoritative executable Step exists for the authenticated
-user, finding submission must not silently invent provenance.
+If no lifecycle-authoritative executable Step exists, Engineering Discovery may
+persist the finding without Planning provenance. It must never invent a Step or
+misattribute the finding to unrelated later work merely to satisfy persistence.
 
 ---
 
@@ -128,15 +129,17 @@ The canonical submission boundary belongs to Engineering Discovery.
 A future bounded submission interface must:
 
 1. require an authenticated user;
-2. resolve the user's authoritative executable Planning Step through
-   Planning-owned authority;
-3. derive Phase, Initiative, and Project from that Step;
-4. validate that the reported condition satisfies Engineering Finding
+2. ask Planning-owned authority for current executable Planning work;
+3. attach Step-derived Planning provenance when an authoritative Step exists;
+4. continue without Planning provenance when no executable Step exists;
+5. validate that the reported condition satisfies Engineering Finding
    qualification rules;
-5. assign or validate one defined finding category;
-6. establish BLOCKING or NON_BLOCKING classification;
-7. preserve concrete evidence;
-8. reject malformed, unsupported, speculative, or provenance-free submissions.
+6. assign or validate one defined finding category;
+7. establish BLOCKING or NON_BLOCKING classification against the current
+   authoritative work or workflow;
+8. preserve concrete evidence;
+9. reject malformed, unsupported, speculative, or falsely attributed
+   submissions.
 
 The bounded current-work submission surface is:
 
@@ -150,19 +153,22 @@ with canonical operation:
 submit_finding(...)
 ```
 
-It resolves provenance from the authenticated user's lifecycle-authoritative
-ACTIVE Step. It does not accept caller-supplied Planning identifiers.
+It asks Planning for lifecycle-authoritative current execution state. When an
+ACTIVE Step exists it preserves that Step as provenance; when none exists it
+persists without Planning provenance. It does not accept caller-supplied
+Planning identifiers.
 
 ---
 
 ## Capture Point 3: Planning as Provenance Provider
 
-Planning supplies authoritative current work.
+Planning supplies authoritative current execution state.
 
 Planning does not own Engineering Finding persistence or semantic qualification.
 
-Engineering Discovery may depend on a Planning-owned executable-work resolver
-to obtain the current Step and derive the rest of the hierarchy.
+Engineering Discovery may depend on Planning-owned execution authority to
+determine whether an executable Step exists and, when it does, obtain the Step
+and derive the rest of the hierarchy.
 
 This dependency must remain one-way:
 
@@ -173,7 +179,7 @@ Planning
 ```
 
 Planning must not need to understand Engineering Finding internals merely to
-answer which Step is current.
+answer whether executable work exists and which Step is current when applicable.
 
 ---
 
@@ -388,15 +394,16 @@ determine:
 
 1. Engineering Discovery owns finding capture and qualification;
 2. Planning owns authoritative executable-work provenance;
-3. the current Step is the provenance anchor;
-4. Phase, Initiative, and Project are derived from that Step;
-5. callers do not supply trusted provenance IDs;
-6. Wu Chat and Engineering Session may call or coordinate the workflow without
+3. an ACTIVE Step is the Planning provenance anchor when one exists;
+4. Phase, Initiative, and Project are derived from that Step when applicable;
+5. absence of an executable Step does not prevent evidence-backed capture;
+6. callers do not supply trusted provenance IDs;
+7. Wu Chat and Engineering Session may call or coordinate the workflow without
    owning the finding domain;
-7. current Step completion is a required reconciliation boundary;
-8. persistence schema and write interfaces remain deferred;
-9. the two findings encountered during this work are preserved for later
-   submission without being repaired opportunistically.
+8. current Step completion remains a reconciliation boundary when a Step exists;
+9. persistence schema and write interfaces remain deferred;
+10. the two findings encountered during this work are preserved for later
+    submission without being repaired opportunistically.
 
 ---
 

@@ -12,6 +12,10 @@ from aurora.subsystems.engineering_discovery.models import (
     EngineeringFindingCategory,
     EngineeringFindingResolutionState,
 )
+from aurora.subsystems.planning.api.worker_resources import (
+    PlanningWorkerResourceError,
+    get_current_execution_worker_resource,
+)
 from aurora.subsystems.planning.services.time_tracking import (
     PlanningTimeTrackingError,
     get_executable_step,
@@ -60,6 +64,30 @@ def _validate_choice(value, *, choices, field_name: str) -> str:
     return normalized
 
 
+
+
+def _resolve_optional_originating_step(user):
+    """Return authoritative current Step provenance when Planning has one."""
+
+    try:
+        execution = get_current_execution_worker_resource(user=user)
+    except PlanningWorkerResourceError as exc:
+        raise EngineeringFindingSubmissionError(
+            "Planning execution state could not be read safely."
+        ) from exc
+
+    if execution.get("step") is None:
+        return None
+
+    try:
+        return get_executable_step(user)
+    except PlanningTimeTrackingError as exc:
+        raise EngineeringFindingSubmissionError(
+            "Lifecycle-authoritative Planning provenance could not be resolved "
+            "consistently."
+        ) from exc
+
+
 def submit_finding(
     user,
     *,
@@ -70,10 +98,12 @@ def submit_finding(
     steps_to_reproduce="",
 ) -> EngineeringFinding:
     """
-    Persist one finding against the user's lifecycle-authoritative ACTIVE Step.
+    Persist one evidence-backed finding with truthful situational provenance.
 
-    Provenance is resolved from Planning. The caller cannot supply Project,
-    Initiative, Phase, or Step identifiers.
+    Planning provenance is attached automatically when the user has a
+    lifecycle-authoritative ACTIVE Step. Absence of executable Planning work does
+    not prevent capture. The caller cannot supply Project, Initiative, Phase, or
+    Step identifiers.
 
     At least one of evidence or steps_to_reproduce must be present. Reproduction
     steps may themselves constitute sufficient verification evidence.
@@ -106,12 +136,7 @@ def submit_finding(
             "A finding requires evidence, steps_to_reproduce, or both."
         )
 
-    try:
-        originating_step = get_executable_step(user)
-    except PlanningTimeTrackingError as exc:
-        raise EngineeringFindingSubmissionError(
-            "Lifecycle-authoritative Planning provenance could not be resolved."
-        ) from exc
+    originating_step = _resolve_optional_originating_step(user)
 
     with transaction.atomic():
         return EngineeringFinding.objects.create(

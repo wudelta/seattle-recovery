@@ -21,8 +21,8 @@ Engineering Findings are produced as a byproduct of required engineering work.
 Workers do not search for findings.
 
 Workers capture a finding only when a concrete engineering problem is
-encountered while following the authoritative path necessary to complete the
-current Planning Step.
+encountered while following the authoritative path necessary to perform the
+current required engineering work.
 
 ---
 
@@ -57,7 +57,8 @@ Before calling `submit_finding(...)`, all of the following must be true.
 ### 1. Required-work connection
 
 The condition was encountered while following repository authority necessary for
-the current ACTIVE Planning Step.
+the current required engineering work. That work may be an ACTIVE Planning Step,
+a Between-Initiative workflow, or another authoritative engineering path.
 
 The worker did not widen repository inspection merely to search for defects.
 
@@ -90,12 +91,14 @@ The condition matters beyond ordinary successful Step execution evidence.
 Normal file changes, implementation choices, command output proving success, and
 routine validation results are not findings by themselves.
 
-### 5. Current-work provenance
+### 5. Truthful situational provenance
 
-Live submission resolves the lifecycle-authoritative current Step through
-Planning.
+Live submission asks Planning for lifecycle-authoritative current Step provenance
+when one exists. Absence of an executable Step does not invalidate an otherwise
+qualified finding.
 
-The caller does not choose an arbitrary originating Step.
+The caller does not choose arbitrary Planning identifiers. Engineering Discovery
+must preserve only provenance it can establish truthfully.
 
 ---
 
@@ -114,8 +117,8 @@ BLOCKING or NON_BLOCKING
 submit through Engineering Discovery
 ```
 
-Blocking classification answers whether the current Step can be completed
-correctly and validated without resolving the finding.
+Blocking classification answers whether the current authoritative work can proceed
+correctly and be validated without resolving the finding.
 
 It does not answer whether the finding is severe, interesting, or worth fixing
 immediately.
@@ -276,7 +279,8 @@ If any required item is false, do not submit the finding.
 The bounded submission service can enforce structural invariants such as:
 
 - authenticated user;
-- authoritative current Step;
+- truthful Planning provenance when an executable Step exists, without requiring
+  caller-supplied Planning identifiers;
 - supported category;
 - supported blocking classification;
 - non-empty observed condition;
@@ -295,14 +299,14 @@ Engineering Discovery behavior.
 
 ## Clean-Context Acceptance Test
 
-A clean-context worker given the canonical Hansel trail and a normal engineering
-Step should behave as follows:
+A clean-context worker given the canonical Hansel trail and normal required
+engineering work should behave as follows:
 
-1. perform only the work necessary for the authoritative Step;
+1. perform only the work necessary for the authoritative current work;
 2. capture a concrete engineering problem encountered on that path;
 3. preserve sufficient evidence or reproduction steps;
 4. classify it using the blocking decision boundary;
-5. continue the Step when the finding is NON_BLOCKING;
+5. continue the current work when the finding is NON_BLOCKING;
 6. not inspect unrelated repository areas to manufacture additional findings;
 7. not submit hypothetical improvements or generalized best practices.
 

@@ -31,17 +31,24 @@ class EngineeringFindingResolutionState(models.TextChoices):
 
 class EngineeringFinding(models.Model):
     """
-    Persist one evidence-backed engineering problem encountered during required work.
+    Persist one evidence-backed engineering problem encountered during
+    authoritative engineering work or workflow execution.
 
-    The originating Planning Step is the provenance anchor. Phase, Initiative,
-    and Project remain derivable through the Planning hierarchy and are not
-    redundantly persisted.
+    When a lifecycle-authoritative Planning Step exists at discovery time it is
+    preserved as optional provenance. Phase, Initiative, and Project remain
+    derivable through that hierarchy and are not redundantly persisted.
     """
 
     originating_step = models.ForeignKey(
         Step,
         on_delete=models.PROTECT,
         related_name="engineering_findings",
+        null=True,
+        blank=True,
+        help_text=(
+            "Lifecycle-authoritative Planning Step active when the finding was "
+            "discovered, when one truthfully existed."
+        ),
     )
     remedial_phase = models.ForeignKey(
         Phase,
@@ -104,10 +111,12 @@ class EngineeringFinding(models.Model):
         ordering = ["created_at", "pk"]
 
     def __str__(self):
-        return (
-            f"EngineeringFinding {self.pk}: "
-            f"{self.category} / Step {self.originating_step_id}"
+        origin = (
+            f"Step {self.originating_step_id}"
+            if self.originating_step_id
+            else "No Planning Step"
         )
+        return f"EngineeringFinding {self.pk}: {self.category} / {origin}"
 
 
 # ======================================================================
