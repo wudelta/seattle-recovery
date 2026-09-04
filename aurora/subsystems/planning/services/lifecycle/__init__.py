@@ -13,6 +13,7 @@ from aurora.subsystems.planning.services.lifecycle.initiative import (
     evaluate_initiative_completion,
     pause_initiative,
     reject_initiative_completion,
+    reopen_initiative,
     request_initiative_completion,
 )
 from aurora.subsystems.planning.services.lifecycle.orchestration import (
@@ -56,6 +57,7 @@ __all__ = [
     "pause_step",
     "reject_initiative_completion",
     "reject_phase_completion",
+    "reopen_initiative",
     "request_initiative_completion",
     "request_phase_completion",
 ]

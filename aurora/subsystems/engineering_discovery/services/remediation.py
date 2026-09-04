@@ -12,9 +12,12 @@ from aurora.subsystems.engineering_discovery.models import (
     EngineeringFindingBlockingClassification,
     EngineeringFindingResolutionState,
 )
+from aurora.subsystems.planning.models import Initiative
 from aurora.subsystems.planning.services.remediation import (
+    PlanningCompletedInitiativeRemediationResult,
     PlanningRemediationError,
     PlanningRemediationResult,
+    reopen_initiative_with_remedial_phase,
     start_remedial_phase,
 )
 
@@ -51,9 +54,6 @@ def route_blocking_finding(
             current = (
                 EngineeringFinding.objects
                 .select_for_update()
-                .select_related(
-                    "originating_step",
-                )
                 .get(pk=finding.pk)
             )
 
@@ -86,6 +86,100 @@ def route_blocking_finding(
             result = start_remedial_phase(
                 user,
                 blocked_step=current.originating_step,
+                remedial_phase=remedial_phase,
+            )
+
+            current.remedial_phase_id = result.remedial_phase_id
+            current.save(
+                update_fields=[
+                    "remedial_phase",
+                    "updated_at",
+                ]
+            )
+
+            return result
+
+    except EngineeringFindingRemediationError:
+        raise
+    except PlanningRemediationError as exc:
+        raise EngineeringFindingRemediationError(
+            str(exc)
+        ) from exc
+
+
+def route_blocking_closeout_finding(
+    user,
+    *,
+    finding: EngineeringFinding,
+    initiative: Initiative,
+    remedial_phase: dict[str, Any],
+) -> PlanningCompletedInitiativeRemediationResult:
+    """
+    Route one blocking closeout finding into a prematurely completed Initiative.
+
+    Engineering Discovery validates that the finding represents unresolved
+    blocking workflow evidence without Step provenance. Planning owns reopening
+    the explicitly identified Initiative and establishing its remedial work.
+    """
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise EngineeringFindingRemediationError(
+            "An authenticated user is required to route a BLOCKING finding."
+        )
+
+    if finding is None or not getattr(finding, "pk", None):
+        raise EngineeringFindingRemediationError(
+            "A persisted Engineering Finding is required."
+        )
+
+    if initiative is None or not getattr(initiative, "pk", None):
+        raise EngineeringFindingRemediationError(
+            "A persisted Initiative is required."
+        )
+
+    try:
+        with transaction.atomic():
+            current = (
+                EngineeringFinding.objects
+                .select_for_update()
+                .get(pk=finding.pk)
+            )
+
+            if current.discovered_by_id != user.pk:
+                raise EngineeringFindingRemediationError(
+                    "The finding was not submitted by this user."
+                )
+
+            if (
+                current.blocking_classification
+                != EngineeringFindingBlockingClassification.BLOCKING
+            ):
+                raise EngineeringFindingRemediationError(
+                    "Only a BLOCKING finding may reopen completed Planning work."
+                )
+
+            if (
+                current.resolution_state
+                != EngineeringFindingResolutionState.UNRESOLVED
+            ):
+                raise EngineeringFindingRemediationError(
+                    "Resolved findings do not require remedial Planning work."
+                )
+
+            if current.originating_step_id is not None:
+                raise EngineeringFindingRemediationError(
+                    "A Step-originating BLOCKING finding must use current-work "
+                    "remediation."
+                )
+
+            if current.remedial_phase_id is not None:
+                raise EngineeringFindingRemediationError(
+                    "This finding already has a remedial Planning Phase."
+                )
+
+            result = reopen_initiative_with_remedial_phase(
+                user,
+                initiative=initiative,
                 remedial_phase=remedial_phase,
             )
 

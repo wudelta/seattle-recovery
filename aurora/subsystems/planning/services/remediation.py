@@ -14,10 +14,16 @@ from aurora.subsystems.planning.io.exceptions import (
     PlanningSchemaError,
 )
 from aurora.subsystems.planning.io.updater import update_planning_document
-from aurora.subsystems.planning.models import ExecutionStatus, Phase, Step
+from aurora.subsystems.planning.models import (
+    ExecutionStatus,
+    Initiative,
+    Phase,
+    Step,
+)
 from aurora.subsystems.planning.services.lifecycle import (
     PlanningLifecycleError,
     activate_step_hierarchy,
+    reopen_initiative,
 )
 from aurora.subsystems.planning.services.time_tracking import (
     PlanningTimeTrackingError,
@@ -35,6 +41,15 @@ class PlanningRemediationResult:
 
     interrupted_step_id: int
     interrupted_phase_id: int
+    initiative_id: int
+    remedial_phase_id: int
+    remedial_step_id: int
+
+
+@dataclass(frozen=True)
+class PlanningCompletedInitiativeRemediationResult:
+    """Identity of one reopened Initiative and its corrective Planning work."""
+
     initiative_id: int
     remedial_phase_id: int
     remedial_step_id: int
@@ -211,6 +226,119 @@ def start_remedial_phase(
         PlanningSchemaError,
         PlanningLifecycleError,
         PlanningTimeTrackingError,
+    ) as exc:
+        raise PlanningRemediationError(
+            str(exc)
+        ) from exc
+
+
+def reopen_initiative_with_remedial_phase(
+    user,
+    *,
+    initiative: Initiative,
+    remedial_phase: dict[str, Any],
+) -> PlanningCompletedInitiativeRemediationResult:
+    """
+    Reopen one prematurely completed Initiative and establish remedial work.
+
+    The caller owns the evidence establishing that completion is invalid.
+    Planning owns the lifecycle correction, remedial hierarchy creation, and
+    activation of the new executable path.
+    """
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise PlanningRemediationError(
+            "An authenticated user is required to establish remedial work."
+        )
+
+    if initiative is None or not getattr(initiative, "pk", None):
+        raise PlanningRemediationError(
+            "A persisted Initiative is required."
+        )
+
+    normalized_phase = _require_planned_remedial_phase(
+        remedial_phase
+    )
+
+    try:
+        with transaction.atomic():
+            locked_initiative = (
+                Initiative.objects
+                .select_for_update()
+                .select_related("project")
+                .get(pk=initiative.pk)
+            )
+
+            if locked_initiative.assigned_to_id != user.pk:
+                raise PlanningRemediationError(
+                    "The Initiative is not assigned to this user."
+                )
+
+            reopen_initiative(
+                locked_initiative
+            )
+
+            document = {
+                "schema_version": 1,
+                "target": {
+                    "project_slug": locked_initiative.project.slug,
+                },
+                "add_projects": [],
+                "add_initiatives": [],
+                "add_phases": [
+                    {
+                        "initiative_title": locked_initiative.title,
+                        "phases": [
+                            normalized_phase,
+                        ],
+                    },
+                ],
+                "add_steps": [],
+            }
+
+            update_planning_document(
+                document,
+                user=user,
+                apply=True,
+            )
+
+            remedial = (
+                Phase.objects
+                .select_for_update()
+                .get(
+                    initiative=locked_initiative,
+                    title=normalized_phase["title"],
+                )
+            )
+
+            first_step = (
+                remedial.steps
+                .order_by("position", "pk")
+                .first()
+            )
+
+            if first_step is None:
+                raise PlanningRemediationError(
+                    "The appended remedial Phase has no executable Step."
+                )
+
+            activated_step = activate_step_hierarchy(
+                first_step,
+                user,
+            )
+
+            return PlanningCompletedInitiativeRemediationResult(
+                initiative_id=locked_initiative.pk,
+                remedial_phase_id=remedial.pk,
+                remedial_step_id=activated_step.pk,
+            )
+
+    except PlanningRemediationError:
+        raise
+    except (
+        PlanningImportError,
+        PlanningSchemaError,
+        PlanningLifecycleError,
     ) as exc:
         raise PlanningRemediationError(
             str(exc)

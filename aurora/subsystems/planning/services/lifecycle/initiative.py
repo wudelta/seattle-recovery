@@ -13,21 +13,17 @@ from aurora.subsystems.planning.services.lifecycle.exceptions import (
 
 
 def activate_initiative(initiative: Initiative) -> Initiative:
-    """Make one Initiative the current ACTIVE Initiative for its assignee."""
+    """
+    Make one Initiative the current ACTIVE Initiative for its assignee.
+
+    An Initiative may cross into ACTIVE execution only when Planning contains
+    at least one unfinished Phase assigned to the Initiative assignee with at
+    least one unfinished Step.
+    """
 
     if initiative is None or not initiative.pk:
         raise PlanningLifecycleError(
             "A persisted Initiative is required."
-        )
-
-    if initiative.status == ExecutionStatus.COMPLETED:
-        raise PlanningLifecycleError(
-            "A completed Initiative cannot be activated."
-        )
-
-    if initiative.status == ExecutionStatus.CANCELLED:
-        raise PlanningLifecycleError(
-            "A cancelled Initiative cannot be activated."
         )
 
     with transaction.atomic():
@@ -37,6 +33,43 @@ def activate_initiative(initiative: Initiative) -> Initiative:
             .select_related("assigned_to")
             .get(pk=initiative.pk)
         )
+
+        if locked.status == ExecutionStatus.COMPLETED:
+            raise PlanningLifecycleError(
+                "A completed Initiative cannot be activated."
+            )
+
+        if locked.status == ExecutionStatus.CANCELLED:
+            raise PlanningLifecycleError(
+                "A cancelled Initiative cannot be activated."
+            )
+
+        executable_hierarchy_exists = (
+            locked.phases
+            .filter(
+                assigned_to=locked.assigned_to,
+            )
+            .exclude(
+                status__in=[
+                    ExecutionStatus.COMPLETED,
+                    ExecutionStatus.CANCELLED,
+                ]
+            )
+            .filter(
+                steps__status__in=[
+                    ExecutionStatus.PLANNED,
+                    ExecutionStatus.ACTIVE,
+                    ExecutionStatus.PAUSED,
+                ]
+            )
+            .exists()
+        )
+
+        if not executable_hierarchy_exists:
+            raise PlanningLifecycleError(
+                "An Initiative cannot be activated until Planning contains "
+                "an executable Phase and Step path."
+            )
 
         (
             Initiative.objects
@@ -56,6 +89,44 @@ def activate_initiative(initiative: Initiative) -> Initiative:
             locked.save(
                 update_fields=["status"]
             )
+
+    return locked
+
+
+def reopen_initiative(initiative: Initiative) -> Initiative:
+    """
+    Invalidate one Initiative's COMPLETED state for corrective Planning work.
+
+    Reopening restores the Initiative to PAUSED rather than ACTIVE. Corrective
+    work must still be established through the normal executable-hierarchy
+    lifecycle boundary before the Initiative can become authoritative work.
+    """
+
+    if initiative is None or not initiative.pk:
+        raise PlanningLifecycleError(
+            "A persisted Initiative is required."
+        )
+
+    with transaction.atomic():
+        locked = (
+            Initiative.objects
+            .select_for_update()
+            .get(pk=initiative.pk)
+        )
+
+        if locked.status != ExecutionStatus.COMPLETED:
+            raise PlanningLifecycleError(
+                "Only a COMPLETED Initiative can be reopened."
+            )
+
+        locked.status = ExecutionStatus.PAUSED
+        locked.completed_at = None
+        locked.save(
+            update_fields=[
+                "status",
+                "completed_at",
+            ]
+        )
 
     return locked
 
