@@ -1,6 +1,6 @@
 # Decision Engine Planning Dictionary Generation
 
-Version: 1.1
+Version: 1.2
 
 ---
 
@@ -220,7 +220,41 @@ An Initiative should answer:
 
 An Initiative should not describe implementation details.
 
-Normally an Initiative contains multiple independently verifiable Phases.
+Normally an Initiative contains multiple independently verifiable Phases once it
+has been decomposed for execution.
+
+A `PLANNED` Initiative may intentionally be skeletal.
+
+A skeletal `PLANNED` Initiative records an accepted future engineering objective
+without requiring fabricated implementation detail. It may contain:
+
+```python
+"phases": [],
+```
+
+This state is appropriate when the durable objective is understood but the
+engineer or worker who will perform the work has not yet completed technical
+decomposition.
+
+Keep these decisions separate:
+
+```text
+objective acceptance
+    → PLANNED Initiative may be skeletal
+
+technical decomposition
+    → define independently verifiable Phases and bounded Steps
+
+execution activation
+    → requires a valid executable Phase and Step hierarchy
+```
+
+Do not invent Phase titles, Step titles, estimates, risks, validation, technical
+design, or repository paths merely to make an accepted future objective appear
+executable.
+
+A skeletal Initiative must remain `PLANNED`. It must not become `ACTIVE` until
+Planning contains a valid executable Phase and Step path.
 
 ## Active Initiative Decision
 
@@ -259,7 +293,11 @@ confirm from that persisted Planning evidence that the target developer does not
 already have a conflicting `ACTIVE` Initiative.
 
 If no Initiative is currently `ACTIVE`, the new Initiative may be proposed as
-`ACTIVE` when that matches the architectural discussion.
+`ACTIVE` only when that matches the architectural discussion and the dictionary
+contains a valid executable Phase and Step hierarchy.
+
+If the objective has been accepted but executable decomposition is not yet
+defined, create it as `PLANNED` with an empty `phases` list instead.
 
 If another Initiative is already `ACTIVE`, do not silently pause it and do not
 emit a conflicting planning dictionary.
@@ -760,26 +798,32 @@ Given an architectural discussion:
 2. Determine whether the Project exists in the Decision Engine.
 3. If it does not exist, define one `add_projects` record.
 4. Identify one durable Initiative outcome.
-5. Inspect the target developer's persisted Planning state through
+5. Decide whether the current architectural discussion defines only the
+   accepted objective or also defines executable technical decomposition.
+6. Inspect the target developer's persisted Planning state through
    `inspect_planning_state`.
-6. Determine the target developer's current ACTIVE Initiative state from that
+7. Determine the target developer's current ACTIVE Initiative state from that
    deterministic evidence.
-8. If the new Initiative should be ACTIVE and another Initiative is already
-   ACTIVE, request the human lifecycle decision before generating the dictionary.
-7. Divide the Initiative into independently verifiable Phases.
-9. Divide each Phase into bounded Steps.
-10. Preserve relevant technical design, dependencies, assumptions, and
-   discussion within each Step document.
-11. Add planned repository files only when the paths are supported by the
+8. If only the future objective is understood, generate the Initiative as
+   `PLANNED` with `"phases": []`; do not fabricate decomposition.
+9. If executable decomposition is understood, divide the Initiative into
+   independently verifiable Phases and each Phase into bounded Steps.
+10. If the new Initiative should be ACTIVE, require a valid executable Phase
+    and Step hierarchy. If another Initiative is already ACTIVE, request the
+    human lifecycle decision before generating the dictionary.
+11. Preserve relevant technical design, dependencies, assumptions, and
+    discussion within each Step document when Steps exist.
+12. Add planned repository files only when the paths are supported by the
     discussion or repository evidence.
-12. Define deterministic validation for every Step.
-13. Assign reasonable estimates, confidence, and risk.
-14. Generate one Python-literal planning dictionary.
-15. Run dry-run validation.
-16. Correct every validation error.
-17. Apply only after successful validation.
-18. Inspect the resulting hierarchy and supporting Step records.
-19. Commit the Initiative source, contract changes, template changes, schema
+13. Define deterministic validation for every Step.
+14. Assign reasonable estimates, confidence, and risk only where executable
+    decomposition exists.
+15. Generate one Python-literal planning dictionary.
+16. Run dry-run validation.
+17. Correct every validation error.
+18. Apply only after successful validation.
+19. Inspect the resulting hierarchy and supporting Step records.
+20. Commit the Initiative source, contract changes, template changes, schema
     changes, updater changes, command changes, and validated reference import.
 
 ---
@@ -916,9 +960,12 @@ The Planning Knowledge Pipeline is complete for one Initiative when:
 * the dictionary starts from the canonical template;
 * only schema-supported fields are present;
 * Project creation is included only when required;
-* every Phase is independently understandable;
-* every Step is bounded;
-* every Step has deterministic validation;
+* a future objective may remain a skeletal `PLANNED` Initiative when executable
+  decomposition is not yet known;
+* an `ACTIVE` Initiative includes a valid executable Phase and Step hierarchy;
+* every Phase that exists is independently understandable;
+* every Step that exists is bounded;
+* every Step that exists has deterministic validation;
 * planned files are included only when supported;
 * actual files are not predicted;
 * relevant discussion and design context are preserved;

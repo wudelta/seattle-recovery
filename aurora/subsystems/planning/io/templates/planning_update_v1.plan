@@ -30,6 +30,10 @@
                 "must produce."
             ),
             "status": "PLANNED",
+
+            # Use [] when this record intentionally captures only an accepted
+            # future objective. A skeletal Initiative must remain PLANNED until
+            # valid executable Phase and Step decomposition has been added.
             "phases": [
                 {
                     "title": "Phase title",
