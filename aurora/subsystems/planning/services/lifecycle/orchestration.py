@@ -7,6 +7,10 @@ from django.db import transaction
 
 from aurora.models import ExecutionStatus, Initiative, Phase, Step
 
+from aurora.subsystems.planning.services.execution_evidence import (
+    finalize_step_repository_baseline,
+    open_step_repository_baseline,
+)
 from aurora.subsystems.planning.services.lifecycle.exceptions import (
     PlanningLifecycleError,
 )
@@ -24,6 +28,37 @@ from aurora.subsystems.planning.services.lifecycle.step import (
 )
 
 
+def _get_outgoing_active_step(user) -> Step | None:
+    """Return the user's currently authoritative ACTIVE Step, if one exists."""
+    active_steps = list(
+        Step.objects
+        .select_for_update()
+        .select_related("phase", "phase__initiative")
+        .filter(
+            status=ExecutionStatus.ACTIVE,
+            phase__status=ExecutionStatus.ACTIVE,
+            phase__assigned_to=user,
+            phase__initiative__status=ExecutionStatus.ACTIVE,
+            phase__initiative__assigned_to=user,
+        )
+        .order_by(
+            "phase__initiative__position",
+            "phase__initiative__pk",
+            "phase__position",
+            "phase__pk",
+            "position",
+            "pk",
+        )
+    )
+
+    if len(active_steps) > 1:
+        raise PlanningLifecycleError(
+            "Multiple lifecycle-authoritative ACTIVE Steps are assigned to this user."
+        )
+
+    return active_steps[0] if active_steps else None
+
+
 def activate_step_hierarchy(
     step: Step,
     user,
@@ -31,11 +66,11 @@ def activate_step_hierarchy(
     """
     Establish one Step as the lifecycle-authoritative resume point.
 
-    The Step's actual ORM ancestry determines the Initiative and Phase.
-    UserPosition is intentionally not consulted.
+    Repository evidence follows executable authority. When authority transfers
+    away from another Step, that Step's current repository segment is finalized.
+    The newly authoritative Step receives a fresh repository baseline.
 
-    Activation changes Planning lifecycle state only. It never starts,
-    stops, or otherwise mutates TimeEntry records.
+    TimeEntry remains independent and is never mutated here.
     """
 
     if step is None or not step.pk:
@@ -72,16 +107,18 @@ def activate_step_hierarchy(
                 "The Step's Phase is not assigned to this user."
             )
 
-        activate_initiative(
-            initiative
-        )
+        outgoing_step = _get_outgoing_active_step(user)
 
-        activate_phase(
-            phase
-        )
+        if outgoing_step is not None and outgoing_step.pk != locked_step.pk:
+            finalize_step_repository_baseline(step=outgoing_step)
 
-        activated_step = activate_step(
-            locked_step
+        activate_initiative(initiative)
+        activate_phase(phase)
+        activated_step = activate_step(locked_step)
+
+        open_step_repository_baseline(
+            step=activated_step,
+            user=user,
         )
 
     return activated_step
@@ -127,9 +164,7 @@ def establish_initiative_work(
                 "The Initiative is not assigned to this user."
             )
 
-        activate_initiative(
-            locked_initiative
-        )
+        activate_initiative(locked_initiative)
 
         active_phases = list(
             Phase.objects

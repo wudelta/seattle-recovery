@@ -12,7 +12,7 @@ from aurora.subsystems.component_registry.services.maintenance import (
 from aurora.subsystems.component_registry.services.reconciler import WorkspaceReconciler
 from aurora.subsystems.planning.services.execution_evidence import (
     PlanningExecutionEvidenceError,
-    record_actual_step_files_from_reconciliation,
+    finalize_step_repository_baseline,
 )
 from aurora.subsystems.planning.services.lifecycle import (
     approve_phase_completion,
@@ -84,10 +84,9 @@ def complete_current_work(
     """
     Capture execution evidence, validate, and complete the executable Step.
 
-    Component Registry reconciliation is read once. Planning records repository
-    impacts from that snapshot before Component Registry synchronization replaces
-    the previous source hashes. Lifecycle advancement occurs only after both
-    execution evidence and registry maintenance succeed.
+    Step actual-file evidence is finalized from the repository baseline opened
+    when the Step acquired executable authority. Component Registry maintenance
+    remains an independent whole-workspace reconciliation operation.
     """
     try:
         step = get_executable_step(user)
@@ -99,10 +98,8 @@ def complete_current_work(
 
     try:
         with transaction.atomic():
-            actual_files = record_actual_step_files_from_reconciliation(
+            actual_files = finalize_step_repository_baseline(
                 step=step,
-                items=reconciliation_items,
-                user=user,
             )
 
             maintenance_report = ComponentRegistryMaintenance().refresh_from_items(

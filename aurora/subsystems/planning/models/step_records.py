@@ -4,6 +4,8 @@ from django.db import models
 from .hierarchy import Step
 
 
+# ======================================================================
+# FILE: aurora/subsystems/planning/models/step_records.py
 # START: STEP_SUPPORTING_MODELS
 # ======================================================================
 class StepDocument(models.Model):
@@ -166,6 +168,35 @@ class StepFile(models.Model):
             f"{self.get_role_display()} / "
             f"{self.file_path}"
         )
+
+
+class StepRepositoryBaseline(models.Model):
+    """The repository state when one Step acquired executable authority."""
+
+    step = models.OneToOneField(
+        Step,
+        on_delete=models.CASCADE,
+        related_name="repository_baseline",
+    )
+
+    snapshot = models.JSONField(
+        default=dict,
+        help_text=(
+            "Repository-relative eligible file paths mapped to deterministic "
+            "SHA-256 hashes at the start of the current execution segment."
+        ),
+    )
+
+    opened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="step_repository_baselines_opened",
+    )
+
+    opened_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Repository baseline / {self.step}"
 # ======================================================================
 # END: STEP_SUPPORTING_MODELS
 # ======================================================================
