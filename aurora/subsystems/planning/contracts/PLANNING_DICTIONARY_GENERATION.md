@@ -1,4 +1,4 @@
-# Decision Engine Planning Dictionary Generation
+# Planning Dictionary Generation
 
 Version: 1.2
 
@@ -7,7 +7,7 @@ Version: 1.2
 # Purpose
 
 This playbook teaches a human engineer or AI worker how to convert an
-architectural discussion into a Decision Engine planning dictionary.
+architectural discussion into a Planning dictionary.
 
 The resulting dictionary must be directly consumable by:
 
@@ -38,8 +38,8 @@ produce:
 
 * one valid planning dictionary.
 
-The planning dictionary becomes the authoritative implementation plan for the
-Decision Engine.
+The planning dictionary becomes the authoritative implementation plan for
+Planning.
 
 ---
 
@@ -144,7 +144,7 @@ shapes. Follow the authority chain defined below.
 
 ---
 
-# Decision Engine Hierarchy
+# Planning Hierarchy
 
 Planning follows one hierarchy.
 
@@ -483,7 +483,7 @@ Looks correct.
 
 # Planned and Actual Files
 
-The Decision Engine records repository file impact through Step files.
+Planning records repository file impact through Step files.
 
 ## Planned Files
 
@@ -586,7 +586,7 @@ Good questions:
 
 Do not ask:
 
-* how the Decision Engine works;
+* how Planning works;
 * how the importer works;
 * what fields the dictionary supports;
 * what shape `planned_files` uses;
@@ -795,7 +795,7 @@ Do not make the human guess which file comes next.
 Given an architectural discussion:
 
 1. Identify the target Project slug.
-2. Determine whether the Project exists in the Decision Engine.
+2. Determine whether the Project exists in Planning.
 3. If it does not exist, define one `add_projects` record.
 4. Identify one durable Initiative outcome.
 5. Decide whether the current architectural discussion defines only the
@@ -946,7 +946,7 @@ The objective is not to minimize questions.
 The objective is to eliminate unnecessary questions.
 
 A successful planning session ends with one validated planning dictionary that
-can create or extend the target Decision Engine Project without manual
+can create or extend the target Project in Planning without manual
 modification.
 
 ---

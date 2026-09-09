@@ -326,6 +326,30 @@ def _apply_update(
 ) -> None:
     initiatives = context["initiatives"]
     phases = context["phases"]
+    requested_active_step: Step | None = None
+
+    def create_step(
+        step_data: dict[str, Any],
+        phase: Phase,
+        position: int,
+    ) -> Step:
+        nonlocal requested_active_step
+
+        step = _create_step(
+            step_data,
+            phase,
+            user,
+            position,
+        )
+
+        if step_data["status"] == "ACTIVE":
+            if requested_active_step is not None:
+                raise PlanningImportError(
+                    "A planning update may request only one ACTIVE Step."
+                )
+            requested_active_step = step
+
+        return step
 
     next_initiative_position = _next_position(
         Initiative.objects.filter(project=project)
@@ -354,10 +378,9 @@ def _apply_update(
             next_step_position = 1
 
             for step_data in phase_data["steps"]:
-                _create_step(
+                create_step(
                     step_data,
                     phase,
-                    user,
                     next_step_position,
                 )
                 next_step_position += 1
@@ -380,10 +403,9 @@ def _apply_update(
             next_step_position = 1
 
             for step_data in phase_data["steps"]:
-                _create_step(
+                create_step(
                     step_data,
                     phase,
-                    user,
                     next_step_position,
                 )
                 next_step_position += 1
@@ -399,13 +421,22 @@ def _apply_update(
         )
 
         for step_data in addition["steps"]:
-            _create_step(
+            create_step(
                 step_data,
                 phase,
-                user,
                 next_step_position,
             )
             next_step_position += 1
+
+    if requested_active_step is not None:
+        from aurora.subsystems.planning.services.lifecycle.orchestration import (
+            activate_step_hierarchy,
+        )
+
+        activate_step_hierarchy(
+            requested_active_step,
+            user,
+        )
 
 
 def _create_initiative(
@@ -418,7 +449,7 @@ def _create_initiative(
         project=project,
         title=data["title"],
         description=data["description"],
-        status=data["status"],
+        status="PLANNED" if data["status"] == "ACTIVE" else data["status"],
         position=position,
         created_by=user,
         assigned_to=user,
@@ -439,7 +470,7 @@ def _create_phase(
         initiative=initiative,
         title=data["title"],
         description=data["description"],
-        status=data["status"],
+        status="PLANNED" if data["status"] == "ACTIVE" else data["status"],
         position=position,
         created_by=user,
         assigned_to=user,
@@ -460,7 +491,7 @@ def _create_step(
         phase=phase,
         title=data["title"],
         description=data["description"],
-        status=data["status"],
+        status="PLANNED" if data["status"] == "ACTIVE" else data["status"],
         position=position,
         estimated_minutes=data["estimated_minutes"],
         estimate_confidence=data["estimate_confidence"],
@@ -489,7 +520,6 @@ def _create_step(
     )
 
     return step
-
 
 def _create_step_document(
     step: Step,

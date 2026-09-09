@@ -73,18 +73,26 @@ def get_current_execution_worker_resource(
 
     Planning owns lifecycle resolution. Consumers receive only serialized
     Initiative, Phase, and Step state and never Planning ORM objects.
+
+    Legitimate Planning review boundaries may have an ACTIVE Initiative with no
+    ACTIVE Phase or Step. Those states are returned as bounded worker data rather
+    than treated as execution-resolution failures.
     """
     if user is None or not getattr(user, "is_authenticated", False):
         raise PlanningWorkerResourceError(
             "An authenticated user is required to read Planning resources."
         )
 
-    has_active_initiative = Initiative.objects.filter(
-        assigned_to=user,
-        status=ExecutionStatus.ACTIVE,
-    ).exists()
+    initiatives = list(
+        Initiative.objects
+        .filter(
+            assigned_to=user,
+            status=ExecutionStatus.ACTIVE,
+        )
+        .order_by("position", "pk")
+    )
 
-    if not has_active_initiative:
+    if not initiatives:
         return {
             "resource": "planning/execution/current",
             "initiative": None,
@@ -92,13 +100,78 @@ def get_current_execution_worker_resource(
             "step": None,
         }
 
+    if len(initiatives) > 1:
+        raise PlanningWorkerResourceError(
+            "Multiple ACTIVE Initiatives are assigned to this user."
+        )
+
+    initiative = initiatives[0]
+
+    active_phases = list(
+        initiative.phases
+        .filter(
+            assigned_to=user,
+            status=ExecutionStatus.ACTIVE,
+        )
+        .order_by("position", "pk")
+    )
+
+    if not active_phases:
+        return {
+            "resource": "planning/execution/current",
+            "initiative": {
+                "id": initiative.pk,
+                "title": initiative.title,
+                "description": initiative.description,
+                "status": initiative.status,
+            },
+            "phase": None,
+            "step": None,
+        }
+
+    if len(active_phases) > 1:
+        raise PlanningWorkerResourceError(
+            "The ACTIVE Initiative has multiple ACTIVE Phases assigned "
+            "to this user."
+        )
+
+    active_phase = active_phases[0]
+
+    active_steps = list(
+        active_phase.steps
+        .filter(status=ExecutionStatus.ACTIVE)
+        .order_by("position", "pk")
+    )
+
+    if not active_steps:
+        return {
+            "resource": "planning/execution/current",
+            "initiative": {
+                "id": initiative.pk,
+                "title": initiative.title,
+                "description": initiative.description,
+                "status": initiative.status,
+            },
+            "phase": {
+                "id": active_phase.pk,
+                "title": active_phase.title,
+                "description": active_phase.description,
+                "status": active_phase.status,
+            },
+            "step": None,
+        }
+
+    if len(active_steps) > 1:
+        raise PlanningWorkerResourceError(
+            "The ACTIVE Phase has multiple ACTIVE Steps."
+        )
+
     try:
         step = get_executable_step(user)
     except PlanningTimeTrackingError as exc:
         raise PlanningWorkerResourceError(str(exc)) from exc
 
     phase = step.phase
-    initiative = phase.initiative
 
     return {
         "resource": "planning/execution/current",

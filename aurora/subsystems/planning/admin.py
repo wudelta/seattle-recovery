@@ -23,7 +23,7 @@ from aurora.subsystems.planning.models import (
 # ======================================================================
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    """Management view for Decision Engine projects."""
+    """Management view for Planning projects."""
 
     list_display = (
         'position',

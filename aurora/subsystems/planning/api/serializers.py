@@ -20,7 +20,7 @@ def serialize_user(user):
 
 
 def serialize_project(project):
-    """Serializes one selectable Decision Engine project."""
+    """Serializes one selectable Planning project."""
     created_by = serialize_user(project.created_by)
     assigned_to = serialize_user(project.assigned_to)
 

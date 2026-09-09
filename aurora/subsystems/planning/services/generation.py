@@ -344,7 +344,7 @@ def _build_generation_task(
     )
 
     return (
-        "Generate one Decision Engine planning dictionary.\n\n"
+        "Generate one Planning dictionary.\n\n"
         f"Target Project slug: {project_slug}\n\n"
         "Engineering intent:\n"
         f"{engineering_intent}\n\n"
