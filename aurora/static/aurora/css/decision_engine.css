@@ -1,0 +1,84 @@
+/* ===================================================================== */
+/* FILE: aurora/static/aurora/css/decision_engine.css                    */
+/* START: DECISION_ENGINE_RAW_INBOX_STYLES                               */
+/* ===================================================================== */
+
+.decision-engine-console {
+    min-height: 0;
+    background: #0b0f12;
+    color: #d7e0e7;
+}
+.decision-engine-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #343a40;
+}
+.decision-engine-kicker,
+.decision-engine-status,
+.decision-engine-meta {
+    color: #8e9aa3;
+    font-size: 0.8rem;
+}
+.decision-engine-title {
+    color: #f1f5f7;
+    font-size: 1.35rem;
+}
+.decision-engine-subtitle {
+    color: #8e9aa3;
+}
+.decision-engine-counts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+.decision-engine-count-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.55rem 0.7rem;
+    background: #11171b;
+    border: 1px solid #293239;
+    font-size: 0.75rem;
+}
+.decision-engine-status {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #252b30;
+}
+.decision-engine-inbox {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.75rem 1rem 1rem;
+}
+.decision-engine-item {
+    margin-bottom: 0.65rem;
+    padding: 0.8rem;
+    background: #101519;
+    border: 1px solid #293239;
+}
+.decision-engine-source,
+.decision-engine-classification {
+    font-family: monospace;
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+.decision-engine-classification {
+    color: #c8a96b;
+}
+.decision-engine-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.decision-engine-meta {
+    margin-top: 0.45rem;
+}
+.decision-engine-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #7d8991;
+}
+
+/* ===================================================================== */
+/* END: DECISION_ENGINE_RAW_INBOX_STYLES                                 */
+/* ===================================================================== */

@@ -293,6 +293,28 @@ authorization, distribution, or reconciliation.
 If the operation remains entirely within one established subsystem's lifecycle
 or authority, stay in that subsystem.
 
+### Read the raw organizational inbox
+
+Use:
+
+```text
+aurora/subsystems/decision_engine/services/inbox.py
+```
+
+For the read-only HTTP adapter, use:
+
+```text
+aurora/subsystems/decision_engine/api/endpoint.py
+```
+
+### Work with Decision Engine UI
+
+Go to:
+
+```text
+aurora/subsystems/decision_engine/contracts/UI_MAP.md
+```
+
 ### Work with executable engineering objectives
 
 Go to:
@@ -353,15 +375,24 @@ Do not infer Decision Engine ownership from UI placement.
 
 ## Current Implementation State
 
-The Decision Engine subsystem authority is established here before its
-organization-wide orchestration implementation is introduced.
+The first implemented Decision Engine surface is the read-only raw
+organizational inbox:
 
-Do not invent models, services, APIs, UI behavior, candidate schemas,
-approved-change persistence, distribution machinery, or reconciliation
-mechanisms merely because this contract defines their responsibility.
+```text
+aurora/subsystems/decision_engine/services/inbox.py
+aurora/subsystems/decision_engine/api/endpoint.py
+aurora/subsystems/decision_engine/contracts/UI_MAP.md
+```
 
-Follow future Planning Steps and Hansel breadcrumbs as those implementation
-authorities become established.
+It aggregates source-owned readers while preserving raw Delta Note and
+Engineering Finding identity and provenance.
+
+No Decision Engine model, candidate persistence, AI grouping, reconciliation,
+approval workflow, assignment machinery, Planning ingestion, or execution
+authorization is established by this inbox.
+
+Do not invent those later responsibilities before their owning Planning work
+becomes authoritative.
 
 ---
 

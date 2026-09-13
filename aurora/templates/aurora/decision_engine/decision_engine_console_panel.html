@@ -1,0 +1,40 @@
+<!-- ====================================================================== -->
+<!-- FILE: aurora/templates/aurora/decision_engine/decision_engine_console_panel.html -->
+<!-- START: DECISION_ENGINE_RAW_INBOX_PANEL -->
+<!-- ====================================================================== -->
+
+<div id="decision-engine-console" class="decision-engine-console h-100 d-flex flex-column">
+    <div class="decision-engine-header flex-shrink-0">
+        <div>
+            <div class="decision-engine-kicker">ORGANIZATIONAL INBOX</div>
+            <h2 class="decision-engine-title mb-1">Decision Engine</h2>
+            <div class="decision-engine-subtitle">
+                Raw unprocessed Delta Notes and unresolved Engineering Findings.
+            </div>
+        </div>
+        <button id="decision-engine-refresh" type="button" class="btn btn-sm btn-outline-info">
+            Refresh
+        </button>
+    </div>
+
+    <div class="decision-engine-counts flex-shrink-0">
+        <div class="decision-engine-count-card">
+            <span>TOTAL</span><strong id="decision-engine-total-count">0</strong>
+        </div>
+        <div class="decision-engine-count-card">
+            <span>DELTA NOTES</span><strong id="decision-engine-delta-count">0</strong>
+        </div>
+        <div class="decision-engine-count-card">
+            <span>FINDINGS</span><strong id="decision-engine-finding-count">0</strong>
+        </div>
+    </div>
+
+    <div id="decision-engine-status" class="decision-engine-status flex-shrink-0" role="status">
+        Raw inbox not loaded.
+    </div>
+    <div id="decision-engine-inbox" class="decision-engine-inbox flex-grow-1" aria-live="polite"></div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- END: DECISION_ENGINE_RAW_INBOX_PANEL -->
+<!-- ====================================================================== -->

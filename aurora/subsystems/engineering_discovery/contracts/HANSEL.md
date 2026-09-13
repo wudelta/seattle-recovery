@@ -402,6 +402,20 @@ Historical findings encountered before this submission surface existed must not
 be misattributed to the current Step merely to move them out of a temporary
 ledger.
 
+### Read unresolved Engineering Findings organization-wide
+
+Use:
+
+```text
+aurora/subsystems/engineering_discovery/services/organizational.py
+```
+
+Use this read-only boundary when an organization-wide Aurora workflow needs all
+unresolved Engineering Findings. Preserve truthful Planning provenance when an
+originating Step exists and preserve null provenance when no Step existed.
+
+This reader does not reconcile, route, resolve, or mutate findings.
+
 ### Read unresolved Engineering Findings for Initiative closeout
 
 Use:

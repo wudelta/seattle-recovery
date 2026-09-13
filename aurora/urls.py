@@ -78,6 +78,11 @@ urlpatterns = [
         name="delta_notes_endpoint",
     ),
     path(
+        "api/decision_engine/inbox/",
+        api_endpoints.decision_engine_inbox_endpoint,
+        name="decision_engine_inbox_endpoint",
+    ),
+    path(
         "api/content/",
         api_endpoints.content_endpoint,
         name="content_endpoint",

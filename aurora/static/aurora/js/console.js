@@ -52,6 +52,15 @@ $(document).ready(function() {
                 'aurora:view_changed',
                 ['delta_notes']
             );
+        } else if (viewMode === 'decision_engine') {
+            $('#decision-engine-workspace-container')
+                .removeClass('d-none')
+                .addClass('active-pane');
+
+            $(document).trigger(
+                'aurora:view_changed',
+                ['decision_engine']
+            );
         } else if (viewMode === 'wu_chat') {
             $('#wu_chat-workspace-container')
                 .removeClass('d-none')

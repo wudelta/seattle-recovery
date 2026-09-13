@@ -14,6 +14,7 @@
 
 <link rel="stylesheet" href="{% static 'aurora/css/console.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/delta_notes.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/decision_engine.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/planning.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
@@ -93,6 +94,11 @@
                 </label>
 
                 <label class="matrix-pill-label">
+                    <input type="radio" name="console_pane_target" value="decision_engine" class="matrix-radio-pill">
+                    <div class="matrix-btn-box">Decision Engine</div>
+                </label>
+
+                <label class="matrix-pill-label">
                     <input type="radio" name="console_pane_target" value="planning" class="matrix-radio-pill">
                     <div class="matrix-btn-box">Planning</div>
                 </label>
@@ -122,6 +128,7 @@
             <!-- Hidden selector mock state to remain backwards-compatible with legacy console.js listener attachment routines -->
             <select id="console-view-selector" class="d-none">
                 <option value="delta_notes" selected>delta_notes</option>
+                <option value="decision_engine">decision_engine</option>
                 <option value="planning">planning</option>
                 <option value="wu_chat">wu_chat</option>
                 <option value="anamod">anamod</option>
@@ -153,6 +160,10 @@
     <!-- Standardized View Panes -->
     <div class="workspace-section active-pane h-100 w-100" id="delta-notes-workspace-container" style="min-height: 0; overflow: hidden;">
         {% include "aurora/delta_notes/delta_notes_console_panel.html" %}
+    </div>
+
+    <div class="workspace-section d-none h-100 w-100" id="decision-engine-workspace-container" style="min-height: 0; overflow: hidden;">
+        {% include "aurora/decision_engine/decision_engine_console_panel.html" %}
     </div>
 
     <div class="workspace-section d-none h-100 w-100" id="wu_chat-workspace-container" style="min-height: 0; overflow: hidden;">
@@ -198,6 +209,7 @@
 <script src="{% static 'aurora/js/console.js' %}"></script>
 
 <script src="{% static 'aurora/js/delta_notes/delta_notes.js' %}"></script>
+<script src="{% static 'aurora/js/decision_engine/decision_engine.js' %}"></script>
 
 <script src="{% static 'aurora/js/wu_chat/delta_notes_session.js' %}"></script>
 <script src="{% static 'aurora/js/wu_chat/engineering_session.js' %}"></script>
@@ -295,6 +307,7 @@ require.config({
 $(document).ready(function() {
     const systemEndpoints = {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
+        decision_engine_endpoint: "{% url 'aurora:decision_engine_inbox_endpoint' %}",
         content_endpoint: "{% url 'aurora:content_endpoint' %}",
         directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
         planning_endpoint: "{% url 'aurora:planning_endpoint' %}",
@@ -303,6 +316,7 @@ $(document).ready(function() {
         wu_chat_reject_endpoint: "{% url 'aurora:reject_pending_code_change' %}"
     };
 
+    let decisionEngineInitialized = false;
     let planningInitialized = false;
     let anamodInitialized = false;
     let contentPanelInitialized = false;
@@ -339,11 +353,20 @@ $(document).ready(function() {
         $('#console-view-selector-group').removeClass('matrix-selector-disabled');
 
         const currentView = $('#console-view-selector').val();
+        if (currentView === 'decision_engine') { triggerDecisionEngineLoad(); }
         if (currentView === 'planning') { triggerPlanningLoad(); }
         if (currentView === 'anamod') { triggerAnamodLoad(); }
         if (currentView === 'content_panel') { triggerContentPanelLoad(); }
         if (currentView === 'directives_panel') { triggerDirectivesPanelLoad(); }
     });
+
+    function triggerDecisionEngineLoad() {
+        if (!decisionEngineInitialized && window.initDecisionEngineConsole) {
+            console.log("[Decision Engine] Panel active. Loading raw organizational inbox...");
+            window.initDecisionEngineConsole(systemEndpoints);
+            decisionEngineInitialized = true;
+        }
+    }
 
     function triggerPlanningLoad() {
         if (!planningInitialized && window.initPlanningConsole) {
@@ -383,6 +406,7 @@ $(document).ready(function() {
     }
 
     $(document).on('aurora:view_changed', function(e, viewMode) {
+        if (viewMode === 'decision_engine') { setTimeout(triggerDecisionEngineLoad, 80); }
         if (viewMode === 'planning') { setTimeout(triggerPlanningLoad, 80); }
         if (viewMode === 'anamod') { setTimeout(triggerAnamodLoad, 80); }
         if (viewMode === 'content_panel') { setTimeout(triggerContentPanelLoad, 80); }
