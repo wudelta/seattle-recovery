@@ -5,6 +5,10 @@
 
 AURORA_DEVELOPER_GROUP = "developers"
 
+AURORA_INITIATIVE_OWNER_GROUP = "initiative_owner"
+AURORA_PHASE_OWNER_GROUP = "phase_owner"
+AURORA_STEP_OWNER_GROUP = "step_owner"
+
 
 def can_access_aurora(user) -> bool:
     """Return whether an authenticated user may access Aurora."""
@@ -18,6 +22,7 @@ def can_access_aurora(user) -> bool:
     return user.groups.filter(
         name=AURORA_DEVELOPER_GROUP,
     ).exists()
+
 
 # ======================================================================
 # END: AURORA_APPLICATION_ACCESS_POLICY
