@@ -249,73 +249,34 @@ The temporary planning dictionary is transport, not durable Planning authority.
 
 ---
 
-## Git Boundary
+## Initiative Switching Route
 
-Planning Initiative state and Git branch state should remain aligned.
+This contract owns the human decision boundary that determines **which**
+engineering objective happens next.
 
-### Leaving an Initiative
-
-Before deliberately switching Initiatives:
-
-1. reach a logical validated stopping point;
-2. inspect repository state;
-3. commit deliberate repository changes;
-4. push the Initiative branch.
-
-For a PAUSED Initiative:
+When the human has selected an existing or newly established Initiative and
+moving to it requires coordinated Planning lifecycle and Git branch changes,
+continue with:
 
 ```text
-Planning Initiative PAUSED
-    ↕
-feature/<initiative_slug> preserved
+aurora/subsystems/planning/contracts/INITIATIVE_SWITCHING.md
 ```
 
-Do not merge a paused Initiative merely because work has stopped temporarily.
+That contract owns the deterministic mechanics for:
 
-### Completing an Initiative
+- checkpointing the Initiative being left;
+- preserving paused resume state;
+- closing and reopening Step repository-evidence segments;
+- resolving and preparing the selected Initiative branch;
+- sequencing Git preparation before Planning activation;
+- preserving recoverable failure states;
+- and proving final Planning/Git alignment.
 
-A completed Initiative creates an integration boundary:
+Do not load `INITIATIVE_SWITCHING.md` merely to present candidates or obtain the
+human objective decision.
 
-```text
-validate Initiative branch
-    ↓
-merge current main into Initiative branch when needed
-    ↓
-resolve conflicts on Initiative branch
-    ↓
-validate again
-    ↓
-merge Initiative branch into main
-    ↓
-validate main
-    ↓
-push main
-```
-
-Use merge rather than rebase unless an observed engineering need justifies a
-different strategy.
-
-### Entering an Initiative
-
-For a new Initiative:
-
-```text
-current main
-    ↓
-create feature/<initiative_slug>
-```
-
-For a resumed Initiative:
-
-```text
-existing Initiative branch
-    ↓
-merge current main when main has advanced
-    ↓
-resolve and validate
-```
-
-Do not use automatic stashing as part of the normal transition workflow.
+The worker reaches that contract only after the target engineering objective is
+known and a repository/Planning transition is actually required.
 
 ---
 
