@@ -36,7 +36,6 @@ EXCLUDED_DIRECTORY_NAMES = frozenset(
         "htmlcov",
         "logs",
         "media",
-        "migrations",
         "monaco",
         "node_modules",
         "secrets",
