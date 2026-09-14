@@ -320,6 +320,23 @@ record created after explicit reviewer commit, the transient-selection boundary,
 intake-to-work cardinality, source-lifetime independence, or intentionally
 deferred persistence behavior.
 
+### Understand intake disposition and processed semantics
+
+Go to:
+
+```text
+aurora/subsystems/decision_engine/contracts/INTAKE_DISPOSITION.md
+```
+
+Use this authority when work concerns:
+
+- terminal and non-terminal Decision Engine intake outcomes;
+- when `processed` is semantically true;
+- resolving `DecisionEngineWork` requirements;
+- duplicate or mixed-scope intake;
+- source-lifecycle separation;
+- or the boundary between intake disposition and Planning execution.
+
 ### Work with Decision Engine UI
 
 Go to:
@@ -388,24 +405,23 @@ Do not infer Decision Engine ownership from UI placement.
 
 ## Current Implementation State
 
-The first implemented Decision Engine surface is the read-only raw
-organizational inbox:
+Implemented Decision Engine authorities:
 
-```text
-aurora/subsystems/decision_engine/services/inbox.py
-aurora/subsystems/decision_engine/api/endpoint.py
-aurora/subsystems/decision_engine/contracts/UI_MAP.md
-```
+Raw organizational inbox:
+- `services/inbox.py`
+- `api/endpoint.py`
+- `contracts/UI_MAP.md`
 
-It aggregates source-owned readers while preserving raw Delta Note and
-Engineering Finding identity and provenance.
+Durable `DecisionEngineWork`:
+- `models.py`
+- `services/work.py`
+- `contracts/DECISION_ENGINE_WORK.md`
 
-No Decision Engine model, candidate persistence, AI grouping, reconciliation,
-approval workflow, assignment machinery, Planning ingestion, or execution
-authorization is established by this inbox.
+The inbox preserves source identity and provenance.
 
-Do not invent those later responsibilities before their owning Planning work
-becomes authoritative.
+`DecisionEngineWork` begins at the explicit durable-work commit boundary.
+
+Later workflow remains deferred to its authoritative Planning Steps.
 
 ---
 
