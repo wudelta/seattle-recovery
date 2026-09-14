@@ -21,6 +21,15 @@ aurora/templates/aurora/aurora_console.html
 aurora/templates/aurora/decision_engine/decision_engine_console_panel.html
 ```
 
+## Guided Subconsole Interaction
+
+For workflow progression, reversible pre-commit navigation, state preservation,
+and consequential-boundary rules, use:
+
+```text
+aurora/subsystems/decision_engine/contracts/SUBCONSOLE_WORKFLOW.md
+```
+
 ## Browser Behavior
 
 ```text
