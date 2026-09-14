@@ -3,9 +3,15 @@
 # START: AURORA_ACCESS_PACKAGE
 # ======================================================================
 
-from aurora.access.policy import can_access_aurora
+from aurora.access.policy import (
+    can_access_aurora,
+    can_reconcile_decision_engine,
+)
 
-__all__ = ["can_access_aurora"]
+__all__ = [
+    "can_access_aurora",
+    "can_reconcile_decision_engine",
+]
 
 # ======================================================================
 # END: AURORA_ACCESS_PACKAGE

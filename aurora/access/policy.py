@@ -24,6 +24,15 @@ def can_access_aurora(user) -> bool:
     ).exists()
 
 
+def can_reconcile_decision_engine(user) -> bool:
+    """Return whether a user has Decision Engine reconciliation capability."""
+
+    if not can_access_aurora(user):
+        return False
+
+    return user.has_perm("aurora.change_initiative")
+
+
 # ======================================================================
 # END: AURORA_APPLICATION_ACCESS_POLICY
 # ======================================================================

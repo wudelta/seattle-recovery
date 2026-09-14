@@ -293,6 +293,12 @@ authorization, distribution, or reconciliation.
 If the operation remains entirely within one established subsystem's lifecycle
 or authority, stay in that subsystem.
 
+### Determine Decision Engine reconciliation authority
+
+Use `aurora/access/policy.py` → `can_reconcile_decision_engine()`.
+
+This capability does not grant foreign Delta Note access or Planning lifecycle authority.
+
 ### Read the raw organizational inbox
 
 Use:
