@@ -307,6 +307,19 @@ For the read-only HTTP adapter, use:
 aurora/subsystems/decision_engine/api/endpoint.py
 ```
 
+### Understand DecisionEngineWork persistence
+
+Go to:
+
+```text
+aurora/subsystems/decision_engine/contracts/DECISION_ENGINE_WORK.md
+```
+
+Use this authority when work concerns the durable organization-level work
+record created after explicit reviewer commit, the transient-selection boundary,
+intake-to-work cardinality, source-lifetime independence, or intentionally
+deferred persistence behavior.
+
 ### Work with Decision Engine UI
 
 Go to:
