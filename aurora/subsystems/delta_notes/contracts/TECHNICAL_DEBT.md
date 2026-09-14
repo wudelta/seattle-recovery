@@ -14,8 +14,11 @@ Its current responsibility is limited to:
 * capture an idea;
 * display captured ideas;
 * edit an idea;
-* delete an idea;
-* mark an idea processed.
+* delete an idea.
+
+Directly marking an idea processed is not an actor-local Delta Notes
+responsibility. Processed semantics are governed by the Decision Engine's
+repository-owned intake-disposition authority.
 
 Planning ingestion is outside the current Delta Notes responsibility.
 
@@ -33,7 +36,6 @@ Validated behavior includes:
 initial note loading
 note creation
 unprocessed-note display
-marking a note processed
 processed-note display
 user-scoped persistence
 ```

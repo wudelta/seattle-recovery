@@ -12,7 +12,7 @@ class DeltaNotesOrganizationReadError(ValueError):
 
 
 def get_unprocessed_notes_for_organization(user) -> list[dict[str, object]]:
-    """Return all current unprocessed Delta Notes across Aurora."""
+    """Return the requesting author's unprocessed notes for organizational use."""
 
     if not can_access_aurora(user):
         raise DeltaNotesOrganizationReadError(
@@ -21,7 +21,10 @@ def get_unprocessed_notes_for_organization(user) -> list[dict[str, object]]:
 
     notes = (
         DeltaNotesEntry.objects
-        .filter(processed=False)
+        .filter(
+            user=user,
+            processed=False,
+        )
         .select_related("user")
         .order_by("-created_at", "pk")
     )

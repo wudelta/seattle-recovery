@@ -40,7 +40,7 @@ Go to:
 aurora/subsystems/delta_notes/api/endpoint.py
 ```
 
-### Read unprocessed Delta Notes organization-wide
+### Read Delta Notes for an organizational workflow
 
 Go to:
 
@@ -48,8 +48,12 @@ Go to:
 aurora/subsystems/delta_notes/services/organizational.py
 ```
 
-Use this read-only boundary when an Aurora organizational workflow needs all
-current unprocessed Delta Notes while preserving each note's human author.
+Use this read-only boundary when an Aurora organizational workflow needs the
+requesting actor's current unprocessed Delta Notes while preserving author
+privacy and provenance.
+
+Organizational reconciliation authority does not grant access to another
+author's private Delta Notes.
 
 Do not broaden the actor-local Delta Notes CRUD endpoint for this purpose.
 

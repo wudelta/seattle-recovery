@@ -12,7 +12,7 @@ from aurora.subsystems.engineering_discovery.services import (
 
 
 def get_raw_decision_engine_inbox(user) -> dict[str, object]:
-    """Aggregate raw organizational evidence without mutating source records."""
+    """Aggregate authorized raw organizational evidence without source mutation."""
 
     notes = get_unprocessed_notes_for_organization(user)
     findings = get_unresolved_findings_for_organization(user)

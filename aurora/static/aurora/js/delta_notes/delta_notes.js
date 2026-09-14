@@ -35,7 +35,6 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
                         <div class="text-wrap small note-display-text" id="note-text-display-${note.id}">${note.text}</div>
                     </div>
                     <div class="btn-group shadow-sm flex-shrink-0">
-                        <button class="btn btn-outline-success btn-xs px-1 py-0 complete-note-btn" data-id="${note.id}" title="Mark Processed" style="font-size: 0.7rem;">✓</button>
                         <button class="btn btn-outline-warning btn-xs px-1 py-0 edit-note-btn" data-id="${note.id}" style="font-size: 0.7rem;">Edit</button>
                         <button class="btn btn-outline-danger btn-xs px-1 py-0 delete-note-btn" data-id="${note.id}" style="font-size: 0.7rem;">Del</button>
                     </div>
@@ -79,21 +78,6 @@ function initDeltaNotesConsole(endpoints, csrfToken) {
         }, function(data) {
             if (data.status === "success") {
                 textInput.val('');
-                loadActiveQueue();
-            }
-        });
-    });
-
-    // Dynamic Row Action: Inline Mark Processed Handler
-    $('#notes-container').off('click', '.complete-note-btn').on('click', '.complete-note-btn', function(e) {
-        e.preventDefault();
-        const noteId = $(this).attr('data-id') || $(this).data('id');
-        $.post(endpoints.endpoint_url, { 
-            action: 'process_note', 
-            note_id: noteId, 
-            csrfmiddlewaretoken: csrfToken 
-        }, function(data) {
-            if (data.status === "success") {
                 loadActiveQueue();
             }
         });

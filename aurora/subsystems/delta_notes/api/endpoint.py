@@ -17,8 +17,7 @@ def delta_notes_endpoint(request):
     - capture;
     - display;
     - edit;
-    - delete;
-    - mark processed.
+    - delete.
     """
     if request.method == "GET":
         unprocessed_notes = (
@@ -143,38 +142,6 @@ def delta_notes_endpoint(request):
         ).delete()
 
         if not deleted:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Note not found.",
-                },
-                status=404,
-            )
-
-        return JsonResponse({
-            "status": "success",
-        })
-
-    if action == "process_note":
-        note_id = request.POST.get("note_id")
-
-        if not note_id:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Missing note id.",
-                },
-                status=400,
-            )
-
-        updated = DeltaNotesEntry.objects.filter(
-            user=request.user,
-            id=note_id,
-        ).update(
-            processed=True,
-        )
-
-        if not updated:
             return JsonResponse(
                 {
                     "status": "error",

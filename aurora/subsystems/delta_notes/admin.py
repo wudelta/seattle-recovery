@@ -34,6 +34,7 @@ class DeltaNotesEntryAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         "display_user_uuid",
+        "processed",
         "created_at",
         "updated_at",
     )
