@@ -145,6 +145,31 @@
         );
     }
 
+    function sourceKey(item) {
+        return `${item.source_type}:${item.source_id}`;
+    }
+
+    function renderClassificationItem(item, actionLabel, onAction) {
+        const card = renderItem(item);
+        const actions = el(
+            "div",
+            "decision-engine-classification-actions"
+        );
+        const button = el(
+            "button",
+            "btn btn-sm btn-outline-info",
+            actionLabel
+        );
+
+        button.type = "button";
+        button.addEventListener("click", onAction);
+
+        actions.appendChild(button);
+        card.appendChild(actions);
+
+        return card;
+    }
+
     window.initDecisionEngineConsole = function(systemEndpoints) {
         const root = document.getElementById("decision-engine-console");
 
@@ -164,6 +189,98 @@
         );
 
         let currentView = DEFAULT_VIEW;
+        let latestItems = [];
+        const selectedKeys = new Set();
+
+        function renderClassification() {
+            const available = document.getElementById(
+                "decision-engine-available-items"
+            );
+            const selected = document.getElementById(
+                "decision-engine-selected-items"
+            );
+
+            if (!available || !selected) return;
+
+            available.replaceChildren();
+            selected.replaceChildren();
+
+            const currentKeys = new Set(
+                latestItems.map(item => sourceKey(item))
+            );
+
+            Array.from(selectedKeys).forEach(key => {
+                if (!currentKeys.has(key)) {
+                    selectedKeys.delete(key);
+                }
+            });
+
+            const availableItems = [];
+            const selectedItems = [];
+
+            latestItems.forEach(item => {
+                if (selectedKeys.has(sourceKey(item))) {
+                    selectedItems.push(item);
+                } else {
+                    availableItems.push(item);
+                }
+            });
+
+            text(
+                "decision-engine-available-count",
+                availableItems.length
+            );
+            text(
+                "decision-engine-selected-count",
+                selectedItems.length
+            );
+
+            if (!availableItems.length) {
+                available.appendChild(
+                    el(
+                        "div",
+                        "decision-engine-empty",
+                        "No authorized intake available."
+                    )
+                );
+            } else {
+                availableItems.forEach(item => {
+                    available.appendChild(
+                        renderClassificationItem(
+                            item,
+                            "Select",
+                            function() {
+                                selectedKeys.add(sourceKey(item));
+                                renderClassification();
+                            }
+                        )
+                    );
+                });
+            }
+
+            if (!selectedItems.length) {
+                selected.appendChild(
+                    el(
+                        "div",
+                        "decision-engine-empty",
+                        "No intake selected for action."
+                    )
+                );
+            } else {
+                selectedItems.forEach(item => {
+                    selected.appendChild(
+                        renderClassificationItem(
+                            item,
+                            "Return",
+                            function() {
+                                selectedKeys.delete(sourceKey(item));
+                                renderClassification();
+                            }
+                        )
+                    );
+                });
+            }
+        }
 
         function showView(viewName) {
             const target = workspaces.find(
@@ -229,7 +346,13 @@
                     );
                 }
 
+                latestItems = Array.isArray(payload.items)
+                    ? payload.items
+                    : [];
+
                 render(payload);
+                renderClassification();
+
                 text(
                     "decision-engine-status",
                     "Read-only organizational evidence."

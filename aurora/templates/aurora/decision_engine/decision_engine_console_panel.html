@@ -119,13 +119,45 @@
             data-decision-engine-workspace="classification"
             aria-hidden="true"
         >
-            <div class="decision-engine-placeholder">
-                <div class="decision-engine-placeholder-title">
-                    Classification
+            <div class="decision-engine-classification-workspace h-100">
+                <div class="decision-engine-classification-column">
+                    <div class="decision-engine-classification-header">
+                        <div>
+                            <div class="decision-engine-placeholder-title">
+                                Available Intake
+                            </div>
+                            <div class="decision-engine-classification-help">
+                                Authorized unresolved intake not currently selected
+                                for organizational action.
+                            </div>
+                        </div>
+                        <strong id="decision-engine-available-count">0</strong>
+                    </div>
+
+                    <div
+                        id="decision-engine-available-items"
+                        class="decision-engine-classification-list"
+                    ></div>
                 </div>
-                <div>
-                    Classification workspace behavior is introduced in the next
-                    Planning Step.
+
+                <div class="decision-engine-classification-column">
+                    <div class="decision-engine-classification-header">
+                        <div>
+                            <div class="decision-engine-placeholder-title">
+                                Selected for Action
+                            </div>
+                            <div class="decision-engine-classification-help">
+                                Transient reviewer selection only. No durable
+                                disposition or DecisionEngineWork exists yet.
+                            </div>
+                        </div>
+                        <strong id="decision-engine-selected-count">0</strong>
+                    </div>
+
+                    <div
+                        id="decision-engine-selected-items"
+                        class="decision-engine-classification-list"
+                    ></div>
                 </div>
             </div>
         </section>
