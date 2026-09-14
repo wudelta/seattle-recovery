@@ -1,40 +1,184 @@
 <!-- ====================================================================== -->
 <!-- FILE: aurora/templates/aurora/decision_engine/decision_engine_console_panel.html -->
-<!-- START: DECISION_ENGINE_RAW_INBOX_PANEL -->
+<!-- START: DECISION_ENGINE_SUBCONSOLE_SHELL -->
 <!-- ====================================================================== -->
 
 <div id="decision-engine-console" class="decision-engine-console h-100 d-flex flex-column">
     <div class="decision-engine-header flex-shrink-0">
         <div>
-            <div class="decision-engine-kicker">ORGANIZATIONAL INBOX</div>
+            <div class="decision-engine-kicker">ORGANIZATIONAL WORKFLOW</div>
             <h2 class="decision-engine-title mb-1">Decision Engine</h2>
             <div class="decision-engine-subtitle">
-                Raw unprocessed Delta Notes and unresolved Engineering Findings.
+                Guided review from intake evidence through downstream handoff.
             </div>
         </div>
-        <button id="decision-engine-refresh" type="button" class="btn btn-sm btn-outline-info">
-            Refresh
+
+        <button
+            id="decision-engine-refresh"
+            type="button"
+            class="btn btn-sm btn-outline-info"
+        >
+            Refresh Inbox
         </button>
     </div>
 
-    <div class="decision-engine-counts flex-shrink-0">
-        <div class="decision-engine-count-card">
-            <span>TOTAL</span><strong id="decision-engine-total-count">0</strong>
-        </div>
-        <div class="decision-engine-count-card">
-            <span>DELTA NOTES</span><strong id="decision-engine-delta-count">0</strong>
-        </div>
-        <div class="decision-engine-count-card">
-            <span>FINDINGS</span><strong id="decision-engine-finding-count">0</strong>
-        </div>
-    </div>
+    <nav
+        id="decision-engine-subconsole-nav"
+        class="decision-engine-subconsole-nav flex-shrink-0"
+        aria-label="Decision Engine workflow"
+    >
+        <button
+            type="button"
+            class="decision-engine-nav-btn active"
+            data-decision-engine-view="inbox"
+            aria-selected="true"
+        >
+            Inbox
+        </button>
 
-    <div id="decision-engine-status" class="decision-engine-status flex-shrink-0" role="status">
-        Raw inbox not loaded.
+        <button
+            type="button"
+            class="decision-engine-nav-btn"
+            data-decision-engine-view="classification"
+            aria-selected="false"
+        >
+            Classification
+        </button>
+
+        <button
+            type="button"
+            class="decision-engine-nav-btn"
+            data-decision-engine-view="aggregation"
+            aria-selected="false"
+        >
+            Aggregation
+        </button>
+
+        <button
+            type="button"
+            class="decision-engine-nav-btn"
+            data-decision-engine-view="planning_proposal"
+            aria-selected="false"
+        >
+            Planning Proposal
+        </button>
+
+        <button
+            type="button"
+            class="decision-engine-nav-btn"
+            data-decision-engine-view="result"
+            aria-selected="false"
+        >
+            Result
+        </button>
+    </nav>
+
+    <div
+        id="decision-engine-subconsole-workspace"
+        class="decision-engine-subconsole-workspace flex-grow-1"
+    >
+        <section
+            class="decision-engine-view h-100 d-flex flex-column"
+            data-decision-engine-workspace="inbox"
+            aria-hidden="false"
+        >
+            <div class="decision-engine-counts flex-shrink-0">
+                <div class="decision-engine-count-card">
+                    <span>TOTAL</span>
+                    <strong id="decision-engine-total-count">0</strong>
+                </div>
+
+                <div class="decision-engine-count-card">
+                    <span>DELTA NOTES</span>
+                    <strong id="decision-engine-delta-count">0</strong>
+                </div>
+
+                <div class="decision-engine-count-card">
+                    <span>FINDINGS</span>
+                    <strong id="decision-engine-finding-count">0</strong>
+                </div>
+            </div>
+
+            <div
+                id="decision-engine-status"
+                class="decision-engine-status flex-shrink-0"
+                role="status"
+            >
+                Raw inbox not loaded.
+            </div>
+
+            <div
+                id="decision-engine-inbox"
+                class="decision-engine-inbox flex-grow-1"
+                aria-live="polite"
+            ></div>
+        </section>
+
+        <section
+            class="decision-engine-view d-none h-100"
+            data-decision-engine-workspace="classification"
+            aria-hidden="true"
+        >
+            <div class="decision-engine-placeholder">
+                <div class="decision-engine-placeholder-title">
+                    Classification
+                </div>
+                <div>
+                    Classification workspace behavior is introduced in the next
+                    Planning Step.
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="decision-engine-view d-none h-100"
+            data-decision-engine-workspace="aggregation"
+            aria-hidden="true"
+        >
+            <div class="decision-engine-placeholder">
+                <div class="decision-engine-placeholder-title">
+                    Aggregation
+                </div>
+                <div>
+                    Aggregation behavior is not implemented by this shell Step.
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="decision-engine-view d-none h-100"
+            data-decision-engine-workspace="planning_proposal"
+            aria-hidden="true"
+        >
+            <div class="decision-engine-placeholder">
+                <div class="decision-engine-placeholder-title">
+                    Planning Proposal
+                </div>
+                <div>
+                    Planning proposal behavior is not implemented by this shell
+                    Step.
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="decision-engine-view d-none h-100"
+            data-decision-engine-workspace="result"
+            aria-hidden="true"
+        >
+            <div class="decision-engine-placeholder">
+                <div class="decision-engine-placeholder-title">
+                    Result
+                </div>
+                <div>
+                    Downstream import and result behavior is not implemented by
+                    this shell Step.
+                </div>
+            </div>
+        </section>
     </div>
-    <div id="decision-engine-inbox" class="decision-engine-inbox flex-grow-1" aria-live="polite"></div>
 </div>
 
 <!-- ====================================================================== -->
-<!-- END: DECISION_ENGINE_RAW_INBOX_PANEL -->
+<!-- END: DECISION_ENGINE_SUBCONSOLE_SHELL -->
 <!-- ====================================================================== -->

@@ -1,6 +1,6 @@
 /* ===================================================================== */
 /* FILE: aurora/static/aurora/css/decision_engine.css                    */
-/* START: DECISION_ENGINE_RAW_INBOX_STYLES                               */
+/* START: DECISION_ENGINE_SUBCONSOLE_STYLES                              */
 /* ===================================================================== */
 
 .decision-engine-console {
@@ -8,6 +8,7 @@
     background: #0b0f12;
     color: #d7e0e7;
 }
+
 .decision-engine-header {
     display: flex;
     justify-content: space-between;
@@ -15,25 +16,70 @@
     padding: 1rem;
     border-bottom: 1px solid #343a40;
 }
+
 .decision-engine-kicker,
 .decision-engine-status,
 .decision-engine-meta {
     color: #8e9aa3;
     font-size: 0.8rem;
 }
+
 .decision-engine-title {
     color: #f1f5f7;
     font-size: 1.35rem;
 }
+
 .decision-engine-subtitle {
     color: #8e9aa3;
 }
+
+.decision-engine-subconsole-nav {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    overflow-x: auto;
+    border-bottom: 1px solid #343a40;
+    background: #0d1216;
+}
+
+.decision-engine-nav-btn {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid #293239;
+    background: #101519;
+    color: #8e9aa3;
+    font-size: 0.78rem;
+}
+
+.decision-engine-nav-btn:hover,
+.decision-engine-nav-btn:focus {
+    color: #d7e0e7;
+    border-color: #56636c;
+}
+
+.decision-engine-nav-btn.active {
+    color: #f1f5f7;
+    border-color: #6c8797;
+    background: #182127;
+}
+
+.decision-engine-subconsole-workspace {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.decision-engine-view {
+    min-height: 0;
+    overflow: hidden;
+}
+
 .decision-engine-counts {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem;
     padding: 0.75rem 1rem;
 }
+
 .decision-engine-count-card {
     display: flex;
     justify-content: space-between;
@@ -42,43 +88,67 @@
     border: 1px solid #293239;
     font-size: 0.75rem;
 }
+
 .decision-engine-status {
     padding: 0.5rem 1rem;
     border-bottom: 1px solid #252b30;
 }
+
 .decision-engine-inbox {
     min-height: 0;
     overflow-y: auto;
     padding: 0.75rem 1rem 1rem;
 }
+
 .decision-engine-item {
     margin-bottom: 0.65rem;
     padding: 0.8rem;
     background: #101519;
     border: 1px solid #293239;
 }
+
 .decision-engine-source,
 .decision-engine-classification {
     font-family: monospace;
     font-size: 0.75rem;
     margin-bottom: 0.4rem;
 }
+
 .decision-engine-classification {
     color: #c8a96b;
 }
+
 .decision-engine-body {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
 .decision-engine-meta {
     margin-top: 0.45rem;
 }
-.decision-engine-empty {
+
+.decision-engine-empty,
+.decision-engine-placeholder {
     padding: 2rem 1rem;
-    text-align: center;
     color: #7d8991;
 }
 
+.decision-engine-empty {
+    text-align: center;
+}
+
+.decision-engine-placeholder {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.decision-engine-placeholder-title {
+    margin-bottom: 0.5rem;
+    color: #d7e0e7;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
 /* ===================================================================== */
-/* END: DECISION_ENGINE_RAW_INBOX_STYLES                                 */
+/* END: DECISION_ENGINE_SUBCONSOLE_STYLES                                */
 /* ===================================================================== */
