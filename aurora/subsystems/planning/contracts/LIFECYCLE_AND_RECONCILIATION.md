@@ -177,6 +177,49 @@ If cancellation would conflict with an active invariant that requires other
 state changes, the CRUD operation must reject the request rather than silently
 perform those side effects.
 
+### Executable Step and Phase Cancellation
+
+Ordinary Planning CRUD may cancel a Step or Phase only when cancellation does
+not require lifecycle side effects.
+
+When a Step or Phase is part of the lifecycle-authoritative executable path:
+
+```text
+ACTIVE Initiative
+    ↓
+ACTIVE Phase
+    ↓
+ACTIVE Step
+```
+
+cancellation must use Planning lifecycle orchestration rather than direct CRUD
+status mutation.
+
+The executable cancellation boundary is:
+
+```text
+aurora/subsystems/planning/services/lifecycle/orchestration.py
+```
+
+It owns the coordinated transition that:
+
+1. verifies the requested Step or Phase is the lifecycle-authoritative current
+   work for the actor;
+2. finalizes the outgoing Step repository baseline before executable authority
+   is removed;
+3. performs the cancellation through Planning lifecycle primitives;
+4. preserves truthful child lifecycle state as historical evidence when
+   cancelling a Phase; and
+5. deliberately does not invent or activate replacement work.
+
+Ordinary CRUD must reject executable cancellation rather than bypass repository
+evidence finalization.
+
+An `ACTIVE` child beneath a non-ACTIVE parent is preserved resume or historical
+state. It is not executable merely because its own persisted status remains
+`ACTIVE`, so ordinary CRUD cancellation is not automatically prohibited in that
+case.
+
 ---
 
 ## Phase Lifecycle

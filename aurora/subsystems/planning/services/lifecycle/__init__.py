@@ -18,6 +18,8 @@ from aurora.subsystems.planning.services.lifecycle.initiative import (
 )
 from aurora.subsystems.planning.services.lifecycle.orchestration import (
     activate_step_hierarchy,
+    cancel_executable_phase,
+    cancel_executable_step,
     complete_step_and_evaluate_parents,
     establish_initiative_work,
 )
@@ -45,6 +47,8 @@ __all__ = [
     "activate_step_hierarchy",
     "approve_initiative_completion",
     "approve_phase_completion",
+    "cancel_executable_phase",
+    "cancel_executable_step",
     "complete_initiative",
     "complete_phase",
     "complete_step",

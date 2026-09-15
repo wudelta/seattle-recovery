@@ -93,6 +93,39 @@ def pause_step(step: Step) -> Step:
     return locked
 
 
+def cancel_step(step: Step) -> Step:
+    """Cancel one unfinished Step without orchestration side effects."""
+
+    if step is None or not step.pk:
+        raise PlanningLifecycleError(
+            "A persisted Step is required."
+        )
+
+    with transaction.atomic():
+        locked = (
+            Step.objects
+            .select_for_update()
+            .get(pk=step.pk)
+        )
+
+        if locked.status == ExecutionStatus.COMPLETED:
+            raise PlanningLifecycleError(
+                "A completed Step cannot be cancelled."
+            )
+
+        if locked.status == ExecutionStatus.CANCELLED:
+            raise PlanningLifecycleError(
+                "This Step is already cancelled."
+            )
+
+        locked.status = ExecutionStatus.CANCELLED
+        locked.save(
+            update_fields=["status"]
+        )
+
+    return locked
+
+
 def complete_step(step: Step, user) -> Step:
     """
     Complete one validated Step and persist completion attribution.

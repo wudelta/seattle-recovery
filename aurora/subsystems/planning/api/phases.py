@@ -166,6 +166,28 @@ def save_phase(request, payload):
             status=409,
         )
 
+    if (
+        phase is not None
+        and status == ExecutionStatus.CANCELLED
+        and phase.status == ExecutionStatus.ACTIVE
+        and phase.initiative.status == ExecutionStatus.ACTIVE
+    ):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    "Executable Phase cancellation must use Planning lifecycle "
+                    "authority."
+                ),
+                "field_errors": {
+                    "status": (
+                        "Cancel active work through its lifecycle workflow."
+                    ),
+                },
+            },
+            status=409,
+        )
+
     description = str(
         payload.get(
             "description",

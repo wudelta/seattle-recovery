@@ -89,6 +89,39 @@ def pause_phase(phase: Phase) -> Phase:
     return locked
 
 
+def cancel_phase(phase: Phase) -> Phase:
+    """Cancel one unfinished Phase without changing child lifecycle state."""
+
+    if phase is None or not phase.pk:
+        raise PlanningLifecycleError(
+            "A persisted Phase is required."
+        )
+
+    with transaction.atomic():
+        locked = (
+            Phase.objects
+            .select_for_update()
+            .get(pk=phase.pk)
+        )
+
+        if locked.status == ExecutionStatus.COMPLETED:
+            raise PlanningLifecycleError(
+                "A completed Phase cannot be cancelled."
+            )
+
+        if locked.status == ExecutionStatus.CANCELLED:
+            raise PlanningLifecycleError(
+                "This Phase is already cancelled."
+            )
+
+        locked.status = ExecutionStatus.CANCELLED
+        locked.save(
+            update_fields=["status"]
+        )
+
+    return locked
+
+
 def evaluate_phase_completion(phase: Phase) -> dict[str, object]:
     """
     Evaluate whether a Phase is eligible for completion.

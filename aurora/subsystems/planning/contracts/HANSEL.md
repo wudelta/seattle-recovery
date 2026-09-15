@@ -108,6 +108,30 @@ worker-facing operation already exists.
 
 ---
 
+### Cancel executable Step or Phase work safely
+
+Read lifecycle semantics in:
+
+```text
+aurora/subsystems/planning/contracts/LIFECYCLE_AND_RECONCILIATION.md
+```
+
+Executable cancellation boundary:
+
+```text
+aurora/subsystems/planning/services/lifecycle/orchestration.py
+```
+
+Use the exported `cancel_executable_step()` or `cancel_executable_phase()`
+operations when cancelling work on the lifecycle-authoritative executable path.
+
+These operations close the outgoing Step repository-evidence segment before
+removing executable authority.
+
+Do not use ordinary CRUD cancellation for executable Step or Phase work.
+
+---
+
 ### Route a BLOCKING Engineering Finding into remedial work
 
 Read:
