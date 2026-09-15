@@ -20,10 +20,12 @@ from aurora.subsystems.planning.services.lifecycle.initiative import (
 )
 from aurora.subsystems.planning.services.lifecycle.phase import (
     activate_phase,
+    cancel_phase,
     request_phase_completion,
 )
 from aurora.subsystems.planning.services.lifecycle.step import (
     activate_step,
+    cancel_step,
     complete_step,
 )
 
@@ -122,6 +124,181 @@ def activate_step_hierarchy(
         )
 
     return activated_step
+
+
+def cancel_executable_step(
+    step: Step,
+    user,
+) -> dict[str, object]:
+    """
+    Cancel the lifecycle-authoritative Step after closing repository evidence.
+
+    This operation deliberately does not activate another Step. A subsequent
+    execution decision must establish new executable work explicitly.
+    """
+
+    if step is None or not step.pk:
+        raise PlanningLifecycleError(
+            "A persisted Step is required."
+        )
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise PlanningLifecycleError(
+            "An authenticated user is required to cancel executable Planning work."
+        )
+
+    with transaction.atomic():
+        locked_step = (
+            Step.objects
+            .select_for_update()
+            .select_related(
+                "phase",
+                "phase__initiative",
+            )
+            .get(pk=step.pk)
+        )
+
+        phase = locked_step.phase
+        initiative = phase.initiative
+
+        if initiative.assigned_to_id != user.pk:
+            raise PlanningLifecycleError(
+                "The Step's Initiative is not assigned to this user."
+            )
+
+        if phase.assigned_to_id != user.pk:
+            raise PlanningLifecycleError(
+                "The Step's Phase is not assigned to this user."
+            )
+
+        if initiative.status != ExecutionStatus.ACTIVE:
+            raise PlanningLifecycleError(
+                "The Step's Initiative is not ACTIVE."
+            )
+
+        if phase.status != ExecutionStatus.ACTIVE:
+            raise PlanningLifecycleError(
+                "The Step's Phase is not ACTIVE."
+            )
+
+        if locked_step.status != ExecutionStatus.ACTIVE:
+            raise PlanningLifecycleError(
+                "Only the lifecycle-authoritative ACTIVE Step can use executable "
+                "cancellation."
+            )
+
+        outgoing_step = _get_outgoing_active_step(user)
+
+        if outgoing_step is None or outgoing_step.pk != locked_step.pk:
+            raise PlanningLifecycleError(
+                "The requested Step is not the lifecycle-authoritative current Step."
+            )
+
+        actual_files = finalize_step_repository_baseline(
+            step=locked_step
+        )
+        cancelled_step = cancel_step(
+            locked_step
+        )
+
+    return {
+        "cancelled_step": cancelled_step,
+        "actual_files": actual_files,
+    }
+
+
+def cancel_executable_phase(
+    phase: Phase,
+    user,
+) -> dict[str, object]:
+    """
+    Cancel one executable Phase after closing its active Step evidence segment.
+
+    Child Step lifecycle state is preserved as historical Planning evidence.
+    This operation deliberately leaves the Initiative without a newly selected
+    executable Phase; subsequent work establishment remains explicit.
+    """
+
+    if phase is None or not phase.pk:
+        raise PlanningLifecycleError(
+            "A persisted Phase is required."
+        )
+
+    if not user or not getattr(user, "is_authenticated", False):
+        raise PlanningLifecycleError(
+            "An authenticated user is required to cancel executable Planning work."
+        )
+
+    with transaction.atomic():
+        locked_phase = (
+            Phase.objects
+            .select_for_update()
+            .select_related("initiative")
+            .get(pk=phase.pk)
+        )
+        initiative = locked_phase.initiative
+
+        if initiative.assigned_to_id != user.pk:
+            raise PlanningLifecycleError(
+                "The Phase's Initiative is not assigned to this user."
+            )
+
+        if locked_phase.assigned_to_id != user.pk:
+            raise PlanningLifecycleError(
+                "The Phase is not assigned to this user."
+            )
+
+        if initiative.status != ExecutionStatus.ACTIVE:
+            raise PlanningLifecycleError(
+                "The Phase's Initiative is not ACTIVE."
+            )
+
+        if locked_phase.status != ExecutionStatus.ACTIVE:
+            raise PlanningLifecycleError(
+                "Only an ACTIVE Phase can use executable cancellation."
+            )
+
+        active_steps = list(
+            Step.objects
+            .select_for_update()
+            .filter(
+                phase=locked_phase,
+                status=ExecutionStatus.ACTIVE,
+            )
+            .order_by("position", "pk")
+        )
+
+        if len(active_steps) > 1:
+            raise PlanningLifecycleError(
+                "The Phase has multiple ACTIVE Steps and cannot be cancelled safely."
+            )
+
+        actual_files = []
+
+        if active_steps:
+            outgoing_step = _get_outgoing_active_step(user)
+
+            if (
+                outgoing_step is None
+                or outgoing_step.pk != active_steps[0].pk
+            ):
+                raise PlanningLifecycleError(
+                    "The Phase's ACTIVE Step is not the lifecycle-authoritative "
+                    "current Step."
+                )
+
+            actual_files = finalize_step_repository_baseline(
+                step=active_steps[0]
+            )
+
+        cancelled_phase = cancel_phase(
+            locked_phase
+        )
+
+    return {
+        "cancelled_phase": cancelled_phase,
+        "actual_files": actual_files,
+    }
 
 
 def establish_initiative_work(

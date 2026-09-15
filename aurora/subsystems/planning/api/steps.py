@@ -584,6 +584,29 @@ def save_step(request, payload):
     step = context["step"]
     phase = context["phase"]
 
+    if (
+        step is not None
+        and context["status"] == ExecutionStatus.CANCELLED
+        and step.status == ExecutionStatus.ACTIVE
+        and step.phase.status == ExecutionStatus.ACTIVE
+        and step.phase.initiative.status == ExecutionStatus.ACTIVE
+    ):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    "Executable Step cancellation must use Planning lifecycle "
+                    "authority."
+                ),
+                "field_errors": {
+                    "status": (
+                        "Cancel active work through its lifecycle workflow."
+                    ),
+                },
+            },
+            status=409,
+        )
+
     details, error_response = resolve_step_save_details(
         payload,
         step,

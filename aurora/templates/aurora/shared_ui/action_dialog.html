@@ -1,0 +1,69 @@
+{# ====================================================================== #}
+{# FILE: aurora/templates/aurora/shared_ui/action_dialog.html              #}
+{# START: SHARED_UI_ACTION_DIALOG_TEMPLATE                                 #}
+{# ====================================================================== #}
+
+<div
+    id="shared-ui-action-dialog"
+    class="shared-ui-action-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    aria-labelledby="shared-ui-action-dialog-title"
+    aria-describedby="shared-ui-action-dialog-summary"
+>
+    <div
+        class="shared-ui-action-dialog__surface"
+        tabindex="-1"
+    >
+        <header class="shared-ui-action-dialog__header">
+            <div class="shared-ui-action-dialog__heading">
+                <div
+                    id="shared-ui-action-dialog-title"
+                    class="shared-ui-action-dialog__title"
+                ></div>
+
+                <div
+                    id="shared-ui-action-dialog-summary"
+                    class="shared-ui-action-dialog__summary d-none"
+                ></div>
+            </div>
+
+            <button
+                id="shared-ui-action-dialog-secondary"
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+            >
+                Cancel
+            </button>
+        </header>
+
+        <div class="shared-ui-action-dialog__body">
+            <div
+                id="shared-ui-action-dialog-content"
+                class="shared-ui-action-dialog__content"
+            ></div>
+
+            <div
+                id="shared-ui-action-dialog-status"
+                class="shared-ui-action-dialog__status d-none"
+                role="status"
+                aria-live="polite"
+            ></div>
+        </div>
+
+        <footer class="shared-ui-action-dialog__footer">
+            <button
+                id="shared-ui-action-dialog-primary"
+                type="button"
+                class="btn btn-sm btn-outline-warning"
+            >
+                Continue
+            </button>
+        </footer>
+    </div>
+</div>
+
+{# ====================================================================== #}
+{# END: SHARED_UI_ACTION_DIALOG_TEMPLATE                                   #}
+{# ====================================================================== #}
