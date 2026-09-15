@@ -4,8 +4,16 @@
 # ======================================================================
 
 from .inbox import get_raw_decision_engine_inbox
+from .reconciliation import (
+    DecisionEngineReconciliationError,
+    commit_selected_intake_to_work,
+)
 
-__all__ = ["get_raw_decision_engine_inbox"]
+__all__ = [
+    "DecisionEngineReconciliationError",
+    "commit_selected_intake_to_work",
+    "get_raw_decision_engine_inbox",
+]
 
 # ======================================================================
 # END: DECISION_ENGINE_SERVICE_EXPORTS

@@ -16,6 +16,7 @@ from aurora.subsystems.content.api import content_endpoint
 from aurora.subsystems.delta_directives.api import directives_endpoint
 from aurora.subsystems.delta_notes.api import delta_notes_endpoint
 from aurora.subsystems.decision_engine.api import (
+    decision_engine_commit_endpoint,
     decision_engine_inbox_endpoint,
 )
 from aurora.subsystems.engineering_session.api import (
@@ -32,6 +33,7 @@ __all__ = [
     "approve_pending_code_change",
     "component_registry_endpoint",
     "content_endpoint",
+    "decision_engine_commit_endpoint",
     "decision_engine_inbox_endpoint",
     "delta_notes_endpoint",
     "directives_endpoint",

@@ -308,6 +308,7 @@ $(document).ready(function() {
     const systemEndpoints = {
         endpoint_url: "{% url 'aurora:delta_notes_endpoint' %}",
         decision_engine_endpoint: "{% url 'aurora:decision_engine_inbox_endpoint' %}",
+        decision_engine_commit_endpoint: "{% url 'aurora:decision_engine_commit_endpoint' %}",
         content_endpoint: "{% url 'aurora:content_endpoint' %}",
         directives_endpoint: "{% url 'aurora:directives_endpoint' %}",
         planning_endpoint: "{% url 'aurora:planning_endpoint' %}",

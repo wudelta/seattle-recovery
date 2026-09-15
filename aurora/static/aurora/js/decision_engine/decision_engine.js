@@ -170,6 +170,71 @@
         return card;
     }
 
+    function getCsrfToken() {
+        const cookie = document.cookie
+            .split(";")
+            .map(part => part.trim())
+            .find(part => part.startsWith("csrftoken="));
+
+        if (cookie) {
+            return decodeURIComponent(
+                cookie.slice("csrftoken=".length)
+            );
+        }
+
+        const formToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        );
+
+        return formToken?.value || "";
+    }
+
+    function renderSelectedClassificationItem(
+        item,
+        confirmedKeys,
+        onReturn,
+        onConfirmationChange
+    ) {
+        const key = sourceKey(item);
+        const card = renderItem(item);
+        const confirmation = el(
+            "label",
+            "decision-engine-scope-confirmation"
+        );
+        const checkbox = document.createElement("input");
+        const confirmationText = el(
+            "span",
+            "",
+            "I confirm this entire intake item belongs to this one body of work."
+        );
+        const actions = el(
+            "div",
+            "decision-engine-classification-actions"
+        );
+        const returnButton = el(
+            "button",
+            "btn btn-sm btn-outline-info",
+            "Return"
+        );
+
+        checkbox.type = "checkbox";
+        checkbox.checked = confirmedKeys.has(key);
+        checkbox.addEventListener("change", function() {
+            onConfirmationChange(checkbox.checked);
+        });
+
+        returnButton.type = "button";
+        returnButton.addEventListener("click", onReturn);
+
+        confirmation.appendChild(checkbox);
+        confirmation.appendChild(confirmationText);
+        card.appendChild(confirmation);
+        actions.appendChild(returnButton);
+        card.appendChild(actions);
+
+        return card;
+    }
+
     window.initDecisionEngineConsole = function(systemEndpoints) {
         const root = document.getElementById("decision-engine-console");
 
@@ -180,7 +245,21 @@
         root.dataset.initialized = "true";
 
         const endpoint = systemEndpoints.decision_engine_endpoint;
+        const commitEndpoint =
+            systemEndpoints.decision_engine_commit_endpoint;
         const refresh = document.getElementById("decision-engine-refresh");
+        const reviewCommit = document.getElementById(
+            "decision-engine-review-commit"
+        );
+        const commitDialog = document.getElementById(
+            "decision-engine-commit-dialog"
+        );
+        const cancelCommit = document.getElementById(
+            "decision-engine-cancel-commit"
+        );
+        const commitSelected = document.getElementById(
+            "decision-engine-commit-selected"
+        );
         const navButtons = Array.from(
             root.querySelectorAll("[data-decision-engine-view]")
         );
@@ -191,6 +270,7 @@
         let currentView = DEFAULT_VIEW;
         let latestItems = [];
         const selectedKeys = new Set();
+        const confirmedKeys = new Set();
 
         function renderClassification() {
             const available = document.getElementById(
@@ -212,6 +292,7 @@
             Array.from(selectedKeys).forEach(key => {
                 if (!currentKeys.has(key)) {
                     selectedKeys.delete(key);
+                    confirmedKeys.delete(key);
                 }
             });
 
@@ -234,6 +315,17 @@
                 "decision-engine-selected-count",
                 selectedItems.length
             );
+            text(
+                "decision-engine-commit-summary",
+                selectedItems.length === 1
+                    ? "1 reviewed intake item will be committed to one body of work."
+                    : `${selectedItems.length} reviewed intake items will be committed `
+                        + "to one body of work."
+            );
+
+            if (reviewCommit) {
+                reviewCommit.disabled = selectedItems.length === 0;
+            }
 
             if (!availableItems.length) {
                 available.appendChild(
@@ -269,17 +361,55 @@
             } else {
                 selectedItems.forEach(item => {
                     selected.appendChild(
-                        renderClassificationItem(
+                        renderSelectedClassificationItem(
                             item,
-                            "Return",
+                            confirmedKeys,
                             function() {
-                                selectedKeys.delete(sourceKey(item));
+                                const key = sourceKey(item);
+                                selectedKeys.delete(key);
+                                confirmedKeys.delete(key);
                                 renderClassification();
+                            },
+                            function(isConfirmed) {
+                                const key = sourceKey(item);
+                                if (isConfirmed) {
+                                    confirmedKeys.add(key);
+                                } else {
+                                    confirmedKeys.delete(key);
+                                }
                             }
                         )
                     );
                 });
             }
+        }
+
+        function openCommitDialog() {
+            if (!selectedKeys.size) {
+                text(
+                    "decision-engine-classification-status",
+                    "Select at least one intake item before review."
+                );
+                return;
+            }
+
+            if (!commitDialog) return;
+
+            commitDialog.classList.remove("d-none");
+            commitDialog.setAttribute("aria-hidden", "false");
+
+            const title = document.getElementById(
+                "decision-engine-work-title"
+            );
+
+            if (title) title.focus();
+        }
+
+        function closeCommitDialog() {
+            if (!commitDialog) return;
+
+            commitDialog.classList.add("d-none");
+            commitDialog.setAttribute("aria-hidden", "true");
         }
 
         function showView(viewName) {
@@ -365,6 +495,117 @@
             }
         }
 
+        async function commitSelectedIntake() {
+            const title = document.getElementById(
+                "decision-engine-work-title"
+            );
+            const description = document.getElementById(
+                "decision-engine-work-description"
+            );
+            const reason = document.getElementById(
+                "decision-engine-work-reason"
+            );
+            const selectedItems = latestItems.filter(
+                item => selectedKeys.has(sourceKey(item))
+            );
+
+            if (!selectedItems.length) {
+                text(
+                    "decision-engine-classification-status",
+                    "Select at least one intake item before commit."
+                );
+                return;
+            }
+
+            if (
+                !title
+                || !description
+                || !reason
+                || !title.value.trim()
+                || !description.value.trim()
+                || !reason.value.trim()
+            ) {
+                text(
+                    "decision-engine-classification-status",
+                    "Title, description, and commit reason are required."
+                );
+                return;
+            }
+
+            const sources = selectedItems.map(item => ({
+                source_type: item.source_type,
+                source_id: item.source_id,
+                scope_confirmed: confirmedKeys.has(sourceKey(item))
+            }));
+
+            if (sources.some(source => source.scope_confirmed !== true)) {
+                text(
+                    "decision-engine-classification-status",
+                    "Confirm every selected intake item belongs entirely to "
+                    + "this one body of work before commit."
+                );
+                return;
+            }
+
+            commitSelected.disabled = true;
+            text(
+                "decision-engine-classification-status",
+                "Committing selected intake..."
+            );
+
+            try {
+                const response = await fetch(commitEndpoint, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        title: title.value.trim(),
+                        description: description.value.trim(),
+                        reason: reason.value.trim(),
+                        sources: sources
+                    })
+                });
+
+                const payload = await response.json();
+                if (
+                    !response.ok
+                    || payload.status !== "SUCCESS"
+                ) {
+                    throw new Error(
+                        payload.message
+                        || "Decision Engine commit failed."
+                    );
+                }
+
+                selectedKeys.clear();
+                confirmedKeys.clear();
+                title.value = "";
+                description.value = "";
+                reason.value = "";
+                await loadInbox();
+
+                text(
+                    "decision-engine-classification-status",
+                    `Committed DecisionEngineWork #${payload.work.id}.`
+                );
+
+                if (cancelCommit) {
+                    cancelCommit.textContent = "Close";
+                }
+            } catch (error) {
+                text(
+                    "decision-engine-classification-status",
+                    `Commit error: ${error.message}`
+                );
+            } finally {
+                commitSelected.disabled = false;
+            }
+        }
+
         navButtons.forEach(button => {
             button.addEventListener("click", function() {
                 showView(
@@ -375,6 +616,27 @@
 
         if (refresh) {
             refresh.addEventListener("click", loadInbox);
+        }
+
+        if (reviewCommit) {
+            reviewCommit.addEventListener(
+                "click",
+                openCommitDialog
+            );
+        }
+
+        if (cancelCommit) {
+            cancelCommit.addEventListener(
+                "click",
+                closeCommitDialog
+            );
+        }
+
+        if (commitSelected) {
+            commitSelected.addEventListener(
+                "click",
+                commitSelectedIntake
+            );
         }
 
         showView(DEFAULT_VIEW);

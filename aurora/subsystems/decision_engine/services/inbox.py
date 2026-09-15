@@ -3,6 +3,10 @@
 # START: DECISION_ENGINE_RAW_INBOX
 # ======================================================================
 
+from aurora.subsystems.decision_engine.models import (
+    DecisionEngineDisposition,
+    DecisionEngineIntakeDisposition,
+)
 from aurora.subsystems.delta_notes.services import (
     get_unprocessed_notes_for_organization,
 )
@@ -11,8 +15,33 @@ from aurora.subsystems.engineering_discovery.services import (
 )
 
 
+TERMINAL_DISPOSITIONS = {
+    DecisionEngineDisposition.WORK_COMMITTED,
+    DecisionEngineDisposition.REJECTED,
+    DecisionEngineDisposition.WITHDRAWN,
+}
+
+
+def _terminal_source_keys(items) -> set[tuple[str, int]]:
+    if not items:
+        return set()
+
+    source_types = {str(item["source_type"]) for item in items}
+    source_ids = {int(item["source_id"]) for item in items}
+
+    return set(
+        DecisionEngineIntakeDisposition.objects
+        .filter(
+            source_type__in=source_types,
+            source_id__in=source_ids,
+            disposition__in=TERMINAL_DISPOSITIONS,
+        )
+        .values_list("source_type", "source_id")
+    )
+
+
 def get_raw_decision_engine_inbox(user) -> dict[str, object]:
-    """Aggregate authorized raw organizational evidence without source mutation."""
+    """Aggregate authorized actionable organizational evidence without mutation."""
 
     notes = get_unprocessed_notes_for_organization(user)
     findings = get_unresolved_findings_for_organization(user)
@@ -35,6 +64,14 @@ def get_raw_decision_engine_inbox(user) -> dict[str, object]:
         }
         for finding in findings
     )
+
+    terminal_keys = _terminal_source_keys(items)
+    items = [
+        item
+        for item in items
+        if (str(item["source_type"]), int(item["source_id"])) not in terminal_keys
+    ]
+
     items.sort(
         key=lambda item: (
             str(item["created_at"]),
@@ -44,11 +81,16 @@ def get_raw_decision_engine_inbox(user) -> dict[str, object]:
         reverse=True,
     )
 
+    delta_count = sum(item["source_type"] == "DELTA_NOTE" for item in items)
+    finding_count = sum(
+        item["source_type"] == "ENGINEERING_FINDING" for item in items
+    )
+
     return {
         "counts": {
             "total": len(items),
-            "delta_notes": len(notes),
-            "engineering_findings": len(findings),
+            "delta_notes": delta_count,
+            "engineering_findings": finding_count,
         },
         "items": items,
     }

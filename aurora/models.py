@@ -15,7 +15,12 @@ from aurora.subsystems.component_registry.models import ComponentRegistry
 from aurora.subsystems.content.models import StaticContent
 from aurora.subsystems.delta_directives.models import DeltaDirectives
 from aurora.subsystems.delta_notes.models import DeltaNotesEntry
-from aurora.subsystems.decision_engine.models import DecisionEngineWork
+from aurora.subsystems.decision_engine.models import (
+    DecisionEngineDisposition,
+    DecisionEngineIntakeDisposition,
+    DecisionEngineSourceType,
+    DecisionEngineWork,
+)
 from aurora.subsystems.engineering_discovery.models import EngineeringFinding
 from aurora.subsystems.engineering_session.models import EngineeringSession
 from aurora.subsystems.hansel.models import (
@@ -51,6 +56,9 @@ __all__ = [
     "ComponentRegistry",
     "DeltaDirectives",
     "DeltaNotesEntry",
+    "DecisionEngineDisposition",
+    "DecisionEngineIntakeDisposition",
+    "DecisionEngineSourceType",
     "DecisionEngineWork",
     "EngineeringFinding",
     "EngineeringSession",

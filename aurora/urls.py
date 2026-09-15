@@ -83,6 +83,11 @@ urlpatterns = [
         name="decision_engine_inbox_endpoint",
     ),
     path(
+        "api/decision_engine/commit/",
+        api_endpoints.decision_engine_commit_endpoint,
+        name="decision_engine_commit_endpoint",
+    ),
+    path(
         "api/content/",
         api_endpoints.content_endpoint,
         name="content_endpoint",

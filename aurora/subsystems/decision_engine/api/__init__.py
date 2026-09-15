@@ -3,9 +3,15 @@
 # START: DECISION_ENGINE_API_EXPORTS
 # ======================================================================
 
-from .endpoint import decision_engine_inbox_endpoint
+from .endpoint import (
+    decision_engine_commit_endpoint,
+    decision_engine_inbox_endpoint,
+)
 
-__all__ = ["decision_engine_inbox_endpoint"]
+__all__ = [
+    "decision_engine_commit_endpoint",
+    "decision_engine_inbox_endpoint",
+]
 
 # ======================================================================
 # END: DECISION_ENGINE_API_EXPORTS

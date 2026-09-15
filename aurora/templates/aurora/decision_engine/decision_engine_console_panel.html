@@ -151,13 +151,107 @@
                                 disposition or DecisionEngineWork exists yet.
                             </div>
                         </div>
-                        <strong id="decision-engine-selected-count">0</strong>
+
+                        <div class="decision-engine-selected-header-actions">
+                            <strong id="decision-engine-selected-count">0</strong>
+
+                            <button
+                                id="decision-engine-review-commit"
+                                type="button"
+                                class="btn btn-sm btn-outline-warning"
+                                disabled
+                            >
+                                Review &amp; Commit
+                            </button>
+                        </div>
                     </div>
 
                     <div
                         id="decision-engine-selected-items"
                         class="decision-engine-classification-list"
                     ></div>
+                </div>
+            </div>
+
+            <div
+                id="decision-engine-commit-dialog"
+                class="decision-engine-commit-dialog d-none"
+                role="dialog"
+                aria-modal="true"
+                aria-hidden="true"
+                aria-labelledby="decision-engine-commit-dialog-title"
+            >
+                <div class="decision-engine-commit-dialog-card">
+                    <div class="decision-engine-commit-dialog-header">
+                        <div>
+                            <div
+                                id="decision-engine-commit-dialog-title"
+                                class="decision-engine-placeholder-title"
+                            >
+                                Review &amp; Commit Selected Intake
+                            </div>
+                            <div
+                                id="decision-engine-commit-summary"
+                                class="decision-engine-classification-help"
+                            >
+                                No intake is currently selected.
+                            </div>
+                        </div>
+
+                        <button
+                            id="decision-engine-cancel-commit"
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div class="decision-engine-commit-dialog-body">
+                        <label class="decision-engine-commit-field">
+                            <span>Work title</span>
+                            <input
+                                id="decision-engine-work-title"
+                                type="text"
+                                maxlength="255"
+                                autocomplete="off"
+                            >
+                        </label>
+
+                        <label class="decision-engine-commit-field">
+                            <span>Work description</span>
+                            <textarea
+                                id="decision-engine-work-description"
+                                rows="5"
+                            ></textarea>
+                        </label>
+
+                        <label class="decision-engine-commit-field">
+                            <span>Commit reason</span>
+                            <textarea
+                                id="decision-engine-work-reason"
+                                rows="4"
+                            ></textarea>
+                        </label>
+
+                        <div
+                            id="decision-engine-classification-status"
+                            class="decision-engine-classification-help"
+                            role="status"
+                        >
+                            Selection remains transient until explicit commit.
+                        </div>
+                    </div>
+
+                    <div class="decision-engine-commit-dialog-footer">
+                        <button
+                            id="decision-engine-commit-selected"
+                            type="button"
+                            class="btn btn-sm btn-outline-warning"
+                        >
+                            Commit Selected
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

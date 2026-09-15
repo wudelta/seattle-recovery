@@ -191,6 +191,89 @@
     margin-top: 0.7rem;
 }
 
+.decision-engine-scope-confirmation {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    color: #aeb8bf;
+    font-size: 0.78rem;
+}
+
+.decision-engine-scope-confirmation input {
+    margin-top: 0.15rem;
+}
+
+.decision-engine-selected-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.decision-engine-commit-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.decision-engine-commit-dialog-card {
+    display: flex;
+    width: min(52rem, 96vw);
+    max-height: min(46rem, 92vh);
+    min-height: 0;
+    flex-direction: column;
+    border: 1px solid #39434a;
+    background: #101519;
+}
+
+.decision-engine-commit-dialog-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #293239;
+}
+
+.decision-engine-commit-dialog-body {
+    display: grid;
+    min-height: 0;
+    gap: 0.85rem;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.decision-engine-commit-field {
+    display: grid;
+    gap: 0.3rem;
+    color: #aeb8bf;
+    font-size: 0.78rem;
+}
+
+.decision-engine-commit-field input,
+.decision-engine-commit-field textarea {
+    width: 100%;
+    border: 1px solid #39434a;
+    background: #0b0f12;
+    color: #d7e0e7;
+    padding: 0.45rem 0.55rem;
+}
+
+.decision-engine-commit-dialog-footer {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid #293239;
+    background: #0d1216;
+}
+
 @media (max-width: 900px) {
     .decision-engine-classification-workspace {
         grid-template-columns: 1fr;
