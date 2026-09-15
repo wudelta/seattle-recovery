@@ -7,7 +7,7 @@
 
 **Contract State: VERIFIED**
 
-**Runtime State: PLANNED**
+**Runtime State: VERIFIED**
 
 ---
 
@@ -345,7 +345,10 @@ primary action control
 status presentation
 ```
 
-Those mechanics are candidates for extraction into Shared UI.
+Those mechanics are implemented by Shared UI.
+
+Decision Engine adoption of the shared implementation remains a separate
+consumer-migration responsibility.
 
 Decision Engine retains ownership of:
 
@@ -412,10 +415,15 @@ The ActionDialog implementation is valid when a concrete consumer proves that:
 12. no consumer-specific authorization, validation, API, persistence, or domain
     workflow exists in Shared UI.
 
-For the first implementation, Decision Engine is the required real consumer.
+The Shared UI runtime may be validated independently before any consumer is
+migrated.
 
-Validation must preserve the existing Decision Engine commit transaction rather
-than replacing it with synthetic demonstration behavior.
+Decision Engine is the first required real consumer for end-to-end adoption
+validation.
+
+That later consumer validation must preserve the existing Decision Engine
+commit transaction rather than replacing it with synthetic demonstration
+behavior.
 
 ---
 

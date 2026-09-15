@@ -111,18 +111,25 @@ aurora/subsystems/shared_ui/contracts/HANSEL.md
 aurora/subsystems/shared_ui/contracts/ACTION_DIALOG.md
 ```
 
-ActionDialog runtime assets will use Aurora application-level frontend
-integration surfaces because Aurora's current static and template structure is
-rooted under the Aurora application.
+ActionDialog runtime assets use Aurora application-level frontend integration
+surfaces because Aurora's current static and template structure is rooted under
+the Aurora application.
 
-The planned runtime placement is defined by the ActionDialog authority:
+Current runtime authorities:
 
 ```text
-aurora/subsystems/shared_ui/contracts/ACTION_DIALOG.md
+aurora/templates/aurora/shared_ui/action_dialog.html
+aurora/static/aurora/css/shared_ui/action_dialog.css
+aurora/static/aurora/js/shared_ui/action_dialog.js
 ```
 
-Runtime paths do not become Hansel breadcrumbs until those repository
-authorities actually exist.
+Console integration is provided by:
+
+```text
+aurora/templates/aurora/aurora_console.html
+```
+
+These paths are framework integration surfaces.
 
 Ownership remains with the `shared_ui` subsystem.
 
@@ -155,7 +162,7 @@ keyboard interaction
 accessibility
 ```
 
-### Implement ActionDialog runtime mechanics
+### Change ActionDialog runtime mechanics
 
 Read first:
 
@@ -163,7 +170,21 @@ Read first:
 aurora/subsystems/shared_ui/contracts/ACTION_DIALOG.md
 ```
 
-Then use the runtime surfaces declared there.
+Then use:
+
+```text
+aurora/templates/aurora/shared_ui/action_dialog.html
+aurora/static/aurora/css/shared_ui/action_dialog.css
+aurora/static/aurora/js/shared_ui/action_dialog.js
+```
+
+Use:
+
+```text
+aurora/templates/aurora/aurora_console.html
+```
+
+only when ActionDialog's Aurora-console integration itself must change.
 
 Do not place consuming-subsystem business behavior into Shared UI.
 
@@ -238,8 +259,10 @@ Validation must target the architectural claim being changed.
 
 ## Known Gaps
 
-`ActionDialog` runtime implementation is PLANNED until its implementation Step
-is executed.
+`ActionDialog` runtime implementation is VERIFIED.
+
+Decision Engine adoption of the shared ActionDialog remains PLANNED until its
+consumer-migration work is executed and validated.
 
 `HelpDialog` is DEFERRED.
 

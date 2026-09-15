@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="{% static 'aurora/css/anamod.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/content.css' %}">
 <link rel="stylesheet" href="{% static 'aurora/css/directives.css' %}">
+<link rel="stylesheet" href="{% static 'aurora/css/shared_ui/action_dialog.css' %}">
 <!-- Local Offline-Ready Flat Root Vendor Style Nodes Remapped -->
 <link rel="stylesheet" href="{% static 'css/jstree-style.min.css' %}">
 
@@ -178,6 +179,8 @@
 ```
 
 </div>
+
+{% include "aurora/shared_ui/action_dialog.html" %}
 {% endblock %}
 <!-- ====================================================================== -->
 <!-- END: MASTER_WORKSPACE_CONSOLE_VIEWPORT_SHELL (PATCH 1 OF 2) -->
@@ -196,6 +199,7 @@
 <!-- Core Main Layout Panel Orchestrator -->
 
 <script src="{% static 'aurora/js/console.js' %}"></script>
+<script src="{% static 'aurora/js/shared_ui/action_dialog.js' %}"></script>
 
 <script src="{% static 'aurora/js/delta_notes/delta_notes.js' %}"></script>
 
