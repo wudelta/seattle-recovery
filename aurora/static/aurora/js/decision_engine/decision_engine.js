@@ -251,14 +251,9 @@
         const reviewCommit = document.getElementById(
             "decision-engine-review-commit"
         );
-        const commitDialog = document.getElementById(
-            "decision-engine-commit-dialog"
-        );
-        const cancelCommit = document.getElementById(
-            "decision-engine-cancel-commit"
-        );
-        const commitSelected = document.getElementById(
-            "decision-engine-commit-selected"
+        const actionDialog = window.AuroraActionDialog;
+        const commitContent = document.getElementById(
+            "decision-engine-commit-content"
         );
         const navButtons = Array.from(
             root.querySelectorAll("[data-decision-engine-view]")
@@ -266,6 +261,12 @@
         const workspaces = Array.from(
             root.querySelectorAll("[data-decision-engine-workspace]")
         );
+
+        if (!actionDialog || !commitContent) {
+            throw new Error(
+                "Decision Engine Review & Commit requires Shared UI ActionDialog."
+            );
+        }
 
         let currentView = DEFAULT_VIEW;
         let latestItems = [];
@@ -315,14 +316,6 @@
                 "decision-engine-selected-count",
                 selectedItems.length
             );
-            text(
-                "decision-engine-commit-summary",
-                selectedItems.length === 1
-                    ? "1 reviewed intake item will be committed to one body of work."
-                    : `${selectedItems.length} reviewed intake items will be committed `
-                        + "to one body of work."
-            );
-
             if (reviewCommit) {
                 reviewCommit.disabled = selectedItems.length === 0;
             }
@@ -385,31 +378,28 @@
         }
 
         function openCommitDialog() {
-            if (!selectedKeys.size) {
-                text(
-                    "decision-engine-classification-status",
-                    "Select at least one intake item before review."
-                );
-                return;
-            }
+            const selectedCount = selectedKeys.size;
 
-            if (!commitDialog) return;
-
-            commitDialog.classList.remove("d-none");
-            commitDialog.setAttribute("aria-hidden", "false");
+            if (!selectedCount) return;
 
             const title = document.getElementById(
                 "decision-engine-work-title"
             );
+            const summary = selectedCount === 1
+                ? "1 reviewed intake item will be committed to one body of work."
+                : `${selectedCount} reviewed intake items will be committed `
+                    + "to one body of work.";
 
-            if (title) title.focus();
-        }
-
-        function closeCommitDialog() {
-            if (!commitDialog) return;
-
-            commitDialog.classList.add("d-none");
-            commitDialog.setAttribute("aria-hidden", "true");
+            actionDialog.open({
+                title: "Review & Commit Selected Intake",
+                summary,
+                contentNode: commitContent,
+                status: "Selection remains transient until explicit commit.",
+                secondaryLabel: "Cancel",
+                primaryLabel: "Commit Selected",
+                onPrimary: commitSelectedIntake,
+                initialFocus: title
+            });
         }
 
         function showView(viewName) {
@@ -510,8 +500,7 @@
             );
 
             if (!selectedItems.length) {
-                text(
-                    "decision-engine-classification-status",
+                actionDialog.setStatus(
                     "Select at least one intake item before commit."
                 );
                 return;
@@ -525,8 +514,7 @@
                 || !description.value.trim()
                 || !reason.value.trim()
             ) {
-                text(
-                    "decision-engine-classification-status",
+                actionDialog.setStatus(
                     "Title, description, and commit reason are required."
                 );
                 return;
@@ -539,17 +527,14 @@
             }));
 
             if (sources.some(source => source.scope_confirmed !== true)) {
-                text(
-                    "decision-engine-classification-status",
+                actionDialog.setStatus(
                     "Confirm every selected intake item belongs entirely to "
                     + "this one body of work before commit."
                 );
                 return;
             }
 
-            commitSelected.disabled = true;
-            text(
-                "decision-engine-classification-status",
+            actionDialog.setStatus(
                 "Committing selected intake..."
             );
 
@@ -588,21 +573,14 @@
                 reason.value = "";
                 await loadInbox();
 
-                text(
-                    "decision-engine-classification-status",
+                actionDialog.setStatus(
                     `Committed DecisionEngineWork #${payload.work.id}.`
                 );
-
-                if (cancelCommit) {
-                    cancelCommit.textContent = "Close";
-                }
+                actionDialog.setSecondaryLabel("Close");
             } catch (error) {
-                text(
-                    "decision-engine-classification-status",
+                actionDialog.setStatus(
                     `Commit error: ${error.message}`
                 );
-            } finally {
-                commitSelected.disabled = false;
             }
         }
 
@@ -622,20 +600,6 @@
             reviewCommit.addEventListener(
                 "click",
                 openCommitDialog
-            );
-        }
-
-        if (cancelCommit) {
-            cancelCommit.addEventListener(
-                "click",
-                closeCommitDialog
-            );
-        }
-
-        if (commitSelected) {
-            commitSelected.addEventListener(
-                "click",
-                commitSelectedIntake
             );
         }
 
